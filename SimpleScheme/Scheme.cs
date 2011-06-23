@@ -95,13 +95,13 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            Stepper stop = Evaluator.EvalReturn;
+            Evaluator stop = new EvaluatorReturn();
             var eval = new EvaluatorMain(this, stop, expr, env);
-            Stepper nextStep = eval.EvalStep;
+            Evaluator nextStep = eval;
             while (true)
             {
 //Console.WriteLine("Evaluating {0} {1} {2}", eval.Expr, eval.Pc, eval.GetType());
-                nextStep = nextStep();
+                nextStep = nextStep.EvalStep();
                 if (nextStep == stop)
                 {
                     break;
