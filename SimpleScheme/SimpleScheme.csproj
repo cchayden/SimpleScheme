@@ -36,6 +36,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActivationRecord.cs" />
     <Compile Include="Closure.cs" />
     <Compile Include="ClrMethod.cs" />
     <Compile Include="Continuation.cs" />

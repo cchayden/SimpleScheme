@@ -96,7 +96,7 @@ namespace SimpleScheme
         public object Eval(object expr, Environment env)
         {
             Evaluator stop = new EvaluatorReturn();
-            Evaluator eval = new EvaluatorMain(this, stop, expr, env);
+            Evaluator eval = Evaluator.CallMain(this, stop, expr, env);
             Evaluator nextStep = eval;
             while (true)
             {
