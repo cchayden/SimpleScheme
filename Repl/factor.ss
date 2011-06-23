@@ -1,5 +1,5 @@
 ;; factor.ss
-;; factor numbers
+;; factor numbers and time the
 
 (reset-counters)
 
@@ -9,11 +9,19 @@
       (cond
         ((> i n) '())
         ((integer? (/ n i)) (cons i (f (/ n i) i)))
-        (else (f n (+ i 1)))))))				
+        (else (f n (+ i 1)))))))
+(define (test-factor n) (display "factor: ")(display n)(display " ")(display (factor n))(newline))						
 
-(display "factor 12: ")(display (time (factor 12)))(newline)
-(display "factor 3628800: ")(display (time (factor 3628800)))(newline)
-(display "factor 9239: ")(display (time (factor 9239)))(newline)
-(display "factor 9876543: ")(display (time (factor 9876543)))(newline)
+(counters-on)
+(do ((i 0 (+ i 1))) ((= i 10)) 
+ (begin
+  (test-factor 12)
+  (test-factor 3628800)
+  (test-factor 9239)
+  (test-factor 9876543)
+  (test-factor 105943)
+ )
+)
+(counters-off)
 (dump-counters)
-(exit)
+;(exit)

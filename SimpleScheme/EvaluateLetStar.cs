@@ -13,6 +13,16 @@ namespace SimpleScheme
     public sealed class EvaluateLetStar : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "let*";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// The variable bindings established by the let expression.
         /// </summary>
         private object bindings;
@@ -47,14 +57,22 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateLetStar class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateLetStar(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateLetStar(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("let*");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -76,32 +94,31 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the init list.</returns>
         private Stepper InitialStep()
         {
-            if (this.Expr == null)
+            if (Expr == null)
             {
                 ErrorHandlers.Error("Let*: wrong number of arguments");
                 return ReturnFromStep(null);
             }
 
-            if (!(this.Expr is Pair))
+            if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Let*: illegal arg list: " + this.Expr);
+                ErrorHandlers.Error("Let*: illegal arg list: " + Expr);
                 return ReturnFromStep(null);
             }
 
-            this.bindings = List.First(this.Expr);
-            this.body = List.Rest(this.Expr);
+            this.bindings = First(Expr);
+            this.body = Rest(Expr);
 
             if (this.body == null)
             {
                 return ReturnFromStep(null);
             }
 
-            this.vars = List.MapFun(List.First, List.MakeList(this.bindings));
-            this.inits = List.MapFun(List.Second, List.MakeList(this.bindings));
+            this.vars = MapFun(First, MakeList(this.bindings));
+            this.inits = MapFun(Second, MakeList(this.bindings));
             this.formals = null;
             this.vals = null;
-            this.Pc = this.EvalInit;
-            return this;
+            return ContinueHere(this.EvalInit);
         }
 
         /// <summary>
@@ -113,13 +130,11 @@ namespace SimpleScheme
         {
             if (this.inits == null)
             {
-                this.Pc = this.ApplyLambda1;
-                return this;
+                return ContinueHere(this.ApplyLambda);
             }
 
-            object fun = new Closure(this.formals, List.MakeList(List.First(this.inits)), this.Env);
-            this.Pc = this.BindVarToInit;
-            return Procedure.Proc(fun).Apply(this, this.vals);
+            object fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);
+            return Procedure.Proc(fun).Apply(ContinueHere(this.BindVarToInit), this.vals);
         }
 
         /// <summary>
@@ -130,24 +145,22 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper BindVarToInit()
         {
-            this.formals = List.Cons(List.First(this.vars), this.formals);
-            this.vals = List.Cons(ReturnedExpr, this.vals);
-            this.vars = List.Rest(this.vars);
-            this.inits = List.Rest(this.inits);
-            this.Pc = this.EvalInit;
-            return this;
+            this.formals = Cons(First(this.vars), this.formals);
+            this.vals = Cons(ReturnedExpr, this.vals);
+            this.vars = Rest(this.vars);
+            this.inits = Rest(this.inits);
+            return ContinueHere(this.EvalInit);
         }
 
         /// <summary>
         /// Inits evaluated and bound -- execute the proc.
         /// </summary>
         /// <returns>Execution continues with evaluation of the body of the let.</returns>
-        private Stepper ApplyLambda1()
+        private Stepper ApplyLambda()
         {
             // apply the fun to the vals
-            this.Pc = this.ReturnStep;
             object fun = new Closure(this.formals, this.body, this.Env);
-            return Procedure.Proc(fun).Apply(this, this.vals);
+            return Procedure.Proc(fun).Apply(ContinueReturn(), this.vals);
         }
     }
 }

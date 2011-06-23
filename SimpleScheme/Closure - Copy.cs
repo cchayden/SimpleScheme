@@ -9,7 +9,6 @@ namespace SimpleScheme
     /// The Macro class also derives from this.
     /// </summary>
     //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
-    //// <r4rs section="4.1.4">body: expression ...)</r4rs>
     //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
     //// <r4rs section="4.1.4">formals: <variable></r4rs>
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
@@ -26,7 +25,22 @@ namespace SimpleScheme
         {
             this.FormalParameters = formalParameters;
             this.Env = env;
-            this.Body = body;
+#if FALSE
+            this.Body = body is Pair && Rest(body) == null ? 
+                First(body) :            // one expression
+                Cons("begin", body);     // more than one expression --> (begin expressions)
+#else
+            if (body is Pair && Rest(body) == null)
+            {
+                this.Body = First(body);
+                this.sequence = false;
+            }
+            else
+            {
+                this.Body = body;
+                this.sequence = true;
+            }
+#endif
         }
 
         /// <summary>
@@ -44,6 +58,8 @@ namespace SimpleScheme
         /// </summary>
         public Environment Env { get; private set; }
 
+        private bool sequence;
+
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
@@ -53,19 +69,48 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public override Stepper Apply(Stepper caller, object args)
         {
-            return EvaluateSequence.Call(caller, this.Body, new Environment(this.FormalParameters, args, this.Env));
+#if FALSE
+            return EvaluatorMain.Call(caller, this.Body, new Environment(this.FormalParameters, args, this.Env));
+#else
+            if (this.sequence)
+            {
+                return EvaluateSequence.Call(caller, this.Body, new Environment(this.FormalParameters, args, this.Env));
+                
+            }
+            else
+            {
+                return EvaluatorMain.Call(caller, this.Body, new Environment(this.FormalParameters, args, this.Env));
+            }
+#endif
         }
 
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
-        /// Uses environment of the caller rather than creating a new one.
+        /// Uses environment of the cller rather than creating a new one.
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public Stepper ApplyWithCurrentEnv(Stepper caller)
+        public Stepper ApplyWithEnv(Stepper caller)
         {
-            return EvaluateSequence.Call(caller, this.Body, caller.Env);
+#if FALSE
+            return EvaluatorMain.Call(caller, this.Body, caller.Env);
+#else
+            return this.Evaluate(caller);
+#endif
+        }
+
+        public Stepper Evaluate(Stepper caller)
+        {
+            if (sequence)
+            {
+                return EvaluateSequence.Call(caller, this.Body, caller.Env);
+            }
+            else
+            {
+                return EvaluatorMain.Call(caller, this.Body, caller.Env);
+            }
+            
         }
 
         /// <summary>
@@ -75,18 +120,8 @@ namespace SimpleScheme
         /// <returns>The string form of the closure.</returns>
         public override string ToString()
         {
-            return this.ToString("lambda");
-        }
-
-        /// <summary>
-        /// Common printing logic for closures.
-        /// </summary>
-        /// <param name="tag">The function name.</param>
-        /// <returns>String representing the closure.</returns>
-        protected string ToString(string tag)
-        {
             string formals = this.FormalParameters == null ? "()" : this.FormalParameters.ToString();
-            return string.Format("({0} {1} {2})", tag, formals, this.Body);
+            return string.Format("(lambda {0} {1})", formals, this.Body);
         }
     }
 }

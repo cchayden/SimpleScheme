@@ -4,20 +4,35 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Reflection;
 
     /// <summary>
     /// Primitive procedures.
     /// This contains implementations for all primitive procedures.
-    /// Each primitive knows its operCode, and the min and max number of arguments it expects.
-    /// Each instance of Primitive is immutable.  In practice, we have one instance for each operCode.
+    /// Each primitive knows its operation, a reference to the code to execute to carry out
+    ///   the primitive.  It also knows the min and max number of arguments it expects.
+    /// Each instance of Primitive is immutable.
     /// </summary>
     public sealed class Primitive : Procedure
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "primitive";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// The code to perform the operation.
+        /// The stepper function is executed to perform the primitive operation.
+        /// It takes two arguments, a caller and args.
+        /// The caller is the step to return to when the operation is done.
+        /// The args is the operand.
+        /// The return value is either
+        /// (1) a value, the operation result, or
+        /// (2) a Stepper, the next step to execute. 
         /// </summary>
         private readonly Func<Stepper, object, object> operation;
 
@@ -60,7 +75,7 @@ namespace SimpleScheme
         public override Stepper Apply(Stepper caller, object args)
         {
             // First check the number of arguments
-            int numArgs = List.Length(args);
+            int numArgs = Length(args);
             if (numArgs < this.minArgs)
             {
                 return ErrorHandlers.EvalError("Primitive: too few args, " + numArgs + ", for " +
@@ -72,6 +87,8 @@ namespace SimpleScheme
                 return ErrorHandlers.EvalError("Primitive: too many args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
+
+            caller.Env.Interp.IncrementCounter(counter);
 
             // Execute the operation
             object res = this.operation(caller, args);

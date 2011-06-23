@@ -13,16 +13,34 @@ namespace SimpleScheme
     public sealed class EvaluateIf : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "if";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// Initializes a new instance of the EvaluateIf class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateIf(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateIf(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.EvaluateTestStep;
-            IncrementCounter("if");
+            ContinueHere(this.EvaluateTestStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -42,8 +60,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private Stepper EvaluateTestStep()
         {
-            this.Pc = this.EvaluateAlternativeStep;
-            return EvaluatorMain.Call(this, List.First(this.Expr));
+            return EvaluateExpression.Call(ContinueHere(this.EvaluateAlternativeStep), First(Expr));
         }
 
         /// <summary>
@@ -54,9 +71,9 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private Stepper EvaluateAlternativeStep()
         {
-            return EvaluatorMain.Call(
-                this.Parent, 
-                SchemeBoolean.Truth(ReturnedExpr) ? List.Second(this.Expr) : List.Third(this.Expr));
+            return EvaluateExpression.Call(
+                this.Caller, 
+                SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr));
         }
     }
 }

@@ -1,22 +1,22 @@
-﻿// <copyright file="EvaluateExpandMacro.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateProc.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     /// <summary>
-    /// Expand a macro.
+    /// Evaluate args and apply a proc to it.
     /// </summary>
-    public sealed class EvaluateExpandMacro : Stepper
+    public class EvaluateProc : Stepper
     {
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "expand-macro";
+        private const string StepperName = "evaluate-proc";
 
         /// <summary>
-        /// The macro to expand.
+        /// The proc or primitive to apply.
         /// </summary>
-        private readonly Macro fn;
+        private readonly Procedure fn;
 
         /// <summary>
         /// The counter id.
@@ -24,13 +24,13 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create(StepperName);
 
         /// <summary>
-        /// Initializes a new instance of the EvaluateExpandMacro class.
+        /// Initializes a new instance of the EvaluateProc class.
         /// </summary>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        /// <param name="fn">The macro to expand.</param>
-        private EvaluateExpandMacro(Stepper caller, object expr, Environment env, Macro fn)
+        /// <param name="fn">The function to apply.</param>
+        protected EvaluateProc(Stepper caller, object expr, Environment env, Procedure fn)
             : base(caller, expr, env)
         {
             this.fn = fn;
@@ -47,33 +47,34 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Call an expand evaluator.
+        /// Call apply proc evaluator.
         /// </summary>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="fn">The macro to expand.</param>
-        /// <returns>The expand evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr, Macro fn)
+        /// <param name="fn">The function to apply.</param>
+        /// <returns>The apply proc evaluator.</returns>
+        public static Stepper Call(Stepper caller, object expr, Procedure fn)
         {
-            return new EvaluateExpandMacro(caller, expr, caller.Env, fn);
+            return new EvaluateProc(caller, expr, caller.Env, fn);
         }
 
         /// <summary>
-        /// Apply the macro to the expression.  
+        /// Back here after args have been evaluated.  
+        /// Apply the proc to the evaluated args.  
         /// </summary>
-        /// <returns>The first step to evaluate to macro.</returns>
+        /// <returns>The result, or the next step to obtain it.</returns>
+        protected Stepper ApplyStep()
+        {
+            return this.fn.Apply(ContinueReturn(), ReturnedExpr);
+        }
+
+        /// <summary>
+        /// Begin by evaluating all the arguments.
+        /// </summary>
+        /// <returns>Next action to evaluate the args.</returns>
         private Stepper InitialStep()
         {
-            return this.fn.Apply(ContinueHere(this.ExpandStep), Expr);
-        }
-
-        /// <summary>
-        /// Back here after macro is expanded.  Evaluate the result.
-        /// </summary>
-        /// <returns>The expanded macro.</returns>
-        private Stepper ExpandStep()
-        {
-            return EvaluateExpression.Call(ContinueReturn(), ReturnedExpr);
+            return EvaluateList.Call(ContinueHere(this.ApplyStep), Expr);
         }
     }
 }

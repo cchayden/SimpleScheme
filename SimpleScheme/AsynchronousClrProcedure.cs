@@ -63,7 +63,7 @@ namespace SimpleScheme
             env
                 .DefinePrimitive(
                    "method-async",
-                   (parent, args) => new AsynchronousClrProcedure(List.First(args), SchemeString.AsString(List.Second(args), false), List.Rest(List.Rest(args))),
+                   (parent, args) => new AsynchronousClrProcedure(First(args), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
                    2,
                    MaxInt);
         }
@@ -88,8 +88,8 @@ namespace SimpleScheme
             }
             else
             {
-                target = List.First(args);
-                argArray = this.ToArgListBegin(List.Rest(args), new AsyncState(target, caller)).ToArray();
+                target = First(args);
+                argArray = this.ToArgListBegin(Rest(args), new AsyncState(target, caller)).ToArray();
             }
 
             this.MethodInfo.Invoke(target, argArray);
@@ -138,13 +138,13 @@ namespace SimpleScheme
         {
             object[] args = { result };
             AsyncState state = (AsyncState)result.AsyncState;
-            Stepper parent = state.Parent;
+            Stepper caller = state.Caller;
             object res = this.endMethodInfo.Invoke(state.InvokedObject, args);
-            parent.ContinueStep(res);
+            caller.ContinueStep(res);
 
             // Continue executing steps.  In effect, this thread takes over stepping
             //  because the other thread has already exited.
-            parent.Env.Interp.EvalStep(parent);
+            caller.Env.Interp.EvalStep(caller);
         }
 
         /// <summary>
@@ -156,11 +156,11 @@ namespace SimpleScheme
             /// Initializes a new instance of the AsynchronousClrProcedure.AsyncState class.
             /// </summary>
             /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
-            /// <param name="parent">The caller stepper to resume.</param>
-            public AsyncState(object invokedObject, Stepper parent)
+            /// <param name="caller">The caller stepper to resume.</param>
+            public AsyncState(object invokedObject, Stepper caller)
             {
                 this.InvokedObject = invokedObject;
-                this.Parent = parent;
+                this.Caller = caller;
             }
 
             /// <summary>
@@ -171,7 +171,7 @@ namespace SimpleScheme
             /// <summary>
             /// Gets the caller stepper to resume.
             /// </summary>
-            public Stepper Parent { get; private set; }
+            public Stepper Caller { get; private set; }
         }
     }
 }

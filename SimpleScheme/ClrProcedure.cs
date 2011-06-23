@@ -56,7 +56,7 @@ namespace SimpleScheme
                         {
                             try
                             {
-                                return Type.GetType(SchemeString.AsString(List.First(args), false));
+                                return Type.GetType(SchemeString.AsString(First(args), false));
                             }
                             catch (TypeLoadException)
                             {
@@ -71,7 +71,7 @@ namespace SimpleScheme
                         {
                             try
                             {
-                                return CreateInstance(List.First(args));
+                                return CreateInstance(First(args));
                             }
                             catch (ArgumentNullException)
                             {
@@ -149,7 +149,7 @@ namespace SimpleScheme
         /// <returns>An array of Type objects corresponding to the list.</returns>
         protected List<Type> ClassList(object args)
         {
-            int n = List.Length(args);
+            int n = Length(args);
             List<Type> array = new List<Type>(n);
 
             if (args is Pair)
@@ -174,7 +174,7 @@ namespace SimpleScheme
         /// <returns>A (CLR) list of arguments for the method call.</returns>
         protected List<object> ToArgList(object args, object[] additionalArgs)
         {
-            int n = List.Length(args);
+            int n = Length(args);
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)

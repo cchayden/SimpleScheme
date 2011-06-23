@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Operations on boolean values.
     /// </summary>
-    public sealed class SchemeBoolean
+    public sealed class SchemeBoolean : ListPrimitives
     {
         /// <summary>
         /// Define the true object.
@@ -26,17 +26,17 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (parent, args) => Truth(List.First(args) is bool), 1)
+                .DefinePrimitive("boolean?", (parent, args) => Truth(First(args) is bool), 1)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (parent, args) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("eq?", (parent, args) => Truth(Eqv(First(args), Second(args))), 2)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (parent, args) => Truth(Equal(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("equal?", (parent, args) => Truth(Equal(First(args), Second(args))), 2)
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (parent, args) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("eqv?", (parent, args) => Truth(Eqv(First(args), Second(args))), 2)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (parent, args) => Truth(List.First(args) is bool && (bool)List.First(args) == false), 1)
+                .DefinePrimitive("not", (parent, args) => Truth(First(args) is bool && (bool)First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (parent, args) => Truth(List.First(args) == null), 1);
+                .DefinePrimitive("null?", (parent, args) => Truth(First(args) == null), 1);
         }
 
         /// <summary>
@@ -47,41 +47,41 @@ namespace SimpleScheme
         ///   are both vectors whose members are all equal, or
         ///   are equal by their type-specific Equals function.
         /// </summary>
-        /// <param name="x">One member to test.</param>
-        /// <param name="y">The other member to test.</param>
+        /// <param name="obj1">One member to test.</param>
+        /// <param name="obj2">The other member to test.</param>
         /// <returns>True if the objects are equal.</returns>
-        public static bool Equal(object x, object y)
+        public static bool Equal(object obj1, object obj2)
         {
             // both null
-            if (x == null || y == null)
+            if (obj1 == null || obj2 == null)
             {
-                return x == y;
+                return obj1 == obj2;
             }
 
             // test strings
-            if (x is SchemeString)
+            if (obj1 is SchemeString)
             {
-                if (!(y is SchemeString))
+                if (!(obj2 is SchemeString))
                 {
                     return false;
                 }
 
-                return SchemeString.Equal((SchemeString)x, (SchemeString)y);
+                return SchemeString.Equal((SchemeString)obj1, (SchemeString)obj2);
             }
 
             // test vectors
-            if (x is Vector)
+            if (obj1 is Vector)
             {
-                if (!(y is Vector))
+                if (!(obj2 is Vector))
                 {
                     return false;
                 }
 
-                return Vector.Equal((Vector)x, (Vector)y);
+                return Vector.Equal((Vector)obj1, (Vector)obj2);
             }
 
             // delegate to first member, use C# equality
-            return x.Equals(y);
+            return obj1.Equals(obj2);
         }
 
         /// <summary>
@@ -92,16 +92,16 @@ namespace SimpleScheme
         ///   they are equal numbers
         ///   they are equal character.
         /// </summary>
-        /// <param name="x">The first object.</param>
-        /// <param name="y">The second object.</param>
+        /// <param name="obj1">The first object.</param>
+        /// <param name="obj2">The second object.</param>
         /// <returns>True if they are equivalent.</returns>
-        public static bool Eqv(object x, object y)
+        public static bool Eqv(object obj1, object obj2)
         {
-            return x == y || 
-                (x is bool && x.Equals(y)) || 
-                (x is int && x.Equals(y)) || 
-                (x is double && x.Equals(y)) || 
-                (x is char && x.Equals(y));
+            return obj1 == obj2 || 
+                (obj1 is bool && obj1.Equals(obj2)) || 
+                (obj1 is int && obj1.Equals(obj2)) || 
+                (obj1 is double && obj1.Equals(obj2)) || 
+                (obj1 is char && obj1.Equals(obj2));
         }
 
         /// <summary>
@@ -132,11 +132,11 @@ namespace SimpleScheme
         /// Test to see if an object is true.
         /// This is true if the object is not a boolean, or if it is and is true.
         /// </summary>
-        /// <param name="x">The object to test.</param>
+        /// <param name="obj">The object to test.</param>
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        public static bool Truth(object x)
+        public static bool Truth(object obj)
         {
-            return !IsFalse(x);
+            return !IsFalse(obj);
         }
 
         /// <summary>

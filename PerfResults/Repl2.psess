@@ -5,6 +5,7 @@
     <CollectionMethod>Sampling</CollectionMethod>
     <AllocationMethod>None</AllocationMethod>
     <LaunchRuntimeControl>true</LaunchRuntimeControl>
+    <Reportname>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl.vsp</Reportname>
     <AddReport>true</AddReport>
     <ResourceBasedAnalysisSelected>false</ResourceBasedAnalysisSelected>
     <ThreadBasedAnalysisSelected>false</ThreadBasedAnalysisSelected>
@@ -61,7 +62,7 @@
       <LaunchMethod>Executable</LaunchMethod>
       <ExecutablePath>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl\bin\Debug\Repl.exe</ExecutablePath>
       <StartupDirectory>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl\</StartupDirectory>
-      <Arguments>fib.ss</Arguments>
+      <Arguments>factor.ss</Arguments>
       <NetAppHost>IIS</NetAppHost>
       <NetBrowser>InternetExplorer</NetBrowser>
       <ExcludeSmallFuncs>true</ExcludeSmallFuncs>
@@ -79,22 +80,22 @@
   </Binaries>
   <Reports>
     <Report>
-      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl110519(6).vsp</Path>
+      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl110526.vsp</Path>
     </Report>
     <Report>
-      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl110519(8).vsp</Path>
+      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl110526(1).vsp</Path>
     </Report>
     <Report>
-      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl110519(9).vsp</Path>
+      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl110526(2).vsp</Path>
     </Report>
     <Report>
-      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl110519(10).vsp</Path>
+      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl110526(3).vsp</Path>
     </Report>
     <Report>
-      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl110519(11).vsp</Path>
+      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl110526(4).vsp</Path>
     </Report>
     <Report>
-      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl110519(12).vsp</Path>
+      <Path>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\PerfResults\Repl110526(5).vsp</Path>
     </Report>
   </Reports>
   <Launches>

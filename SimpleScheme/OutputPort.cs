@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public sealed class OutputPort
+    public sealed class OutputPort : ListPrimitives
     {
         /// <summary>
         /// The output port to write to.
@@ -54,69 +54,75 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             // TODO not implemented
-            //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
+            //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
 
             env
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
-                .DefinePrimitive("call-with-output-file", (parent, args) => EvaluateCallWithOutputFile.Call(parent, args), 2)
+                .DefinePrimitive(
+                    "call-with-output-file",
+                    (parent, args) => EvaluateCallWithOutputFile.Call(parent, args), 
+                    2)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
                 .DefinePrimitive(
-                   "close-output-port",
-                   (parent, args) =>
-                   {
-                       OutPort(List.First(args), parent.Env.Interp).Close();
-                       return SchemeBoolean.True;
-                   },
-                   1)
+                    "close-output-port",
+                    (parent, args) =>
+                        {
+                            OutPort(First(args), parent.Env.Interp).Close();
+                            return SchemeBoolean.True;
+                        },
+                    1)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
                 .DefinePrimitive("current-output-port", (parent, args) => parent.Env.Interp.Output, 0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
-                .DefinePrimitive("display", (parent, args) => Write(List.First(args), OutPort(List.Second(args), parent.Env.Interp), false), 1, 2)
+                .DefinePrimitive(
+                    "display",
+                    (parent, args) => Write(First(args), OutPort(Second(args), parent.Env.Interp), false),
+                    1, 
+                    2)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
                 .DefinePrimitive(
-                   "newline",
-                   (parent, args) =>
-                   {
-                       object first = List.First(args);
-                       OutPort(first, parent.Env.Interp).Println();
-                       OutPort(first, parent.Env.Interp).Flush();
-                       return SchemeBoolean.True;
-                   },
+                    "newline",
+                    (parent, args) =>
+                        {
+                            object first = First(args);
+                            OutPort(first, parent.Env.Interp).Println();
+                            OutPort(first, parent.Env.Interp).Flush();
+                            return SchemeBoolean.True;
+                        },
                     0,
                     1)
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
-                .DefinePrimitive("open-output-file", (parent, args) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args)), 1)
+                .DefinePrimitive(
+                    "open-output-file",
+                    (parent, args) => EvaluateCallWithOutputFile.OpenOutputFile(First(args)), 
+                    1)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (parent, args) => SchemeBoolean.Truth(List.First(args) is OutputPort), 1)
+                .DefinePrimitive("output-port?", (parent, args) => SchemeBoolean.Truth(First(args) is OutputPort), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
-                .DefinePrimitive("write", (parent, args) => Write(List.First(args), OutPort(List.Second(args), parent.Env.Interp), true), 1, 2)
-                .DefinePrimitive("p", (parent, args) => P(List.First(args)), 1, 1)
+                .DefinePrimitive(
+                   "write",
+                   (parent, args) => Write(First(args), OutPort(Second(args), parent.Env.Interp), true), 
+                   1,
+                   2)
+                .DefinePrimitive("p", (parent, args) => P(First(args)), 1, 1)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
                 .DefinePrimitive(
-                   "write-char",
-                   (parent, args) => Write(List.First(args), OutPort(List.Second(args), parent.Env.Interp), false),
-                   1,
-                   2)
+                    "write-char",
+                    (parent, args) => Write(First(args), OutPort(Second(args), parent.Env.Interp), false),
+                    1,
+                    2)
                 .DefinePrimitive(
-                   "dump-counters",
-                   (parent, args) =>
-                   {
-                       parent.Env.Interp.DumpCounters();
-                       return null;
-                   },
-                   0)
-                .DefinePrimitive(
-                   "reset-counters", 
-                   (parent, args) =>
-                   { 
-                           parent.Env.Interp.ResetCounters();
-                           return null;
-                   }, 
-                   0);
+                    "dump-env",
+                    (parent, args) =>
+                        {
+                            parent.Env.DumpEnv();
+                            return null;
+                        },
+                    0);
         }
 
         /// <summary>
@@ -175,18 +181,6 @@ namespace SimpleScheme
         private static object P(object x)
         {
             Console.Out.WriteLine(SchemeString.AsString(x));
-            return x;
-        }
-
-        /// <summary>
-        /// Print the object on the console along with a message.
-        /// </summary>
-        /// <param name="msg">The message.</param>
-        /// <param name="x">The object to print.</param>
-        /// <returns>The object printed.</returns>
-        private static object P(string msg, object x)
-        {
-            Console.Out.WriteLine(msg + ": " + SchemeString.AsString(x));
             return x;
         }
     }

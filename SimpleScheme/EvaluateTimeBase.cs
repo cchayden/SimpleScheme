@@ -36,15 +36,15 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateTimeBase class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        protected EvaluateTimeBase(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        protected EvaluateTimeBase(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
-            this.Pc = this.InitialStep;
+            ContinueHere(this.InitialStep);
         }
 
         /// <summary>
@@ -53,11 +53,10 @@ namespace SimpleScheme
         /// <returns>Continue to next step.</returns>
         protected Stepper InitialStep()
         {
-            object y = List.Second(Expr);
+            object y = Second(Expr);
             this.counter = y == null ? 1 : (int)Number.Num(y);
             this.i = 0;
-            this.Pc = this.Step1;
-            return this;
+            return ContinueHere(this.Step1);
         }
 
         /// <summary>
@@ -87,9 +86,9 @@ namespace SimpleScheme
             long time = this.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - this.startMem;
             return ReturnFromStep(
-                    List.Cons(
+                    Cons(
                         ReturnedExpr, 
-                        List.MakeList(List.MakeList(Number.Num(time), "msec"), List.MakeList(Number.Num(mem), "bytes"))));
+                        MakeList(MakeList(Number.Num(time), "msec"), MakeList(Number.Num(mem), "bytes"))));
         }
     }
 }

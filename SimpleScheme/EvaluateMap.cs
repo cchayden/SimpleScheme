@@ -8,8 +8,19 @@ namespace SimpleScheme
     /// This is done to the args of a procedure call (except for special forms).
     /// This is an iterative, rather than a recursive one.
     /// </summary>
+    //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
     public sealed class EvaluateMap : Stepper
     {
+        /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "map";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
         /// <summary>
         /// The proc to apply to each element of the list.
         /// </summary>
@@ -23,6 +34,11 @@ namespace SimpleScheme
         private readonly Pair result;
 
         /// <summary>
+        /// The lists to map
+        /// </summary>
+        private object lists;
+
+        /// <summary>
         /// Accumulates the returned result.
         /// The is the end of the list that we are constructing.
         /// </summary>
@@ -31,19 +47,28 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateMap class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">The result is appended to this list.</param>
-        private EvaluateMap(Stepper parent, object expr, Environment env, Procedure proc, Pair result)
-            : base(parent, expr, env)
+        private EvaluateMap(Stepper caller, object expr, Environment env, Procedure proc, Pair result)
+            : base(caller, expr, env)
         {
             this.proc = proc;
+            this.lists = expr;
             this.result = result;
             this.accum = result;
-            this.Pc = this.InitialStep;
-            IncrementCounter("map");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -67,19 +92,18 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             // first check for degenerate cases
-            if (this.Expr == null)
+            if (this.lists == null)
             {
                 return ReturnFromStep(null);
             }
 
-            if (!(this.Expr is Pair))
+            if (!(this.lists is Pair))
             {
-                ErrorHandlers.Error("Map: illegal arg list: " + this.Expr);
+                ErrorHandlers.Error("Map: illegal arg list: " + this.lists);
                 return ReturnFromStep(null);
             }
 
-            this.Pc = this.ApplyFunStep;
-            return this;
+            return ContinueHere(this.ApplyFunStep);
         }
 
         /// <summary>
@@ -89,16 +113,15 @@ namespace SimpleScheme
         /// If we are done, return the collected results.</returns>
         private Stepper ApplyFunStep()
         {
-            if (List.First(this.Expr) is Pair)
+            if (First(this.lists) is Pair)
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                this.Pc = this.CollectAndLoopStep;
-                return this.proc.Apply(this, List.MapFun(List.First, List.MakeList(Expr)));
+                return this.proc.Apply(ContinueHere(this.CollectAndLoopStep), MapFun(First, MakeList(this.lists)));
             }
 
             // if we are done, just return the result minus the dummy entry
-            return ReturnFromStep(List.Rest(this.result));
+            return ReturnFromStep(Rest(this.result));
         }
 
         /// <summary>
@@ -111,12 +134,12 @@ namespace SimpleScheme
             if (this.result != null)
             {
                 // Builds a list by tacking new values onto the tail.
-                this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
+                this.accum = (Pair)(this.accum.RestCell = MakeList(ReturnedExpr));
             }
 
             // Step down each of the lists
-            this.Pc = this.ApplyFunStep;
-            return this.LoopStep(List.MapFun(List.Rest, List.MakeList(Expr)));
+            this.lists = MapFun(Rest, MakeList(this.lists));
+            return ContinueHere(this.ApplyFunStep);
         }
     }
 }

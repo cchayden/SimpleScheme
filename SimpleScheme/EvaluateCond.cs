@@ -3,12 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// Reduce a conditiona;
     /// </summary>
-    //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)<r4rs>
     //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
@@ -16,9 +13,24 @@ namespace SimpleScheme
     public sealed class EvaluateCond : Stepper
     {
         /// <summary>
-        /// The result to be returned.
+        /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private object result;
+        private const string StepperName = "cond";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
+        /// The value of the test expr
+        /// </summary>
+        private object test;
+
+        /// <summary>
+        /// The list of clauses in the cond
+        /// </summary>
+        private object clauses;
 
         /// <summary>
         /// The cond clause that is being processed.
@@ -28,14 +40,23 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCond class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateCond(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateCond(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("cond");
+            this.clauses = expr;
+            ContinueHere(this.EvalClauseStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -46,33 +67,31 @@ namespace SimpleScheme
         /// <returns>The reduce cond evaluator.</returns>
         public static Stepper Call(Stepper caller, object expr)
         {
+            // If no expr, avoid creating an evaluator.
+            if (expr == null)
+            {
+                return caller.ContinueStep(SchemeBoolean.False);
+            }
+
             return new EvaluateCond(caller, expr, caller.Env);
         }
 
         /// <summary>
-        /// Evaluates a cond.  This step starts by checking for special conditions
+        /// Evaluates a clause.  This step starts by checking for special conditions
         ///   such as else or the end of the list.
         /// Most often it evaluates the first clause.
         /// </summary>
         /// <returns>Usually, the step to evaluate the first clause.</returns>
-        private Stepper InitialStep()
+        private Stepper EvalClauseStep()
         {
-            if (Expr == null)
+            this.clause = First(this.clauses);
+            if (First(this.clause) as string == "else")
             {
-                return ReturnFromStep(SchemeBoolean.False);
+                this.test = null;
+                return ContinueHere(this.EvalConsequentStep);
             }
 
-            this.clause = List.First(Expr);
-            this.LoopStep(List.Rest(Expr));
-            if (List.First(this.clause) as string == "else")
-            {
-                this.result = null;
-                this.Pc = this.ReturnStep;
-                return this;
-            }
-
-            this.Pc = this.EvalClauseStep;
-            return EvaluatorMain.Call(this, List.First(this.clause));
+            return EvaluateExpression.Call(ContinueHere(this.TestClauseStep), First(this.clause));
         }
 
         /// <summary>
@@ -82,11 +101,21 @@ namespace SimpleScheme
         /// The list was stepped down already in the previous step.
         /// </summary>
         /// <returns>The next step, either loop or finish.</returns>
-        private Stepper EvalClauseStep()
+        private Stepper TestClauseStep()
         {
-            this.result = ReturnedExpr;
-            this.Pc = SchemeBoolean.Truth(this.result) ? (Func<Stepper>)this.ReturnStep : this.InitialStep;
-            return this;
+            this.test = ReturnedExpr;
+            if (SchemeBoolean.Truth(this.test))
+            {
+                return ContinueHere(this.EvalConsequentStep);
+            }
+
+            this.clauses = Rest(this.clauses);
+            if (this.clauses == null)
+            {
+                return ReturnFromStep(SchemeBoolean.False);
+            }
+
+            return ContinueHere(this.EvalClauseStep);
         }
 
         /// <summary>
@@ -95,23 +124,31 @@ namespace SimpleScheme
         /// Evaluate and return the consequent.
         /// </summary>
         /// <returns>Execution continues with the caller.</returns>
-        private new Stepper ReturnStep()
+        private Stepper EvalConsequentStep()
         {
-            object res;
-            if (List.Rest(this.clause) == null)
+            if (Rest(this.clause) == null)
             {
-                res = List.MakeList("quote", this.result);
-            }
-            else if (List.Second(this.clause) as string == "=>")
-            {
-                res = List.MakeList(List.Third(this.clause), List.MakeList("quote", this.result));
-            }
-            else
-            {
-                res = List.Cons("begin", List.Rest(this.clause));
+                // no consequent: return the test as the result
+                return ReturnFromStep(this.test);
             }
 
-            return EvaluatorMain.Call(this.Parent, res);
+            if (Second(this.clause) as string == "=>")
+            {
+                // send to recipient -- first evaluate recipient
+                return EvaluateExpression.Call(ContinueHere(this.ApplyRecipientStep), Third(this.clause));
+            }
+
+            // evaluate and return the sequence of expressions
+            return EvaluateSequence.Call(this.Caller, Rest(this.clause));
+        }
+
+        /// <summary>
+        /// Apply the recipient function to the value of the test
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        private Stepper ApplyRecipientStep()
+        {
+            return EvaluateProcQuoted.Call(this.Caller, MakeList(this.test), Procedure.Proc(ReturnedExpr));
         }
     }
 }

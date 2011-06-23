@@ -47,8 +47,10 @@
     <Compile Include="EvaluateLet.cs" />
     <Compile Include="EvaluateLetRec.cs" />
     <Compile Include="EvaluateLetStar.cs" />
+    <Compile Include="EvaluateProcQuoted.cs" />
     <Compile Include="EvaluateTime.cs" />
     <Compile Include="EvaluateTimeBase.cs" />
+    <Compile Include="ListPrimitives.cs" />
     <Compile Include="SchemeBoolean.cs" />
     <Compile Include="Closure.cs" />
     <Compile Include="ClrProcedure.cs" />
@@ -60,7 +62,7 @@
     </Compile>
     <Compile Include="Stepper.cs" />
     <Compile Include="EvaluateTimeCall.cs" />
-    <Compile Include="EvaluateApplyProc.cs" />
+    <Compile Include="EvaluateProc.cs" />
     <Compile Include="EvaluateCallWithInputFile.cs" />
     <Compile Include="EvaluateCallWithOutputFile.cs" />
     <Compile Include="EvaluateClosure.cs" />
@@ -69,7 +71,7 @@
     <Compile Include="EvaluateExpandMacro.cs" />
     <Compile Include="EvaluateIf.cs" />
     <Compile Include="EvaluateList.cs" />
-    <Compile Include="EvaluatorMain.cs" />
+    <Compile Include="EvaluateExpression.cs" />
     <Compile Include="EvaluateMap.cs" />
     <Compile Include="EvaluateOr.cs" />
     <Compile Include="EvaluateCond.cs" />
@@ -89,9 +91,6 @@
     <Compile Include="ErrorHandlers.cs" />
     <Compile Include="SynchronousClrProcedure.cs" />
     <Compile Include="Vector.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

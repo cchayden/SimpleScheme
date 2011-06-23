@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// Evaluate a sequence of clauses by evaluating each member.
     /// If a value is not #f then return it.  Otherwise return the last value.
@@ -13,16 +11,40 @@ namespace SimpleScheme
     public sealed class EvaluateOr : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "or";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
+        /// The list of expressions.
+        /// </summary>
+        private object tests;
+
+        /// <summary>
         /// Initializes a new instance of the EvaluateOr class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateOr(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateOr(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("or");
+            this.tests = expr;
+            ContinueHere(this.EvalTestStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -33,32 +55,23 @@ namespace SimpleScheme
         /// <returns>The or evaluator.</returns>
         public static Stepper Call(Stepper caller, object expr)
         {
+            // If no expr, avoid creating an evaluator.
+            if (expr == null)
+            {
+                return caller.ContinueStep(SchemeBoolean.False);
+            }
+
             return new EvaluateOr(caller, expr, caller.Env);
         }
 
         /// <summary>
-        /// Start by checking for empty list.
-        /// </summary>
-        /// <returns>Normally, skips to the next step.</returns>
-        private Stepper InitialStep()
-        {
-            if (this.Expr == null)
-            {
-                return ReturnFromStep(SchemeBoolean.False);
-            }
-
-            this.Pc = this.EvalExprStep;
-            return this;
-        }
-
-        /// <summary>
-        /// Evaluate the next expression in the list.
+        /// Evaluate the next test expression in the list.
         /// </summary>
         /// <returns>Steps to evaluate the expression.</returns>
-        private Stepper EvalExprStep()
+        private Stepper EvalTestStep()
         {
-            this.Pc = List.Rest(this.Expr) == null ? (Func<Stepper>)this.ReturnStep : this.LoopStep;
-            return EvaluatorMain.Call(this, List.First(this.Expr));
+            var nextStep = Rest(this.tests) == null ? (StepperFunction)this.ReturnStep : this.LoopStep;
+            return EvaluateExpression.Call(ContinueHere(nextStep), First(this.tests));
         }
 
         /// <summary>
@@ -73,8 +86,8 @@ namespace SimpleScheme
                 return ReturnFromStep(this.ReturnedExpr);
             }
 
-            this.Pc = this.EvalExprStep;
-            return this.LoopStep(List.Rest(this.Expr));
+            this.tests = Rest(this.tests);
+            return ContinueHere(this.EvalTestStep);
         }
     }
 }

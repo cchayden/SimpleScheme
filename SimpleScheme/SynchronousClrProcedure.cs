@@ -29,8 +29,10 @@ namespace SimpleScheme
                 {
                     ErrorHandlers.Error("Bad class: can't load class " + ClassName);
                 }
-
-                this.MethodInfo = cls.GetMethod(methodName, this.ArgClasses.ToArray());
+                else
+                {
+                    this.MethodInfo = cls.GetMethod(methodName, this.ArgClasses.ToArray());
+                }
             }
             catch (TypeLoadException)
             {
@@ -52,7 +54,7 @@ namespace SimpleScheme
             env
                 .DefinePrimitive(
                    "method",
-                   (parent, args) => new SynchronousClrProcedure(List.First(args), SchemeString.AsString(List.Second(args), false), List.Rest(List.Rest(args))),
+                   (parent, args) => new SynchronousClrProcedure(First(args), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
                     2,
                     MaxInt);
         }
@@ -77,8 +79,8 @@ namespace SimpleScheme
             }
             else
             {
-                target = List.First(args);
-                argArray = this.ToArgList(List.Rest(args), null).ToArray();
+                target = First(args);
+                argArray = this.ToArgList(Rest(args), null).ToArray();
             }
 
             return caller.ContinueStep(this.MethodInfo.Invoke(target, argArray));

@@ -4,23 +4,27 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
     /// Represents the interpreter environment.
-    /// The environment is part of a chain, made up of the Parent links, that represents the dynamic context.
+    /// The environment is part of a chain, made up of the Caller links, that represents the dynamic context.
     /// At the bottom of the chain is the global environment, created by the single-arg constructor.
     /// Each link in the chain contains a symbol table of the bindings at that level.
     /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
-    public sealed class Environment
+    public sealed class Environment : ListPrimitives
     {
         /// <summary>
         /// The symbol table for this enviornment.
         /// </summary>
         private readonly SymbolTable symbolTable = new SymbolTable();
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create("environment");
 
         /// <summary>
         /// Initializes a new instance of the Environment class.
@@ -40,7 +44,7 @@ namespace SimpleScheme
         {
             this.Interp = interp;
             this.Parent = parent;
-            interp.Counters.Increment("environment");
+            interp.IncrementCounter(counter);
         }
 
         /// <summary>
@@ -48,19 +52,19 @@ namespace SimpleScheme
         /// Start out with a set of variable bindings and a parent environment.
         /// The initial variable bindings are the formal parameters and the corresponding argument values.
         /// </summary>
-        /// <param name="vars">A list of variable names.</param>
+        /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
         /// <param name="parent">The parent environment.</param>
-        public Environment(object vars, object vals, Environment parent)
+        public Environment(object formals, object vals, Environment parent)
         {
             this.Parent = parent;
             this.Interp = parent.Interp;
-            if (!NumberArgsOk(vars, vals))
+            if (!NumberArgsOk(formals, vals))
             {
-                ErrorHandlers.Warn("Wrong number of arguments: expected " + vars + " got " + vals);
+                ErrorHandlers.Warn("Wrong number of arguments: expected " + formals + " got " + vals);
             }
 
-            this.symbolTable.AddList(vars, vals);
+            this.symbolTable.AddList(formals, vals);
         }
 
         /// <summary>
@@ -93,6 +97,8 @@ namespace SimpleScheme
             ClrProcedure.DefinePrimitives(this);
             SynchronousClrProcedure.DefinePrimitives(this);
             AsynchronousClrProcedure.DefinePrimitives(this);
+            Counter.DefinePrimitives(this);
+            Interpreter.DefinePrimitives(this);
             ErrorHandlers.DefinePrimitives(this);
 
             this
@@ -100,8 +106,7 @@ namespace SimpleScheme
                    "exit", 
                    (parent, args) =>
                        {
-                            parent.Env.Interp.DumpCounters();
-                            System.Environment.Exit(List.First(args) == null ? 0 : (int)Number.Num(List.First(args)));
+                            System.Environment.Exit(First(args) == null ? 0 : (int)Number.Num(First(args)));
                             return null;
                         },
                    0, 
@@ -137,16 +142,17 @@ namespace SimpleScheme
         /// <returns>The value bound to the variable.</returns>
         public object Lookup(string symbol)
         {
-            object val;
-            if (this.symbolTable.Lookup(symbol, out val))
+            Environment env = this;
+            while (env != null)
             {
-                return val;
-            }
+                object val;
+                if (env.symbolTable.Lookup(symbol, out val))
+                {
+                    return val;
+                }
 
-            // if we get here, we have not found anything, so look in the parent
-            if (this.Parent != null)
-            {
-                return this.Parent.Lookup(symbol);
+                // if we get here, we have not found anything, so look in the parent
+                env = env.Parent;
             }
 
             return ErrorHandlers.Error("Lookup: unbound variable: " + symbol);
@@ -218,20 +224,33 @@ namespace SimpleScheme
         /// At each level, sow the symbol table.
         /// </summary>
         /// <param name="levels">The number of levels to show.</param>
+        /// <param name="indent">The number of characters to indent.</param>
         /// <returns>The environment stack, as a string.</returns>
-        public string Dump(int levels)
+        public string Dump(int levels, int indent)
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
             while (env != null && levels > 0)
             {
-                env.symbolTable.Dump(sb);
-                sb.Append("-----\n");
-                env = env.Parent;
+                env.symbolTable.Dump(indent, sb);
                 levels--;
+                if (levels > 0)
+                {
+                    sb.Append("-----\n");
+                }
+
+                env = env.Parent;
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Dump the environment.
+        /// </summary>
+        public void DumpEnv()
+        {
+            Console.Out.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>
@@ -240,7 +259,7 @@ namespace SimpleScheme
         /// <returns>The environment, as a string.</returns>
         public string Dump()
         {
-            return this.Dump(1);
+            return this.Dump(1, 0);
         }
 
         /// <summary>
@@ -255,7 +274,7 @@ namespace SimpleScheme
         /// <summary>
         /// Check that the variable and value lists have the same length.
         /// Iterate down the lists together.
-        /// If the vars list is not a proper list, but ends in a dotted pair whose 
+        /// If the formals list is not a proper list, but ends in a dotted pair whose 
         ///   tail is a string, then the variable matches the rest of the args.
         /// </summary>
         /// <param name="vars">The variable list</param>
@@ -276,8 +295,8 @@ namespace SimpleScheme
                     return false;
                 }
 
-                vars = List.Rest(vars);
-                vals = List.Rest(vals);
+                vars = Rest(vars);
+                vals = Rest(vals);
             }
         }
 
@@ -334,11 +353,11 @@ namespace SimpleScheme
                     }
                     else
                     {
-                        this.Add(List.First(symbols), List.First(vals));
+                        this.Add(First(symbols), First(vals));
                     }
 
-                    symbols = List.Rest(symbols);
-                    vals = List.Rest(vals);
+                    symbols = Rest(symbols);
+                    vals = Rest(vals);
                 }
             }
 
@@ -362,12 +381,14 @@ namespace SimpleScheme
             /// <summary>
             /// Dump the symbol table to a string for printing.
             /// </summary>
+            /// <param name="indent">The number of characters to indent.</param>
             /// <param name="sb">A string builder to write the dump into.</param>
-            public void Dump(StringBuilder sb)
+            public void Dump(int indent, StringBuilder sb)
             {
+                string initial = new string(' ', indent);
                 foreach (var key in this.symbolTable.Keys)
                 {
-                    sb.AppendFormat("{0} {1}\n", key, this.symbolTable[key]);
+                    sb.AppendFormat("{0}{1}: {2}\n", initial, key, this.symbolTable[key]);
                 }
             }
         }

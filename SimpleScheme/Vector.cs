@@ -9,8 +9,9 @@ namespace SimpleScheme
 
     /// <summary>
     /// Represents a scheme vector.
+    /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public sealed class Vector : IEnumerable<object>
+    public sealed class Vector : ListPrimitives, IEnumerable<object>
     {
         /// <summary>
         /// A vector is an array of objects.
@@ -24,15 +25,17 @@ namespace SimpleScheme
         /// <param name="objs">A list of values to put in the vector.</param>
         public Vector(object objs)
         {
-            this.vec = new object[List.Length(objs)];
+            this.vec = new object[Length(objs)];
 
-            if (objs is Pair)
+            if (!(objs is Pair))
             {
-                int i = 0;
-                foreach (object elem in (Pair)objs)
-                {
-                    this.vec[i++] = elem;
-                }
+                return;
+            }
+
+            int i = 0;
+            foreach (object elem in (Pair)objs)
+            {
+                this.vec[i++] = elem;
             }
         }
 
@@ -55,19 +58,21 @@ namespace SimpleScheme
         public Vector(object length, object fill)
         {
             this.vec = new object[(int)Number.Num(length)];
-            if (fill != null)
+            if (fill == null)
             {
-                for (int i = 0; i < this.vec.Length; i++)
-                {
-                    this.vec[i] = fill;
-                }
+                return;
+            }
+
+            for (int i = 0; i < this.vec.Length; i++)
+            {
+                this.vec[i] = fill;
             }
         }
 
         /// <summary>
         /// Gets the length of the vector.
         /// </summary>
-        public int Length
+        public int VectorLength
         {
             get { return this.vec.Length; }
         }
@@ -96,44 +101,44 @@ namespace SimpleScheme
         /// <param name="env">The environment to define the primitives into.</param>
         public static void DefinePrimitives(Environment env)
         {
-            // TODO not implemented
-            //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (parent, args) => new Vector(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("make-vector", (parent, args) => new Vector(First(args), Second(args)), 1, 2)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive("vector", (parent, args) => new Vector(args), 0, MaxInt)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (parent, args) => VectorToList(List.First(args)), 1)
+                .DefinePrimitive("vector->list", (parent, args) => VectorToList(First(args)), 1)
+                //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
+                .DefinePrimitive("vector-fill", (parent, args) => VectorFill(First(args), Second(args)), 2)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (parent, args) => Number.Num(Vec(List.First(args)).Length), 1)
+                .DefinePrimitive("vector-length", (parent, args) => Number.Num(Vec(First(args)).VectorLength), 1)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (parent, args) => Vec(List.First(args))[(int)Number.Num(List.Second(args))], 2)
+                .DefinePrimitive("vector-ref", (parent, args) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (parent, args) => Vec(List.First(args))[(int)Number.Num(List.Second(args))] = List.Third(args), 3)
+                .DefinePrimitive("vector-set!", (parent, args) => Vec(First(args))[(int)Number.Num(Second(args))] = Third(args), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (parent, args) => SchemeBoolean.Truth(List.First(args) is Vector), 1);
+                .DefinePrimitive("vector?", (parent, args) => SchemeBoolean.Truth(First(args) is Vector), 1);
         }
 
         /// <summary>
         /// Tests whether two vectors are equal.
         /// </summary>
-        /// <param name="xo">One vector.</param>
-        /// <param name="yo">The other vector.</param>
-        /// <returns>True if they are both vectors and are equal.</returns>
-        public static bool Equal(Vector xo, Vector yo)
+        /// <param name="vector1">One vector.</param>
+        /// <param name="vector2">The other vector.</param>
+        /// <returns>True if they are both vectors of equal length and 
+        /// all elements are equal.</returns>
+        public static bool Equal(Vector vector1, Vector vector2)
         {
-            if (xo.Length != yo.Length)
+            if (vector1.VectorLength != vector2.VectorLength)
             {
                 return false;
             }
 
-            for (int i = xo.Length - 1; i >= 0; i--)
+            for (int i = 0; i < vector1.VectorLength; i++)
             {
-                if (!SchemeBoolean.Equal(xo.vec[i], yo.vec[i]))
+                if (!SchemeBoolean.Equal(vector1.vec[i], vector2.vec[i]))
                 {
                     return false;
                 }
@@ -150,7 +155,7 @@ namespace SimpleScheme
         public void AsString(bool quoted, StringBuilder buf)
         {
             buf.Append("#(");
-            if (this.Length > 0)
+            if (this.VectorLength > 0)
             {
                 foreach (object elem in this)
                 {
@@ -199,39 +204,62 @@ namespace SimpleScheme
         /// <summary>
         /// Convert an object that should be a vector into an array of objects.
         /// </summary>
-        /// <param name="x">The vector.</param>
+        /// <param name="vector">The vector.</param>
         /// <returns>The array of objects.</returns>
-        private static Vector Vec(object x)
+        private static Vector Vec(object vector)
         {
-            if (x is Vector) 
+            if (vector is Vector) 
             {
-                return (Vector)x;
+                return (Vector)vector;
             }
 
-            return Vec(ErrorHandlers.Error("Expected a vector, got: " + x));
+            return Vec(ErrorHandlers.Error("Expected a vector, got: " + vector));
         }
 
         /// <summary>
         /// Convert a vector into a list of objects.
         /// If the object is not a vector, return null.
         /// </summary>
-        /// <param name="x">The vector.</param>
+        /// <param name="vector">The vector.</param>
         /// <returns>The list, or null.</returns>
-        private static Pair VectorToList(object x)
+        private static Pair VectorToList(object vector)
         {
-            if (x is Vector)
+            if (vector is Vector)
             {
-                Vector vec = (Vector)x;
+                Vector vec = (Vector)vector;
                 Pair result = null;
-                for (int i = vec.Length - 1; i >= 0; i--)
+                for (int i = vec.VectorLength - 1; i >= 0; i--)
                 {
-                    result = List.Cons(vec[i], result);
+                    result = Cons(vec[i], result);
                 }
 
                 return result;
             }
 
-            ErrorHandlers.Error("VectorToList: expected a vector, got: " + x);
+            ErrorHandlers.Error("VectorToList: expected a vector, got: " + vector);
+            return null;
+        }
+
+        /// <summary>
+        /// Fill all elements of a vector with a given value
+        /// </summary>
+        /// <param name="vector">The vector to fill.</param>
+        /// <param name="fill">The value to fill with.</param>
+        /// <returns>Return value is unspecified.</returns>
+        private static object VectorFill(object vector, object fill)
+        {
+            if (vector is Vector)
+            {
+                Vector vec = (Vector)vector;
+                for (int i = 0; i < vec.VectorLength; i++)
+                {
+                    vec[i] = fill;
+                }
+
+                return false;
+            }
+
+            ErrorHandlers.Error("VectorFill: expected a vector, got: " + vector);
             return null;
         }
     }

@@ -14,6 +14,11 @@ namespace SimpleScheme
     public sealed class Interpreter
     {
         /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create("step");
+
+        /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
         private readonly Stepper halted;
@@ -35,6 +40,7 @@ namespace SimpleScheme
         {
             this.halted = new EvaluatorBase("halted");
             this.Trace = false;
+            this.Count = false;
             this.Input = new InputPort(Console.In);
             this.Output = new OutputPort(Console.Out);
             if (primEnvironment == null)
@@ -89,11 +95,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to trace.
-        /// </summary>
-        public bool Trace { get; set; }
-
-        /// <summary>
         /// Gets the counters collection.
         /// </summary>
         public Counter Counters { get; private set; }
@@ -109,9 +110,40 @@ namespace SimpleScheme
         internal OutputPort Output { get; private set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to trace.
+        /// </summary>
+        private bool Trace { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to count.
+        /// </summary>
+        private bool Count { get; set; }
+
+        /// <summary>
         /// Gets or setsthe global environment for the interpreter.
         /// </summary>
         private Environment GlobalEnvironment { get; set; }
+
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            env
+                .DefinePrimitive("trace-on", (parent, args) => parent.Env.Interp.Trace = true, 0)
+                .DefinePrimitive("trace-off", (parent, args) => parent.Env.Interp.Trace = false, 0)
+                .DefinePrimitive("counters-on", (parent, args) => parent.Env.Interp.Count = true, 0)
+                .DefinePrimitive("counters-off", (parent, args) => parent.Env.Interp.Count = false, 0)
+                .DefinePrimitive(
+                    "backtrace",
+                    (parent, args) =>
+                        {
+                            Console.Out.WriteLine(parent.StackBacktrace());
+                            return null;
+                        },
+                    0);
+        }
 
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
@@ -166,7 +198,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            return this.EvalStep(EvaluatorMain.Call(this.halted, expr, env));
+            return this.EvalStep(EvaluateExpression.Call(this.halted, expr, env));
         }
 
         /// <summary>
@@ -180,14 +212,6 @@ namespace SimpleScheme
             Stepper lastStep = null;
             while (true)
             {
-                if (this.Trace && lastStep != step)
-                {
-                    Console.WriteLine("Evaluating {0} {1}", step.GetType(), step.Expr);
-                }
-
-                step.IncrementCounter("step");
-                lastStep = step;
-                step = step.RunStep();
                 if (step == Stepper.Suspended)
                 {
                     return step;
@@ -202,6 +226,20 @@ namespace SimpleScheme
 
                     return this.halted.ReturnedExpr;
                 }
+
+                if (this.Trace && lastStep != step)
+                {
+                    Console.Out.WriteLine("{0}: {1}", step.Name, step.Expr);
+                }
+
+                if (step == null)
+                {
+                    return ErrorHandlers.EvalError("PC bad value");
+                }
+
+                step.IncrementCounter(counter);
+                lastStep = step;
+                step = step.Pc();
             }
         }
 
@@ -291,19 +329,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Dump the counte
+        /// Increment the given counter.
+        /// Skip if if counting is turned off.
         /// </summary>
-        public void DumpCounters()
+        /// <param name="counterId">The counter to increment.</param>
+        public void IncrementCounter(int counterId)
         {
-            Console.Out.WriteLine(this.Counters.Dump());
-        }
-
-        /// <summary>
-        /// Reset all counters.
-        /// </summary>
-        public void ResetCounters()
-        {
-            this.Counters.Reset();
+            if (this.Count)
+            {
+                this.Counters.Increment(counterId);
+            }
         }
 
         /// <summary>

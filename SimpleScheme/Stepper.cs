@@ -3,13 +3,12 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
 
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public class Stepper
+    public abstract class Stepper : ListPrimitives
     {
         /// <summary>
         /// The suspended stepper is used to indicate suspension, when stepping
@@ -18,19 +17,36 @@ namespace SimpleScheme
         private static readonly Stepper suspended = new EvaluatorBase("suspended");
 
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "evaluate";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counterId = Counter.Create(StepperName);
+
+        /// <summary>
         /// Initializes a new instance of the Stepper class.
         /// </summary>
-        /// <param name="parent">The parent evaluator.</param>
+        /// <param name="caller">The caller evaluator.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluator environment.</param>
-        protected Stepper(Stepper parent, object expr, Environment env)
+        protected Stepper(Stepper caller, object expr, Environment env)
         {
-            this.Parent = parent;
+            this.Caller = caller;
             this.Expr = expr;
             this.Env = env;
-            this.Pc = DefaultStep;
-            this.IncrementCounter("evaluate");
+
+            this.IncrementCounter(counterId);
         }
+
+        /// <summary>
+        /// This is the type for the stepper functions.
+        /// These values are assigned to the Pc.
+        /// </summary>
+        /// <returns>The next step to take.</returns>
+        public delegate Stepper StepperFunction();
 
         /// <summary>
         /// Gets the singleton suspended stepper.
@@ -43,15 +59,21 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets or sets the next step in the evaluator to execute.
-        /// Each evaluator must keep track of its internal program counter with this delegate.
+        /// Gets the stepper name, used for tracing and counters.
+        /// Each subclass must implement.
         /// </summary>
-        public Func<Stepper> Pc { get; set; }
+        public abstract string Name { get; }
 
         /// <summary>
-        /// Gets the parent that execution returns to when this is done.
+        /// Gets the next step in the evaluator to execute.
+        /// Each evaluator must keep track of its internal program counterId with this delegate.
         /// </summary>
-        public Stepper Parent { get; private set; }
+        public StepperFunction Pc { get; private set; }
+
+        /// <summary>
+        /// Gets the caller that execution returns to when this is done.
+        /// </summary>
+        public Stepper Caller { get; private set; }
 
         /// <summary>
         /// Gets the expression being evaluated.  
@@ -64,9 +86,9 @@ namespace SimpleScheme
         public object ReturnedExpr { get; private set; }
 
         /// <summary>
-        /// Gets or sets the evaluation environment.  After execution, this is the new environment.
+        /// Gets the evaluation environment.  After execution, this is the new environment.
         /// </summary>
-        public Environment Env { get; set; }
+        public Environment Env { get; private set; }
 
         /// <summary>
         /// Gets the returned environment from the last call.
@@ -76,14 +98,13 @@ namespace SimpleScheme
         /// <summary>
         /// Transfer to a given stepper.  
         /// This can be used to return fram an evaluator.
-        /// Assign the return value and return the parent task to resume.
-        /// The Call/CC handler uses this to transfer to a saved continuation, otherwise
-        ///     is is used only for returns.
+        /// Assign the return value and return the caller task to resume.
+        /// The Call/CC handler uses this to transfer to a saved continuation.
         /// </summary>
         /// <param name="nextStep">The stepper to transfer to.</param>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
-        /// <returns>The next step.  This is in the parent for return.</returns>
+        /// <returns>The next step.  This is in the caller for return.</returns>
         public static Stepper TransferToStep(Stepper nextStep, object expr, Environment env)
         {
             nextStep.ReturnedExpr = expr;
@@ -103,95 +124,79 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Loop: copy result expr and env into working expr and env and
-        ///   continue executing in the current stepper.
+        /// Create a stack backtrace
         /// </summary>
-        /// <param name="expr">The expression to assign to the working expr.</param>
-        /// <param name="env">The environment to assign to working environment.</param>
-        /// <returns>The current stepper.</returns>
-        public Stepper LoopStep(object expr, Environment env)
+        /// <returns>A backtrace of the stepper call stack.</returns>
+        public string StackBacktrace()
         {
-            this.Expr = expr;
-            this.Env = env;
-            return this;
-        }
-
-        /// <summary>
-        /// Loop: copy result expr to working expr and continue in the current stepper.
-        /// </summary>
-        /// <param name="expr">The expression to assign to the working expr.</param>
-        /// <returns>The current stepper.</returns>
-        public Stepper LoopStep(object expr)
-        {
-            this.Expr = expr;
-            return this;
-        }
-
-        /// <summary>
-        /// Dump a stack backtrace
-        /// </summary>
-        /// <returns>A dump of the stepper call stack.</returns>
-        public string Dump()
-        {
-            Stepper step = this;
+            Stepper step = this.Caller;    // skip backtrace itself
             StringBuilder sb = new StringBuilder();
             while (step != null)
             {
                 step.DumpStep(sb);
-                step = step.Parent;
+                step = step.Caller;
             }
 
             return sb.ToString();
         }
 
         /// <summary>
-        /// Run one step in a stepper.
-        /// Each stepper is responsible for remembering where it left off, which is what it 
-        ///   does by setting Pc.
+        /// Increment the given counter.
         /// </summary>
-        /// <returns>A step in the evaluation.</returns>
-        public Stepper RunStep()
+        /// <param name="counterIdent">The counter id</param>
+        public void IncrementCounter(int counterIdent)
         {
-            return this.Pc();
-        }
-
-        /// <summary>
-        /// Increment the named counter.
-        /// </summary>
-        /// <param name="name">The counter name</param>
-        public void IncrementCounter(string name)
-        {
-#if COUNTERS
-            if (this.Env == null)
+            if (this.Env != null)
             {
-                return;
+                this.Env.Interp.IncrementCounter(counterIdent);
             }
-
-            this.Env.Interp.Counters.Increment(name);
-#endif
         }
 
         /// <summary>
-        /// Return the final result.
+        /// Assign PC and return the current stepper.
         /// </summary>
-        /// <returns>The last expression evaluated.</returns>
-        protected Stepper ReturnStep()
+        /// <param name="nextStep">The new PC value</param>
+        /// <returns>The next step to take.</returns>
+        protected Stepper ContinueHere(StepperFunction nextStep)
         {
-            return this.ReturnFromStep(this.ReturnedExpr);
+            this.Pc = nextStep;
+            return this;
+        }
+
+        /// <summary>
+        /// Assign PC to be the return step;
+        /// </summary>
+        /// <returns>The next step to take.</returns>
+        protected Stepper ContinueReturn()
+        {
+            this.Pc = this.ReturnStep;
+            return this;
+        }
+
+        /// <summary>
+        /// Create a new environment and replace the current one with it.
+        /// </summary>
+        /// <param name="formals">The environment variable names.</param>
+        /// <param name="vals">The values of the variables.</param>
+        /// <param name="parent">The caller environment.</param>
+        protected void ReplaceEnvironment(object formals, object vals, Environment parent)
+        {
+            this.Env = new Environment(formals, vals, parent);
         }
 
         /// <summary>
         /// Return fram an evaluator.
-        /// Assign the return value and return the parent task to resume.
+        /// Assign the return value and return the caller task to resume.
         /// Set Pc to catch errors.
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
-        /// <returns>The next step, which is in the parent.</returns>
+        /// <returns>The next step, which is in the caller.</returns>
         protected Stepper ReturnFromStep(object expr, Environment env)
         {
-            this.Pc = DefaultStep;
-            return TransferToStep(this.Parent, expr, env);
+            this.Caller.ReturnedExpr = expr;
+            this.Caller.ReturnedEnv = env;
+            return this.Caller;
         }
 
         /// <summary>
@@ -199,21 +204,22 @@ namespace SimpleScheme
         /// Set Pc to catch errors.
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
-        /// <returns>The next step, which is in the parent.</returns>
+        /// <returns>The next step, which is in the caller.</returns>
         protected Stepper ReturnFromStep(object expr)
         {
-            this.Pc = DefaultStep;
-            return TransferToStep(this.Parent, expr, this.Env);
+            this.Caller.ReturnedExpr = expr;
+            return this.Caller;
         }
 
         /// <summary>
-        /// Used to indicate a bad step.
-        /// Pc initialized to this, and set to this after return.
+        /// Return the final result.
+        /// This exists as a separate function so that it can be used as a StepperFunction.
         /// </summary>
-        /// <returns>Does not return.</returns>
-        private static Stepper DefaultStep()
+        /// <returns>The last expression evaluated.</returns>
+        protected Stepper ReturnStep()
         {
-            return ErrorHandlers.EvalError("Bad program counter");
+            this.Caller.ReturnedExpr = this.ReturnedExpr;
+            return this.Caller;
         }
 
         /// <summary>
@@ -222,7 +228,13 @@ namespace SimpleScheme
         /// <param name="sb">The string builder to write to.</param>
         private void DumpStep(StringBuilder sb)
         {
-            sb.AppendFormat("Step\n  Expr: {0}\n  Pc: {1}\n  Env: {2}", this.Expr, this.Pc, this.Env.Dump(1));
+            sb.AppendFormat("Step {0}\n", this.Name);
+            string exp = this.Expr == null ? "()" : this.Expr.ToString();
+            sb.AppendFormat("  Expr: {0}\n", exp);
+            if (this.Env != null)
+            {
+                sb.AppendFormat("  Env:\n{0}", this.Env.Dump(1, 3));
+            }
         }
     }
 }

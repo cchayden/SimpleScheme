@@ -6,17 +6,12 @@ namespace Repl
     using System.Collections.Generic;
     using SimpleScheme;
 
-    // TODO 
+    // TODO checklist
     // TODO check code coverage -- fill gaps
     // TODO      async, sync, timed, ...
-    // TODO comprehensive trace control wth ability to set/reset trace from scheme
-    // TODO backtrace generated from scheme
     // TODO create a perf test case, track over time
     // TODO Examples using various .NET subsystems -- see ruby book for ideas
     // TODO Use the DLR to add a hosting environment??
-    // TODO process let directly -- and other rewrite primitives
-    // TODO look at let*, letrec, time, other macros
-    // TODO make counters more efficient by precomputing an index, incrementing an array
 
     /// <summary>
     /// The main just starts a REPL loop.
@@ -41,8 +36,7 @@ namespace Repl
         private void Run1(IEnumerable<string> args)
         {
             new Interpreter(args)
-                .ReadEvalWriteLoop()
-                .DumpCounters();
+                .ReadEvalWriteLoop();
         }
 
         /// <summary>
@@ -55,8 +49,7 @@ namespace Repl
             Environment primEnvironment = new Environment()
                 .InstallPrimitives();
             new Interpreter(true, primEnvironment, args)
-                .ReadEvalWriteLoop()
-                .DumpCounters();
+                .ReadEvalWriteLoop();
         }
     }
 }

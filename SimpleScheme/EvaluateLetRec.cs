@@ -13,6 +13,16 @@ namespace SimpleScheme
     public sealed class EvaluateLetRec : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "letrec";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// The body of the let.
         /// </summary>
         private object body;
@@ -41,14 +51,22 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateLetRec class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateLetRec(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateLetRec(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("letrec");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -72,41 +90,40 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the init list.</returns>
         private Stepper InitialStep()
         {
-            if (this.Expr == null)
+            if (Expr == null)
             {
                 ErrorHandlers.Error("Letrec: wrong number of arguments");
                 return ReturnFromStep(null);
             }
 
-            if (!(this.Expr is Pair))
+            if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Letrec: illegal arg list: " + this.Expr);
+                ErrorHandlers.Error("Letrec: illegal arg list: " + Expr);
                 return ReturnFromStep(null);
             }
 
-            object bindings = List.First(this.Expr);
-            this.body = List.Rest(this.Expr);
+            object bindings = First(Expr);
+            this.body = Rest(Expr);
 
             if (this.body == null)
             {
                 return ReturnFromStep(null);
             }
 
-            this.vars = List.MapFun(List.First, List.MakeList(bindings));
-            this.inits = List.MapFun(List.Second, List.MakeList(bindings));
+            this.vars = MapFun(First, MakeList(bindings));
+            this.inits = MapFun(Second, MakeList(bindings));
             this.formals = this.vars;
             object initVals = null;
-            int n = List.Length(this.vars);
+            int n = Length(this.vars);
             for (int i = 0; i < n; i++)
             {
-                initVals = List.Cons(false, initVals);
+                initVals = Cons(false, initVals);
             }
 
             this.vals = new System.Collections.Generic.List<object>(n);
 
-            this.Env = new Environment(this.formals, initVals, this.Parent.Env);
-            this.Pc = this.EvalInit;
-            return this;
+            this.ReplaceEnvironment(this.formals, initVals, this.Caller.Env);
+            return ContinueHere(this.EvalInit);
         }
 
         /// <summary>
@@ -117,13 +134,11 @@ namespace SimpleScheme
         {
             if (this.inits == null)
             {
-                this.Pc = this.ApplyProc;
-                return this;
+                return ContinueHere(this.ApplyProc);
             }
 
-            Closure fun = new Closure(this.formals, List.MakeList(List.First(this.inits)), this.Env);  
-            this.Pc = this.BindVarToInit;
-            return fun.ApplyWithEnv(this);
+            Closure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);  
+            return fun.ApplyWithCurrentEnv(ContinueHere(this.BindVarToInit));
         }
 
         /// <summary>
@@ -135,10 +150,9 @@ namespace SimpleScheme
         private Stepper BindVarToInit()
         {
             this.vals.Add(ReturnedExpr);
-            this.vars = List.Rest(this.vars);
-            this.inits = List.Rest(this.inits);
-            this.Pc = this.EvalInit;
-            return this;
+            this.vars = Rest(this.vars);
+            this.inits = Rest(this.inits);
+            return ContinueHere(this.EvalInit);
         }
 
         /// <summary>
@@ -149,17 +163,16 @@ namespace SimpleScheme
         {
             // assign the inits into the env
             object var = this.formals;
-            int n = List.Length(this.formals);
+            int n = Length(this.formals);
             for (int i = 0; i < n; i++)
             {
-                this.Env.Set(List.First(var), this.vals[i]);
-                var = List.Rest(var);
+                this.Env.Set(First(var), this.vals[i]);
+                var = Rest(var);
             }
 
             // apply the fun to the vals and return
             Closure fun = new Closure(this.formals, this.body, this.Env);
-            this.Pc = this.ReturnStep;
-            return fun.ApplyWithEnv(this);
+            return fun.ApplyWithCurrentEnv(ContinueReturn());
         }
     }
 }

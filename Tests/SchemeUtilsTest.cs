@@ -234,7 +234,7 @@ namespace Tests
         }
 
         /// <summary>
-        /// A test for Length
+        /// A test for StringLength
         /// </summary>
         [TestMethod]
         public void LengthTest()
@@ -282,7 +282,7 @@ namespace Tests
             Assert.AreEqual(10, actual);
             actual = List.ListStar(List.MakeList(10, 11));
             Assert.AreEqual(10, List.First(actual));
-            Assert.AreEqual(11, ((Pair)actual).Rest);
+            Assert.AreEqual(11, ((Pair)actual).RestCell);
             actual = List.ListStar(List.Cons(10, List.Cons(11, List.MakeList(12))));
             Assert.AreEqual(10, List.First(actual));
             Assert.AreEqual(11, List.Second(actual));
@@ -310,12 +310,12 @@ namespace Tests
         {
             var actual = new Vector(List.MakeList(1, 2));
             var expected = new object[] { 1, 2 };
-            Assert.AreEqual(2, actual.Length);
+            Assert.AreEqual(2, actual.VectorLength);
             Assert.AreEqual(2, expected.Length);
             Assert.AreEqual(expected[0], actual[0]);
             Assert.AreEqual(expected[1], actual[1]);
             actual = new Vector(1);
-            Assert.AreEqual(0, actual.Length);
+            Assert.AreEqual(0, actual.VectorLength);
         }
 
         /// <summary>
@@ -355,7 +355,7 @@ namespace Tests
         public void StrTest()
         {
             var actual = SchemeString_Accessor.Str(new SchemeString("abc"));
-            Assert.AreEqual(3, actual.Length);
+            Assert.AreEqual(3, actual.StringLength);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);
             Assert.AreEqual('c', actual[2]);
@@ -444,7 +444,7 @@ namespace Tests
         public void VecTest()
         {
             var test = new Vector(new object[] { 1, 2 });
-            Assert.AreEqual(2, Vector_Accessor.Vec(test).Length);
+            Assert.AreEqual(2, Vector_Accessor.Vec(test).VectorLength);
             Assert.AreEqual(1, Vector_Accessor.Vec(test)[0]);
             Assert.AreEqual(2, Vector_Accessor.Vec(test)[1]);
             AssertEx.Throws(() => Vector_Accessor.Vec(1));

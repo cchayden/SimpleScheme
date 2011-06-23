@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="step">The continuation to return to when applied.</param>
         public Continuation(Stepper step)
         {
-            this.step = step.Parent.Parent;
+            this.step = step.Caller.Caller;
         }
 
         /// <summary>
@@ -37,8 +37,8 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public override Stepper Apply(Stepper caller, object args)
         {
-            this.Value = List.First(args);
-            return Stepper.TransferToStep(this.step, List.First(args), this.step.Env);
+            this.Value = First(args);
+            return Stepper.TransferToStep(this.step, First(args), this.step.Env);
         }
 
         /// <summary>

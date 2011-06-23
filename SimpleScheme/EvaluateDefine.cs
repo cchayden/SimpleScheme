@@ -9,16 +9,34 @@ namespace SimpleScheme
     public sealed class EvaluateDefine : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "define";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// Initializes a new instance of the EvaluateDefine class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateDefine(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateDefine(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("define");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -40,15 +58,14 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the body of the definition.</returns>
         private Stepper InitialStep()
         {
-            if (List.First(this.Expr) is Pair)
+            if (First(Expr) is Pair)
             {
-                this.Pc = this.StoreStep1;
-                return EvaluatorMain.Call(
-                    this, List.Cons("lambda", List.Cons(List.Rest(List.First(this.Expr)), List.Rest(this.Expr))));
+                // TODO rewrite
+                return EvaluateExpression.Call(
+                    ContinueHere(this.StoreStep1), Cons("lambda", Cons(Rest(First(Expr)), Rest(Expr))));
             }
 
-            this.Pc = this.StoreStep2;
-            return EvaluatorMain.Call(this, List.Second(this.Expr));
+            return EvaluateExpression.Call(ContinueHere(this.StoreStep2), Second(Expr));
         }
 
         /// <summary>
@@ -57,7 +74,7 @@ namespace SimpleScheme
         /// <returns>Execution continues in the caller.</returns>
         private Stepper StoreStep1()
         {
-            return ReturnFromStep(this.Env.Define(List.First(List.First(this.Expr)), ReturnedExpr));
+            return ReturnFromStep(this.Env.Define(First(First(Expr)), ReturnedExpr));
         }
 
         /// <summary>
@@ -66,7 +83,7 @@ namespace SimpleScheme
         /// <returns>Execution continues in the caller.</returns>
         private Stepper StoreStep2()
         {
-            return ReturnFromStep(this.Env.Define(List.First(this.Expr), ReturnedExpr));
+            return ReturnFromStep(this.Env.Define(First(Expr), ReturnedExpr));
         }
     }
 }

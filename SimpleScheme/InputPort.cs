@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Represents an input port, a mechanism for reading input.
     /// </summary>
-    public sealed class InputPort
+    public sealed class InputPort : ListPrimitives
     {
         /// <summary>
         /// Marks the end of the input file.
@@ -52,7 +52,7 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             // TODO not implemented
-            //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
+            //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
             //// <r4rs section="6.10.2">(char-ready?)</r4rs>
             //// <r4rs section="6.10.2">(char-ready? <port>)</r4rs>
             //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
@@ -60,29 +60,29 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
-                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(List.First(args))), 1)
+                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive("call-with-input-file", (parent, args) => EvaluateCallWithInputFile.Call(parent, args), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (parent, args) => InPort(List.First(args), parent.Env.Interp).Close(), 1)
+                .DefinePrimitive("close-input-port", (parent, args) => InPort(First(args), parent.Env.Interp).Close(), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (parent, args) => parent.Env.Interp.Input, 0)
-                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(List.First(args))), 1)
+                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (parent, args) => SchemeBoolean.Truth(List.First(args) is InputPort), 1)
+                .DefinePrimitive("input-port?", (parent, args) => SchemeBoolean.Truth(First(args) is InputPort), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (parent, args) => parent.Env.Interp.LoadFile(List.First(args)), 1)
+                .DefinePrimitive("load", (parent, args) => parent.Env.Interp.LoadFile(First(args)), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
-                .DefinePrimitive("open-input-file", (parent, args) => EvaluateCallWithInputFile.OpenInputFile(List.First(args)), 1)
+                .DefinePrimitive("open-input-file", (parent, args) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (parent, args) => InPort(List.First(args), parent.Env.Interp).PeekChar(), 0, 1)
+                .DefinePrimitive("peek-char", (parent, args) => InPort(First(args), parent.Env.Interp).PeekChar(), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (parent, args) => InPort(List.First(args), parent.Env.Interp).Read(), 0, 1)
+                .DefinePrimitive("read", (parent, args) => InPort(First(args), parent.Env.Interp).Read(), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (parent, args) => InPort(List.First(args), parent.Env.Interp).ReadChar(), 0, 1);
+                .DefinePrimitive("read-char", (parent, args) => InPort(First(args), parent.Env.Interp).ReadChar(), 0, 1);
         }
 
         /// <summary>
@@ -149,13 +149,13 @@ namespace SimpleScheme
                         ErrorHandlers.Warn("Extra . ignored.");
                         return this.Read();
                     case "'": 
-                        return List.MakeList("quote", this.Read());
+                        return MakeList("quote", this.Read());
                     case "`":
-                        return List.MakeList("quasiquote", this.Read());
+                        return MakeList("quasiquote", this.Read());
                     case ",": 
-                        return List.MakeList("unquote", this.Read());
+                        return MakeList("unquote", this.Read());
                     case ",@": 
-                        return List.MakeList("unquote-splicing", this.Read());
+                        return MakeList("unquote-splicing", this.Read());
                     default:
                         return token;
                 }
@@ -410,7 +410,7 @@ namespace SimpleScheme
             }
 
             this.tokStream.PushToken(token);
-            return List.Cons(this.Read(), this.ReadTail(true));
+            return Cons(this.Read(), this.ReadTail(true));
         }
 
         /// <summary>
@@ -578,12 +578,7 @@ namespace SimpleScheme
             /// <returns>The pushed token, if available, otherwise null.</returns>
             public object GetPushedToken()
             {
-                if (this.isPushedToken)
-                {
-                    return this.PopToken();
-                }
-
-                return null;
+                return this.isPushedToken ? this.PopToken() : null;
             }
 
             /// <summary>

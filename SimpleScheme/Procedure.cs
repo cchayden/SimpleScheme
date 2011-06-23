@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure
+    public abstract class Procedure : ListPrimitives
     {
         /// <summary>
         /// The default name of a procedure.
@@ -39,38 +39,38 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (parent, args) => Proc(List.First(args)).Apply(parent, List.ListStar(List.Rest(args))), 2, MaxInt)
+                .DefinePrimitive("apply", (parent, args) => Proc(First(args)).Apply(parent, ListStar(Rest(args))), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-current-continuation",
-                    (parent, args) => Proc(List.First(args)).Apply(
+                    (parent, args) => Proc(First(args)).Apply(
                         parent,
-                        List.MakeList(new Continuation(EvaluateContinuation.Call(parent, List.First(args))))),
+                        MakeList(new Continuation(EvaluateContinuation.Call(parent, First(args))))),
                     1)
                 .DefinePrimitive(
                     "call/cc",
-                    (parent, args) => Proc(List.First(args)).Apply(
+                    (parent, args) => Proc(First(args)).Apply(
                         parent,
-                        List.MakeList(new Continuation(EvaluateContinuation.Call(parent, List.First(args))))),
+                        MakeList(new Continuation(EvaluateContinuation.Call(parent, First(args))))),
                     1)
 
                  // Instead of returning a value, return an evaulator that can be run to get the value
-                .DefinePrimitive("eval", (parent, args) => EvaluatorMain.Call(parent, List.First(args), parent.Env), 1, 2)
+                .DefinePrimitive("eval", (parent, args) => EvaluateExpression.Call(parent, First(args), parent.Env), 1, 2)
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
                    "force",
                    (parent, args) =>
                    {
-                       object first = List.First(args);
+                       object first = First(args);
                        return !(first is Procedure) ? first : Proc(first).Apply(parent, null);
                    },
                    1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (parent, args) => EvaluateMap.Call(parent, List.Rest(args), Proc(List.First(args)), null), 1, MaxInt)
-                //// <r4rs section="6.9">(map <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (parent, args) => EvaluateMap.Call(parent, List.Rest(args), Proc(List.First(args)), List.MakeList(null)), 1, MaxInt)
+                .DefinePrimitive("for-each", (parent, args) => EvaluateMap.Call(parent, Rest(args), Proc(First(args)), null), 1, MaxInt)
+                //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
+                .DefinePrimitive("map", (parent, args) => EvaluateMap.Call(parent, Rest(args), Proc(First(args)), MakeList(null)), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (parent, args) => SchemeBoolean.Truth(List.First(args) is Procedure), 1);
+                .DefinePrimitive("procedure?", (parent, args) => SchemeBoolean.Truth(First(args) is Procedure), 1);
         }
 
         /// <summary>
@@ -119,5 +119,38 @@ namespace SimpleScheme
         /// been evaluated.</param>
         /// <returns>The next step to run after the application.</returns>
         public abstract Stepper Apply(Stepper caller, object args);
+
+        /// <summary>
+        /// Evaluate the procedure.
+        /// Macro, Closure, and other procs are evaluated differently.
+        /// </summary>
+        /// <param name="caller">Return here when done.</param>
+        /// <param name="args">The expression to evaluate.</param>
+        /// <returns>The next step toexecute.</returns>
+        public Stepper Evaluate(Stepper caller, object args)
+        {
+            // If the function is a macro, expand it and then continue.
+            if (this is Macro)
+            {
+                return EvaluateExpandMacro.Call(caller, args, (Macro)this);
+            }
+
+            // If the function is a closure, then create a new environment consisting of
+            //   1 the closure param list
+            //   2 arguments evaluated in the original environment
+            //   3 the closure's environment
+            // Then continue evaluating the closure body in this new environment
+            if (this is Closure)
+            {
+                // CLOSURE CALL -- capture the environment and evaluate the body
+                return EvaluateClosure.Call(caller, args, (Closure)this);
+            }
+
+            // This is a procedure call.
+            // In any other case, the function is a primitive, a continuation, or a ClrProcedure.
+            // Evaluate the arguments in the environment, then apply the function 
+            //    to the arguments.
+            return EvaluateProc.Call(caller, args, this);
+        }
     }
 }

@@ -14,6 +14,16 @@ namespace SimpleScheme
     public sealed class EvaluateLet : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "let";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// Name, for named let.
         /// </summary>
         private object name;
@@ -41,15 +51,23 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateLet class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateLet(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateLet(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
             this.name = null;
-            this.Pc = this.InitialStep;
-            IncrementCounter("let");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -74,29 +92,29 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the constructed lambda.</returns>
         private Stepper InitialStep()
         {
-            if (this.Expr == null)
+            if (Expr == null)
             {
                 ErrorHandlers.Error("Let: wrong number of arguments");
                 return ReturnFromStep(null);
             }
 
-            if (!(this.Expr is Pair))
+            if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Let: illegal arg list: " + this.Expr);
+                ErrorHandlers.Error("Let: illegal arg list: " + Expr);
                 return ReturnFromStep(null);
             }
 
-            if (List.First(this.Expr) is string)
+            if (First(Expr) is string)
             {
                 // named let
-                this.name = List.First(this.Expr);
-                this.bindings = List.Second(this.Expr);
-                this.body = List.Rest(List.Rest(this.Expr));
+                this.name = First(Expr);
+                this.bindings = Second(Expr);
+                this.body = Rest(Rest(Expr));
             }
             else
             {
-                this.bindings = List.First(this.Expr);
-                this.body = List.Rest(this.Expr);
+                this.bindings = First(Expr);
+                this.body = Rest(Expr);
             }
 
             if (this.body == null)
@@ -104,34 +122,31 @@ namespace SimpleScheme
                 return ReturnFromStep(null);
             }
 
-            this.vars = List.MapFun(List.First, List.MakeList(this.bindings));
-            this.inits = List.MapFun(List.Second, List.MakeList(this.bindings));
+            this.vars = MapFun(First, MakeList(this.bindings));
+            this.inits = MapFun(Second, MakeList(this.bindings));
 
             if (this.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
-                this.Pc = this.ReturnStep;
-                return EvaluateApplyProc.Call(this, this.inits, new Closure(this.vars, this.body, this.Env));
+                return EvaluateProc.Call(ContinueReturn(), this.inits, new Closure(this.vars, this.body, this.Env));
             }
 
-            // named let -- create an outer lambda that defines the name
-            object innerLambda = List.Cons("lambda", List.Cons(this.vars, this.body));
-            object set = List.MakeList("set!", this.name, innerLambda);
-            object invoke = List.Cons(this.name, this.inits);
-            object outerLambda = List.MakeList("lambda", List.MakeList(this.name), set, invoke);
-            this.Pc = this.ApplyLambda;
-            return EvaluatorMain.Call(this, outerLambda);
+            // named let -- eval the inits in the outer environment
+            return EvaluateList.Call(ContinueHere(this.ApplyNamedLet), this.inits);
         }
 
         /// <summary>
-        /// Back from named let.  Execute the lambda that was defined.
+        /// Apply the named let.
+        /// Define a closure with the bound vars and the body, and put it in the environment
+        ///   of the closure.
+        /// Then apply the closure.
         /// </summary>
-        /// <returns>Execution continues with evaluation of the body of the let.</returns>
-        private Stepper ApplyLambda()
+        /// <returns>The next step to execute.</returns>
+        private Stepper ApplyNamedLet()
         {
-            // the rest of named let -- apply the lambda we defined before
-            this.Pc = this.ReturnStep;
-            return EvaluateApplyProc.Call(this, List.MakeList(SchemeBoolean.False), ReturnedExpr);
+            Closure fn = new Closure(this.vars, this.body, this.Env);
+            fn.Env.Define(this.name, fn);
+            return fn.Apply(ContinueReturn(), ReturnedExpr);
         }
     }
 }

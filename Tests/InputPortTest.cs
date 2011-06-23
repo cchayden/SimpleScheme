@@ -307,8 +307,8 @@ namespace Tests
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
                 var actual = accessor.NextToken() as Vector;
                 Assert.IsNotNull(actual);
-                Assert.AreEqual(expected.Length, actual.Length);
-                for (int i = 0; i < expected.Length; i++)
+                Assert.AreEqual(expected.VectorLength, actual.VectorLength);
+                for (int i = 0; i < expected.VectorLength; i++)
                 {
                     Assert.AreEqual(expected[i], actual[i]);
                 }

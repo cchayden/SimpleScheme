@@ -8,10 +8,10 @@ namespace SimpleScheme
     using System.Text;
 
     /// <summary>
-    /// A pair consists of two cells, named First and Rest.
+    /// A pair consists of two cells, named FirstCell and RestCell.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : IEnumerable<object>
+    public sealed class Pair : ListPrimitives, IEnumerable<object>
     {
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -21,19 +21,19 @@ namespace SimpleScheme
         /// referenced by this.</param>
         public Pair(object first, object rest)
         {
-            this.First = first;
-            this.Rest = rest;
+            this.FirstCell = first;
+            this.RestCell = rest;
         }
 
         /// <summary>
-        /// Gets or sets the first ofject of the pair.
+        /// Gets or sets the first object of the pair.
         /// </summary>
-        public object First { get; set; }
+        public object FirstCell { get; set; }
 
         /// <summary>
         /// Gets or sets the rest of the objects in the list.
         /// </summary>
-        public object Rest { get; set; }
+        public object RestCell { get; set; }
 
         /// <summary>
         /// Tests whether the given object is equal to this pair.
@@ -53,7 +53,7 @@ namespace SimpleScheme
             }
 
             Pair other = (Pair)x;
-            return SchemeBoolean.Equal(this.First, other.First) && SchemeBoolean.Equal(this.Rest, other.Rest);
+            return SchemeBoolean.Equal(this.FirstCell, other.FirstCell) && SchemeBoolean.Equal(this.RestCell, other.RestCell);
         }
 
         /// <summary>
@@ -83,13 +83,13 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to write the string into.</param>
         public void AsString(bool quoted, StringBuilder buf)
         {
-            if (this.Rest is Pair && List.Rest(this.Rest) == null)
+            if (this.RestCell is Pair && Rest(this.RestCell) == null)
             {
                 string special = null;
 
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
-                switch (this.First as string)
+                switch (this.FirstCell as string)
                 {
                     case "quote":
                         special = "'";
@@ -110,24 +110,24 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    SchemeString.AsString(List.Second(this), quoted, buf);
+                    SchemeString.AsString(Second(this), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            SchemeString.AsString(this.First, quoted, buf);
+            SchemeString.AsString(this.FirstCell, quoted, buf);
 
-            object tail = this.Rest;
+            object tail = this.RestCell;
 
             int len = 0;
             while (tail is Pair)
             {
                 buf.Append(' ');
-                SchemeString.AsString(List.First(tail), quoted, buf);
+                SchemeString.AsString(First(tail), quoted, buf);
                 object oldTail = tail;
-                tail = List.Rest(tail);
+                tail = Rest(tail);
                 len++;
                 if (tail == oldTail)
                 {
@@ -157,6 +157,8 @@ namespace SimpleScheme
 
         /// <summary>
         /// Enumerates elements from the list.
+        /// This is slower than the caller just iterating down the list, so
+        ///   use this only where performance does not matter.
         /// </summary>
         /// <returns>The list elements.</returns>
         public IEnumerator<object> GetEnumerator()
@@ -165,8 +167,8 @@ namespace SimpleScheme
             while (elem is Pair)
             {
                 Pair p = (Pair)elem;
-                yield return p.First;
-                elem = p.Rest;
+                yield return p.FirstCell;
+                elem = p.RestCell;
             }
         }
 

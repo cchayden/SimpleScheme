@@ -21,19 +21,37 @@ namespace SimpleScheme
         private readonly bool trace;
 
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "closure";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+      /// <summary>
         /// Initializes a new instance of the EvaluateClosure class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="f">The closure to evaluate</param>
-        private EvaluateClosure(Stepper parent, object expr, Environment env, Closure f)
-            : base(parent, expr, env)
+        private EvaluateClosure(Stepper caller, object expr, Environment env, Closure f)
+            : base(caller, expr, env)
         {
             this.f = f;
-            this.Pc = this.EvaluateArgsStep;
+            ContinueHere(this.EvaluateArgsStep);
             this.trace = false;
-            IncrementCounter("closure");
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -55,8 +73,7 @@ namespace SimpleScheme
         /// <returns>The result of evaluating the argument list.</returns>
         private Stepper EvaluateArgsStep()
         {
-            this.Pc = this.EvalBodyInEnvironmentStep;
-            return EvaluateList.Call(this, Expr);
+            return EvaluateList.Call(ContinueHere(this.EvalBodyInEnvironmentStep), Expr);
         }
 
         /// <summary>
@@ -69,12 +86,11 @@ namespace SimpleScheme
         {
             if (this.trace)
             {
-                Console.WriteLine("({0} {1})", this.f.Name, List.First(ReturnedExpr));
+                Console.Out.WriteLine("({0} {1})", this.f.Name, First(ReturnedExpr));
             }
 
-            this.Env = new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env);
-            this.Pc = this.ReturnStep;
-            return EvaluatorMain.Call(this, this.f.Body);
+            this.ReplaceEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);
+            return this.f.ApplyWithCurrentEnv(ContinueHere(this.ReturnStep));
         }
     }
 }

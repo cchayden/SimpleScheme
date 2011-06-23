@@ -3,12 +3,10 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// List utilities used by the primitives.
     /// </summary>
-    public sealed class List
+    public sealed class List : ListPrimitives
     {
         /// <summary>
         /// Do all the combination car-cdr functions.
@@ -165,167 +163,6 @@ namespace SimpleScheme
                 .DefinePrimitive("set-rest!", (parent, args) => SetRest(First(args), Second(args)), 2);
         }
 
-        /// <summary>
-        /// Create a list from an object.
-        /// Makes a list of length 1.
-        /// </summary>
-        /// <param name="a">The object to put into the list.</param>
-        /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair MakeList(object a)
-        {
-            return new Pair(a, null);
-        }
-
-        /// <summary>
-        /// Create a list from two objects.
-        /// Makes a list of length 2.
-        /// </summary>
-        /// <param name="a">The first object.</param>
-        /// <param name="b">The second object.</param>
-        /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair MakeList(object a, object b)
-        {
-            return new Pair(a, new Pair(b, null));
-        }
-
-        /// <summary>
-        /// Create a list from three objects.
-        /// Makes a list of length 3.
-        /// </summary>
-        /// <param name="a">The first object.</param>
-        /// <param name="b">The second object.</param>
-        /// <param name="c">The third object.</param>
-        /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair MakeList(object a, object b, object c)
-        {
-            return new Pair(a, new Pair(b, new Pair(c, null)));
-        }
-
-        /// <summary>
-        /// Create a list from four objects.
-        /// Makes a list of length 4.
-        /// </summary>
-        /// <param name="a">The first object.</param>
-        /// <param name="b">The second object.</param>
-        /// <param name="c">The third object.</param>
-        /// <param name="d">The fourth object.</param>
-        /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair MakeList(object a, object b, object c, object d)
-        {
-            return new Pair(a, new Pair(b, new Pair(c, new Pair(d, null))));
-        }
-
-        /// <summary>
-        /// Create a list made out of all the objects given.
-        /// </summary>
-        /// <param name="args">The object to make into a list.</param>
-        /// <returns>The items appended.</returns>
-        public static object ListStar(object args)
-        {
-            return Rest(args) == null ? 
-                First(args) : 
-                Cons(First(args), ListStar(Rest(args)));
-        }
-
-        /// <summary>
-        /// Get the first member of a list.
-        /// </summary>
-        /// <param name="x">The list to use.</param>
-        /// <returns>The first member of the list, or null if not a list.</returns>
-        public static object First(object x)
-        {
-            return x is Pair ? ((Pair)x).First : null;
-        }
-
-        /// <summary>
-        /// Get the second member of a list.
-        /// </summary>
-        /// <param name="x">The list to use.</param>
-        /// <returns>The second member of the list, 
-        /// or null if there is none.</returns>
-        public static object Second(object x)
-        {
-            return First(Rest(x));
-        }
-
-        /// <summary>
-        /// Get the third member of a list.
-        /// </summary>
-        /// <param name="x">The list to use.</param>
-        /// <returns>The third member of the list, or null if there is none.</returns>
-        public static object Third(object x)
-        {
-            return First(Rest(Rest(x)));
-        }
-
-        /// <summary>
-        /// Return the rest of a list.
-        /// </summary>
-        /// <param name="x">The list to use.</param>
-        /// <returns>The rest -- the list with the first stripped off, 
-        /// or null if there is none.</returns>
-        public static object Rest(object x)
-        {
-            return x is Pair ? ((Pair)x).Rest : null;
-        }
-
-        /// <summary>
-        /// Construct a pair from two objects.
-        /// </summary>
-        /// <param name="a">The first object.</param>
-        /// <param name="b">The rest of the objects.</param>
-        /// <returns>The pair resulting from the construction.</returns>
-        public static Pair Cons(object a, object b)
-        {
-            return new Pair(a, b);
-        }
-
-        /// <summary>
-        /// Determine the length of a list.
-        /// </summary>
-        /// <param name="x">The list to measure.</param>
-        /// <returns>The list length.</returns>
-        public static int Length(object x)
-        {
-            int len = 0;
-            if (x is Pair)
-            {
-                foreach (object elem in (Pair)x)
-                {
-                    len++;
-                }
-            }
-
-            return len;
-        }
-
-        /// <summary>
-        /// Traverse the given list, applying the given function to all elements.
-        /// Create a list if the results.
-        /// This is purely iterative.
-        /// </summary>
-        /// <param name="fun">The function to apply to each elment.</param>
-        /// <param name="expr">The list to process.</param>
-        /// <returns>A list made up of the function results of each input element.</returns>
-        public static Pair MapFun(Func<object, object> fun, object expr)
-        {
-            Pair result = MakeList(null);
-            Pair accum = result;
-
-            // Iterate down the list, taking the function and building a list of the results.
-            expr = First(expr);
-            if (expr is Pair)
-            {
-                foreach (object elem in (Pair)expr)
-                {
-                    // Builds a list by tacking new values onto the tail.
-                    accum = (Pair)(accum.Rest = MakeList(fun(elem)));
-                }
-            }
-
-            return (Pair)Rest(result);
-        }
-
         // Destructive list operations
 
         /// <summary>
@@ -337,7 +174,7 @@ namespace SimpleScheme
         private static object SetFirst(object x, object y)
         {
             return x is Pair ? 
-                ((Pair)x).First = y : 
+                ((Pair)x).FirstCell = y : 
                 ErrorHandlers.Error("SetFirst: attempt to set-car of a non-Pair: " + SchemeString.AsString(x));
         }
 
@@ -350,24 +187,23 @@ namespace SimpleScheme
         private static object SetRest(object x, object y)
         {
             return x is Pair ? 
-                ((Pair)x).Rest = y : 
+                ((Pair)x).RestCell = y : 
                 ErrorHandlers.Error("SetRest: attempt to set-cdr of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
         /// Create a list containing objects in the given list in the reverse order.
+        /// Avoid Pair iterator for speed.
         /// </summary>
         /// <param name="x">The list to reverse.</param>
         /// <returns>The reversed list.</returns>
         private static object Reverse(object x)
         {
             object result = null;
-            if (x is Pair)
+            while (x is Pair)
             {
-                foreach (object elem in (Pair)x)
-                {
-                    result = Cons(elem, result);
-                }
+                result = Cons(First(x), result);
+                x = ((Pair)x).RestCell;
             }
 
             return result;
@@ -391,7 +227,7 @@ namespace SimpleScheme
                 args = Rest(args);
             }
 
-            accum.Rest = First(args);
+            accum.RestCell = First(args);
 
             return Rest(result);
         }
@@ -408,7 +244,7 @@ namespace SimpleScheme
         {
             while (toCopy != null)
             {
-                tail.Rest = MakeList(First(toCopy));
+                tail.RestCell = MakeList(First(toCopy));
                 toCopy = Rest(toCopy);
                 tail = (Pair)Rest(tail);
             }

@@ -3,111 +3,172 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Collections;
+    using System;
     using System.Collections.Generic;
     using System.Text;
+    using System.Threading;
 
     /// <summary>
     /// Handles perf counters.
-    /// There is one of these in the environment.
+    /// There is one of these in each interpreter.
+    /// They all share a dictionary that maps a name to a counter id.
+    /// The counter id is used as an index into a counter array.
+    /// An array is used because accessing through a dictionary is relatively slow.
     /// </summary>
-    public class Counter : IEnumerable<string>
+    public class Counter : ListPrimitives
     {
         /// <summary>
-        /// The counters are stored here.
+        /// The counterNames are stored here.
         /// </summary>
-        private Dictionary<string, int> counters = new Dictionary<string, int>();
+        private static readonly Dictionary<string, int> counterNames = new Dictionary<string, int>();
 
         /// <summary>
-        /// Gets a counter, given its name.
+        /// The maximum number of counters supported.
+        /// Increase this if more counters are added and the increment function
+        ///   starts throwing index out of bounds exceptions.
+        /// It would be better if this was determined automatically, but that is expensive.
+        /// </summary>
+        private const int MaxCounters = 30;
+
+        /// <summary>
+        /// The actual counters.
+        /// </summary>
+        private readonly int[] counters;
+
+        /// <summary>
+        /// Initializes a new instance of the Counter class.
+        /// Creates a new counter for each of the counter names.
+        /// Counter names should all be created before instances are created.
+        /// </summary>
+        public Counter()
+        {
+            this.counters = new int[MaxCounters];
+        }
+
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            env
+                .DefinePrimitive("dump-counters", (parent, args) => parent.Env.Interp.Counters.DumpCounters(), 0)
+                .DefinePrimitive("get-counters", (parent, args) => parent.Env.Interp.Counters.GetCounters(), 0)
+                .DefinePrimitive("get-counter", (parent, args) => parent.Env.Interp.Counters.GetCounter(First(args)), 1)
+                .DefinePrimitive("reset-counters", (parent, args) => parent.Env.Interp.Counters.ResetCounters(), 0);
+        }
+
+        /// <summary>
+        /// Create a new counter id, given its name.
+        /// If the counter already exists, return its id.
+        /// Counters are normally created by static constructors, which execute at 
+        ///   unpredictable times.  So it is impossible to know when all counters have
+        ///   been created.  This is what makes it impossible to allocate the counter
+        ///   array itself.
         /// </summary>
         /// <param name="name">The counter name.</param>
-        /// <returns>The counter value.  If no counter exists with that name, returns -1.</returns>
-        public int this[string name]
+        /// <returns>The counter id.</returns>
+        public static int Create(string name)
         {
-            get
+            lock (counterNames)
             {
-                if (! this.counters.ContainsKey(name))
+                if (counterNames.ContainsKey(name))
                 {
-                    return -1;
+                    return counterNames[name];
                 }
 
-                return this.counters[name];
+                int num = counterNames.Count;
+                counterNames.Add(name, num);
+                return num;
             }
         }
 
         /// <summary>
-        /// Create a new counter.
-        /// If the counter already exists, just ignores the request.
+        /// Increment a counter, given its id.
         /// </summary>
-        /// <param name="name">The counter name.</param>
-        public void Create(string name)
+        /// <param name="id">The counter id.</param>
+        public void Increment(int id)
         {
-            if (this.counters.ContainsKey(name))
-            {
-                return;
-            }
-            
-            this.counters.Add(name, 0);
+            Interlocked.Increment(ref this.counters[id]);
         }
 
         /// <summary>
-        /// Increment a counter, given its name.
-        /// If the named counter does not exist, it is created.
+        /// Dump the counters on the console.
         /// </summary>
-        /// <param name="name">The counter name.</param>
-        public void Increment(string name)
-        {
-            if (!this.counters.ContainsKey(name))
-            {
-                this.counters.Add(name, 0);
-            }
-
-            this.counters[name]++;
-        }
-
-        /// <summary>
-        /// Dump the counters for reporting.
-        /// </summary>
-        /// <returns>The counters as a string.</returns>
-        public string Dump()
+        /// <returns>The result is unspecified.</returns>
+        private object DumpCounters()
         {
             StringBuilder sb = new StringBuilder();
-            foreach (var kvp in this.counters)
+            this.Dump(sb);
+            Console.Out.WriteLine(sb.ToString());
+            return null;
+        }
+
+        /// <summary>
+        /// Get the counters, as a list of name/count pairs.
+        /// </summary>
+        /// <returns>The list of counterName/count pairs.</returns>
+        private object GetCounters()
+        {
+            Pair res = null;
+            foreach (var kvp in counterNames)
             {
-                sb.AppendFormat("{0} {1}\n", kvp.Key, kvp.Value);
+                int count = this.counters[kvp.Value];
+                if (count > 0)
+                {
+                    res = Cons(Cons(kvp.Key, count), res);
+                }
             }
 
-            return sb.ToString();
+            return res;
         }
 
         /// <summary>
-        /// Reset all the counters (by deleting them).
+        /// Get an individual counter value.
         /// </summary>
-        public void Reset()
+        /// <param name="name">The counter name.</param>
+        /// <returns>The counter value.</returns>
+        private object GetCounter(object name)
         {
-            this.counters = new Dictionary<string, int>();
-        }
-
-        /// <summary>
-        /// Enumerates counter names.
-        /// </summary>
-        /// <returns>The counter names..</returns>
-        public IEnumerator<string> GetEnumerator()
-        {
-            foreach (var kvp in this.counters)
+            string counterName = name.ToString();
+            if (counterNames.ContainsKey(counterName))
             {
-                yield return kvp.Key;
+                return this.counters[counterNames[counterName]];
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Dump the counter names and corresponding values into a 
+        ///  StringBuilder for reporting.
+        /// </summary>
+        /// <param name="sb">The string builder to dump to.</param>
+        private void Dump(StringBuilder sb)
+        {
+            foreach (var kvp in counterNames)
+            {
+                int count = this.counters[kvp.Value];
+                if (count > 0)
+                {
+                    sb.AppendFormat("{0} {1}\n", kvp.Key, count);
+                }
             }
         }
 
         /// <summary>
-        /// Gets the counter enumerator.
+        /// Reset all the counters.
+        /// Do not delete counter names.
         /// </summary>
-        /// <returns>The string enumerator.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
+        /// <returns>The result is unspecified.</returns>
+        private object ResetCounters()
         {
-            return this.GetEnumerator();
+            for (int i = 0; i < this.counters.Length; i++)
+            {
+                this.counters[i] = 0;
+            }
+
+            return null;
         }
     }
 }

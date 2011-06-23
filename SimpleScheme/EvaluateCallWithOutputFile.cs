@@ -11,6 +11,16 @@ namespace SimpleScheme
     public sealed class EvaluateCallWithOutputFile : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "call-with-output-file";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// The output port to use during evaluation.
         /// </summary>
         private OutputPort port;
@@ -18,14 +28,22 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCallWithOutputFile class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateCallWithOutputFile(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateCallWithOutputFile(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("call-with-output-file");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -67,9 +85,8 @@ namespace SimpleScheme
         /// continues to the next step.</returns>
         private Stepper InitialStep()
         {
-            this.port = OpenOutputFile(List.First(Expr));
-            this.Pc = this.ReturnStep;
-            return Procedure.Proc(List.Second(Expr)).Apply(this, List.MakeList(this.port));
+            this.port = OpenOutputFile(First(Expr));
+            return Procedure.Proc(Second(Expr)).Apply(ContinueHere(this.ReturnStep), MakeList(this.port));
         }
 
         /// <summary>

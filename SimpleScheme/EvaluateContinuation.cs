@@ -10,16 +10,34 @@ namespace SimpleScheme
     public sealed class EvaluateContinuation : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "continuation";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// Initializes a new instance of the EvaluateContinuation class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateContinuation(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateContinuation(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.InitialStep;
-            IncrementCounter("continuation");
+            ContinueHere(this.InitialStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -35,12 +53,12 @@ namespace SimpleScheme
 
         /// <summary>
         /// The only step, a continuation returns the saved expression.
-        /// The parent that it returns to is really the step to continue from, not the current caller.
+        /// The caller that it returns to is really the step to continue from, not the current caller.
         /// </summary>
         /// <returns>The expression.</returns>
         private Stepper InitialStep()
         {
-            return ReturnFromStep(this.Expr);            
+            return ReturnFromStep(Expr);            
         }
     }
 }

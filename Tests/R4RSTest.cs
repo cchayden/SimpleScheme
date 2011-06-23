@@ -276,10 +276,7 @@ namespace Tests
         	       (loop (cdr numbers)
         		     (cons (car numbers) nonneg)
        		     neg))))");
-
-
-            // TODO this does not pass
-            // this.Run("-1", "let", "(let ((f -)) (let f ((n (f 1))) n))");
+            this.Run("-1", "let", "(let ((f -)) (let f ((n (f 1))) n))");
         }
 
         /// <summary>
@@ -715,8 +712,8 @@ namespace Tests
         {
             this.section = "6.5.5";
             this.ReadAndEvaluate(@"(define (test-string->number str)
-                                   (define ans (string->number str))
-                                      (cond ((not ans) #t) ((number? ans) #t) (else ans)))");
+                                     (define ans (string->number str))
+                                        (cond ((not ans) #t) ((number? ans) #t) (else ans)))");
             this.Run("True", "test-string->number", @"(test-string->number ""+#.#"")");
             this.Run("True", "test-string->number", @"(test-string->number ""-#.#"")");
             this.Run("True", "test-string->number", @"(test-string->number ""#.#"")");

@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// <returns>The string form of the closure.</returns>
         public override string ToString()
         {
-            return string.Format("(macro {0} {1})", this.FormalParameters, this.Body);
+            return this.ToString("macro");
         }
     }
 }

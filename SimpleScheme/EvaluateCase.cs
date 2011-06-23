@@ -18,6 +18,16 @@ namespace SimpleScheme
     public sealed class EvaluateCase : Stepper
     {
         /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        private const string StepperName = "case";
+
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create(StepperName);
+
+        /// <summary>
         /// The list of clauses to test.
         /// </summary>
         private object clauses;
@@ -35,14 +45,22 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCase class.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateCase(Stepper parent, object expr, Environment env)
-            : base(parent, expr, env)
+        private EvaluateCase(Stepper caller, object expr, Environment env)
+            : base(caller, expr, env)
         {
-            this.Pc = this.EvaluateKeyStep;
-            IncrementCounter("case");
+            ContinueHere(this.EvaluateKeyStep);
+            IncrementCounter(counter);
+        }
+
+        /// <summary>
+        /// Gets the name of the stepper.
+        /// </summary>
+        public override string Name
+        {
+            get { return StepperName; }
         }
 
         /// <summary>
@@ -62,20 +80,18 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private Stepper EvaluateKeyStep()
         {
-            this.Pc = this.AssignKey;
-            this.clauses = List.Rest(this.Expr);
-            return EvaluatorMain.Call(this, List.First(this.Expr));
+            this.clauses = Rest(Expr);
+            return EvaluateExpression.Call(ContinueHere(this.AssignKey), First(Expr));
         }
 
         /// <summary>
         /// Grab the evaluated key and go to the test loop.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The next step: check clause.</returns>
         private Stepper AssignKey()
         {
             this.keyVal = ReturnedExpr;
-            this.Pc = this.CheckClauseStep;
-            return this;
+            return ContinueHere(this.CheckClauseStep);
         }
 
         /// <summary>
@@ -89,14 +105,14 @@ namespace SimpleScheme
         {
             while (this.clauses != null)
             {
-                object clause = List.First(this.clauses);
+                object clause = First(this.clauses);
                 if (!(clause is Pair))
                 {
                     return ErrorHandlers.EvalError("Case: bad syntax in case");
                 }
 
-                object data = List.First(clause);
-                this.exprList = List.Rest(clause);
+                object data = First(clause);
+                this.exprList = Rest(clause);
 
                 // look for else datum
                 if (data is string && (string)data == "else")
@@ -107,16 +123,16 @@ namespace SimpleScheme
                 // look for a match within the list of datum items
                 while (data is Pair)
                 {
-                    if (SchemeBoolean.Eqv(this.keyVal, List.First(data)))
+                    if (SchemeBoolean.Eqv(this.keyVal, First(data)))
                     {
                         return this.EvalExpr();
                     }
 
-                    data = List.Rest(data);
+                    data = Rest(data);
                 }
 
                 // didn't find a match -- look at the next clause
-               this.clauses = List.Rest(this.clauses);
+               this.clauses = Rest(this.clauses);
             }
 
             // no clauses matched -- unspecified
@@ -136,7 +152,7 @@ namespace SimpleScheme
             }
 
             // eval and return last expr
-            return EvaluateSequence.Call(this.Parent, this.exprList);
+            return EvaluateSequence.Call(this.Caller, this.exprList);
         }
     }
 }
