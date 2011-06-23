@@ -18,6 +18,8 @@ namespace SimpleScheme
         private EvaluateContinuation(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
+            this.Pc = this.InitialStep;
+            IncrementCounter("continuation");
         }
 
         /// <summary>
@@ -26,18 +28,19 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The continuation evaluator.</returns>
-        public static EvaluateContinuation Call(Stepper caller, object expr)
+        public static Stepper Call(Stepper caller, object expr)
         {
             return new EvaluateContinuation(caller, expr, caller.Env);            
         }
 
         /// <summary>
-        /// Evaluate acontinuation
+        /// The only step, a continuation returns the saved expression.
+        /// The parent that it returns to is really the step to continue from, not the current caller.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>The expression.</returns>
+        private Stepper InitialStep()
         {
-            return ReturnFromStep(this.Expr);
+            return ReturnFromStep(this.Expr);            
         }
     }
 }

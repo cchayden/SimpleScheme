@@ -32,6 +32,8 @@ namespace SimpleScheme
             // start with an empty list
             // the empty cell will be stripped off at the end
             this.accum = this.result = List.MakeList(null);
+            this.Pc = this.InitialStep;
+            IncrementCounter("list");
         }
 
         /// <summary>
@@ -40,59 +42,63 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>A list evaluator.</returns>
-        public static EvaluateList Call(Stepper caller, object expr)
+        public static Stepper Call(Stepper caller, object expr)
         {
             return new EvaluateList(caller, expr, caller.Env);
         }
+        
+        /// <summary>
+        /// Start by testing for an empty or an illegal argument.
+        /// </summary>
+        /// <returns>Result if empty or illegal, otherwise null to continue to next step.</returns>
+        private Stepper InitialStep()
+        {
+            // first check for degenerate cases
+            if (this.Expr == null)
+            {
+                return ReturnFromStep(null);
+            }
+
+            if (!(this.Expr is Pair))
+            {
+                ErrorHandlers.Error("Illegal arg list: " + this.Expr);
+                return ReturnFromStep(null);
+            }
+
+            this.Pc = this.EvalExprStep;
+            return this;
+        }
 
         /// <summary>
-        /// Evaluate a list of expressions.
+        /// Create the list by evaluating the expression.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>Next step evaluates the first expression.</returns>
+        private Stepper EvalExprStep()
         {
-            while (true)
+            // there is more to do --  evaluate the first expression
+            this.Pc = this.LoopStep;
+            return EvaluatorMain.Call(this, List.First(this.Expr));
+        }
+
+        /// <summary>
+        /// Back from evaluating the expression.  Accumulate the result and, if there
+        ///   is anything left, loop back to evaluate another expression.
+        /// </summary>
+        /// <returns>The created list, or null to loop back and evaluate some more.</returns>
+        private Stepper LoopStep()
+        {
+            // back from the evaluation -- save the result and keep going with the rest
+            this.Pc = this.EvalExprStep;
+            this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
+            this.LoopStep(List.Rest(Expr));
+
+            // if we are done now, return
+            if (!(Expr is Pair))
             {
-                switch (this.Pc)
-                {
-                    case PC.Initial:
-                        // first check for degenerate cases
-                        if (this.Expr == null)
-                        {
-                            return ReturnFromStep(null);
-                        }
-
-                        if (!(this.Expr is Pair))
-                        {
-                            ErrorHandlers.Error("Illegal arg list: " + this.Expr);
-                            return ReturnFromStep(null);
-                        }
-
-                        Pc = PC.Step1;
-                        continue;
-
-                    case PC.Step1:
-                        // there is more to do --  evaluate the first expression left
-                        Pc = PC.Step2;
-                        return EvaluatorMain.Call(this, List.First(this.Expr));
-
-                    case PC.Step2:
-                        // back from the evaluation -- save the result and keep going with the rest
-                        Pc = PC.Step1;
-                        this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
-                        Expr = List.Rest(Expr);
-
-                        // if we are done now, return
-                        if (!(Expr is Pair))
-                        {
-                            return ReturnFromStep(this.result.Rest);
-                        }
-
-                        continue;
-                }
-
-                return ErrorHandlers.EvalError("List: program counter error");
+                return ReturnFromStep(this.result.Rest);
             }
+
+            return this;
         }
     }
 }

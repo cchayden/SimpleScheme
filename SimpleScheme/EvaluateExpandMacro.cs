@@ -24,6 +24,8 @@ namespace SimpleScheme
             : base(parent, expr, env)
         {
             this.fn = fn;
+            this.Pc = this.InitialStep;
+            IncrementCounter("expand-macro");
         }
 
         /// <summary>
@@ -33,33 +35,29 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="fn">The macro to expand.</param>
         /// <returns>The expand evaluator.</returns>
-        public static EvaluateExpandMacro Call(Stepper caller, object expr, Macro fn)
+        public static Stepper Call(Stepper caller, object expr, Macro fn)
         {
             return new EvaluateExpandMacro(caller, expr, caller.Env, fn);
         }
 
         /// <summary>
-        /// Expand a macro
+        /// Apply the macro to the expression.  
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>The first step to evaluate to macro.</returns>
+        private Stepper InitialStep()
         {
-            switch (Pc)
-            {
-                case PC.Initial:
-                    object expanded = this.fn.Apply(this, Expr);
-                    if (expanded is Stepper)
-                    {
-                        return GoToStep((Stepper)expanded, PC.Step1);
-                    }
+            this.Pc = this.ExpandStep;
+            return this.fn.Apply(this, Expr);
+        }
 
-                    return ErrorHandlers.EvalError("Expand: should not get here");
-
-                case PC.Step1:
-                    return ReturnFromStep(ReturnedExpr);
-            }
-
-            return ErrorHandlers.EvalError("Expand: program counter error");
+        /// <summary>
+        /// Back here after macro is expanded.  Evaluate the result.
+        /// </summary>
+        /// <returns>The expanded macro.</returns>
+        private Stepper ExpandStep()
+        {
+            this.Pc = this.ReturnStep;
+            return EvaluatorMain.Call(this, ReturnedExpr);
         }
     }
 }

@@ -43,13 +43,14 @@ namespace SimpleScheme
                     .InstallPrimitives();
             }
 
+            this.Counters = new Counter();
             this.GlobalEnvironment = new Environment(this, primEnvironment);
+
             try
             {
                 if (loadStandardMacros)
                 {
                     this.LoadString(SchemePrimitives.Code);
-                    this.LoadString(SchemePrimitives.Extensions);
                 }
 
                 if (files != null)
@@ -91,6 +92,11 @@ namespace SimpleScheme
         /// Gets or sets a value indicating whether to trace.
         /// </summary>
         public bool Trace { get; set; }
+
+        /// <summary>
+        /// Gets the counters collection.
+        /// </summary>
+        public Counter Counters { get; private set; }
 
         /// <summary>
         /// Gets the input port.
@@ -167,24 +173,27 @@ namespace SimpleScheme
         /// Perform steps until evaluation is complete or suspended.
         /// After suspension, return to this entry point.
         /// </summary>
-        /// <param name="nextStep">The step to perform first.</param>
+        /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended stepper.</returns>
-        public object EvalStep(Stepper nextStep)
+        public object EvalStep(Stepper step)
         {
+            Stepper lastStep = null;
             while (true)
             {
-                if (this.Trace)
+                if (this.Trace && lastStep != step)
                 {
-                    Console.WriteLine("Evaluating {0} {1} {2}", nextStep.Expr, nextStep.GetType(), nextStep.Pc);
+                    Console.WriteLine("Evaluating {0} {1}", step.GetType(), step.Expr);
                 }
 
-                nextStep = nextStep.RunStep();
-                if (nextStep == Stepper.Suspended)
+                step.IncrementCounter("step");
+                lastStep = step;
+                step = step.RunStep();
+                if (step == Stepper.Suspended)
                 {
-                    return nextStep;
+                    return step;
                 }
 
-                if (nextStep == this.halted)
+                if (step == this.halted)
                 {
                     if (this.asyncResult != null)
                     {
@@ -241,7 +250,8 @@ namespace SimpleScheme
         /// Read from an input port, evaluate in the global environment, and print the result.
         /// Catch and discard exceptions.
         /// </summary>
-        public void ReadEvalWriteLoop()
+        /// <returns>The interpreter.</returns>
+        public Interpreter ReadEvalWriteLoop()
         {
             while (true)
             {
@@ -252,7 +262,7 @@ namespace SimpleScheme
                     this.Output.Flush();
                     if (InputPort.IsEOF(x = this.Input.Read()))
                     {
-                        return;
+                        return this;
                     }
 
 #if ASYNC
@@ -278,6 +288,22 @@ namespace SimpleScheme
                     Console.WriteLine("Caught exception {0}", ex.Message);
                 }
             }
+        }
+
+        /// <summary>
+        /// Dump the counte
+        /// </summary>
+        public void DumpCounters()
+        {
+            Console.Out.WriteLine(this.Counters.Dump());
+        }
+
+        /// <summary>
+        /// Reset all counters.
+        /// </summary>
+        public void ResetCounters()
+        {
+            this.Counters.Reset();
         }
 
         /// <summary>

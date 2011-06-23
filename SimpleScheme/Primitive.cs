@@ -45,49 +45,46 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Do all the combination car-cdr functions.
-        /// </summary>
-        /// <param name="name">The function name.</param>
-        /// <param name="args">The expression to operate on.</param>
-        /// <returns>The result of the operation.</returns>
-        public static object Cxr(string name, object args)
-        {
-            object first = List.First(args);
-            for (int i = name.Length - 2; i >= 1; i--)
-            {
-                first = name[i] == 'a' ? List.First(first) : List.Rest(first);
-            }
-
-            return first;
-        }
-
-        /// <summary>
         /// Apply the primitive to the arguments, giving a result.
-        /// This may return a result or a Stepper, which can be used to get a result.
-        /// If parent is null, then it will not return a Stepper, so when that is not
-        ///   acceptable, pass null for parent.
+        /// As a convenience for primitives, they are allowed to return either
+        ///   a result or a Stepper.  If they return a stepper, it means the result
+        ///   is not yet ready, and that a new stepper was created and returned.  When
+        ///   that stepper has a result, it will put in into ReturnedResult and return to the
+        ///   caller stepper provided to it.
+        /// If there is a result available immediately, this returns it by storing it
+        ///   in ReturnedResult and returning to the caller.
         /// </summary>
-        /// <param name="parent">The calling Stepper.</param>
+        /// <param name="caller">The calling Stepper.</param>
         /// <param name="args">The arguments to the primitive.</param>
-        /// <returns>The result of the application.</returns>
-        public override object Apply(Stepper parent, object args)
+        /// <returns>The next step to execute.</returns>
+        public override Stepper Apply(Stepper caller, object args)
         {
             // First check the number of arguments
             int numArgs = List.Length(args);
             if (numArgs < this.minArgs)
             {
-                return ErrorHandlers.Error("Primitive: too few args, " + numArgs + ", for " +
+                return ErrorHandlers.EvalError("Primitive: too few args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
 
             if (numArgs > this.maxArgs)
             {
-                return ErrorHandlers.Error("Primitive: too many args, " + numArgs + ", for " +
+                return ErrorHandlers.EvalError("Primitive: too many args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
 
             // Execute the operation
-            return this.operation(parent, args);
+            object res = this.operation(caller, args);
+
+            // See if the operation returns a result or another step
+            if (res is Stepper)
+            {
+                return (Stepper)res;
+            }
+
+            // Operation returned a result -- just return this
+            //  to the caller.
+            return caller.ContinueStep(res);
         }
     }
 }

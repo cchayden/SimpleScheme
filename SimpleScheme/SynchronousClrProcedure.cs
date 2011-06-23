@@ -57,20 +57,17 @@ namespace SimpleScheme
                     MaxInt);
         }
 
-        // TODO maybe this could be moved to base class.
-
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
         /// Otherwise, the first argument is the class instance, and the rest are passed 
         ///    to the method.
         /// </summary>
-        /// <param name="parent">The calling evaluator.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <returns>The result of executing the method.</returns>
-        public override object Apply(Stepper parent, object args)
+        /// <returns>The next step to excute.</returns>
+        public override Stepper Apply(Stepper caller, object args)
         {
-#if DEBUG
             object target;
             object[] argArray;
             if (this.MethodInfo.IsStatic)
@@ -84,12 +81,7 @@ namespace SimpleScheme
                 argArray = this.ToArgList(List.Rest(args), null).ToArray();
             }
 
-            return this.MethodInfo.Invoke(target, argArray);
-#else
-            return this.methodInfo.IsStatic ? 
-                this.methodInfo.Invoke(null, this.ToArgList(args).ToArray()) : 
-                this.methodInfo.Invoke(First(args), this.ToArgList(Rest(args)).ToArray());
-#endif
+            return caller.ContinueStep(this.MethodInfo.Invoke(target, argArray));
         }
     }
 }

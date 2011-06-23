@@ -83,66 +83,114 @@ namespace SimpleScheme
         /// <param name="env">The environment to define the primitives into.</param>
         public static void DefinePrimitives(Environment env)
         {
+            // TODO not implemented
+            //// <r4rs section="6.7">(string-copy <string>)</r4rs>
+            //// <r4rs section="6.7">(string-fill! <string> <char>)</r4rs>
+            
             const int MaxInt = int.MaxValue;
             env
-                .DefinePrimitive("char->integer", (parent, args) => (double)SchemeString.Chr(List.First(args)), 1)
-                .DefinePrimitive("char-alphabetic?", (parent, args) => SchemeBoolean.Truth(char.IsLetter(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char-ci<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) <= 0), 2)
-                .DefinePrimitive("char-ci<?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) < 0), 2)
-                .DefinePrimitive("char-ci=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) == 0), 2)
-                .DefinePrimitive("char-ci>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) >= 0), 2)
-                .DefinePrimitive("char-ci>?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) > 0), 2)
-                .DefinePrimitive("char-downcase", (parent, args) => SchemeString.Chr(char.ToLower(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char-lower-case?", (parent, args) => SchemeBoolean.Truth(char.IsLower(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char-numeric?", (parent, args) => SchemeBoolean.Truth(char.IsDigit(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char-upcase", (parent, args) => SchemeString.Chr(char.ToUpper(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char-upper-case?", (parent, args) => SchemeBoolean.Truth(char.IsUpper(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char-whitespace?", (parent, args) => SchemeBoolean.Truth(char.IsWhiteSpace(SchemeString.Chr(List.First(args)))), 1)
-                .DefinePrimitive("char<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) <= 0), 2)
-                .DefinePrimitive("char<?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) < 0), 2)
-                .DefinePrimitive("char=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) == 0), 2)
-                .DefinePrimitive("char>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) >= 0), 2)
-                .DefinePrimitive("char>?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) > 0), 2)
+                //// <r4rs section="6.6">(char->integer <char>)</r4rs>
+                .DefinePrimitive("char->integer", (parent, args) => (double)Chr(List.First(args)), 1)
+                //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
+                .DefinePrimitive("char-alphabetic?", (parent, args) => SchemeBoolean.Truth(char.IsLetter(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char-ci<=?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) <= 0), 2)
+                //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char-ci<?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) < 0), 2)
+                //// <r4rs section="6.6">(char-ci=? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char-ci=?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) == 0), 2)
+                //// <r4rs section="6.6">(char-ci>=? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char-ci>=?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) >= 0), 2)
+                //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char-ci>?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) > 0), 2)
+                //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
+                .DefinePrimitive("char-downcase", (parent, args) => Chr(char.ToLower(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
+                .DefinePrimitive("char-lower-case?", (parent, args) => SchemeBoolean.Truth(char.IsLower(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
+                .DefinePrimitive("char-numeric?", (parent, args) => SchemeBoolean.Truth(char.IsDigit(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
+                .DefinePrimitive("char-upcase", (parent, args) => Chr(char.ToUpper(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
+                .DefinePrimitive("char-upper-case?", (parent, args) => SchemeBoolean.Truth(char.IsUpper(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
+                .DefinePrimitive("char-whitespace?", (parent, args) => SchemeBoolean.Truth(char.IsWhiteSpace(Chr(List.First(args)))), 1)
+                //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char<=?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) <= 0), 2)
+                //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char<?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) < 0), 2)
+                //// <r4rs section="6.6">(char=? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char=?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) == 0), 2)
+                //// <r4rs section="6.6">(char>=? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char>=?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) >= 0), 2)
+                //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
+                .DefinePrimitive("char>?", (parent, args) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) > 0), 2)
+                //// <r4rs section="6.6">(char? <obj>)</r4rs>
                 .DefinePrimitive("char?", (parent, args) => SchemeBoolean.Truth(List.First(args) is char), 1)
 
+                //// <r4rs section="6.7">(make-string <k>)</r4rs>
+                //// <r4rs section="6.7">(make-string <k> <char>)</r4rs>
                 .DefinePrimitive("make-string", (parent, args) => new SchemeString(List.First(args), List.Second(args)), 1, 2)
-                .DefinePrimitive("string", (parent, args) => SchemeString.ListToString(args), 0, MaxInt)
-                .DefinePrimitive("string->list", (parent, args) => SchemeString.StringToList(List.First(args)), 1)
-                .DefinePrimitive("string->number", (parent, args) => SchemeString.StringToNumber(List.First(args), List.Second(args)), 1, 2)
-                .DefinePrimitive("string->symbol", (parent, args) => string.Intern(SchemeString.Str(List.First(args)).AsString()), 1)
-                .DefinePrimitive("string-append", (parent, args) => SchemeString.StringAppend(args), 0, MaxInt)
-                .DefinePrimitive("string-ci<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) <= 0), 2)
-                .DefinePrimitive("string-ci<?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) < 0), 2)
-                .DefinePrimitive("string-ci=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) == 0), 2)
-                .DefinePrimitive("string-ci>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) >= 0), 2)
-                .DefinePrimitive("string-ci>?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) > 0), 2)
-                .DefinePrimitive("string-length", (parent, args) => Number.Num(SchemeString.Str(List.First(args)).Length), 1)
-                .DefinePrimitive("string-ref", (parent, args) => SchemeString.Chr(SchemeString.Str(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
+                //// <r4rs section="6.7">(string <char> ...)</r4rs>
+                .DefinePrimitive("string", (parent, args) => ListToString(args), 0, MaxInt)
+                //// <r4rs section="6.7">(string->list <string>)</r4rs>
+                .DefinePrimitive("string->list", (parent, args) => StringToList(List.First(args)), 1)
+                //// <r4rs section="6.5.6">(string->number <number>)</r4rs>
+                //// <r4rs section="6.5.6">(string->number <number> <radix>)</r4rs>
+                .DefinePrimitive("string->number", (parent, args) => StringToNumber(List.First(args), List.Second(args)), 1, 2)
+                //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
+                .DefinePrimitive("string->symbol", (parent, args) => string.Intern(Str(List.First(args)).AsString()), 1)
+                //// <r4rs section="6.7">(string-append <string> ...)</r4rs>
+                .DefinePrimitive("string-append", (parent, args) => StringAppend(args), 0, MaxInt)
+                //// <r4rs section="6.7">(string-ci<=? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string-ci<=?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), true) <= 0), 2)
+                //// <r4rs section="6.7">(string-ci<? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string-ci<?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), true) < 0), 2)
+                //// <r4rs section="6.7">(string-ci=? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string-ci=?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), true) == 0), 2)
+                //// <r4rs section="6.7">(string-ci>=? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string-ci>=?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), true) >= 0), 2)
+                //// <r4rs section="6.7">(string-ci>? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string-ci>?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), true) > 0), 2)
+                //// <r4rs section="6.7">(string-length <string>)</r4rs>
+                .DefinePrimitive("string-length", (parent, args) => Number.Num(Str(List.First(args)).Length), 1)
+                //// <r4rs section="6.7">(string-ref <string> <k>)</r4rs>
+                .DefinePrimitive("string-ref", (parent, args) => Chr(Str(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
+                //// <r4rs section="6.7">(string-set! <string> <k> <char>)</r4rs>
                 .DefinePrimitive(
                    "string-set!",
                    (parent, args) =>
                    {
                        object z = List.Third(args);
-                       SchemeString.Str(List.First(args))[(int)Number.Num(List.Second(args))] = SchemeString.Chr(z);
+                       Str(List.First(args))[(int)Number.Num(List.Second(args))] = Chr(z);
                        return z;
                    },
                     3)
-                .DefinePrimitive("string<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) <= 0), 2)
-                .DefinePrimitive("string<?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) < 0), 2)
-                .DefinePrimitive("string=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) == 0), 2)
-                .DefinePrimitive("string>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) >= 0), 2)
-                .DefinePrimitive("string>?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) > 0), 2)
+                //// <r4rs section="6.7">(string<=? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string<=?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), false) <= 0), 2)
+                //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string<?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), false) < 0), 2)
+                //// <r4rs section="6.7">(string=? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string=?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), false) == 0), 2)
+                //// <r4rs section="6.7">(string>=? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string>=?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), false) >= 0), 2)
+                //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
+                .DefinePrimitive("string>?", (parent, args) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), false) > 0), 2)
+                //// <r4rs section="6.7">(string? <obj>)</r4rs>
                 .DefinePrimitive("string?", (parent, args) => SchemeBoolean.Truth(List.First(args) is SchemeString), 1)
+                //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
                 .DefinePrimitive(
                     "substring",
                     (parent, args) =>
                     {
                         int start = (int)Number.Num(List.Second(args));
                         int end = (int)Number.Num(List.Third(args));
-                        return SchemeString.Str(List.First(args)).Substring(start, end - start);
+                        return Str(List.First(args)).Substring(start, end - start);
                     },
                     3)
-                .DefinePrimitive("symbol->string", (parent, args) => new SchemeString(SchemeString.Sym(List.First(args))), 1)
+                //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
+                .DefinePrimitive("symbol->string", (parent, args) => new SchemeString(Sym(List.First(args))), 1)
+                //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
                 .DefinePrimitive("symbol?", (parent, args) => SchemeBoolean.Truth(List.First(args) is string), 1);
         }
 
@@ -244,7 +292,14 @@ namespace SimpleScheme
                     buf.Append("#\\");
                 }
 
-                buf.Append(x);
+                if ((char)x == ' ')
+                {
+                    buf.Append("space");
+                } 
+                else
+                {
+                    buf.Append(x);
+                }
             }
             else if (x is Pair)
             {
@@ -252,48 +307,15 @@ namespace SimpleScheme
             }
             else if (x is SchemeString)
             {
-                SchemeString chars = (SchemeString)x;
-                if (quoted)
-                {
-                    buf.Append('"');
-                }
-
-                foreach (char c in chars)
-                {
-                    if (quoted && c == '"')
-                    {
-                        buf.Append('\\');
-                    }
-
-                    buf.Append(c);
-                }
-
-                if (quoted)
-                {
-                    buf.Append('"');
-                }
+                ((SchemeString)x).AsString(quoted, buf);
             }
             else if (x is Vector)
             {
-                Vector v = (Vector)x;
-                buf.Append("#(");
-                if (v.Length > 0)
-                {
-                    foreach (object elem in v)
-                    {
-                        AsString(elem, quoted, buf);
-                        buf.Append(' ');
-                    }
-
-                    buf.Remove(buf.Length - 1, 1);
-                }
-
-                buf.Append(')');
+                ((Vector)x).AsString(quoted, buf);
             }
             else if (x is Stepper)
             {
-                Stepper s = (Stepper)x;
-                buf.Append(s.Expr);
+                buf.Append(((Stepper)x).Expr);
             }
             else if (SchemeBoolean.IsTrue(x))
             {
@@ -327,12 +349,51 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Covert the SchemeString into a string.
+        /// </summary>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        public void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append('"');
+            }
+
+            foreach (char c in this)
+            {
+                if (quoted && c == '"')
+                {
+                    buf.Append('\\');
+                }
+
+                buf.Append(c);
+            }
+
+            if (quoted)
+            {
+                buf.Append('"');
+            }
+        }
+
+        /// <summary>
         /// Gets the SchemeString as a string.
         /// </summary>
         /// <returns>The contained string.</returns>
         public string AsString()
         {
             return this.str;
+        }
+
+        /// <summary>
+        /// Format as a string.
+        /// </summary>
+        /// <returns>The SchemeString as a string.</returns>
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            this.AsString(false, sb);
+            return sb.ToString();
         }
 
         /// <summary>
@@ -429,11 +490,12 @@ namespace SimpleScheme
         {
             StringBuilder result = new StringBuilder();
 
-            // TODO convert to user foreach
-            while (args is Pair)
+            if (args is Pair)
             {
-                result.Append(AsString(List.First(args), false));
-                args = List.Rest(args);
+                foreach (var elem in (Pair)args)
+                {
+                    result.Append(AsString(elem, false));
+                }
             }
 
             return new SchemeString(result.ToString());

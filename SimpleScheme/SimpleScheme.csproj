@@ -38,10 +38,17 @@
   <ItemGroup>
     <Compile Include="AsynchronousClrProcedure.cs" />
     <Compile Include="AsyncResult.cs" />
+    <Compile Include="Counter.cs" />
     <Compile Include="EvaluateAnd.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="EvaluateCase.cs" />
+    <Compile Include="EvaluateDo.cs" />
     <Compile Include="EvaluateLet.cs" />
+    <Compile Include="EvaluateLetRec.cs" />
+    <Compile Include="EvaluateLetStar.cs" />
+    <Compile Include="EvaluateTime.cs" />
+    <Compile Include="EvaluateTimeBase.cs" />
     <Compile Include="SchemeBoolean.cs" />
     <Compile Include="Closure.cs" />
     <Compile Include="ClrProcedure.cs" />

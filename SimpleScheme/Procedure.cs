@@ -37,7 +37,10 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
+                //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
+                //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
                 .DefinePrimitive("apply", (parent, args) => Proc(List.First(args)).Apply(parent, List.ListStar(List.Rest(args))), 2, MaxInt)
+                //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-current-continuation",
                     (parent, args) => Proc(List.First(args)).Apply(
@@ -53,6 +56,7 @@ namespace SimpleScheme
 
                  // Instead of returning a value, return an evaulator that can be run to get the value
                 .DefinePrimitive("eval", (parent, args) => EvaluatorMain.Call(parent, List.First(args), parent.Env), 1, 2)
+                //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
                    "force",
                    (parent, args) =>
@@ -61,8 +65,11 @@ namespace SimpleScheme
                        return !(first is Procedure) ? first : Proc(first).Apply(parent, null);
                    },
                    1)
+                //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive("for-each", (parent, args) => EvaluateMap.Call(parent, List.Rest(args), Proc(List.First(args)), null), 1, MaxInt)
+                //// <r4rs section="6.9">(map <list1> <list2> ...)</r4rs>
                 .DefinePrimitive("map", (parent, args) => EvaluateMap.Call(parent, List.Rest(args), Proc(List.First(args)), List.MakeList(null)), 1, MaxInt)
+                //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
                 .DefinePrimitive("procedure?", (parent, args) => SchemeBoolean.Truth(List.First(args) is Procedure), 1);
         }
 
@@ -107,10 +114,10 @@ namespace SimpleScheme
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// </summary>
-        /// <param name="parent">The calling evaluator.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">The arguments to the procedure, which have 
         /// been evaluated.</param>
-        /// <returns>The result of applying the procedure to the arguments.</returns>
-        public abstract object Apply(Stepper parent, object args);
+        /// <returns>The next step to run after the application.</returns>
+        public abstract Stepper Apply(Stepper caller, object args);
     }
 }

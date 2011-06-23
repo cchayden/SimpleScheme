@@ -24,6 +24,8 @@ namespace SimpleScheme
         private EvaluateCallWithInputFile(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
+            this.Pc = this.InitialStep;
+            IncrementCounter("call-with-input-file");
         }
 
         /// <summary>
@@ -32,7 +34,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The created evaluator.</returns>
-        public static EvaluateCallWithInputFile Call(Stepper caller, object expr)
+        public static Stepper Call(Stepper caller, object expr)
         {
             return new EvaluateCallWithInputFile(caller, expr, caller.Env);
         }
@@ -59,38 +61,28 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Evaluate an if expression.
+        /// Open the input file and apply the proc.  
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>The next step, or else if the result is available, continue on to the next step.</returns>
+        private Stepper InitialStep()
         {
-            while (true)
+            this.port = OpenInputFile(List.First(Expr));
+            this.Pc = this.ReturnStep;
+            return Procedure.Proc(List.Second(Expr)).Apply(this, List.MakeList(this.port));
+        }
+
+        /// <summary>
+        /// Evaluation is complete: close the file and return the result.
+        /// </summary>
+        /// <returns>The evaluation result.</returns>
+        private new Stepper ReturnStep()
+        {
+            if (this.port != null)
             {
-                switch (Pc)
-                {
-                    case PC.Initial:
-                        this.port = OpenInputFile(List.First(Expr));
-                        object z = Procedure.Proc(List.Second(Expr)).Apply(this, List.MakeList(this.port));
-                        if (z is Stepper)
-                        {
-                            return GoToStep((Stepper)z, PC.Step1);
-                        }
-
-                        Pc = PC.Step1;
-                        ReturnedExpr = z;
-                        continue;
-
-                    case PC.Step1:
-                        if (this.port != null)
-                        {
-                            this.port.Close();
-                        }
-
-                        return ReturnFromStep(this.ReturnedExpr);
-                }
-
-                return ErrorHandlers.EvalError("CallWithInputFile: program counter error");
+                this.port.Close();
             }
+
+            return ReturnFromStep(this.ReturnedExpr);
         }
     }
 }

@@ -25,11 +25,17 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             env
+                //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
                 .DefinePrimitive("boolean?", (parent, args) => Truth(List.First(args) is bool), 1)
+                //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eq?", (parent, args) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("equal?", (parent, args) => Truth(Equal(List.First(args), List.Second(args))), 2)
+                //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eqv?", (parent, args) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                //// <r4rs section="6.1">(not <obj>)</r4rs>
                 .DefinePrimitive("not", (parent, args) => Truth(List.First(args) is bool && (bool)List.First(args) == false), 1)
+                //// <r4rs section="6.3">(null? <obj>)</r4rs>
                 .DefinePrimitive("null?", (parent, args) => Truth(List.First(args) == null), 1);
         }
 

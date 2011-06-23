@@ -17,53 +17,47 @@ namespace SimpleScheme
         private EvaluateSequence(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
+            this.Pc = this.EvalExprStep;
+            IncrementCounter("sequence");
         }
 
         /// <summary>
-        /// Creates a sequence evaluator.
+        /// Call the sequence evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static EvaluateSequence New(object expr, Environment env, Stepper parent)
-        {
-            return new EvaluateSequence(parent, expr, env);
-        }
-
-        public static EvaluateSequence Call(Stepper caller, object expr)
+        public static Stepper Call(Stepper caller, object expr)
         {
             return new EvaluateSequence(caller, expr, caller.Env);
         }
 
         /// <summary>
-        /// Evaluate a sequence of objects, returning the last.
-        /// This was a simple while loop that has been split in the middle.
+        /// Initial step: to see if we are done.
+        /// If not, evaluate the next expression.
+        /// If we are, evaluate and return the last expr.
         /// </summary>
         /// <returns>The next step.</returns>
-        public override Stepper RunStep()
+        private Stepper EvalExprStep()
         {
-            while (true)
+            if (List.Rest(this.Expr) == null)
             {
-                switch (this.Pc)
-                {
-                    case PC.Initial:
-                        if (List.Rest(this.Expr) == null)
-                        {
-                            return ReturnFromStep(List.First(this.Expr));
-                        }
-
-                        this.Pc = PC.Step1;
-                        return EvaluatorMain.Call(this, List.First(this.Expr));
-
-                    case PC.Step1:
-                        this.Expr = List.Rest(this.Expr);
-                        this.Pc = PC.Initial;
-                        continue;
-                }
-
-                return ErrorHandlers.EvalError("Sequence: program counter error");
+                this.Pc = this.ReturnStep;
+                return EvaluatorMain.Call(this, List.First(this.Expr));
             }
+
+            this.Pc = this.LoopStep;
+            return EvaluatorMain.Call(this, List.First(this.Expr));
+        }
+
+        /// <summary>
+        /// Comes back here after expression evaluation.  Loop back and evaluate another
+        /// </summary>
+        /// <returns>Immediately steps back.</returns>
+        private Stepper LoopStep()
+        {
+            this.Pc = this.EvalExprStep;
+            return this.LoopStep(List.Rest(this.Expr));
         }
     }
 }

@@ -16,6 +16,11 @@ namespace SimpleScheme
         private readonly Closure f;
 
         /// <summary>
+        /// Indicates whether to trace.
+        /// </summary>
+        private readonly bool trace;
+
+        /// <summary>
         /// Initializes a new instance of the EvaluateClosure class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
@@ -26,6 +31,9 @@ namespace SimpleScheme
             : base(parent, expr, env)
         {
             this.f = f;
+            this.Pc = this.EvaluateArgsStep;
+            this.trace = false;
+            IncrementCounter("closure");
         }
 
         /// <summary>
@@ -35,29 +43,38 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="f">The closure to evaluate</param>
         /// <returns>The closure evaluator..</returns>
-        public static EvaluateClosure Call(Stepper caller, object expr, Closure f)
+        public static Stepper Call(Stepper caller, object expr, Closure f)
         {
             return new EvaluateClosure(caller, expr, caller.Env, f);
         }
 
         /// <summary>
-        /// Evaluate a set! expression.
+        /// Evaluate a closure, in other words execute the function that it defines in the 
+        /// appropriate environment.  Start by evaluating the list of expressions.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>The result of evaluating the argument list.</returns>
+        private Stepper EvaluateArgsStep()
         {
-            switch (this.Pc)
-            {
-                case PC.Initial:
-                    Pc = PC.Step1;
-                    return EvaluateList.Call(this, Expr);
+            this.Pc = this.EvalBodyInEnvironmentStep;
+            return EvaluateList.Call(this, Expr);
+        }
 
-                case PC.Step1:
-                    //Console.WriteLine("({0} {1})", this.f.Name, List.First(ReturnedExpr));
-                    return ReturnFromStep(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
+        /// <summary>
+        /// Back here after evaluating the args, now apply the closure itself.
+        /// Create a new environment matching the formal parameters up with the evaluated arguments, and link
+        ///   back to the caller's environment.  The evaluate the closure body.
+        /// </summary>
+        /// <returns>The next step to evaluate the closure.</returns>
+        private Stepper EvalBodyInEnvironmentStep()
+        {
+            if (this.trace)
+            {
+                Console.WriteLine("({0} {1})", this.f.Name, List.First(ReturnedExpr));
             }
 
-            return ErrorHandlers.EvalError("Closure: program counter error");
+            this.Env = new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env);
+            this.Pc = this.ReturnStep;
+            return EvaluatorMain.Call(this, this.f.Body);
         }
     }
 }

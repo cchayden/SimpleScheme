@@ -15,7 +15,7 @@ namespace SimpleScheme
     {
         /// <summary>
         /// The method info for the EndXXX method.
-        /// The parent class has info for BeginXXX.
+        /// The caller class has info for BeginXXX.
         /// </summary>
         private readonly MethodInfo endMethodInfo;
 
@@ -68,23 +68,31 @@ namespace SimpleScheme
                    MaxInt);
         }
 
-        // TODO if this can be static or non-static, move synchronous version to base class and share.
-
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
         /// Otherwise, the first argument is the class instance, and the rest are passed 
         ///    to the method.
         /// </summary>
-        /// <param name="parent">The calling evaluator.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <returns>The result of executing the method.</returns>
-        public override object Apply(Stepper parent, object args)
+        /// <returns>The next step to execute.</returns>
+        public override Stepper Apply(Stepper caller, object args)
         {
-            object invokedObj = List.First(args);
-            AsyncState state = new AsyncState(invokedObj, parent);
-            object[] argArray = this.ToArgListBegin(List.Rest(args), state).ToArray();
-            IAsyncResult res = (IAsyncResult)this.MethodInfo.Invoke(invokedObj, argArray);
+            object target;
+            object[] argArray;
+            if (this.MethodInfo.IsStatic)
+            {
+                target = null;
+                argArray = this.ToArgListBegin(args, new AsyncState(target, caller)).ToArray();
+            }
+            else
+            {
+                target = List.First(args);
+                argArray = this.ToArgListBegin(List.Rest(args), new AsyncState(target, caller)).ToArray();
+            }
+
+            this.MethodInfo.Invoke(target, argArray);
             return Stepper.Suspended;
         }
 
@@ -132,7 +140,10 @@ namespace SimpleScheme
             AsyncState state = (AsyncState)result.AsyncState;
             Stepper parent = state.Parent;
             object res = this.endMethodInfo.Invoke(state.InvokedObject, args);
-            parent.ReturnedExpr = res;
+            parent.ContinueStep(res);
+
+            // Continue executing steps.  In effect, this thread takes over stepping
+            //  because the other thread has already exited.
             parent.Env.Interp.EvalStep(parent);
         }
 
@@ -145,7 +156,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the AsynchronousClrProcedure.AsyncState class.
             /// </summary>
             /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
-            /// <param name="parent">The parent stepper to resume.</param>
+            /// <param name="parent">The caller stepper to resume.</param>
             public AsyncState(object invokedObject, Stepper parent)
             {
                 this.InvokedObject = invokedObject;
@@ -158,7 +169,7 @@ namespace SimpleScheme
             public object InvokedObject { get; private set; }
 
             /// <summary>
-            /// Gets the parent stepper to resume.
+            /// Gets the caller stepper to resume.
             /// </summary>
             public Stepper Parent { get; private set; }
         }

@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System.Collections;
     using System.Collections.Generic;
+    using System.Text;
 
     /// <summary>
     /// Represents a scheme vector.
@@ -95,14 +96,25 @@ namespace SimpleScheme
         /// <param name="env">The environment to define the primitives into.</param>
         public static void DefinePrimitives(Environment env)
         {
+            // TODO not implemented
+            //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
+                
             const int MaxInt = int.MaxValue;
             env
+                //// <r4rs section="6.8">(make-vector <k>)</r4rs>
+                //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
                 .DefinePrimitive("make-vector", (parent, args) => new Vector(List.First(args), List.Second(args)), 1, 2)
+                //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive("vector", (parent, args) => new Vector(args), 0, MaxInt)
+                //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
                 .DefinePrimitive("vector->list", (parent, args) => VectorToList(List.First(args)), 1)
+                //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
                 .DefinePrimitive("vector-length", (parent, args) => Number.Num(Vec(List.First(args)).Length), 1)
+                //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
                 .DefinePrimitive("vector-ref", (parent, args) => Vec(List.First(args))[(int)Number.Num(List.Second(args))], 2)
+                //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
                 .DefinePrimitive("vector-set!", (parent, args) => Vec(List.First(args))[(int)Number.Num(List.Second(args))] = List.Third(args), 3)
+                //// <r4rs section="6.8">(vector? <obj>)</r4rs>
                 .DefinePrimitive("vector?", (parent, args) => SchemeBoolean.Truth(List.First(args) is Vector), 1);
         }
 
@@ -128,6 +140,39 @@ namespace SimpleScheme
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Convert the vector a string.
+        /// </summary>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        public void AsString(bool quoted, StringBuilder buf)
+        {
+            buf.Append("#(");
+            if (this.Length > 0)
+            {
+                foreach (object elem in this)
+                {
+                    SchemeString.AsString(elem, quoted, buf);
+                    buf.Append(' ');
+                }
+
+                buf.Remove(buf.Length - 1, 1);
+            }
+
+            buf.Append(')');
+        }
+
+        /// <summary>
+        /// Provide the string representation of a vector.
+        /// </summary>
+        /// <returns>The vector as a string.</returns>
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            this.AsString(false, sb);
+            return sb.ToString();
         }
 
         /// <summary>

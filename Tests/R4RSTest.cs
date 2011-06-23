@@ -3,6 +3,7 @@
 // </copyright>
 namespace Tests
 {
+    using System;
     using System.IO;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
@@ -126,11 +127,13 @@ namespace Tests
         [TestMethod]
         public void IfMoreTest()
         {
-            this.LoadTest("4.1.5");
-            this.RunTest(@"(define x 2)
-                           (test 3 'define (+ x 1))");
-            this.RunTest(@"(set! x 4)
-                           (test 5 'set! (+ x 1))");
+            this.section = "4.1.5";
+            this.Run("3", "define", 
+                     @"(define x 2)
+                       (+ x 1)");
+            this.Run("5", "set!",
+                      @"(set! x 4)
+                        (+ x 1)");
         }
 
         /// <summary>
@@ -139,10 +142,10 @@ namespace Tests
         [TestMethod]
         public void DefineSetTest()
         {
-            this.LoadTest("4.1.6");
-            this.RunTest("(test 'yes 'if (if (> 3 2) 'yes 'no))");
-            this.RunTest("(test 'no 'if (if (> 2 3) 'yes 'no))");
-            this.RunTest("(test '1 'if (if (> 3 2) (- 3 2) (+ 3 2)))");
+            this.section = "4.1.6";
+            this.Run("yes", "if", "(if (> 3 2) 'yes 'no)");
+            this.Run("no", "if", "(if (> 2 3) 'yes 'no)");
+            this.Run("1", "if", "(if (> 3 2) (- 3 2) (+ 3 2))");
         }
 
         /// <summary>
@@ -151,30 +154,36 @@ namespace Tests
         [TestMethod]
         public void ConditionalsTest()
         {
-            this.LoadTest("4.2.1");
-            this.RunTest(@"(test 'greater 'cond (cond ((> 3 2) 'greater)
-			                  ((< 3 2) 'less)))");
-            this.RunTest(@"(test 'equal 'cond (cond ((> 3 3) 'greater)
-			                  ((< 3 3) 'less)
-			                (else 'equal)))");
-            this.RunTest(@"(test 2 'cond (cond ((assv 'b '((a 1) (b 2))) => cadr)
-		                                 (else #f)))");
-            this.RunTest(@"(test 'composite 'case (case (* 2 3)
-			                                   ((2 3 5 7) 'prime)
-			                                   ((1 4 6 8 9) 'composite)))");
-            this.RunTest(@"(test 'consonant 'case (case (car '(c d))
-			                      ((a e i o u) 'vowel)
-			                      ((w y) 'semivowel)
-			                      (else 'consonant)))");
-            this.RunTest("(test #t 'and (and (= 2 2) (> 2 1)))");
-            this.RunTest("(test #f 'and (and (= 2 2) (< 2 1)))");
-            this.RunTest("(test '(f g) 'and (and 1 2 'c '(f g)))");
-            this.RunTest("(test #t 'and (and))");
-            this.RunTest("(test #t 'or (or (= 2 2) (> 2 1)))");
-            this.RunTest("(test #t 'or (or (= 2 2) (< 2 1)))");
-            this.RunTest("(test #f 'or (or #f #f #f))");
-            this.RunTest("(test #f 'or (or))");
-            this.RunTest("(test '(b c) 'or (or (memq 'b '(a b c)) (+ 3 0)))");
+            this.section = "4.2.1";
+            this.Run("greater", "cond", 
+                  @"(cond ((> 3 2) 'greater)
+			              ((< 3 2) 'less))");
+            this.Run("equal", "cond", 
+                     @"(cond ((> 3 3) 'greater)
+			                 ((< 3 3) 'less)
+			                 (else 'equal))");
+            this.Run("2", "cond", 
+                    @"(cond ((assv 'b '((a 1) (b 2))) => cadr)
+		                    (else #f))");
+            this.Run("composite", "case", 
+                     @"(case (* 2 3)
+			               ((2 3 5 7) 'prime)
+			               ((1 4 6 8 9) 'composite))");
+            this.Run("consonant", "case", 
+                  @"(case (car '(c d))
+			                ((a e i o u) 'vowel)
+        			        ((w y) 'semivowel)
+			                (else 'consonant))");
+
+            this.Run("True", "and", "(and (= 2 2) (> 2 1))");
+            this.Run("False", "and", "(and (= 2 2) (< 2 1))");
+            this.Run("(f g)", "and", "(and 1 2 'c '(f g))");
+            this.Run("True", "and", "(and)");
+            this.Run("True", "or", "(or (= 2 2) (> 2 1))");
+            this.Run("True", "or", "(or (= 2 2) (< 2 1))");
+            this.Run("False", "or", "(or #f #f #f)");
+            this.Run("False", "or", "(or)");
+            this.Run("(b c)", "or", "(or (memq 'b '(a b c)) (+ 3 0))");
         }
 
         /// <summary>
@@ -183,30 +192,34 @@ namespace Tests
         [TestMethod]
         public void LetTest()
         {
-            this.LoadTest("4.2.2");
-            this.RunTest("(test 6 'let (let ((x 2) (y 3)) (* x y)))");
-            this.RunTest("(test 35 'let (let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))))");
-            this.RunTest("(test 70 'let* (let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x))))");
-            this.RunTest(@"(test #t 'letrec (letrec 
+            this.section = "4.2.2";
+            this.Run("6", "let", "(let ((x 2) (y 3)) (* x y))");
+            this.Run("35", "let", "(let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x)))");
+            this.Run("70", "let*", "(let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x)))");
+            this.Run("True",  "letrec", 
+                          @"(letrec 
                              ((even?
     			               (lambda (n) (if (zero? n) #t (odd? (- n 1)))))
 			                 (odd?
 			                   (lambda (n) (if (zero? n) #f (even? (- n 1))))))
-		                            (even? 88)))");
-            this.RunTest(@"(define x 34)
-                           (test 5 'let (let ((x 3)) (define x 5) x))");
-            this.RunTest("(test 34 'let x)");
-            this.RunTest("(test 6 'let (let () (define x 6) x))");
-            this.RunTest("(test 34 'let x)");
-            this.RunTest("(test 34 'let (let ((x x)) x))");
-            this.RunTest("(test 7 'let* (let* ((x 3)) (define x 7) x))");
-            this.RunTest("(test 34 'let* x)");
-            this.RunTest("(test 8 'let* (let* () (define x 8) x))");
-            this.RunTest("(test 34 'let* x)");
-            this.RunTest("(test 9 'letrec (letrec () (define x 9) x))");
-            this.RunTest("(test 34 'letrec x)");
-            this.RunTest("(test 10 'letrec (letrec ((x 3)) (define x 10) x))");
-            this.RunTest("(test 34 'letrec x)");
+		                   (even? 88))");
+            this.Run("5", "let", 
+                 @"(define x 34)
+                   (let ((x 3)) 
+                      (define x 5) x)");
+            this.Run("34", "let", "x");
+
+            this.Run("6", "let", "(let () (define x 6) x)");
+            this.Run("34", "let", "x");
+            this.Run("34", "let",  "(let ((x x)) x)");
+            this.Run("7", "let*", "(let* ((x 3)) (define x 7) x)");
+            this.Run("34", "let*", "x");
+            this.Run("8", "let*", "(let* () (define x 8) x)");
+            this.Run("34", "let*",  "x");
+            this.Run("9", "letrec",  "(letrec () (define x 9) x)");
+            this.Run("34", "letrec",  "x");
+            this.Run("10", "letrec",  "(letrec ((x 3)) (define x 10) x)");
+            this.Run("34", "letrec",  "x");
         }
 
         /// <summary>
@@ -215,10 +228,11 @@ namespace Tests
         [TestMethod]
         public void BeginTest()
         {
-            this.LoadTest("4.2.3");
-            this.RunTest(@"(define x 0)
-                           (test 6 'begin (begin (set! x (begin (begin 5)))
-		                     (begin ((begin +) (begin x) (begin (begin 1))))))");
+            this.section = "4.2.3";
+            Assert.AreEqual("6", this.ReadAndEvaluate(
+                           @"(define x 0)
+                             (begin (begin (set! x (begin (begin 5)))
+		                        (begin ((begin +) (begin x) (begin (begin 1))))))").ToString(), "Failed " + this.section);
         }
 
         /// <summary>
@@ -227,32 +241,33 @@ namespace Tests
         [TestMethod]
         public void LoopTest()
         {
-            this.LoadTest("4.2.4");
-
-            this.RunTest(@"(test '#(0 1 2 3 4) 'do (do ((vec (make-vector 5))
-			    (i 0 (+ i 1)))
-			   ((= i 5) vec)
-			 (vector-set! vec i i)))");
-
-            this.RunTest(@"
-            (test 25 'do (let ((x '(1 3 5 7 9)))
+            this.section = "4.2.4";
+            this.Run("#(0 1 2 3 4)", "do", 
+            @" (do ((vec (make-vector 5))
+			          (i 0 (+ i 1)))
+			         ((= i 5) vec)
+			       (vector-set! vec i i))");
+            this.Run("25", "do", 
+            @"
+            (let ((x '(1 3 5 7 9)))
      	       (do ((x x (cdr x))
      		    (sum 0 (+ sum (car x))))
-     		   ((null? x) sum))))");
-            this.RunTest(@"
-            (test 25 'do (let ((x '(1 3 5 7 9))
+     		   ((null? x) sum)))");
+            this.Run("25", "do", 
+            @"
+            (let ((x '(1 3 5 7 9))
                    (sum 0))
      	       (do ((x x (cdr x)))
-    		   ((null? x))
-    		 (set! sum (+ sum (car x))))
-    	       sum))");
-            this.RunTest("(test 1 'let (let foo () 1))");
-            this.RunTest(@"  
-            (test '((6 1 3) (-5 -2)) 'let
+    		       ((null? x))
+    		       (set! sum (+ sum (car x))))
+    	       sum)");
+            this.Run("1", "let", "(let foo () 1)");
+            this.Run("((6 1 3) (-5 -2))", "let", 
+            @"
               (let loop ((numbers '(3 -2 1 6 -5))
         		 (nonneg '())
         		 (neg '()))
-        	(cond ((null? numbers) (list nonneg neg))
+        	  (cond ((null? numbers) (list nonneg neg))
         	      ((negative? (car numbers))
         	       (loop (cdr numbers)
         		     nonneg
@@ -260,10 +275,11 @@ namespace Tests
         	      (else
         	       (loop (cdr numbers)
         		     (cons (car numbers) nonneg)
-       		     neg)))))");
+       		     neg))))");
+
 
             // TODO this does not pass
-            // this.RunTest(@"(test -1 'let (let ((f -)) (let f ((n (f 1))) n)))");
+            // this.Run("-1", "let", "(let ((f -)) (let f ((n (f 1))) n))");
         }
 
         /// <summary>
@@ -272,25 +288,27 @@ namespace Tests
         [TestMethod]
         public void QuasiQuoteTest()
         {
-            this.LoadTest("4.2.6");
-            this.RunTest(@"(test '(list 3 4) 'quasiquote `(list ,(+ 1 2) 4))");
-            this.RunTest(@"(test '(list a (quote a)) 'quasiquote (let ((name 'a)) `(list ,name ',name)))");
-            this.RunTest(@"(test '(a 3 4 5 6 b) 'quasiquote `(a ,(+ 1 2) ,@(map abs '(4 -5 6)) b))");
-            this.RunTest(@"(test '((foo 7) . cons)
-	                           'quasiquote
-	                               `((foo ,(- 10 3)) ,@(cdr '(c)) . ,(car '(cons))))");
+            this.section = "4.2.6";
+            this.LoadTest();
+            this.Run("(list 3 4)", "quasiquote", "`(list ,(+ 1 2) 4)");
+            this.Run("(list a 'a)", "quasiquote", "(let ((name 'a)) `(list ,name ',name))");
+            this.Run("(a 3 4 5 6 b)", "quasiquote", "`(a ,(+ 1 2) ,@(map abs '(4 -5 6)) b)");
+            this.Run("((foo 7) . cons)", "quasiquote", 
+	                               "`((foo ,(- 10 3)) ,@(cdr '(c)) . ,(car '(cons)))");
             this.ReadAndEvaluate(@"(define (sqt x)
 	                          (do ((i 0 (+ i 1)))
 	                             ((> (* i i) x) (- i 1))))");
 
-            this.RunTest(@"(test '#(10 5 2 4 3 8) 'quasiquote `#(10 5 ,(sqt 4) ,@(map sqt '(16 9)) 8))");
-            this.RunTest(@"(test 5 'quasiquote `,(+ 2 3))");
-            this.RunTest(@"(test '(a `(b ,(+ 1 2) ,(foo 4 d) e) f)
-                           'quasiquote `(a `(b ,(+ 1 2) ,(foo ,(+ 1 3) d) e) f))");
+            this.Run("#(10 5 2 4 3 8)", "quasiquote", "`#(10 5 ,(sqt 4) ,@(map sqt '(16 9)) 8)");
+            this.Run("5", "quasiquote", "`,(+ 2 3)");
+            this.Run("(a `(b ,(+ 1 2) ,(foo 4 d) e) f)", "quasiquote", "`(a `(b ,(+ 1 2) ,(foo ,(+ 1 3) d) e) f)");
+
             this.RunTest(@"(test '(a `(b ,x ,'y d) e) 'quasiquote
 	                           (let ((name1 'x) (name2 'y)) `(a `(b ,,name1 ,',name2 d) e)))
                                     (test '(list 3 4) 'quasiquote (quasiquote (list (unquote (+ 1 2)) 4)))");
-            this.RunTest(@"(test '`(list ,(+ 1 2) 4) 'quasiquote '(quasiquote (list (unquote (+ 1 2)) 4)))");
+
+            this.Run("`(list ,(+ 1 2) 4)", "quasiquote", "'(quasiquote (list (unquote (+ 1 2)) 4))");
+
         }
 
         /// <summary>
@@ -299,20 +317,29 @@ namespace Tests
         [TestMethod]
         public void BeginMoreTest()
         {
-            this.LoadTest("5.2.1");
-            this.RunTest(@"(define (tprint x) #t)
-                           (test #t 'tprint (tprint 56))");
-            this.RunTest(@"(define add3 (lambda (x) (+ x 3)))
-                           (test 6 'define (add3 3))");
-            this.RunTest(@"(define first car)
-                           (test 1 'define (first '(1 2)))");
-            this.RunTest(@"(define foo (lambda () 9))
-                           (test 9 'define (foo))");
-            this.RunTest(@"(define foo foo)
-                           (test 9 'define (foo))");
-            this.RunTest(@"(define foo (let ((foo foo)) (lambda () (+ 1 (foo)))))
-                           (test 10 'define (foo))");
-            this.RunTest(@"(define old-+ +)
+            this.section = "5.2.1";
+            this.LoadTest();
+            this.Run("True", "tprint", 
+              @"(define (tprint x) #t)
+                    (tprint 56)");
+            this.Run("6", "define", 
+                  @"(define add3 (lambda (x) (+ x 3)))
+                        (add3 3)");
+            this.Run("1", "define", 
+                  @"(define first car)
+                    (first '(1 2))");
+            this.Run("9", "define", 
+                  @"(define foo (lambda () 9))
+                    (foo)");
+            this.Run("9", "define", 
+                  @"(define foo foo)
+                    (foo)");
+            this.Run("10", "define", 
+                @"(define foo (let ((foo foo)) (lambda () (+ 1 (foo)))))
+                  (foo)");
+
+            this.Run("9", "add3", 
+                         @"(define old-+ +)
                            (begin (begin (begin)
 	                            (begin (begin (begin) (define + (lambda (x y) (list y x)))
 			                        (begin)))
@@ -321,8 +348,9 @@ namespace Tests
                           (begin (begin (begin) (test '(3 6) add3 6)
 		                      (begin))))
                          (set! + old-+)
-                         (test 9 add3 6)");
-            this.ReadAndEvaluate(@"(begin)
+                         (add3 6)");
+            this.ReadAndEvaluate(
+                         @"(begin)
                            (begin (begin))
                            (begin (begin (begin (begin))))");
         }
@@ -333,8 +361,9 @@ namespace Tests
         [TestMethod]
         public void DefineMoreTest()
         {
-            this.LoadTest("5.2.2");
-            this.RunTest(@"(test 45 'define
+            this.section = "5.2.2";
+            this.Run("45", "define", 
+                            @"
                               (let ((x 5))
 	                              (begin (begin (begin)
 		                             (begin (begin (begin) (define foo (lambda (y) (bar x y)))
@@ -345,28 +374,33 @@ namespace Tests
 	                         (begin (define bar (lambda (a b) (+ (* a b) a))))
 	                             (begin))
 	                   (begin)
-	                  (begin (foo (+ x 3)))))");
-            this.RunTest(@"(define x 34)
+	                  (begin (foo (+ x 3))))");
+            this.Run("5", "foo", 
+                         @"(define x 34)
                            (define (foo) (define x 5) x)
-                           (test 5 foo)");
-            this.RunTest(@"(test 34 'define x)");
-            this.RunTest(@"(define foo (lambda () (define x 5) x))
-                           (test 5 foo)");
-            this.RunTest(@"(test 34 'define x)");
-            this.RunTest(@"(define (foo x) ((lambda () (define x 5) x)) x)
-                           (test 88 foo 88)");
-            this.RunTest(@"(test 4 foo 4)");
-            this.RunTest(@"(test 34 'define x)");
-            this.RunTest(@"(test 99 'internal-define (letrec ((foo (lambda (arg)
+                           (foo)");
+            this.Run("34", "define", "x");
+            this.Run("5", "foo", 
+                         @"(define foo (lambda () (define x 5) x))
+                           (foo)");
+            this.Run("34", "define", "x");
+            this.Run("88", "foo", 
+                         @"(define (foo x) ((lambda () (define x 5) x)) x)
+                           (foo 88)");
+            this.Run("4", "foo", "(foo 4)");
+            this.Run("34", "define", "x");
+            this.Run("99", "internal-define", 
+                @"(letrec ((foo (lambda (arg)
 					  (or arg (and (procedure? foo)
 						       (foo 99))))))
 			    (define bar (foo #f))
-			    (foo #f)))");
-            this.RunTest(@"(test 77 'internal-define (letrec ((foo 77)
+			    (foo #f))");
+            this.Run("77", "internal-define", 
+              @"(letrec ((foo 77)
 				   (bar #f)
 				   (retfoo (lambda () foo)))
 			    (define baz (retfoo))
-			    (retfoo)))");
+			    (retfoo))");
         }
 
         /// <summary>
@@ -375,17 +409,17 @@ namespace Tests
         [TestMethod]
         public void NotTest()
         {
-            this.LoadTest("6.1");
-            this.RunTest(@"(test #f not #t)");
-            this.RunTest(@"(test #f not 3)");
-            this.RunTest(@"(test #f not (list 3))");
-            this.RunTest(@"(test #t not #f)");
-            this.RunTest(@"(test #f not '())");
-            this.RunTest(@"(test #f not (list))");
-            this.RunTest(@"(test #f not 'nil)");
-            this.RunTest(@"(test #t boolean? #f)");
-            this.RunTest(@"(test #f boolean? 0)");
-            this.RunTest(@"(test #f boolean? '())");
+            this.section = "6.1";
+            this.Run("False", "not", "(not #t)");
+            this.Run("False", "not", "(not 3)");
+            this.Run("False", "not", "(not (list 3))");
+            this.Run("True", "not", "(not #f)");
+            this.Run("False", "not", "(not '())");
+            this.Run("False", "not", "(not (list))");
+            this.Run("False", "not", "(not 'nil)");
+            this.Run("True", "boolean?", "(boolean? #f)");
+            this.Run("False", "boolean?", "(boolean? 0)");
+            this.Run("False", "boolean?", "(boolean? '())");
         }
 
         /// <summary>
@@ -394,15 +428,17 @@ namespace Tests
         [TestMethod]
         public void EquivalenceTest()
         {
-            this.LoadTest("6.2");
-            this.RunTest(@"(test #t eqv? 'a 'a)");
-            this.RunTest(@"(test #f eqv? 'a 'b)");
-            this.RunTest(@"(test #t eqv? 2 2)");
-            this.RunTest(@"(test #t eqv? '() '())");
-            this.RunTest(@"(test #t eqv? '10000 '10000)");
-            this.RunTest(@"(test #f eqv? (cons 1 2)(cons 1 2))");
-            this.RunTest(@"(test #f eqv? (lambda () 1) (lambda () 2))");
-            this.RunTest(@"(test #f eqv? #f 'nil)");
+            this.section = "6.2";
+            this.LoadTest();
+            this.Run("True", "eqv?", "(eqv? 'a 'a)");
+            this.Run("False", "eqv?", "(eqv? 'a 'b)");
+            this.Run("True", "eqv?", "(eqv? 2 2)");
+            this.Run("True", "eqv?", "(eqv? '() '())");
+            this.Run("True", "eqv?", "(eqv? '10000 '10000)");
+            this.Run("False", "eqv?", "(eqv? (cons 1 2)(cons 1 2))");
+            this.Run("False", "eqv?", "(eqv? (lambda () 1) (lambda () 2))");
+            this.Run("False", "eqv?", "(eqv? #f 'nil)");
+
             this.RunTest(@"(let ((p (lambda (x) x)))
                                       (test #t eqv? p p))");
             this.RunTest(@"(define gen-counter
@@ -410,43 +446,43 @@ namespace Tests
                               (let ((n 0))
                                  (lambda () (set! n (+ n 1)) n))))
                                       (let ((g (gen-counter))) (test #t eqv? g g))");
-            this.RunTest(@"(test #f eqv? (gen-counter) (gen-counter))");
+            this.Run("False", "eqv?", "(eqv? (gen-counter) (gen-counter))");
             this.RunTest(@"(letrec ((f (lambda () (if (eqv? f g) 'f 'both)))
 	                                (g (lambda () (if (eqv? f g) 'g 'both))))
                             (test #f eqv? f g))");
 
-            this.RunTest(@"(test #t eq? 'a 'a)");
-            this.RunTest(@"(test #f eq? (list 'a) (list 'a))");
-            this.RunTest(@"(test #t eq? '() '())");
-            this.RunTest(@"(test #t eq? car car)");
-            this.RunTest(@"(let ((x '(a))) (test #t eq? x x))");
-            this.RunTest(@"(let ((x '#())) (test #t eq? x x))");
-            this.RunTest(@"(let ((x (lambda (x) x))) (test #t eq? x x))");
+            this.Run("True", "eq?", "(eq? 'a 'a)");
+            this.Run("False", "eq?", "(eq? (list 'a) (list 'a))");
+            this.Run("True", "eq?", "(eq? '() '())");
+            this.Run("True", "eq?", "(eq? car car)");
+            this.RunTest("(let ((x '(a))) (test #t eq? x x))");
+            this.RunTest("(let ((x '#())) (test #t eq? x x))");
+            this.RunTest("(let ((x (lambda (x) x))) (test #t eq? x x))");
 
             this.ReadAndEvaluate(@"(define test-eq?-eqv?-agreement
                                       (lambda (obj1 obj2)
                                         (cond ((eq? (eq? obj1 obj2) (eqv? obj1 obj2)))
 	                                     (else #f))))");
-            this.RunTest(@"(test-eq?-eqv?-agreement '#f '#f)");
-            this.RunTest(@"(test-eq?-eqv?-agreement '#t '#t)");
-            this.RunTest(@"(test-eq?-eqv?-agreement '#t '#f)");
-            this.RunTest(@"(test-eq?-eqv?-agreement '(a) '(a))");
-            this.RunTest(@"(test-eq?-eqv?-agreement '(a) '(b))");
-            this.RunTest(@"(test-eq?-eqv?-agreement car car)");
-            this.RunTest(@"(test-eq?-eqv?-agreement car cdr)");
-            this.RunTest(@"(test-eq?-eqv?-agreement (list 'a) (list 'a))");
-            this.RunTest(@"(test-eq?-eqv?-agreement (list 'a) (list 'b))");
-            this.RunTest(@"(test-eq?-eqv?-agreement '#(a) '#(a))");
-            this.RunTest(@"(test-eq?-eqv?-agreement '#(a) '#(b))");
-            this.RunTest(@"(test-eq?-eqv?-agreement ""abc"" ""abc"")");
-            this.RunTest(@"(test-eq?-eqv?-agreement ""abc"" ""abz"")");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '#f '#f)");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '#t '#t)");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '#t '#f)");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '(a) '(a))");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '(a) '(b))");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement car car)");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement car cdr)");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement (list 'a) (list 'a))");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement (list 'a) (list 'b))");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '#(a) '#(a))");
+            this.Run("True", "test-eq?-eqv?-agreement", "(test-eq?-eqv?-agreement '#(a) '#(b))");
+            this.Run("True", "test-eq?-eqv?-agreement", @"(test-eq?-eqv?-agreement ""abc"" ""abc"")");
+            this.Run("True", "test-eq?-eqv?-agreement", @"(test-eq?-eqv?-agreement ""abc"" ""abz"")");
 
-            this.RunTest(@"(test #t equal? 'a 'a)");
-            this.RunTest(@"(test #t equal? '(a) '(a))");
-            this.RunTest(@"(test #t equal? '(a (b) c) '(a (b) c))");
-            this.RunTest(@"(test #t equal? ""abc"" ""abc"")");
-            this.RunTest(@"(test #t equal? 2 2)");
-            this.RunTest(@"(test #t equal? (make-vector 5 'a) (make-vector 5 'a))");
+            this.Run("True", "equal?", "(equal? 'a 'a)");
+            this.Run("True", "equal?", "(equal? '(a) '(a))");
+            this.Run("True", "equal?", "(equal? '(a (b) c) '(a (b) c))");
+            this.Run("True", "equal?", @"(equal? ""abc"" ""abc"")");
+            this.Run("True", "equal?", "(equal? 2 2)");
+            this.Run("True", "equal?", "(equal? (make-vector 5 'a) (make-vector 5 'a))");
         }
 
         /// <summary>
@@ -455,61 +491,64 @@ namespace Tests
         [TestMethod]
         public void PairListTest()
         {
-            this.LoadTest("6.3");
-            this.RunTest(@"(test '(a b c d e) 'dot '(a . (b . (c . (d . (e . ()))))))");
+            this.section = "6.3";
+            this.LoadTest();
+
+            this.Run("(a b c d e)", "dot", @"'(a . (b . (c . (d . (e . ())))))");
             this.RunTest(@"(define x (list 'a 'b 'c))
                            (define y x)
                               (and list? (test #t list? y))");
-            this.RunTest(@"(set-cdr! x 4)
-                           (test '(a . 4) 'set-cdr! x)");
-            this.RunTest(@"(test #t eqv? x y)");
-            this.RunTest(@"(test '(a b c . d) 'dot '(a . (b . (c . d))))");
-            this.RunTest(@"(and list? (test #f list? y))");
-            this.RunTest(@"(and list? (let ((x (list 'a))) (set-cdr! x x) (test #f 'list? (list? x))))");
-            this.RunTest(@"(test #t pair? '(a . b))");
-            this.RunTest(@"(test #t pair? '(a . 1))");
-            this.RunTest(@"(test #t pair? '(a b c))");
-            this.RunTest(@"(test #f pair? '())");
-            this.RunTest(@"(test #f pair? '#(a b))");
-            this.RunTest(@"(test '(a) cons 'a '())");
-            this.RunTest(@"(test '((a) b c d) cons '(a) '(b c d))");
-            this.RunTest(@"(test '(""a"" b c) cons ""a"" '(b c))");
-            this.RunTest(@"(test '(a . 3) cons 'a 3)");
-            this.RunTest(@"(test '((a b) . c) cons '(a b) 'c)");
+            this.Run("(a . 4)", "set-cdr!", 
+                         @"(set-cdr! x 4)
+                           x");
+            this.Run("True", "eqv?", "(eqv? x y)");
+            this.Run("(a b c . d)", "dot", "'(a . (b . (c . d)))");
+            this.RunTest("(and list? (test #f list? y))");
+            this.RunTest("(and list? (let ((x (list 'a))) (set-cdr! x x) (test #f 'list? (list? x))))");
+            this.Run("True", "pair?", "(pair? '(a . b))");
+            this.Run("True", "pair?", "(pair? '(a . 1))");
+            this.Run("True", "pair?", "(pair? '(a b c))");
+            this.Run("False", "pair?", "(pair? '())");
+            this.Run("False", "pair?", "(pair? '#(a b))");
+            this.Run("(a)", "cons", "(cons 'a '())");
+            this.Run("((a) b c d)", "cons", "(cons '(a) '(b c d))");
+            this.Run(@"(""a"" b c)", "cons", @"(cons ""a"" '(b c))");
+            this.Run("(a . 3)", "cons", "(cons 'a 3)");
+            this.Run("((a b) . c)", "cons", "(cons '(a b) 'c)");
 
-            this.RunTest(@"(test 'a car '(a b c))");
-            this.RunTest(@"(test '(a) car '((a) b c d))");
-            this.RunTest(@"(test 1 car '(1 . 2))");
+            this.Run("a", "car", "(car '(a b c))");
+            this.Run("(a)", "car", "(car '((a) b c d))");
+            this.Run("1", "car", "(car '(1 . 2))");
 
-            this.RunTest(@"(test '(b c d) cdr '((a) b c d))");
-            this.RunTest(@"(test 2 cdr '(1 . 2))");
+            this.Run("(b c d)", "cdr", "(cdr '((a) b c d))");
+            this.Run("2", "cdr", "(cdr '(1 . 2))");
 
-            this.RunTest(@"(test '(a 7 c) list 'a (+ 3 4) 'c)");
-            this.RunTest(@"(test '() list)");
+            this.Run("(a 7 c)", "list", "(list 'a (+ 3 4) 'c)");
+            this.Run("'()", "list", "(list)");
 
-            this.RunTest(@"(test 3 length '(a b c))");
-            this.RunTest(@"(test 3 length '(a (b) (c d e)))");
-            this.RunTest(@"(test 0 length '())");
+            this.Run("3", "length", "(length '(a b c))");
+            this.Run("3", "length", "(length '(a (b) (c d e)))");
+            this.Run("0", "length", "(length '())");
 
-            this.RunTest(@"(test '(x y) append '(x) '(y))");
-            this.RunTest(@"(test '(a b c d) append '(a) '(b c d))");
-            this.RunTest(@"(test '(a (b) (c)) append '(a (b)) '((c)))");
-            this.RunTest(@"(test '() append)");
-            this.RunTest(@"(test '(a b c . d) append '(a b) '(c . d))");
-            this.RunTest(@"(test 'a append '() 'a)");
+            this.Run("(x y)", "append", "(append '(x) '(y))");
+            this.Run("(a b c d)", "append", "(append '(a) '(b c d))");
+            this.Run("(a (b) (c))", "append", "(append '(a (b)) '((c)))");
+            this.Run("'()", "append", "(append)");
+            this.Run("(a b c . d)", "append", "(append '(a b) '(c . d))");
+            this.Run("a", "append", "(append '() 'a)");
 
-            this.RunTest(@"(test '(c b a) reverse '(a b c))");
-            this.RunTest(@"(test '((e (f)) d (b c) a) reverse '(a (b c) d (e (f))))");
+            this.Run("(c b a)", "reverse", "(reverse '(a b c))");
+            this.Run("((e (f)) d (b c) a)", "reverse", "(reverse '(a (b c) d (e (f))))");
 
-            this.RunTest(@"(test 'c list-ref '(a b c d) 2)");
+            this.Run("c", "list-ref", "(list-ref '(a b c d) 2)");
 
-            this.RunTest(@"(define e '((a 1) (b 2) (c 3)))
-                           (test '(a 1) assq 'a e)");
-            this.RunTest(@"(test '(b 2) assq 'b e)");
-            this.RunTest(@"(test #f assq 'd e)");
-            this.RunTest(@"(test #f assq (list 'a) '(((a)) ((b)) ((c))))");
-            this.RunTest(@"(test '((a)) assoc (list 'a) '(((a)) ((b)) ((c))))");
-            this.RunTest(@"(test '(5 7) assv 5 '((2 3) (5 7) (11 13)))");
+            this.Run("(a 1)", "assq", @"(define e '((a 1) (b 2) (c 3)))
+                                        (assq 'a e)");
+            this.Run("(b 2)", "assq", "(assq 'b e)");
+            this.Run("False", "assq", "(assq 'd e)");
+            this.Run("False", "assq", "(assq (list 'a) '(((a)) ((b)) ((c))))");
+            this.Run("((a))", "assoc", "(assoc (list 'a) '(((a)) ((b)) ((c))))");
+            this.Run("(5 7)", "assv", "(assv 5 '((2 3) (5 7) (11 13)))");
         }
 
         /// <summary>
@@ -518,45 +557,35 @@ namespace Tests
         [TestMethod]
         public void SymbolTest()
         {
-            this.LoadTest("6.4");
-            this.RunTest(@"(test #t symbol? 'foo)");
-            this.RunTest(@"(test #t symbol? (car '(a b)))");
-            this.RunTest(@"(test #f symbol? ""bar"")");
-            this.RunTest(@"(test #t symbol? 'nil)");
-            this.RunTest(@"(test #f symbol? '())");
-            this.RunTest(@"(test #f symbol? #f)");
+            this.section = "6.4";
+            this.LoadTest();
+            this.Run("True", "symbol?", "(symbol? 'foo)");
+            this.Run("True", "symbol?", "(symbol? (car '(a b)))");
+            this.Run("False", "symbol?", @"(symbol? ""bar"")");
+            this.Run("True", "symbol?", "(symbol? 'nil)");
+            this.Run("False", "symbol?", "(symbol? '())");
+            this.Run("False", "symbol?", "(symbol? #f)");
             this.ReadAndEvaluate(@"(define char-standard-case char-upcase)
                                       (if (string=? (symbol->string 'A) ""a"")
                                         (set! char-standard-case char-downcase))");
-            this.RunTest(@"(test #t 'standard-case
-                             (string=? (symbol->string 'a) (symbol->string 'A)))");
-            this.RunTest(@"(test #t 'standard-case
+            this.Run("True", "standard-case", "(string=? (symbol->string 'a) (symbol->string 'A))");
+            this.Run("True", "standard-case", @"
                              (or (string=? (symbol->string 'a) ""A"")
-	                             (string=? (symbol->string 'A) ""a"")))");
-            this.ReadAndEvaluate(@"(define (str-copy s)
-                                      (let ((v (make-string (string-length s))))
-                                        (do ((i (- (string-length v) 1) (- i 1)))
-	                                    ((< i 0) v)
-                                          (string-set! v i (string-ref s i)))))
-                                   (define (string-standard-case s)
-                                      (set! s (str-copy s))
-                                      (do ((i 0 (+ 1 i))
-                                        (sl (string-length s)))
-                                      ((>= i sl) s)
-                                      (string-set! s i (char-standard-case (string-ref s i)))))");
-            this.RunTest(@"(test (string-standard-case ""flying-fish"") symbol->string 'flying-fish)");
-            this.RunTest(@"(test (string-standard-case ""martin"") symbol->string 'Martin)");
-            this.RunTest(@"(test ""Malvina"" symbol->string (string->symbol ""Malvina""))");
-            this.RunTest(@"(test #t 'standard-case (eq? 'a 'A))");
+	                             (string=? (symbol->string 'A) ""a""))");
+
+            this.Run("flying-fish", "symbol->string", "(symbol->string 'flying-fish)");
+            this.Run("martin", "symbol->string", "(symbol->string 'Martin)");
+            this.Run(@"Malvina", "string->symbol", @"(symbol->string (string->symbol ""Malvina""))");
+            this.Run("True", "standard-case", "(eq? 'a 'A)");
 
             this.ReadAndEvaluate(@"(define x (string #\a #\b))
                                    (define y (string->symbol x))
                                    (string-set! x 0 #\c)");
-            this.RunTest(@"(test ""cb"" 'string-set! x)");
-            this.RunTest(@"(test ""ab"" symbol->string y)");
+            this.Run("cb", "string-set!", "x");
+            this.Run("ab", "symbol->string", "y");
             this.RunTest(@"(test y string->symbol ""ab"")");
-            this.RunTest(@"(test #t eq? 'mISSISSIppi 'mississippi)");
-            this.RunTest(@"(test #f 'string->symbol (eq? 'bitBlt (string->symbol ""bitBlt"")))");
+            this.Run("True", "eq", @"(eq? 'mISSISSIppi 'mississippi)");
+            this.Run("False", "string->symbol", @"(eq? 'bitBlt (string->symbol ""bitBlt""))");
             this.RunTest(@"(test 'JollyWog string->symbol (symbol->string 'JollyWog))");
         }
 
@@ -566,116 +595,116 @@ namespace Tests
         [TestMethod]
         public void NumberTest()
         {
-            this.LoadTest("6.5.5");
-            this.RunTest("(test #t number? 3)");
+            this.section = "6.5.5";
+            this.Run("True", "number?", "(number? 3)");
 
             // no complex or rational
-            this.RunTest("(test #t real? 3)");
-            this.RunTest("(test #t integer? 3)");
+            this.Run("True", "real?", "(real? 3)");
+            this.Run("True", "integer?", "(integer? 3)");
 
-            this.RunTest("(test #t exact? 3)");
-            this.RunTest("(test #f inexact? 3)");
+            this.Run("True", "exact?", "(exact? 3)");
+            this.Run("False", "inexact?", "(inexact? 3)");
 
-            this.RunTest("(test 1 expt 0 0)");
-            this.RunTest("(test 0 expt 0 1)");
-            this.RunTest("(test 0 expt 0 256)");
-            this.RunTest("(test 0 expt 0 -255)");
-            this.RunTest("(test 1 expt -1 256)");
-            this.RunTest("(test -1 expt -1 255)");
-            this.RunTest("(test 1 expt -1 -256)");
-            this.RunTest("(test -1 expt -1 -255)");
-            this.RunTest("(test 1 expt 256 0)");
-            this.RunTest("(test 1 expt -256 0)");
-            this.RunTest("(test 256 expt 256 1)");
-            this.RunTest("(test -256 expt -256 1)");
-            this.RunTest("(test 8 expt 2 3)");
-            this.RunTest("(test -8 expt -2 3)");
-            this.RunTest("(test 9 expt 3 2)");
-            this.RunTest("(test 9 expt -3 2)");
+            this.Run("1", "expt", "(expt 0 0)");
+            this.Run("0", "expt", "(expt 0 1)");
+            this.Run("0", "expt", "(expt 0 256)");
+            this.Run("0", "expt", "(expt 0 -255)");
+            this.Run("1", "expt", "(expt -1 256)");
+            this.Run("-1", "expt", "(expt -1 255)");
+            this.Run("1", "expt", "(expt -1 -256)");
+            this.Run("-1", "expt", "(expt -1 -255)");
+            this.Run("1", "expt", "(expt 256 0)");
+            this.Run("1", "expt", "(expt -256 0)");
+            this.Run("256", "expt", "(expt 256 1)");
+            this.Run("-256", "expt", "(expt -256 1)");
+            this.Run("8", "expt", "(expt 2 3)");
+            this.Run("-8", "expt", "(expt -2 3)");
+            this.Run("9", "expt", "(expt 3 2)");
+            this.Run("9", "expt", "(expt -3 2)");
 
-            this.RunTest("(test #t = 22 22 22)");
-            this.RunTest("(test #t = 22 22)");
-            this.RunTest("(test #f = 34 34 35)");
-            this.RunTest("(test #f = 34 35)");
-            this.RunTest("(test #t > 3 -6246)");
-            this.RunTest("(test #f > 9 9 -2424)");
-            this.RunTest("(test #t >= 3 -4 -6246)");
-            this.RunTest("(test #t >= 9 9)");
-            this.RunTest("(test #f >= 8 9)");
-            this.RunTest("(test #t < -1 2 3 4 5 6 7 8)");
-            this.RunTest("(test #f < -1 2 3 4 4 5 6 7)");
-            this.RunTest("(test #t <= -1 2 3 4 5 6 7 8)");
-            this.RunTest("(test #t <= -1 2 3 4 4 5 6 7)");
-            this.RunTest("(test #f < 1 3 2)");
-            this.RunTest("(test #f >= 1 3 2)");
+            this.Run("True", "=", "(= 22 22 22)");
+            this.Run("True", "=", "(= 22 22)");
+            this.Run("False", "=", "(= 34 34 35)");
+            this.Run("False", "=", "(= 34 35)");
+            this.Run("True", ">", "(> 3 -6246)");
+            this.Run("False", ">", "(> 9 9 -2424)");
+            this.Run("True", ">=", "(>= 3 -4 -6246)");
+            this.Run("True", ">=", "(>= 9 9)");
+            this.Run("False", ">=", "(>= 8 9)");
+            this.Run("True", "<", "(< -1 2 3 4 5 6 7 8)");
+            this.Run("False", "<", "(< -1 2 3 4 4 5 6 7)");
+            this.Run("True", "<=", "(<= -1 2 3 4 5 6 7 8)");
+            this.Run("True", "<=", "(<= -1 2 3 4 4 5 6 7)");
+            this.Run("False", "<", "(< 1 3 2)");
+            this.Run("False", ">=", "(>= 1 3 2)");
 
-            this.RunTest("(test #t zero? 0)");
-            this.RunTest("(test #f zero? 1)");
-            this.RunTest("(test #f zero? -1)");
-            this.RunTest("(test #f zero? -100)");
-            this.RunTest("(test #t positive? 4)");
-            this.RunTest("(test #f positive? -4)");
-            this.RunTest("(test #f positive? 0)");
-            this.RunTest("(test #f negative? 4)");
-            this.RunTest("(test #t negative? -4)");
-            this.RunTest("(test #f negative? 0)");
-            this.RunTest("(test #t odd? 3)");
-            this.RunTest("(test #f odd? 2)");
-            this.RunTest("(test #f odd? -4)");
-            this.RunTest("(test #t odd? -1)");
-            this.RunTest("(test #f even? 3)");
-            this.RunTest("(test #t even? 2)");
-            this.RunTest("(test #t even? -4)");
-            this.RunTest("(test #f even? -1)");
+            this.Run("True", "zero?", "(zero? 0)");
+            this.Run("False", "zero?", "(zero? 1)");
+            this.Run("False", "zero?", "(zero? -1)");
+            this.Run("False", "zero?", "(zero? -100)");
+            this.Run("True", "positive?", "(positive? 4)");
+            this.Run("False", "positive?", "(positive? -4)");
+            this.Run("False", "positive?", "(positive? 0)");
+            this.Run("False", "negative?", "(negative? 4)");
+            this.Run("True", "negative?", "(negative? -4)");
+            this.Run("False", "negative?", "(negative? 0)");
+            this.Run("True", "odd?", "(odd? 3)");
+            this.Run("False", "odd?", "(odd? 2)");
+            this.Run("False", "odd?", "(odd? -4)");
+            this.Run("True", "odd?", "(odd? -1)");
+            this.Run("False", "even?", "(even? 3)");
+            this.Run("True", "even?", "(even? 2)");
+            this.Run("True", "even?", "(even? -4)");
+            this.Run("False", "even?", "(even? -1)");
 
-            this.RunTest("(test 38 max 34 5 7 38 6)");
-            this.RunTest("(test -24 min 3  5 5 330 4 -24)");
+            this.Run("38", "max", "(max 34 5 7 38 6)");
+            this.Run("-24", "min", "(min 3  5 5 330 4 -24)");
 
-            this.RunTest("(test 7 + 3 4)");
-            this.RunTest("(test '3 + 3)");
-            this.RunTest("(test 0 +)");
-            this.RunTest("(test 4 * 4)");
-            this.RunTest("(test 1 *)");
-            this.RunTest("(test 1 / 1)");
-            this.RunTest("(test -1 / -1)");
-            this.RunTest("(test 2 / 6 3)");
-            this.RunTest("(test -3 / 6 -2)");
-            this.RunTest("(test -3 / -6 2)");
-            this.RunTest("(test 3 / -6 -2)");
-            this.RunTest("(test -1 - 3 4)");
-            this.RunTest("(test -3 - 3)");
-            this.RunTest("(test 7 abs -7)");
-            this.RunTest("(test 7 abs 7)");
-            this.RunTest("(test 0 abs 0)");
+            this.Run("7", "+", "(+ 3 4)");
+            this.Run("3", "+", "(+ 3)");
+            this.Run("0", "+", "(+)");
+            this.Run("4", "*", "(* 4)");
+            this.Run("1", "*", "(*)");
+            this.Run("1", "/", "(/ 1)");
+            this.Run("-1", "/", "(/ -1)");
+            this.Run("2", "/", "(/ 6 3)");
+            this.Run("-3", "/", "(/ 6 -2)");
+            this.Run("-3", "/", "(/ -6 2)");
+            this.Run("3", "/", "(/ -6 -2)");
+            this.Run("-1", "-", "(- 3 4)");
+            this.Run("-3", "-", "(- 3)");
+            this.Run("7", "abs", "(abs -7)");
+            this.Run("7", "abs", "(abs 7)");
+            this.Run("0", "abs", "(abs 0)");
 
-            this.RunTest("(test 5 quotient 35 7)");
-            this.RunTest("(test -5 quotient -35 7)");
-            this.RunTest("(test -5 quotient 35 -7)");
-            this.RunTest("(test 5 quotient -35 -7)");
-            this.RunTest("(test 1 modulo 13 4)");
-            this.RunTest("(test 1 remainder 13 4)");
-            this.RunTest("(test 3 modulo -13 4)");
-            this.RunTest("(test -1 remainder -13 4)");
-            this.RunTest("(test -3 modulo 13 -4)");
-            this.RunTest("(test 1 remainder 13 -4)");
-            this.RunTest("(test -1 modulo -13 -4)");
-            this.RunTest("(test -1 remainder -13 -4)");
-            this.RunTest("(test 0 modulo 0 86400)");
-            this.RunTest("(test 0 modulo 0 -86400)");
+            this.Run("5", "quotient", "(quotient 35 7)");
+            this.Run("-5", "quotient", "(quotient -35 7)");
+            this.Run("-5", "quotient", "(quotient 35 -7)");
+            this.Run("5", "quotient", "(quotient -35 -7)");
+            this.Run("1", "modulo", "(modulo 13 4)");
+            this.Run("1", "remainder", "(remainder 13 4)");
+            this.Run("3", "modulo", "(modulo -13 4)");
+            this.Run("-1", "remainder", "(remainder -13 4)");
+            this.Run("-3", "modulo", "(modulo 13 -4)");
+            this.Run("1", "remainder", "(remainder 13 -4)");
+            this.Run("-1", "modulo", "(modulo -13 -4)");
+            this.Run("-1", "remainder", "(remainder -13 -4)");
+            this.Run("0", "modulo", "(modulo 0 86400)");
+            this.Run("0", "modulo", "(modulo 0 -86400)");
             this.ReadAndEvaluate(@"(define (divtest n1 n2)
 	                                (= n1 (+ (* n2 (quotient n1 n2))
 		                                 (remainder n1 n2))))");
-            this.RunTest("(test #t divtest 238 9)");
-            this.RunTest("(test #t divtest -238 9)");
-            this.RunTest("(test #t divtest 238 -9)");
-            this.RunTest("(test #t divtest -238 -9)");
+            this.Run("True", "divtest", "(divtest 238 9)");
+            this.Run("True", "divtest", "(divtest -238 9)");
+            this.Run("True", "divtest", "(divtest 238 -9)");
+            this.Run("True", "divtest", "(divtest -238 -9)");
 
-            this.RunTest("(test 4 gcd 0 4)");
-            this.RunTest("(test 4 gcd -4 0)");
-            this.RunTest("(test 4 gcd 32 -36)");
-            this.RunTest("(test 0 gcd)");
-            this.RunTest("(test 288 lcm 32 -36)");
-            this.RunTest("(test 1 lcm)");
+            this.Run("4", "gcd", "(gcd 0 4)");
+            this.Run("4", "gcd", "(gcd -4 0)");
+            this.Run("4", "gcd", "(gcd 32 -36)");
+            this.Run("0", "gcd", "(gcd)");
+            this.Run("288", "lcm", "(lcm 32 -36)");
+            this.Run("1", "lcm", "(lcm)");
         }
 
         /// <summary>
@@ -684,18 +713,18 @@ namespace Tests
         [TestMethod]
         public void MoreNumberTest()
         {
-            this.LoadTest("6.5.5");
+            this.section = "6.5.5";
             this.ReadAndEvaluate(@"(define (test-string->number str)
                                    (define ans (string->number str))
                                       (cond ((not ans) #t) ((number? ans) #t) (else ans)))");
-            this.RunTest(@"(test #t test-string->number ""+#.#"")");
-            this.RunTest(@"(test #t test-string->number ""-#.#"")");
-            this.RunTest(@"(test #t test-string->number ""#.#"")");
-            this.RunTest(@"(test #t test-string->number ""1/0"")");
-            this.RunTest(@"(test #t test-string->number ""-1/0"")");
-            this.RunTest(@"(test #t test-string->number ""0/0"")");
-            this.RunTest(@"(test #t test-string->number ""#e"")");
-            this.RunTest(@"(test #t test-string->number ""#"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""+#.#"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""-#.#"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""#.#"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""1/0"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""-1/0"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""0/0"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""#e"")");
+            this.Run("True", "test-string->number", @"(test-string->number ""#"")");
         }
 
         // No inexact number support
@@ -707,22 +736,38 @@ namespace Tests
         [TestMethod]
         public void StringToNumberTest()
         {
-            this.LoadTest("6.5.9");
-            this.RunTest(@"(test ""0"" number->string 0)");
-            this.RunTest(@"(test ""100"" number->string 100)");
-            this.RunTest(@"(test ""100"" number->string 256 16)");
-            this.RunTest(@"(test 100 string->number ""100"")");
-            this.RunTest(@"(test 256 string->number ""100"" 16)");
-            this.RunTest(@"(test #f string->number """")");
-            this.RunTest(@"(test #f string->number ""."")");
-            this.RunTest(@"(test #f string->number ""d"")");
-            this.RunTest(@"(test #f string->number ""D"")");
-            this.RunTest(@"(test #f string->number ""-"")");
-            this.RunTest(@"(test #f string->number ""+"")");
-            this.RunTest(@"(test #t 'string->number (or (not (string->number ""80000000"" 16))
-			     (positive? (string->number ""80000000"" 16))))");
-            this.RunTest(@"(test #t 'string->number (or (not (string->number ""-80000000"" 16))
-			     (negative? (string->number ""-80000000"" 16))))");
+            this.section = "6.5.9";
+            this.Run("0", "number->string", "(number->string 0)");
+            this.Run("100", "number->string", "(number->string 100)");
+            this.Run("100", "number->string", "(number->string 256 16)");
+            this.Run("100", "string->number", @"(string->number ""100"")");
+            this.Run("256", "string->number", @"(string->number ""100"" 16)");
+            this.Run("False", "string->number", @"(string->number """")");
+            this.Run("False", "string->number", @"(string->number ""."")");
+            this.Run("False", "string->number", @"(string->number ""d"")");
+            this.Run("False", "string->number", @"(string->number ""D"")");
+            this.Run("False", "string->number", @"(string->number ""-"")");
+            this.Run("False", "string->number", @"(string->number ""+"")");
+            this.Run("True", "string->number", @"(or (not (string->number ""80000000"" 16))
+			                                         (positive? (string->number ""80000000"" 16)))");
+            this.Run("True", "string->number", @"(or (not (string->number ""-80000000"" 16))
+			                                             (negative? (string->number ""-80000000"" 16)))");
+
+            this.Run("0", "number->string", "(number->string 0)");
+            this.Run("100", "number->string", "(number->string 100)");
+            this.Run("100", "number->string", "(number->string 256 16)");
+            this.Run("100", "number->string", @"(string->number ""100"")");
+            this.Run("256", "number->string", @"(string->number ""100"" 16)");
+            this.Run("False", "string->number", @"(string->number """")");
+            this.Run("False", "string->number", @"(string->number ""."")");
+            this.Run("False", "string->number", @"(string->number ""d"")");
+            this.Run("False", "string->number", @"(string->number ""D"")");
+            this.Run("False", "string->number", @"(string->number ""-"")");
+            this.Run("False", "string->number", @"(string->number ""+"")");
+            this.Run("True", "string->number", @"(or (not (string->number ""80000000"" 16))
+			                                         (positive? (string->number ""80000000"" 16)))");
+            this.Run("True", "string->number", @"(or (not (string->number ""-80000000"" 16))
+			                                         (negative? (string->number ""-80000000"" 16)))");
         }
 
         /// <summary>
@@ -731,123 +776,123 @@ namespace Tests
         [TestMethod]
         public void CharacterTest()
         {
-            this.LoadTest("6.6");
-            this.RunTest(@"(test #t eqv? '#\  #\Space)");
-            this.RunTest(@"(test #t eqv? #\space '#\Space)");
-            this.RunTest(@"(test #t char? #\a)");
-            this.RunTest(@"(test #t char? #\()");
-            this.RunTest(@"(test #t char? #\space)");
-            this.RunTest(@"(test #t char? '#\newline)");
+            this.section = "6.6";
+            this.Run("True", "eqv?", @"(eqv? '#\  #\Space)");
+            this.Run("True", "eqv?", @"(eqv? #\space '#\Space)");
+            this.Run("True", "char?", @"(char? #\a)");
+            this.Run("True", "char?", @"(char? #\()");
+            this.Run("True", "char?", @"(char? #\space)");
+            this.Run("True", "char?", @"(char? '#\newline)");
 
-            this.RunTest(@"(test #f char=? #\A #\B)");
-            this.RunTest(@"(test #f char=? #\a #\b)");
-            this.RunTest(@"(test #f char=? #\9 #\0)");
-            this.RunTest(@"(test #t char=? #\A #\A)");
+            this.Run("False", "char=?", @"(char=? #\A #\B)");
+            this.Run("False", "char=?", @"(char=? #\a #\b)");
+            this.Run("False", "char=?", @"(char=? #\9 #\0)");
+            this.Run("True", "char=?", @"(char=? #\A #\A)");
 
-            this.RunTest(@"(test #t char<? #\A #\B)");
-            this.RunTest(@"(test #t char<? #\a #\b)");
-            this.RunTest(@"(test #f char<? #\9 #\0)");
-            this.RunTest(@"(test #f char<? #\A #\A)");
+            this.Run("True", "char<?", @"(char<? #\A #\B)");
+            this.Run("True", "char<?", @"(char<? #\a #\b)");
+            this.Run("False", "char<?", @"(char<? #\9 #\0)");
+            this.Run("False", "char<?", @"(char<? #\A #\A)");
 
-            this.RunTest(@"(test #f char>? #\A #\B)");
-            this.RunTest(@"(test #f char>? #\a #\b)");
-            this.RunTest(@"(test #t char>? #\9 #\0)");
-            this.RunTest(@"(test #f char>? #\A #\A)");
+            this.Run("False", "char>?", @"(char>? #\A #\B)");
+            this.Run("False", "char>?", @"(char>? #\a #\b)");
+            this.Run("True", "char>?", @"(char>? #\9 #\0)");
+            this.Run("False", "char>?", @"(char>? #\A #\A)");
 
-            this.RunTest(@"(test #t char<=? #\A #\B)");
-            this.RunTest(@"(test #t char<=? #\a #\b)");
-            this.RunTest(@"(test #f char<=? #\9 #\0)");
-            this.RunTest(@"(test #t char<=? #\A #\A)");
+            this.Run("True", "char<=?", @"(char<=? #\A #\B)");
+            this.Run("True", "char<=?", @"(char<=? #\a #\b)");
+            this.Run("False", "char<=?", @"(char<=? #\9 #\0)");
+            this.Run("True", "char<=?", @"(char<=? #\A #\A)");
 
-            this.RunTest(@"(test #f char>=? #\A #\B)");
-            this.RunTest(@"(test #f char>=? #\a #\b)");
-            this.RunTest(@"(test #t char>=? #\9 #\0)");
-            this.RunTest(@"(test #t char>=? #\A #\A)");
+            this.Run("False", "char>=?", @"(char>=? #\A #\B)");
+            this.Run("False", "char>=?", @"(char>=? #\a #\b)");
+            this.Run("True", "char>=?", @"(char>=? #\9 #\0)");
+            this.Run("True", "char>=?", @"(char>=? #\A #\A)");
 
-            this.RunTest(@"(test #f char-ci=? #\A #\B)");
-            this.RunTest(@"(test #f char-ci=? #\a #\B)");
-            this.RunTest(@"(test #f char-ci=? #\A #\b)");
-            this.RunTest(@"(test #f char-ci=? #\a #\b)");
-            this.RunTest(@"(test #f char-ci=? #\9 #\0)");
-            this.RunTest(@"(test #t char-ci=? #\A #\A)");
-            this.RunTest(@"(test #t char-ci=? #\A #\a)");
+            this.Run("False", "char-ci=?", @"(char-ci=? #\A #\B)");
+            this.Run("False", "char-ci=?", @"(char-ci=? #\a #\B)");
+            this.Run("False", "char-ci=?", @"(char-ci=? #\A #\b)");
+            this.Run("False", "char-ci=?", @"(char-ci=? #\a #\b)");
+            this.Run("False", "char-ci=?", @"(char-ci=? #\9 #\0)");
+            this.Run("True", "char-ci=?", @"(char-ci=? #\A #\A)");
+            this.Run("True", "char-ci=?", @"(char-ci=? #\A #\a)");
 
-            this.RunTest(@"(test #t char-ci<? #\A #\B)");
-            this.RunTest(@"(test #t char-ci<? #\a #\B)");
-            this.RunTest(@"(test #t char-ci<? #\A #\b)");
-            this.RunTest(@"(test #t char-ci<? #\a #\b)");
-            this.RunTest(@"(test #f char-ci<? #\9 #\0)");
-            this.RunTest(@"(test #f char-ci<? #\A #\A)");
-            this.RunTest(@"(test #f char-ci<? #\A #\a)");
+            this.Run("True", "char-ci<?", @"(char-ci<? #\A #\B)");
+            this.Run("True", "char-ci<?", @"(char-ci<? #\a #\B)");
+            this.Run("True", "char-ci<?", @"(char-ci<? #\A #\b)");
+            this.Run("True", "char-ci<?", @"(char-ci<? #\a #\b)");
+            this.Run("False", "char-ci<?", @"(char-ci<? #\9 #\0)");
+            this.Run("False", "char-ci<?", @"(char-ci<? #\A #\A)");
+            this.Run("False", "char-ci<?", @"(char-ci<? #\A #\a)");
 
-            this.RunTest(@"(test #f char-ci>? #\A #\B)");
-            this.RunTest(@"(test #f char-ci>? #\a #\B)");
-            this.RunTest(@"(test #f char-ci>? #\A #\b)");
-            this.RunTest(@"(test #f char-ci>? #\a #\b)");
-            this.RunTest(@"(test #t char-ci>? #\9 #\0)");
-            this.RunTest(@"(test #f char-ci>? #\A #\A)");
-            this.RunTest(@"(test #f char-ci>? #\A #\a)");
+            this.Run("False", "char-ci>?", @"(char-ci>? #\A #\B)");
+            this.Run("False", "char-ci>?", @"(char-ci>? #\a #\B)");
+            this.Run("False", "char-ci>?", @"(char-ci>? #\A #\b)");
+            this.Run("False", "char-ci>?", @"(char-ci>? #\a #\b)");
+            this.Run("True", "char-ci>?", @"(char-ci>? #\9 #\0)");
+            this.Run("False", "char-ci>?", @"(char-ci>? #\A #\A)");
+            this.Run("False", "char-ci>?", @"(char-ci>? #\A #\a)");
 
-            this.RunTest(@"(test #t char-ci<=? #\A #\B)");
-            this.RunTest(@"(test #t char-ci<=? #\a #\B)");
-            this.RunTest(@"(test #t char-ci<=? #\A #\b)");
-            this.RunTest(@"(test #t char-ci<=? #\a #\b)");
-            this.RunTest(@"(test #f char-ci<=? #\9 #\0)");
-            this.RunTest(@"(test #t char-ci<=? #\A #\A)");
-            this.RunTest(@"(test #t char-ci<=? #\A #\a)");
+            this.Run("True", "char-ci<=?", @"(char-ci<=? #\A #\B)");
+            this.Run("True", "char-ci<=?", @"(char-ci<=? #\a #\B)");
+            this.Run("True", "char-ci<=?", @"(char-ci<=? #\A #\b)");
+            this.Run("True", "char-ci<=?", @"(char-ci<=? #\a #\b)");
+            this.Run("False", "char-ci<=?", @"(char-ci<=? #\9 #\0)");
+            this.Run("True", "char-ci<=?", @"(char-ci<=? #\A #\A)");
+            this.Run("True", "char-ci<=?", @"(char-ci<=? #\A #\a)");
 
-            this.RunTest(@"(test #f char-ci>=? #\A #\B)");
-            this.RunTest(@"(test #f char-ci>=? #\a #\B)");
-            this.RunTest(@"(test #f char-ci>=? #\A #\b)");
-            this.RunTest(@"(test #f char-ci>=? #\a #\b)");
-            this.RunTest(@"(test #t char-ci>=? #\9 #\0)");
-            this.RunTest(@"(test #t char-ci>=? #\A #\A)");
-            this.RunTest(@"(test #t char-ci>=? #\A #\a)");
+            this.Run("False", "char-ci>=?", @"(char-ci>=? #\A #\B)");
+            this.Run("False", "char-ci>=?", @"(char-ci>=? #\a #\B)");
+            this.Run("False", "char-ci>=?", @"(char-ci>=? #\A #\b)");
+            this.Run("False", "char-ci>=?", @"(char-ci>=? #\a #\b)");
+            this.Run("True", "char-ci>=?", @"(char-ci>=? #\9 #\0)");
+            this.Run("True", "char-ci>=?", @"(char-ci>=? #\A #\A)");
+            this.Run("True", "char-ci>=?", @"(char-ci>=? #\A #\a)");
 
-            this.RunTest(@"(test #t char-alphabetic? #\a)");
-            this.RunTest(@"(test #t char-alphabetic? #\A)");
-            this.RunTest(@"(test #t char-alphabetic? #\z)");
-            this.RunTest(@"(test #t char-alphabetic? #\Z)");
-            this.RunTest(@"(test #f char-alphabetic? #\0)");
-            this.RunTest(@"(test #f char-alphabetic? #\9)");
-            this.RunTest(@"(test #f char-alphabetic? #\space)");
-            this.RunTest(@"(test #f char-alphabetic? #\;)");
+            this.Run("True", "char-alphabetic?", @"(char-alphabetic? #\a)");
+            this.Run("True", "char-alphabetic?", @"(char-alphabetic? #\A)");
+            this.Run("True", "char-alphabetic?", @"(char-alphabetic? #\z)");
+            this.Run("True", "char-alphabetic?", @"(char-alphabetic? #\Z)");
+            this.Run("False", "char-alphabetic?", @"(char-alphabetic? #\0)");
+            this.Run("False", "char-alphabetic?", @"(char-alphabetic? #\9)");
+            this.Run("False", "char-alphabetic?", @"(char-alphabetic? #\space)");
+            this.Run("False", "char-alphabetic?", @"(char-alphabetic? #\;)");
 
-            this.RunTest(@"(test #f char-numeric? #\a)");
-            this.RunTest(@"(test #f char-numeric? #\A)");
-            this.RunTest(@"(test #f char-numeric? #\z)");
-            this.RunTest(@"(test #f char-numeric? #\Z)");
-            this.RunTest(@"(test #t char-numeric? #\0)");
-            this.RunTest(@"(test #t char-numeric? #\9)");
-            this.RunTest(@"(test #f char-numeric? #\space)");
-            this.RunTest(@"(test #f char-numeric? #\;)");
+            this.Run("False", "char-numeric?", @"(char-numeric? #\a)");
+            this.Run("False", "char-numeric?", @"(char-numeric? #\A)");
+            this.Run("False", "char-numeric?", @"(char-numeric? #\z)");
+            this.Run("False", "char-numeric?", @"(char-numeric? #\Z)");
+            this.Run("True", "char-numeric?", @"(char-numeric? #\0)");
+            this.Run("True", "char-numeric?", @"(char-numeric? #\9)");
+            this.Run("False", "char-numeric?", @"(char-numeric? #\space)");
+            this.Run("False", "char-numeric?", @"(char-numeric? #\;)");
 
-            this.RunTest(@"(test #f char-whitespace? #\a)");
-            this.RunTest(@"(test #f char-whitespace? #\A)");
-            this.RunTest(@"(test #f char-whitespace? #\z)");
-            this.RunTest(@"(test #f char-whitespace? #\Z)");
-            this.RunTest(@"(test #f char-whitespace? #\0)");
-            this.RunTest(@"(test #f char-whitespace? #\9)");
-            this.RunTest(@"(test #t char-whitespace? #\space)");
-            this.RunTest(@"(test #f char-whitespace? #\;)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\a)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\A)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\z)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\Z)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\0)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\9)");
+            this.Run("True", "char-whitespace?", @"(char-whitespace? #\space)");
+            this.Run("False", "char-whitespace?", @"(char-whitespace? #\;)");
 
-            this.RunTest(@"(test #f char-upper-case? #\0)");
-            this.RunTest(@"(test #f char-upper-case? #\9)");
-            this.RunTest(@"(test #f char-upper-case? #\space)");
-            this.RunTest(@"(test #f char-upper-case? #\;)");
+            this.Run("False", "char-upper-case?", @"(char-upper-case? #\0)");
+            this.Run("False", "char-upper-case?", @"(char-upper-case? #\9)");
+            this.Run("False", "char-upper-case?", @"(char-upper-case? #\space)");
+            this.Run("False", "char-upper-case?", @"(char-upper-case? #\;)");
 
-            this.RunTest(@"(test #f char-lower-case? #\0)");
-            this.RunTest(@"(test #f char-lower-case? #\9)");
-            this.RunTest(@"(test #f char-lower-case? #\space)");
-            this.RunTest(@"(test #f char-lower-case? #\;)");
+            this.Run("False", "char-lower-case?", @"(char-lower-case? #\0)");
+            this.Run("False", "char-lower-case?", @"(char-lower-case? #\9)");
+            this.Run("False", "char-lower-case?", @"(char-lower-case? #\space)");
+            this.Run("False", "char-lower-case?", @"(char-lower-case? #\;)");
 
-            this.RunTest(@"(test #\. integer->char (char->integer #\.))");
-            this.RunTest(@"(test #\A integer->char (char->integer #\A))");
-            this.RunTest(@"(test #\a integer->char (char->integer #\a))");
-            this.RunTest(@"(test #\A char-upcase #\A)");
-            this.RunTest(@"(test #\A char-upcase #\a)");
-            this.RunTest(@"(test #\a char-downcase #\A)");
-            this.RunTest(@"(test #\a char-downcase #\a)");
+            this.Run(".", "integer->char?", @"(integer->char (char->integer #\.))");
+            this.Run("A", "integer->char?", @"(integer->char (char->integer #\A))");
+            this.Run("a", "integer->char?", @"(integer->char (char->integer #\a))");
+            this.Run("A", "char-upcase?", @"(char-upcase #\A)");
+            this.Run("A", "char-upcase?", @"(char-upcase #\a)");
+            this.Run("a", "char-downcase?", @"(char-downcase #\A)");
+            this.Run("a", "char-downcase?", @"(char-downcase #\a)");
         }
 
         /// <summary>
@@ -856,105 +901,107 @@ namespace Tests
         [TestMethod]
         public void StringTest()
         {
-            this.LoadTest("6.7");
-            this.RunTest(@"(test #t string? ""The word \""recursion\\\"" has many meanings."")");
-            this.RunTest(@"(test #t string? """")");
+            this.section = "6.7";
+            this.LoadTest();
+            this.Run("True", "string?", @"(string? ""The word \""recursion\\\"" has many meanings."")");
+            this.Run("True", "string?", @"(string? """")");
+
             this.ReadAndEvaluate(@"(define f (make-string 3 #\*))
                                (test ""?**"" 'string-set! (begin (string-set! f 0 #\?) f))");
-            this.RunTest(@"(test ""abc"" string #\a #\b #\c)");
+            this.Run("abc", "string", @"(string #\a #\b #\c)");
 
-            this.RunTest(@"(test """" string)");
-            this.RunTest(@"(test 3 string-length ""abc"")");
-            this.RunTest(@"(test #\a string-ref ""abc"" 0)");
-            this.RunTest(@"(test #\c string-ref ""abc"" 2)");
-            this.RunTest(@"(test 0 string-length """")");
-            this.RunTest(@"(test """" substring ""ab"" 0 0)");
-            this.RunTest(@"(test """" substring ""ab"" 1 1)");
-            this.RunTest(@"(test """" substring ""ab"" 2 2)");
-            this.RunTest(@"(test ""a"" substring ""ab"" 0 1)");
-            this.RunTest(@"(test ""b"" substring ""ab"" 1 2)");
-            this.RunTest(@"(test ""ab"" substring ""ab"" 0 2)");
+            this.Run(string.Empty, "string", @"(string)");
+            this.Run("3", "string-length", @"(string-length ""abc"")");
+            this.Run("a", "string-ref", @"(string-ref ""abc"" 0)");
+            this.Run("c", "string-ref", @"(string-ref ""abc"" 2)");
+            this.Run("0", "string-length", @"(string-length """")");
+            this.Run(string.Empty, "substring", @"(substring ""ab"" 0 0)");
+            this.Run(string.Empty, "substring", @"(substring ""ab"" 1 1)");
+            this.Run(string.Empty, "substring", @"(substring ""ab"" 2 2)");
+            this.Run("a", "substring", @"(substring ""ab"" 0 1)");
+            this.Run("b", "substring", @"(substring ""ab"" 1 2)");
+            this.Run("ab", "substring", @"(substring ""ab"" 0 2)");
 
-            this.RunTest(@"(test ""foobar"" string-append ""foo"" ""bar"")");
-            this.RunTest(@"(test ""foo"" string-append ""foo"")");
-            this.RunTest(@"(test ""foo"" string-append ""foo"" """")");
-            this.RunTest(@"(test ""foo"" string-append """" ""foo"")");
-            this.RunTest(@"(test """" string-append)");
-            this.RunTest(@"(test """" make-string 0)");
-            this.RunTest(@"(test #t string=? """" """")");
-            this.RunTest(@"(test #f string<? """" """")");
-            this.RunTest(@"(test #f string>? """" """")");
-            this.RunTest(@"(test #t string<=? """" """")");
-            this.RunTest(@"(test #t string>=? """" """")");
-            this.RunTest(@"(test #t string-ci=? """" """")");
-            this.RunTest(@"(test #f string-ci<? """" """")");
-            this.RunTest(@"(test #f string-ci>? """" """")");
-            this.RunTest(@"(test #t string-ci<=? """" """")");
-            this.RunTest(@"(test #t string-ci>=? """" """")");
+            this.Run("foobar", "string-append", @"(string-append ""foo"" ""bar"")");
+            this.Run("foo", "string-append", @"(string-append ""foo"")");
+            this.Run("foo", "string-append", @"(string-append ""foo"" """")");
+            this.Run("foo", "string-append", @"(string-append """" ""foo"")");
+            this.Run(string.Empty, "string-append", @"(string-append)");
+            this.Run(string.Empty, "make-string", @"(make-string 0)");
+            this.Run("True", "string=?", @"(string=? """" """")");
+            this.Run("False", "string<?", @"(string<? """" """")");
+            this.Run("False", "string>?", @"(string>? """" """")");
+            this.Run("True", "string<=?", @"(string<=? """" """")");
+            this.Run("True", "string>=?", @"(string>=? """" """")");
+            this.Run("True", "string-ci=?", @"(string-ci=? """" """")");
+            this.Run("False", "string-ci<=?", @"(string-ci<? """" """")");
+            this.Run("False", "string-ci>=?", @"(string-ci>? """" """")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? """" """")");
+            this.Run("True", "string-ci>=?", @"(string-ci>=? """" """")");
 
-            this.RunTest(@"(test #f string=? ""A"" ""B"")");
-            this.RunTest(@"(test #f string=? ""a"" ""b"")");
-            this.RunTest(@"(test #f string=? ""9"" ""0"")");
-            this.RunTest(@"(test #t string=? ""A"" ""A"")");
-            this.RunTest(@"(test #t string<? ""A"" ""B"")");
-            this.RunTest(@"(test #t string<? ""a"" ""b"")");
-            this.RunTest(@"(test #f string<? ""9"" ""0"")");
-            this.RunTest(@"(test #f string<? ""A"" ""A"")");
+            this.Run("False", "string=?", @"(string=? ""A"" ""B"")");
+            this.Run("False", "string=?", @"(string=? ""a"" ""b"")");
+            this.Run("False", "string=?", @"(string=? ""9"" ""0"")");
+            this.Run("True", "string=?", @"(string=? ""A"" ""A"")");
+            this.Run("True", "string<?", @"(string<? ""A"" ""B"")");
+            this.Run("True", "string<?", @"(string<? ""a"" ""b"")");
+            this.Run("False", "string<?", @"(string<? ""9"" ""0"")");
+            this.Run("False", "string<?", @"(string<? ""A"" ""A"")");
 
-            this.RunTest(@"(test #f string>? ""A"" ""B"")");
-            this.RunTest(@"(test #f string>? ""a"" ""b"")");
-            this.RunTest(@"(test #t string>? ""9"" ""0"")");
-            this.RunTest(@"(test #f string>? ""A"" ""A"")");
+            this.Run("False", "string>?", @"(string>? ""A"" ""B"")");
+            this.Run("False", "string>?", @"(string>? ""a"" ""b"")");
+            this.Run("True", "string>?", @"(string>? ""9"" ""0"")");
+            this.Run("False", "string>?", @"(string>? ""A"" ""A"")");
 
-            this.RunTest(@"(test #t string<=? ""A"" ""B"")");
-            this.RunTest(@"(test #t string<=? ""a"" ""b"")");
-            this.RunTest(@"(test #f string<=? ""9"" ""0"")");
-            this.RunTest(@"(test #t string<=? ""A"" ""A"")");
+            this.Run("True", "string<=?", @"(string<=? ""A"" ""B"")");
+            this.Run("True", "string<=?", @"(string<=? ""a"" ""b"")");
+            this.Run("False", "string<=?", @"(string<=? ""9"" ""0"")");
+            this.Run("True", "string<=?", @"(string<=? ""A"" ""A"")");
 
-            this.RunTest(@"(test #f string>=? ""A"" ""B"")");
-            this.RunTest(@"(test #f string>=? ""a"" ""b"")");
-            this.RunTest(@"(test #t string>=? ""9"" ""0"")");
-            this.RunTest(@"(test #t string>=? ""A"" ""A"")");
+            this.Run("False", "string>=?", @"(string>=? ""A"" ""B"")");
+            this.Run("False", "string>=?", @"(string>=? ""a"" ""b"")");
+            this.Run("True", "string>=?", @"(string>=? ""9"" ""0"")");
+            this.Run("True", "string>=?", @"(string>=? ""A"" ""A"")");
 
-            this.RunTest(@"(test #f string-ci=? ""A"" ""B"")");
-            this.RunTest(@"(test #f string-ci=? ""a"" ""B"")");
-            this.RunTest(@"(test #f string-ci=? ""A"" ""b"")");
-            this.RunTest(@"(test #f string-ci=? ""a"" ""b"")");
-            this.RunTest(@"(test #f string-ci=? ""9"" ""0"")");
-            this.RunTest(@"(test #t string-ci=? ""A"" ""A"")");
-            this.RunTest(@"(test #t string-ci=? ""A"" ""a"")");
+            this.Run("False", "string-ci=?", @"(string-ci=? ""A"" ""B"")");
+            this.Run("False", "string-ci=?", @"(string-ci=? ""a"" ""B"")");
+            this.Run("False", "string-ci=?", @"(string-ci=? ""A"" ""b"")");
+            this.Run("False", "string-ci=?", @"(string-ci=? ""a"" ""b"")");
+            this.Run("False", "string-ci=?", @"(string-ci=? ""9"" ""0"")");
+            this.Run("True", "string-ci=?", @"(string-ci=? ""A"" ""A"")");
+            this.Run("True", "string-ci=?", @"(string-ci=? ""A"" ""a"")");
 
-            this.RunTest(@"(test #t string-ci<? ""A"" ""B"")");
-            this.RunTest(@"(test #t string-ci<? ""a"" ""B"")");
-            this.RunTest(@"(test #t string-ci<? ""A"" ""b"")");
-            this.RunTest(@"(test #t string-ci<? ""a"" ""b"")");
-            this.RunTest(@"(test #f string-ci<? ""9"" ""0"")");
-            this.RunTest(@"(test #f string-ci<? ""A"" ""A"")");
-            this.RunTest(@"(test #f string-ci<? ""A"" ""a"")");
+            this.Run("True", "string-ci<?", @"(string-ci<? ""A"" ""B"")");
+            this.Run("True", "string-ci<?", @"(string-ci<? ""a"" ""B"")");
+            this.Run("True", "string-ci<?", @"(string-ci<? ""A"" ""b"")");
+            this.Run("True", "string-ci<?", @"(string-ci<? ""a"" ""b"")");
+            this.Run("False", "string-ci<?", @"(string-ci<? ""9"" ""0"")");
+            this.Run("False", "string-ci<?", @"(string-ci<? ""A"" ""A"")");
+            this.Run("False", "string-ci<?", @"(string-ci<? ""A"" ""a"")");
 
-            this.RunTest(@"(test #f string-ci>? ""A"" ""B"")");
-            this.RunTest(@"(test #f string-ci>? ""a"" ""B"")");
-            this.RunTest(@"(test #f string-ci>? ""A"" ""b"")");
-            this.RunTest(@"(test #f string-ci>? ""a"" ""b"")");
-            this.RunTest(@"(test #t string-ci>? ""9"" ""0"")");
-            this.RunTest(@"(test #f string-ci>? ""A"" ""A"")");
-            this.RunTest(@"(test #f string-ci>? ""A"" ""a"")");
+            this.Run("False", "string-ci>?", @"(string-ci>? ""A"" ""B"")");
+            this.Run("False", "string-ci>?", @"(string-ci>? ""a"" ""B"")");
+            this.Run("False", "string-ci>?", @"(string-ci>? ""A"" ""b"")");
+            this.Run("False", "string-ci>?", @"(string-ci>? ""a"" ""b"")");
+            this.Run("True", "string-ci>?", @"(string-ci>? ""9"" ""0"")");
+            this.Run("False", "string-ci>?", @"(string-ci>? ""A"" ""A"")");
+            this.Run("False", "string-ci>?", @"(string-ci>? ""A"" ""a"")");
 
-            this.RunTest(@"(test #t string-ci<=? ""A"" ""B"")");
-            this.RunTest(@"(test #t string-ci<=? ""a"" ""B"")");
-            this.RunTest(@"(test #t string-ci<=? ""A"" ""b"")");
-            this.RunTest(@"(test #t string-ci<=? ""a"" ""b"")");
-            this.RunTest(@"(test #f string-ci<=? ""9"" ""0"")");
-            this.RunTest(@"(test #t string-ci<=? ""A"" ""A"")");
-            this.RunTest(@"(test #t string-ci<=? ""A"" ""a"")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? ""A"" ""B"")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? ""a"" ""B"")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? ""A"" ""b"")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? ""a"" ""b"")");
+            this.Run("False", "string-ci<=?", @"(string-ci<=? ""9"" ""0"")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? ""A"" ""A"")");
+            this.Run("True", "string-ci<=?", @"(string-ci<=? ""A"" ""a"")");
 
-            this.RunTest(@"(test #f string-ci>=? ""A"" ""B"")");
-            this.RunTest(@"(test #f string-ci>=? ""a"" ""B"")");
-            this.RunTest(@"(test #f string-ci>=? ""A"" ""b"")");
-            this.RunTest(@"(test #f string-ci>=? ""a"" ""b"")");
-            this.RunTest(@"(test #t string-ci>=? ""9"" ""0"")");
-            this.RunTest(@"(test #t string-ci>=? ""A"" ""A"")");
-            this.RunTest(@"(test #t string-ci>=? ""A"" ""a"")");
+            this.Run("False", "string-ci>=?", @"(string-ci>=? ""A"" ""B"")");
+            this.Run("False", "string-ci>=?", @"(string-ci>=? ""a"" ""B"")");
+            this.Run("False", "string-ci>=?", @"(string-ci>=? ""A"" ""b"")");
+            this.Run("False", "string-ci>=?", @"(string-ci>=? ""a"" ""b"")");
+            this.Run("True", "string-ci>=?", @"(string-ci>=? ""9"" ""0"")");
+            this.Run("True", "string-ci>=?", @"(string-ci>=? ""A"" ""A"")");
+            this.Run("True", "string-ci>=?", @"(string-ci>=? ""A"" ""a"")");
         }
 
         /// <summary>
@@ -963,21 +1010,21 @@ namespace Tests
         [TestMethod]
         public void VectorTest()
         {
-            this.LoadTest("6.8");
-            this.RunTest(@"(test #t vector? '#(0 (2 2 2 2) ""Anna:""))");
-            this.RunTest(@"(test #t vector? '#())");
-            this.RunTest(@"(test '#(a b c) vector 'a 'b 'c)");
-            this.RunTest(@"(test '#() vector)");
-            this.RunTest(@"(test 3 vector-length '#(0 (2 2 2 2) ""Anna""))");
-            this.RunTest(@"(test 0 vector-length '#())");
-            this.RunTest(@"(test 8 vector-ref '#(1 1 2 3 5 8 13 21) 5)");
-            this.RunTest(@"(test '#(0 (""Sue"" ""Sue"") ""Anna"") 'vector-set
-	                           (let ((vec (vector 0 '(2 2 2 2) ""Anna"")))
+            this.section = "6.8";
+            this.Run("True", "vector?", @"(vector? '#(0 (2 2 2 2) ""Anna:""))");
+            this.Run("True", "vector?", @"(vector? '#())");
+            this.Run("#(a b c)", "vector", @"(vector 'a 'b 'c)");
+            this.Run("#()", "vector", "(vector)");
+            this.Run("3", "vector-length", @"(vector-length '#(0 (2 2 2 2) ""Anna""))");
+            this.Run("0", "vector-length", @"(vector-length '#())");
+            this.Run("8", "vector-ref", @"(vector-ref '#(1 1 2 3 5 8 13 21) 5)");
+            this.Run("#(0 (Sue Sue) Anna)", "vector-set", 
+                         @"(let ((vec (vector 0 '(2 2 2 2) ""Anna"")))
 	                                 (vector-set! vec 1 '(""Sue"" ""Sue""))
-	                               vec))");
-            this.RunTest(@"(test '#(hi hi) make-vector 2 'hi)");
-            this.RunTest(@"(test '#() make-vector 0)");
-            this.RunTest(@"(test '#() make-vector 0 'a) ");
+	                               vec)");
+            this.Run("#(hi hi)", "make-vector", @"(make-vector 2 'hi)");
+            this.Run("#()", "make-vector", @"(make-vector 0)");
+            this.Run("#()", "make-vector", @"(make-vector 0 'a) ");
         }
 
         /// <summary>
@@ -986,31 +1033,34 @@ namespace Tests
         [TestMethod]
         public void ControlFeaturesTest()
         {
-            this.LoadTest("6.9");
-            this.RunTest(@"(test #t procedure? car)");
-            this.RunTest(@"(test #f procedure? 'car)");
-            this.RunTest(@"(test #t procedure? (lambda (x) (* x x)))");
-            this.RunTest(@"(test #f procedure? '(lambda (x) (* x x)))");
-            this.RunTest(@"(test #t call-with-current-continuation procedure?)");
-            this.RunTest(@"(test #t procedure? /)");
-            this.RunTest(@"(test 7 apply + (list 3 4))");
-            this.RunTest(@"(test 7 apply (lambda (a b) (+ a b)) (list 3 4))");
-            this.RunTest(@"(test 17 apply + 10 (list 3 4))");
-            this.RunTest(@"(test '() apply list '())");
-            this.ReadAndEvaluate(@"(define compose (lambda (f g) (lambda args (f (apply g args)))))");
-            this.RunTest(@"(test 30 (compose sqrt *) 12 75)");
+            this.section = "6.9";
+            this.Run("True", "procedure?", "(procedure? car)");
+            this.Run("False", "procedure?", "(procedure? 'car)");
+            this.Run("True", "procedure?", "(procedure? (lambda (x) (* x x)))");
+            this.Run("False", "procedure?", "(procedure? '(lambda (x) (* x x)))");
+            this.Run("True", "call-with-current-continuation", "(call-with-current-continuation procedure?)");
+            this.Run("True", "procedure?", "(procedure? /)");
+            this.Run("7", "apply", "(apply + (list 3 4))");
+            this.Run("7", "apply", "(apply (lambda (a b) (+ a b)) (list 3 4))");
+            this.Run("17", "apply", "(apply + 10 (list 3 4))");
+            this.Run("'()", "apply", "(apply list '())");
+            this.ReadAndEvaluate("(define compose (lambda (f g) (lambda args (f (apply g args)))))");
+            this.Run("30", "compose", "((compose sqrt *) 12 75)");
 
-            this.RunTest(@"(test '(b e h) map cadr '((a b) (d e) (g h)))");
-            this.RunTest(@"(test '(5 7 9) map + '(1 2 3) '(4 5 6))");
-            this.RunTest(@"(test '(1 2 3) map + '(1 2 3))");
-            this.RunTest(@"(test '(1 2 3) map * '(1 2 3))");
-            this.RunTest(@"(test '(-1 -2 -3) map - '(1 2 3))");
-            this.RunTest(@"(test '#(0 1 4 9 16) 'for-each
-                                (let ((v (make-vector 5)))
+            this.Run("(b e h)", "map", @"(map cadr '((a b) (d e) (g h)))");
+            this.Run("(5 7 9)", "map", @"( map + '(1 2 3) '(4 5 6))");
+            this.Run("(1 2 3)", "map", @"(map + '(1 2 3))");
+            this.Run("(1 2 3)", "map", @"(map * '(1 2 3))");
+            this.Run("(-1 -2 -3)", "map", @"(map - '(1 2 3))");
+
+            this.Run("#(0 1 4 9 16)", "for-each", 
+                            @"
+                            (let ((v (make-vector 5)))
 	                          (for-each (lambda (i) (vector-set! v i (* i i)))
 		                          '(0 1 2 3 4))
-	                          v))");
-            this.RunTest(@"(test -3 call-with-current-continuation
+	                          v)");
+            this.Run("-3", "call-with-current-continuation", 
+                          @"(call-with-current-continuation
                              (lambda (exit)
 	                           (for-each (lambda (x) (if (negative? x) (exit x)))
 		                            '(54 0 37 -3 245 19))
@@ -1023,9 +1073,9 @@ namespace Tests
 				                                      ((pair? obj) (+ (r (cdr obj)) 1))
 				                                      (else (return #f))))))
 	                                (r obj))))))");
-            this.RunTest(@"(test 4 list-length '(1 2 3 4))");
-            this.RunTest(@"(test #f list-length '(a b . c))");
-            this.RunTest(@"(test '() map cadr '())");
+            this.Run("4", "list-length", @"(list-length '(1 2 3 4))");
+            this.Run("False", "list-length", @"(list-length '(a b . c))");
+            this.Run("'()", "map", @"(map cadr '())");
         }
 
         /// <summary>
@@ -1034,15 +1084,15 @@ namespace Tests
         [TestMethod]
         public void CallCCTest()
         {
-            this.LoadTest("6.9");
+            this.section = "6.9";
             this.ReadAndEvaluate(@"
             (define (next-leaf-generator obj eot)
               (letrec ((return #f)
-	               (cont (lambda (x)
-		               (recur obj)
-		               (set! cont (lambda (x) (return eot)))
-		               (cont #f)))
-	               (recur (lambda (obj)
+	                   (cont (lambda (x)
+		                         (recur obj)
+		                         (set! cont (lambda (x) (return eot)))
+		                       (cont #f)))
+	                   (recur (lambda (obj)
 		                  (if (pair? obj)
 			              (for-each recur obj)
 			              (call-with-current-continuation
@@ -1053,16 +1103,16 @@ namespace Tests
 		            (lambda (ret) (set! return ret) (cont #f))))))
             (define (leaf-eq? x y)
               (let* ((eot (list 'eot))
-	             (xf (next-leaf-generator x eot))
-	             (yf (next-leaf-generator y eot)))
+	                 (xf (next-leaf-generator x eot))
+	                 (yf (next-leaf-generator y eot)))
                 (letrec ((loop (lambda (x y)
 		                 (cond ((not (eq? x y)) #f)
-			               ((eq? eot x) #t)
-			               (else (loop (xf) (yf)))))))
+			                   ((eq? eot x) #t)
+			                   (else (loop (xf) (yf)))))))
                   (loop (xf) (yf)))))
             ");
-            this.RunTest("(test #t leaf-eq? '(a (b (c))) '((a) b c))");
-            this.RunTest("(test #f leaf-eq? '(a (b (c))) '((a) b c d))");
+            this.Run("True", "leff-eq", "(leaf-eq? '(a (b (c))) '((a) b c))");
+            this.Run("False", "leaf-eq", "(leaf-eq? '(a (b (c))) '((a) b c d))");
         }
 
         /// <summary>
@@ -1071,17 +1121,22 @@ namespace Tests
         [TestMethod]
         public void ForceDelayTest()
         {
-            this.LoadTest("6.9");
-            this.RunTest(@"(test 3 'delay (force (delay (+ 1 2))))");
-            this.RunTest(@"(test '(3 3) 'delay (let ((p (delay (+ 1 2))))
-			   (list (force p) (force p))))");
-            this.RunTest(@"(test 2 'delay (letrec ((a-stream
+            this.section = "6.9";
+            this.LoadTest(); 
+            this.Run("3", "delay", @"(force (delay (+ 1 2)))");
+            this.Run("(3 3)", "delay", 
+            @"(let ((p (delay (+ 1 2))))
+			   (list (force p) (force p)))");
+
+            this.Run("2", "delay", 
+              @"(letrec ((a-stream
 			       (letrec ((next (lambda (n)
 					        (cons n (delay (next (+ n 1)))))))
 			         (next 0)))
 			      (head car)
 			      (tail (lambda (stream) (force (cdr stream)))))
-		        (head (tail (tail a-stream)))))");
+		        (head (tail (tail a-stream))))");
+
             this.RunTest(@"
                 (letrec ((count 0)
 	               (p (delay (begin (set! count (+ count 1))
@@ -1092,10 +1147,10 @@ namespace Tests
                 (test 6 force p)
                 (set! x 10)
                 (test 6 force p))");
-            this.RunTest(@"(test 3 'force
+            this.Run("3", "force", @"
 	            (letrec ((p (delay (if c 3 (begin (set! c #t) (+ (force p) 1)))))
 		             (c #f))
-	              (force p)))");
+	              (force p))");
         }
 
         /// <summary>
@@ -1104,13 +1159,14 @@ namespace Tests
         [TestMethod]
         public void InputPortTest()
         {
+            this.section = "6.10.1";
             new StreamWriter("temp.scm").Close();   // create a file
-            this.LoadTest("6.10.1");
-            this.RunTest(@"(test #t input-port? (current-input-port))");
-            this.RunTest(@"(test #t output-port? (current-output-port))");
-            this.RunTest(@"(test #t call-with-input-file ""temp.scm"" input-port?)");
-            this.RunTest(@"(define this-file (open-input-file ""temp.scm""))
-                               (test #t input-port? this-file)");
+            this.Run("True", "input-port?", @"(input-port? (current-input-port))");
+            this.Run("True", "output-port?", @"(output-port? (current-output-port))");
+            this.Run("True", "call-with-input-file", @"(call-with-input-file ""temp.scm"" input-port?)");
+            this.Run("True", "input-port?", 
+                 @"(define this-file (open-input-file ""temp.scm""))
+                       (input-port? this-file)");
             this.ReadAndEvaluate("(close-input-port this-file)");
         }
 
@@ -1124,16 +1180,16 @@ namespace Tests
             writer.WriteLine(";;");
             writer.WriteLine("(define cur-section '())(define errs '())");
             writer.Close();
-            this.LoadTest("6.10.2");
+            this.section = "6.10.2";
             this.ReadAndEvaluate(@"(define this-file (open-input-file ""temp.scm""))");
-            this.RunTest(@"(test #\; peek-char this-file)");
-            this.RunTest(@"(test #\; peek-char this-file)");
-            this.RunTest(@"(test #\; read-char this-file)");
-            this.RunTest(@"(test '(define cur-section '()) read this-file)");
-            this.RunTest(@"(test #\( peek-char this-file)");
-            this.RunTest(@"(test '(define errs '()) read this-file)");
-            this.RunTest(@"(close-input-port this-file)");
-            this.RunTest(@"(close-input-port this-file)");
+            this.Run(";", "peek-char", @"(peek-char this-file)");
+            this.Run(";", "peek-char", @"(peek-char this-file)");
+            this.Run(";", "read-char", @"(read-char this-file)");
+            this.Run("(define cur-section '())", "read", @"(read this-file)");
+            this.Run("(", "peek-char", @"(peek-char this-file)");
+            this.Run("(define errs '())", "read", @"(read this-file)");
+            this.ReadAndEvaluate(@"(close-input-port this-file)");
+            this.ReadAndEvaluate(@"(close-input-port this-file)");
         }
 
         /// <summary>
@@ -1146,7 +1202,8 @@ namespace Tests
             writer.WriteLine(";;");
             writer.WriteLine("(define cur-section '())(define errs '())");
             writer.Close();
-            this.LoadTest("6.10.3");
+            this.section = "6.10.3";
+            this.LoadTest();
             this.ReadAndEvaluate(@"
              (define (check-test-file name)
                   (define test-file (open-input-file name))
@@ -1168,7 +1225,8 @@ namespace Tests
                  '(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c)))
              (define load-test-obj
                  (list 'define 'foo (list 'quote write-test-obj)))");
-            this.RunTest(@"(test #t call-with-output-file
+            this.Run("True", "call-with-output-file", 
+                    @"(call-with-output-file
                          ""tmp1""
                          (lambda (test-file)
 	                        (write-char #\; test-file)
@@ -1178,7 +1236,7 @@ namespace Tests
 	                        (newline test-file)
 	                        (write load-test-obj test-file)
 	                        (output-port? test-file)))");
-            this.RunTest(@"(check-test-file ""tmp1"")");
+            this.Run("True", "check-test-file", @"(check-test-file ""tmp1"")");
 
             this.ReadAndEvaluate(@"(define test-file (open-output-file ""tmp2""))
                               (write-char #\; test-file)
@@ -1187,8 +1245,8 @@ namespace Tests
                               (write write-test-obj test-file)
                               (newline test-file)
                               (write load-test-obj test-file)");
-            this.RunTest(@"(test #t output-port? test-file)");
-            this.RunTest(@"(close-output-port test-file)
+            this.Run("True", "output-port?", "(output-port? test-file)");
+            this.Run("True", "close-output-port", @"(close-output-port test-file)
                                (check-test-file ""tmp2"")");
             Assert.IsNull(this.ReadAndEvaluate("errs"));
         }
@@ -1199,36 +1257,35 @@ namespace Tests
         [TestMethod]
         public void R4Test()
         {
-            this.LoadTest("6.7");
-            this.RunTest(@"(test '(#\P #\space #\l) string->list ""P l"")");
-            this.RunTest(@"(test '() string->list """")");
-            this.RunTest(@"(test ""1\\\"""" list->string '(#\1 #\\ #\""))");
-            this.RunTest(@"(test """" list->string '())");
+            this.section = "6.7";
+            this.LoadTest();
+            this.Run(@"(#\P #\space #\l)", "string->list", @"(string->list ""P l"")");
+            this.Run("'()", "string->list", @"(string->list """")");
+            this.Run(@"1\""", "list->string", @"(list->string '(#\1 #\\ #\""))");
+            this.Run(string.Empty, "list->string", @"(list->string '())");
 
             this.section = "6.8";
-            this.RunTest(@"(test '(dah dah didah) vector->list '#(dah dah didah))");
-            this.RunTest(@"(test '() vector->list '#())");
-            this.RunTest(@"(test '#(dididit dah) list->vector '(dididit dah))");
-            this.RunTest(@"(test '#() list->vector '())");
+            this.Run("(dah dah didah)", "vector->list", @"(vector->list '#(dah dah didah))");
+            this.Run("'()", "vector->list", @"(vector->list '#())");
+            this.Run("#(dididit dah)", "list->vector", @"(list->vector '(dididit dah))");
+            this.Run("#()", "list->vector", @"(list->vector '())");
 
             this.section = "6.10.4";
             TextWriter writer = new StreamWriter("tmp1");
             writer.WriteLine(@";;;(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c))
                      (define foo '(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c)))");
             writer.Close();
-            this.RunTest(@"(load ""tmp1"")");
+            this.Run("True", "loca", @"(load ""tmp1"")");
             this.ReadAndEvaluate(@"(define write-test-obj
                  '(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c)))");
-            this.RunTest(@"(test write-test-obj 'load foo)");
+            this.Run("True", "loca", @"(test write-test-obj 'load foo)");
         }
 
         /// <summary>
         /// Load the test function in.
         /// </summary>
-        /// <param name="sec">The test section.</param>
-        private void LoadTest(string sec)
+        private void LoadTest()
         {
-            this.section = sec;
             this.ReadAndEvaluate(@"
               (define errs '())
               (define record-error (lambda (e) (set! errs (cons e errs))))
@@ -1256,6 +1313,20 @@ namespace Tests
         private void RunTest(string test)
         {
             Assert.AreEqual(true, this.ReadAndEvaluate(test), "Failed " + this.section);
+        }
+
+        /// <summary>
+        /// Run a test and check the result.
+        /// </summary>
+        /// <param name="expected">The expected result.</param>
+        /// <param name="label">The label to display.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        private void Run(string expected, string label, string expr)
+        {
+            object res = this.ReadAndEvaluate(expr);
+            string actual = res != null ? res.ToString() : "'()";
+            Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
+            Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
 
         /// <summary>

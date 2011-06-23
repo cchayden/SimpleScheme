@@ -57,69 +57,20 @@ namespace SimpleScheme
                         exp))))
             (expand-quasiquote x 0)))
 
-        (define let*
-          (macro (bindings . body)
-            (if (null? bindings) `((lambda () . ,body))
-            `(let (,(first bindings))
-               (let* ,(rest bindings) . ,body)))))
-
-        (define letrec
-          (macro (bindings . body)
-            (let ((vars (map first bindings))
-              (vals (map second bindings)))
-            `(let ,(map (lambda (var) `(,var #f)) vars)
-               ,@(map (lambda (var val) `(set! ,var ,val)) vars vals)
-               . ,body))))
-
-        (define case
-          (macro (exp . cases)
-            (define (do-case case)
-              (cond ((not (pair? case)) (error \bad syntax in case\ case))
-                ((eq? (first case) 'else) case)
-                (else `((member __exp__ ',(first case)) . ,(rest case)))))
-            `(let ((__exp__ ,exp)) (cond . ,(map do-case cases)))))
-
-        (define do
-          (macro (bindings test-and-result . body)
-            (let ((variables (map first bindings))
-              (inits (map second bindings))
-              (steps (map (lambda (clause)
-                    (if (null? (cddr clause))
-                        (first clause)
-                        (third clause)))
-                      bindings))
-              (test (first test-and-result))
-              (result (rest test-and-result)))
-              `(letrec ((__loop__
-                 (lambda ,variables
-                   (if ,test
-                       (begin . ,result)
-                       (begin
-                     ,@body
-                     (__loop__ . ,steps))))))
-             (__loop__ . ,inits)))))
-
         (define delay
           (macro (exp)
             (define (make-promise proc)
               (let ((result-ready? #f)
-                (result #f))
+                    (result #f))
             (lambda ()
               (if result-ready?
                   result
                   (let ((x (proc)))
-                (if result-ready?
-                    result
-                    (begin (set! result-ready? #t)
-                       (set! result x)
-                       result)))))))
+                    (if result-ready?
+                      result
+                      (begin (set! result-ready? #t)
+                             (set! result x)
+                             result)))))))
             `(,make-promise (lambda () ,exp))))";
-
-        /// <summary>
-        /// Extensions defined in scheme
-        /// </summary>
-        public const string Extensions =
-         @"(define time
-              (macro (exp . rest) `(time-call (lambda () ,exp) . ,rest)))";
     }
 }

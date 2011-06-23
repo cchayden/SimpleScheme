@@ -8,6 +8,10 @@ namespace SimpleScheme
     /// It can be executed later, through Apply.
     /// The Macro class also derives from this.
     /// </summary>
+    //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
+    //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
+    //// <r4rs section="4.1.4">formals: <variable></r4rs>
+    //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
     public class Closure : Procedure
     {
         /// <summary>
@@ -43,17 +47,26 @@ namespace SimpleScheme
 
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
-        ///   list of variable names saved when the continuation was created.
+        ///   list of variable names saved when the closure was created.
         /// </summary>
-        /// <param name="parent">The calling evaluator.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">The values to be matched with the variable names.</param>
-        /// <returns>The results of executing the program.</returns>
-        public override object Apply(Stepper parent, object args)
+        /// <returns>The next step to execute.</returns>
+        public override Stepper Apply(Stepper caller, object args)
         {
-            return EvaluatorMain.Call(
-                parent, 
-                this.Body, 
-                new Environment(this.FormalParameters, args, this.Env));
+            return EvaluatorMain.Call(caller, this.Body, new Environment(this.FormalParameters, args, this.Env));
+        }
+
+        /// <summary>
+        /// Actually executes the saved program, with the given arguments matched with the 
+        ///   list of variable names saved when the closure was created.
+        /// Uses environment of the cller rather than creating a new one.
+        /// </summary>
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>The next step to execute.</returns>
+        public Stepper ApplyWithEnv(Stepper caller)
+        {
+            return EvaluatorMain.Call(caller, this.Body, caller.Env);
         }
 
         /// <summary>
@@ -63,7 +76,8 @@ namespace SimpleScheme
         /// <returns>The string form of the closure.</returns>
         public override string ToString()
         {
-            return string.Format("(lambda {0} {1})", this.FormalParameters, this.Body);
+            string formals = this.FormalParameters == null ? "()" : this.FormalParameters.ToString();
+            return string.Format("(lambda {0} {1})", formals, this.Body);
         }
     }
 }

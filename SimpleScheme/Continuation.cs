@@ -32,10 +32,10 @@ namespace SimpleScheme
         /// Transfers execution to the step saved when the continuation was created.
         /// The environment in effect at that time is also restored.
         /// </summary>
-        /// <param name="parent">The calling evaluator.  Not used, since control is transferred away.</param>
+        /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <param name="args">The value to return.</param>
-        /// <returns>The result of applying the continuation.</returns>
-        public override object Apply(Stepper parent, object args)
+        /// <returns>The next step to execute.</returns>
+        public override Stepper Apply(Stepper caller, object args)
         {
             this.Value = List.First(args);
             return Stepper.TransferToStep(this.step, List.First(args), this.step.Env);

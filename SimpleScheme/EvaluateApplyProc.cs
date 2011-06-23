@@ -24,6 +24,8 @@ namespace SimpleScheme
             : base(parent, expr, env)
         {
             this.fn = fn;
+            this.Pc = this.InitialStep;
+            IncrementCounter("apply-proc");
         }
 
         /// <summary>
@@ -33,39 +35,40 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="fn">The function to apply.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static EvaluateApplyProc Call(Stepper caller, object expr, object fn)
+        public static Stepper Call(Stepper caller, object expr, object fn)
         {
             return new EvaluateApplyProc(caller, expr, caller.Env, fn);
         }
 
         /// <summary>
-        /// Evaluate a proc application.
+        /// Begin by evaluating all the arguments.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>Next action to evaluate the args.</returns>
+        private Stepper InitialStep()
         {
-            while (true)
-            {
-                switch (this.Pc)
-                {
-                    case PC.Initial:
-                        Pc = PC.Step1;
-                        return EvaluateList.Call(this, Expr);
+            this.Pc = this.ApplyStep;
+            return EvaluateList.Call(this, Expr);
+        }
 
-                    case PC.Step1:
-                        object res = Procedure.Proc(this.fn).Apply(this, ReturnedExpr);
-                        if (res is Stepper)
-                        {
-                            return this.GoToStep((Stepper)res, PC.Step2);
-                        }
+        /// <summary>
+        /// Back here after args have been evaluated.  Apply the proc to the
+        ///   evaluated args.  If there is a result return it, otherwise, let the
+        ///   proc proceed.
+        /// </summary>
+        /// <returns>The result, or the next step to obtain it.</returns>
+        private Stepper ApplyStep()
+        {
+            this.Pc = this.ReturnStep;
+            return Procedure.Proc(this.fn).Apply(this, ReturnedExpr);
+        }
 
-                        return ReturnFromStep(res);
-                    case PC.Step2:
-                        return ReturnFromStep(ReturnedExpr);
-                }
-
-                return ErrorHandlers.EvalError("ApplyProc: program counter error");
-            }
+        /// <summary>
+        /// Back from applying the proc.  Get the result and return it to the caller.
+        /// </summary>
+        /// <returns>Control returns to the caller.</returns>
+        private Stepper ReturnStep()
+        {
+            return ReturnFromStep(ReturnedExpr);
         }
     }
 }

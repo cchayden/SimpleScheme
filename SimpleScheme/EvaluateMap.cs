@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -44,6 +42,8 @@ namespace SimpleScheme
             this.proc = proc;
             this.result = result;
             this.accum = result;
+            this.Pc = this.InitialStep;
+            IncrementCounter("map");
         }
 
         /// <summary>
@@ -54,72 +54,69 @@ namespace SimpleScheme
         /// <param name="proc">The map proc.</param>
         /// <param name="result">The result is appended to this.</param>
         /// <returns>The step to execute.</returns>
-        public static EvaluateMap Call(Stepper caller, object expr, Procedure proc, Pair result)
+        public static Stepper Call(Stepper caller, object expr, Procedure proc, Pair result)
         {
             return new EvaluateMap(caller, expr, caller.Env, proc, result);
         }
 
         /// <summary>
-        /// Evaluate a list of expressions.
+        /// Start the map evaluation.
+        /// Begin with some error checking then go to nex step.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>If no expression, return to caller.  Otherwise, continue on to next step.</returns>
+        private Stepper InitialStep()
         {
-            while (true)
+            // first check for degenerate cases
+            if (this.Expr == null)
             {
-                switch (this.Pc)
-                {
-                    case PC.Initial:
-                        // first check for degenerate cases
-                        if (this.Expr == null)
-                        {
-                            return ReturnFromStep(null);
-                        }
-
-                        if (!(this.Expr is Pair))
-                        {
-                            ErrorHandlers.Error("Map: illegal arg list: " + this.Expr);
-                            return ReturnFromStep(null);
-                        }
-
-                        Pc = PC.Step1;
-                        continue;
-
-                    case PC.Step1:
-                        if (List.First(this.Expr) is Pair)
-                        {
-                            // Grab the arguments to the applications (the head of each list).
-                            // The the proc is applied to them.
-                            object x = this.proc.Apply(this, List.MapFun(List.First, List.MakeList(Expr)));
-                            if (x is Stepper)
-                            {
-                                return GoToStep((Stepper)x, PC.Step2);
-                            }
-
-                            Pc = PC.Step2;
-                            ReturnedExpr = x;
-                            continue;
-                        }
-
-                        // if we are done, just return the result minus the dummy entry
-                        return ReturnFromStep(List.Rest(this.result));
-
-                    case PC.Step2:
-                        // back from the evaluation -- save the result and keep going with the rest
-                        if (this.result != null)
-                        {
-                            // Builds a list by tacking new values onto the tail.
-                            this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
-                        }
-
-                        // Step down each of the lists
-                        Expr = List.MapFun(List.Rest, List.MakeList(Expr));
-                        Pc = PC.Step1;
-                        continue;
-                }
-
-                return ErrorHandlers.EvalError("Map: program counter error");
+                return ReturnFromStep(null);
             }
+
+            if (!(this.Expr is Pair))
+            {
+                ErrorHandlers.Error("Map: illegal arg list: " + this.Expr);
+                return ReturnFromStep(null);
+            }
+
+            this.Pc = this.ApplyFunStep;
+            return this;
+        }
+
+        /// <summary>
+        /// Apply the map function to an element of the list and grab the result.
+        /// </summary>
+        /// <returns>If apply recurses, return that stepper.  Otherwise go on to save result.
+        /// If we are done, return the collected results.</returns>
+        private Stepper ApplyFunStep()
+        {
+            if (List.First(this.Expr) is Pair)
+            {
+                // Grab the arguments to the applications (the head of each list).
+                // Then the proc is applied to them.
+                this.Pc = this.CollectAndLoopStep;
+                return this.proc.Apply(this, List.MapFun(List.First, List.MakeList(Expr)));
+            }
+
+            // if we are done, just return the result minus the dummy entry
+            return ReturnFromStep(List.Rest(this.result));
+        }
+
+        /// <summary>
+        /// Collect the result of the function application and loop back to do the next one.
+        /// </summary>
+        /// <returns>Continue back in step 1.</returns>
+        private Stepper CollectAndLoopStep()
+        {
+            // back from the evaluation -- save the result and keep going with the rest
+            if (this.result != null)
+            {
+                // Builds a list by tacking new values onto the tail.
+                this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
+            }
+
+            // Step down each of the lists
+            this.Pc = this.ApplyFunStep;
+            return this.LoopStep(List.MapFun(List.Rest, List.MakeList(Expr)));
         }
     }
 }

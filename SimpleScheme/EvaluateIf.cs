@@ -8,6 +8,8 @@ namespace SimpleScheme
     /// Evaluate the first part, then depending on its truth value, either
     ///   evaluate the second or third part.
     /// </summary>
+    //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
+    //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
     public sealed class EvaluateIf : Stepper
     {
         /// <summary>
@@ -19,6 +21,8 @@ namespace SimpleScheme
         private EvaluateIf(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
+            this.Pc = this.EvaluateTestStep;
+            IncrementCounter("if");
         }
 
         /// <summary>
@@ -27,28 +31,32 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The if evaluator.</returns>
-        public static EvaluateIf Call(Stepper caller, object expr)
+        public static Stepper Call(Stepper caller, object expr)
         {
             return new EvaluateIf(caller, expr, caller.Env);
         }
 
         /// <summary>
-        /// Evaluate an if expression.
+        /// Begin by evaluating the first expression (the test).
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>Steps to evaluate the test.</returns>
+        private Stepper EvaluateTestStep()
         {
-            switch (Pc)
-            {
-                case PC.Initial:
-                    Pc = PC.Step1;
-                    return EvaluatorMain.Call(this, List.First(this.Expr));
+            this.Pc = this.EvaluateAlternativeStep;
+            return EvaluatorMain.Call(this, List.First(this.Expr));
+        }
 
-                case PC.Step1:
-                    return ReturnFromStep(SchemeBoolean.Truth(ReturnedExpr) ? List.Second(this.Expr) : List.Third(this.Expr));
-            }
-
-            return ErrorHandlers.EvalError("If: program counter error");
+        /// <summary>
+        /// Back here after the test has been evaluated.
+        /// Evaluate and return either the second or third expression.
+        /// If there is no thid, the empty list will be evaluated, which is OK.
+        /// </summary>
+        /// <returns>Execution continues with the caller.</returns>
+        private Stepper EvaluateAlternativeStep()
+        {
+            return EvaluatorMain.Call(
+                this.Parent, 
+                SchemeBoolean.Truth(ReturnedExpr) ? List.Second(this.Expr) : List.Third(this.Expr));
         }
     }
 }

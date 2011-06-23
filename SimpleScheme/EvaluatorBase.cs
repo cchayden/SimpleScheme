@@ -29,14 +29,5 @@ namespace SimpleScheme
             : base(parent, expr, env)
         {
         }
-
-        /// <summary>
-        /// This should never be called.
-        /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
-        {
-            return ErrorHandlers.EvalError("Base: cannot run.");
-        }
     }
 }

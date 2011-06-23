@@ -6,6 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
+    //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
     public sealed class EvaluateSet : Stepper
     {
         /// <summary>
@@ -17,6 +18,8 @@ namespace SimpleScheme
         private EvaluateSet(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
+            this.Pc = this.InitialStep;
+            IncrementCounter("set");
         }
 
         /// <summary>
@@ -25,28 +28,29 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The set evaluator.</returns>
-        public static EvaluateSet Call(Stepper caller, object expr)
+        public static Stepper Call(Stepper caller, object expr)
         {
             return new EvaluateSet(caller, expr, caller.Env);
         }
 
         /// <summary>
-        /// Evaluate a set! expression.
+        /// Evaluate the second expression (rhs).
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper RunStep()
+        /// <returns>Code to evaluate the second expression.</returns>
+        private Stepper InitialStep()
         {
-            switch (Pc)
-            {
-                case PC.Initial:
-                    Pc = PC.Step1;
-                    return EvaluatorMain.Call(this, List.Second(this.Expr));
+            this.Pc = this.SetStep;
+            return EvaluatorMain.Call(this, List.Second(this.Expr));
+        }
 
-                case PC.Step1:
-                    return ReturnFromStep(this.Env.Set(List.First(this.Expr), ReturnedExpr));
-            }
-
-            return ErrorHandlers.EvalError("Set: program counter error");
+        /// <summary>
+        /// Back here after evaluation.  Assign the result to the variable in the environment
+        ///   named by the first part of the expression.
+        /// </summary>
+        /// <returns>Returns to caller.</returns>
+        private Stepper SetStep()
+        {
+            return ReturnFromStep(this.Env.Set(List.First(this.Expr), ReturnedExpr));
         }
     }
 }

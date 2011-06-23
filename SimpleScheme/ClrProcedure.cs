@@ -1,12 +1,11 @@
 ﻿// <copyright file="ClrProcedure.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
-using System.IO;
-
 namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Reflection;
 
     /// <summary>
@@ -153,11 +152,12 @@ namespace SimpleScheme
             int n = List.Length(args);
             List<Type> array = new List<Type>(n);
 
-            // TODO convert to use foreach
-            for (int i = 0; i < n; i++)
+            if (args is Pair)
             {
-                array.Add(ToClass(List.First(args)));
-                args = List.Rest(args);
+                foreach (var elem in (Pair)args)
+                {
+                    array.Add(ToClass(elem));
+                }
             }
 
             return array;
@@ -186,28 +186,34 @@ namespace SimpleScheme
 
             List<object> array = new List<object>(n);
 
-            // TODO convert to use foreach
-            for (int i = 0; i < n; i++)
+            if (args is Pair)
             {
-                if (this.ArgClasses[i] == typeof(int))
+                int i = 0;
+                foreach (var elem in (Pair)args)
                 {
-                    array.Add((int)Number.Num(List.First(args)));
-                }
-                else if (this.ArgClasses[i] == typeof(string))
-                {
-                    array.Add(SchemeString.AsString(List.First(args), false));
-                }
-                else
-                {
-                    array.Add(List.First(args));
-                }
+                    if (this.ArgClasses[i] == typeof(int))
+                    {
+                        array.Add((int)Number.Num(elem));
+                    }
+                    else if (this.ArgClasses[i] == typeof(string))
+                    {
+                        array.Add(SchemeString.AsString(elem, false));
+                    }
+                    else
+                    {
+                        array.Add(elem);
+                    }
 
-                args = List.Rest(args);
+                    i++;
+                }
             }
 
-            for (int i = 0; i < additionalN; i++)
+            if (additionalArgs != null)
             {
-                array.Add(additionalArgs[i]);
+                for (int i = 0; i < additionalN; i++)
+                {
+                    array.Add(additionalArgs[i]);
+                }
             }
 
             return array;

@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Text;
 
@@ -39,6 +40,7 @@ namespace SimpleScheme
         {
             this.Interp = interp;
             this.Parent = parent;
+            interp.Counters.Increment("environment");
         }
 
         /// <summary>
@@ -97,7 +99,8 @@ namespace SimpleScheme
                 .DefinePrimitive(
                    "exit", 
                    (parent, args) =>
-                        {
+                       {
+                            parent.Env.Interp.DumpCounters();
                             System.Environment.Exit(List.First(args) == null ? 0 : (int)Number.Num(List.First(args)));
                             return null;
                         },
@@ -214,18 +217,18 @@ namespace SimpleScheme
         /// Dump the stack of environments.
         /// At each level, sow the symbol table.
         /// </summary>
-        /// <param name="nLevels">The number of levels to show.</param>
+        /// <param name="levels">The number of levels to show.</param>
         /// <returns>The environment stack, as a string.</returns>
-        public string Dump(int nLevels)
+        public string Dump(int levels)
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
-            while (env != null && nLevels > 0)
+            while (env != null && levels > 0)
             {
                 env.symbolTable.Dump(sb);
                 sb.Append("-----\n");
                 env = env.Parent;
-                nLevels--;
+                levels--;
             }
 
             return sb.ToString();
@@ -248,7 +251,6 @@ namespace SimpleScheme
         {
             return "Environment \n" + this.Dump();
         }
-
 
         /// <summary>
         /// Check that the variable and value lists have the same length.
@@ -297,9 +299,8 @@ namespace SimpleScheme
             /// <returns>True if found in the symbol table, false if not found.</returns>
             public bool Lookup(object symbol, out object val)
             {
-                if (this.symbolTable.ContainsKey(symbol))
+                if (this.symbolTable.TryGetValue(symbol, out val))
                 {
-                    val = this.symbolTable[symbol];
                     return true;
                 }
 
@@ -364,9 +365,9 @@ namespace SimpleScheme
             /// <param name="sb">A string builder to write the dump into.</param>
             public void Dump(StringBuilder sb)
             {
-                foreach (var kvp in this.symbolTable)
+                foreach (var key in this.symbolTable.Keys)
                 {
-                    sb.AppendFormat("{0} {1}\n", kvp.Key, kvp.Value);
+                    sb.AppendFormat("{0} {1}\n", key, this.symbolTable[key]);
                 }
             }
         }

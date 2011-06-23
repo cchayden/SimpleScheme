@@ -122,13 +122,12 @@ namespace SimpleScheme
             object tail = this.Rest;
 
             int len = 0;
-            // TODO convert to use foreach
             while (tail is Pair)
             {
                 buf.Append(' ');
-                SchemeString.AsString(((Pair)tail).First, quoted, buf);
+                SchemeString.AsString(List.First(tail), quoted, buf);
                 object oldTail = tail;
-                tail = ((Pair)tail).Rest;
+                tail = List.Rest(tail);
                 len++;
                 if (tail == oldTail)
                 {
