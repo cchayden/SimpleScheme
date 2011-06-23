@@ -203,12 +203,13 @@ namespace SimpleScheme
 
             NEW = -1,
             CLASS = -2,
-            METHOD = -3,
-            EXIT = -4,
-            SETCAR = -5,
-            SETCDR = -6,
-            TIMECALL = -7,
-            ERROR = -8,
+            METHODSYNC = -3,
+            METHODASYNC = -4,
+            EXIT = -5,
+            SETCAR = -6,
+            SETCDR = -7,
+            TIMECALL = -8,
+            ERROR = -9,
         }
 
         // ReSharper restore InconsistentNaming
@@ -406,7 +407,8 @@ namespace SimpleScheme
                 // EXTENSIONS
                 .DefPrim("new", OpCode.NEW, 1)
                 .DefPrim("class", OpCode.CLASS, 1)
-                .DefPrim("method", OpCode.METHOD, 2, MaxInt)
+                .DefPrim("method", OpCode.METHODSYNC, 2, MaxInt)
+                .DefPrim("method-async", OpCode.METHODASYNC, 2, MaxInt)
                 .DefPrim("exit", OpCode.EXIT, 0, 1)
                 .DefPrim("error", OpCode.ERROR, 0, MaxInt)
                 .DefPrim("time-call", OpCode.TIMECALL, 1, 2);
@@ -997,8 +999,11 @@ namespace SimpleScheme
 
                     return False;
 
-                case OpCode.METHOD:
-                    return new ClrProcedure(SchemeString.AsString(head, false), tail, Rest(Rest(args)));
+                case OpCode.METHODSYNC:
+                    return new SynchronousClrProcedure(SchemeString.AsString(head, false), tail, Rest(Rest(args)));
+
+                case OpCode.METHODASYNC:
+                    return new AsynchronousClrProcedure(SchemeString.AsString(head, false), tail, Rest(Rest(args)));
 
                 case OpCode.EXIT:
                     System.Environment.Exit(head == null ? 0 : (int)NumberUtils.Num(head));

@@ -6,22 +6,22 @@ namespace SimpleScheme
     using System;
     using System.Reflection;
 
-    // TODO write test cases for this
-
     /// <summary>
     /// Executes a function provided in the CLR.
     /// </summary>
-    public sealed class ClrProcedure : Procedure
+    public abstract class ClrProcedure : Procedure
     {
         /// <summary>
         /// Information about the CLR method to be called.
         /// </summary>
-        private readonly MethodInfo methodInfo;
+        protected MethodInfo methodInfo;
+
+        protected string className;
 
         /// <summary>
         /// The types of the arguments.
         /// </summary>
-        private readonly Type[] argClasses;
+        protected Type[] argClasses;
 
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
@@ -31,27 +31,15 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="methodName">The name of the CLR method.</param>
         /// <param name="targetClassName">The name of the class containing the method.</param>
-        /// <param name="argClassNames">A list of names of classes, the "types" of the arguments 
         /// of the method.</param>
-        public ClrProcedure(string methodName, object targetClassName, object argClassNames)
+        protected ClrProcedure(string methodName, object targetClassName)
         {
-            string className = SchemeString.AsString(targetClassName, false);
+            this.className = SchemeString.AsString(targetClassName, false);
             this.Name = className + "." + methodName;
-            try
-            {
-                this.argClasses = ClassArray(argClassNames);
-                Type cls = ToClass(className);
-                this.methodInfo = cls.GetMethod(methodName, this.argClasses);
-            }
-            catch (TypeLoadException)
-            {
-                Error("Bad class, can't get method: " + this.Name);
-            }
-            catch (MissingMethodException)
-            {
-                Error("Can't get method: " + this.Name);
-            }
         }
+
+        protected abstract object[] ToArray(object args);
+
 
         /// <summary>
         /// Create an instance of the given class.
@@ -65,22 +53,6 @@ namespace SimpleScheme
             Type type = ToClass(x);
             Assembly assembly = type.Assembly;
             return assembly.CreateInstance(type.FullName);
-        }
-
-        /// <summary>
-        /// Apply the method to the given arguments.
-        /// If the method is static, all arguments are passed to the method.
-        /// Otherwise, the first argument is the class instance, and the rest are passed 
-        ///    to the method.
-        /// </summary>
-        /// <param name="parent">The calling evaluator.</param>
-        /// <param name="args">Arguments to pass to the method.</param>
-        /// <returns>The result of executing the method.</returns>
-        public override object Apply(Stepper parent, object args)
-        {
-            return this.methodInfo.IsStatic ? 
-                this.methodInfo.Invoke(null, this.ToArray(args)) : 
-                this.methodInfo.Invoke(First(args), this.ToArray(Rest(args)));
         }
 
         /// <summary>
@@ -99,7 +71,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="arg">A Type or a type name.</param>
         /// <returns>The type corresponding to the name.</returns>
-        private static Type ToClass(object arg)
+        protected static Type ToClass(object arg)
         {
             if (arg is Type)
             {
@@ -126,15 +98,16 @@ namespace SimpleScheme
         /// Take a list of Type or type name elements and create a corresponding 
         ///   array of Type.
         /// </summary>
-        /// <param name="args">A list of Type or type name elements.</param>
+        /// <param name="args">A list of Type or type name elements.  There may be more than this.</param>
+        /// <param name="n">The number of args to caeate.</param>
         /// <returns>An array of Type objects corresponding to the list.</returns>
-        private static Type[] ClassArray(object args)
+        protected Type[] ClassArray(object args, int n)
         {
-            int n = Length(args);
             if (n == 0)
             {
                 return Type.EmptyTypes;
             }
+
             Type[] array = new Type[n];
             for (int i = 0; i < n; i++)
             {
@@ -152,10 +125,10 @@ namespace SimpleScheme
         ///    what is expected.
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
+        /// <param name="n">The number of arguments to create.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private object[] ToArray(object args)
+        protected object[] ToArray(object args, int n)
         {
-            int n = Length(args);
             int diff = n - this.argClasses.Length;
             if (diff != 0)
             {
@@ -185,11 +158,8 @@ namespace SimpleScheme
 
             return array;
         }
+
     }
 
-    public class TestClass
-    {
-        public static string TestMethod1() { return "test 1"; }
-        public string TestMethod2() { return "test 2"; }
-    }
+    // TODO write unit tests
 }
