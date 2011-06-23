@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Represents a continuation.
     /// </summary>
@@ -25,17 +27,17 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the value to return as the result of executing the continuation.
         /// </summary>
-        public object Value { get; private set; }
+        public Obj Value { get; private set; }
 
         /// <summary>
         /// Execute the continuation.
         /// Transfers execution to the step saved when the continuation was created.
         /// The environment in effect at that time is also restored.
         /// </summary>
-        /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <param name="args">The value to return.</param>
+        /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Stepper caller, object args)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
             this.Value = First(args);
             return Stepper.TransferToStep(this.step, First(args), this.step.Env);

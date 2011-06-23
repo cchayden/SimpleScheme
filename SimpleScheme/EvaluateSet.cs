@@ -22,10 +22,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateSet class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateSet(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateSet(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.InitialStep);
@@ -43,12 +43,12 @@ namespace SimpleScheme
         /// <summary>
         /// Calls a set evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateSet(caller, expr, caller.Env);
+            return new EvaluateSet(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace SimpleScheme
         /// <returns>Code to evaluate the second expression.</returns>
         private Stepper InitialStep()
         {
-            return EvaluateExpression.Call(ContinueHere(this.SetStep), Second(Expr));
+            return EvaluateExpression.Call(Second(Expr), ContinueHere(this.SetStep));
         }
 
         /// <summary>
@@ -67,7 +67,8 @@ namespace SimpleScheme
         /// <returns>Returns to caller.</returns>
         private Stepper SetStep()
         {
-            return ReturnFromStep(this.Env.Set(First(Expr), ReturnedExpr));
+            this.Env.Set(First(Expr), ReturnedExpr);
+            return ReturnFromStep(Undefined.Instance);
         }
     }
 }

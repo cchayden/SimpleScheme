@@ -63,19 +63,19 @@ namespace Tests
             this.Run("0", "define", "((lambda (fun)(fun 0)) define)");
 
             this.Run("True", "do", "(procedure? do)");
-            this.Run("'()", "do", "((lambda (fun)(fun 0)) do)");
+            this.Run("SimpleScheme.Undefined", "do", "((lambda (fun)(fun 0)) do)");
 
             this.Run("True", "if", "(procedure? if)");
-            this.Run("'()", "if", "((lambda (fun)(fun 0)) if)");
+            this.Run("SimpleScheme.Undefined", "if", "((lambda (fun)(fun 0)) if)");
 
             this.Run("True", "let", "(procedure? let)");
-            this.Run("'()", "let", "((lambda (fun)(fun 0)) let)");
+            this.Run("SimpleScheme.Undefined", "let", "((lambda (fun)(fun 0)) let)");
 
             this.Run("True", "let*", "(procedure? let*)");
-            this.Run("'()", "let*", "((lambda (fun)(fun 0)) let*)");
+            this.Run("SimpleScheme.Undefined", "let*", "((lambda (fun)(fun 0)) let*)");
 
             this.Run("True", "letrec", "(procedure? letrec)");
-            this.Run("'()", "letrec", "((lambda (fun)(fun 0)) letrec)");
+            this.Run("SimpleScheme.Undefined", "letrec", "((lambda (fun)(fun 0)) letrec)");
 
             this.Run("True", "lambda", "(procedure? lambda)");
             this.Run("(lambda 0 ())", "lambda", "((lambda (fun)(fun 0)) lambda)");
@@ -87,7 +87,7 @@ namespace Tests
             this.Run("0", "quote", "((lambda (fun)(fun 0)) quote)");
 
             this.Run("True", "set!", "(procedure? set!)");
-            this.Run("0", "set!", "(define x 10)((lambda (fun)(fun 'x 0)) set!)");
+            this.Run("SimpleScheme.Undefined", "set!", "(define x 10)((lambda (fun)(fun 'x 0)) set!)");
 
             this.Run("True", "time", "(procedure? time)");
             this.Run("0", "time", "(first ((lambda (fun)(fun 0)) time))");
@@ -102,7 +102,7 @@ namespace Tests
         private void Run(string expected, string label, string expr)
         {
             object res = this.ReadAndEvaluate(expr);
-            string actual = res != null ? res.ToString() : "'()";
+            string actual = res != List.Empty ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
@@ -121,7 +121,7 @@ namespace Tests
                 while (true)
                 {
                     object x;
-                    if (InputPort.IsEOF(x = inp.Read()))
+                    if (InputPort.IsEof(x = inp.Read()))
                     {
                         return last;
                     }

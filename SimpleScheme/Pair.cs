@@ -3,15 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
     /// A pair consists of two cells, named FirstCell and RestCell.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : ListPrimitives, IEnumerable<object>
+    public sealed class Pair : ListPrimitives
     {
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -83,7 +81,7 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to write the string into.</param>
         public void AsString(bool quoted, StringBuilder buf)
         {
-            if (this.RestCell is Pair && Rest(this.RestCell) == null)
+            if (this.RestCell is Pair && Rest(this.RestCell) == List.Empty)
             {
                 string special = null;
 
@@ -133,7 +131,7 @@ namespace SimpleScheme
                 {
                     // this is a circular structure -- truncate
                     buf.Append(" ... [circular list]");
-                    tail = null;
+                    tail = List.Empty;
                     break;
                 }
 
@@ -141,44 +139,18 @@ namespace SimpleScheme
                 {
                     // maybe this is a circular structure -- truncate
                     buf.Append(" ... [too long]");
-                    tail = null;
+                    tail = List.Empty;
                     break;
                 }
             }
 
-            if (tail != null)
+            if (tail != List.Empty)
             {
                 buf.Append(" . ");
                 SchemeString.AsString(tail, quoted, buf);
             }
 
             buf.Append(')');
-        }
-
-        /// <summary>
-        /// Enumerates elements from the list.
-        /// This is slower than the caller just iterating down the list, so
-        ///   use this only where performance does not matter.
-        /// </summary>
-        /// <returns>The list elements.</returns>
-        public IEnumerator<object> GetEnumerator()
-        {
-            object elem = this;
-            while (elem is Pair)
-            {
-                Pair p = (Pair)elem;
-                yield return p.FirstCell;
-                elem = p.RestCell;
-            }
-        }
-
-        /// <summary>
-        /// Gets the list enumerator.
-        /// </summary>
-        /// <returns>The list enumerator.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
         }
     }
 }

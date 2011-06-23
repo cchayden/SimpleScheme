@@ -51,10 +51,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateLetRec class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateLetRec(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateLetRec(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.InitialStep);
@@ -72,52 +72,51 @@ namespace SimpleScheme
         /// <summary>
         /// Call letrec evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateLetRec(caller, expr, caller.Env);
+            return new EvaluateLetRec(expr, caller.Env, caller);
         }
 
         /// <summary>
         /// Start by checking the number of arguments.
-        /// Then test for named let.  
         /// Grab bindings, body, vars, and inits.
         /// Make an environment for evaluating the inits consisting of the vars and 
-        ///   an equal number of #f.
+        ///   an equal number of undefined vals.
         /// </summary>
         /// <returns>Continues by evaluating the init list.</returns>
         private Stepper InitialStep()
         {
-            if (Expr == null)
+            if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Letrec: wrong number of arguments");
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Letrec: illegal arg list: " + Expr);
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             object bindings = First(Expr);
             this.body = Rest(Expr);
 
-            if (this.body == null)
+            if (this.body == List.Empty)
             {
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             this.vars = MapFun(First, MakeList(bindings));
             this.inits = MapFun(Second, MakeList(bindings));
             this.formals = this.vars;
-            object initVals = null;
+            object initVals = List.Empty;
             int n = Length(this.vars);
             for (int i = 0; i < n; i++)
             {
-                initVals = Cons(false, initVals);
+                initVals = Cons(Undefined.Instance, initVals);
             }
 
             this.vals = new System.Collections.Generic.List<object>(n);
@@ -132,7 +131,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalInit()
         {
-            if (this.inits == null)
+            if (this.inits == List.Empty)
             {
                 return ContinueHere(this.ApplyProc);
             }

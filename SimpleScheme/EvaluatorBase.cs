@@ -4,8 +4,9 @@
 namespace SimpleScheme
 {
     /// <summary>
-    /// The initial evaluator.  Eval creates one of these to be the parent of its
-    ///     initial step.
+    /// The initial evaluator.  
+    /// Eval creates one of these to be the parent of its initial step.
+    /// It is also used for a suspended evaluator in async operations.
     /// </summary>
     public class EvaluatorBase : Stepper
     {
@@ -22,10 +23,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluatorBase class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        protected EvaluatorBase(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        protected EvaluatorBase(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
         }
@@ -37,6 +38,5 @@ namespace SimpleScheme
         {
             get { return "base"; }
         }
-
     }
 }

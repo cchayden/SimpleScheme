@@ -21,12 +21,12 @@ namespace Tests
         public TestContext TestContext { get; set; }
 
         /// <summary>
-        /// A test for IsEOF
+        /// A test for IsEof
         /// </summary>
         [TestMethod]
         public void IsEofTest()
         {
-            Assert.IsTrue(InputPort.IsEOF(InputPort.Eof));
+            Assert.IsTrue(InputPort.IsEof(InputPort.Eof));
         }
 
         /// <summary>
@@ -265,14 +265,17 @@ namespace Tests
                 {
                     Assert.AreEqual(expected, actual);
                 } 
-                else if (actual is SchemeString)
-                {
-                    Assert.AreEqual(expected, ((SchemeString)actual).AsString());
-                }
                 else if (actual is char)
                 {
                     Assert.AreEqual(1, expected.Length);
                     Assert.AreEqual(expected[0], actual);
+                }
+                else if (actual is char[])
+                {
+                    for (int i = 0; i < expected.Length; i++)
+                    {
+                        Assert.AreEqual(expected[i], ((char[])actual)[i]);
+                    }
                 }
                 else
                 {

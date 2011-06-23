@@ -13,6 +13,23 @@ namespace SimpleScheme
     /// </summary>
     public abstract class ClrProcedure : Procedure
     {
+
+        /// <summary>
+        /// The primitive types that can be used as args.
+        /// </summary>
+        private static readonly string[][] primitiveTypes = {
+                                                     new [] {"boolean", "System.Boolean"},
+                                                     new [] {"char", "System.Char"}, 
+                                                     new [] {"byte", "System.Byte"},
+                                                     new [] {"short", "System.Int16"}, 
+                                                     new [] {"int", "System.Int32"}, 
+                                                     new [] {"long", "System.Int64"}, 
+                                                     new [] {"float", "System.Single"}, 
+                                                     new [] {"double", "System.Double"}, 
+                                                     new [] {"string", "System.String"}, 
+                                                     new [] {"object", "Object"}
+                                                 };
+
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
         /// This allows calls into CLR methods.
@@ -97,7 +114,40 @@ namespace SimpleScheme
 
                             return SchemeBoolean.False;
                         },
-                    1);
+                    1)
+                .DefinePrimitive(
+                    "new-array",
+                    (caller, args) =>
+                        {
+                            try
+                            {
+                                return CreateArrayInstance(First(args), Second(args));
+                            }
+                            catch (ArgumentNullException)
+                            {
+                            }
+                            catch (ArgumentException)
+                            {
+                            }
+                            catch (BadImageFormatException)
+                            {
+                            }
+                            catch (MissingMethodException)
+                            {
+                            }
+                            catch (FileLoadException)
+                            {
+                            }
+                            catch (FileNotFoundException)
+                            {
+                            }
+                            catch (TargetInvocationException)
+                            {
+                            }
+
+                            return SchemeBoolean.False;
+                        },
+                    2);
         }
 
         /// <summary>
@@ -124,21 +174,22 @@ namespace SimpleScheme
             }
 
             var typeName = SchemeString.AsString(arg, false);
-            switch (typeName)
+            foreach (var type in primitiveTypes)
             {
-                case "void": return typeof(void);
-                case "boolean": return typeof(bool);
-                case "char": return typeof(char);
-                case "byte": return typeof(byte);
-                case "short": return typeof(short);
-                case "int": return typeof(int);
-                case "long": return typeof(long);
-                case "float": return typeof(float);
-                case "double": return typeof(double);
-                case "string": return typeof(string);
-                case "object": return typeof(object);
-                default: return Type.GetType(typeName);
+                string abbrev = type[0];
+                string full = type[1];
+                if (typeName == abbrev)
+                {
+                    return Type.GetType(full);
+                }
+
+                if (typeName == abbrev + "[]")
+                {
+                    return Type.GetType(full + "[]");
+                }
             }
+
+            return typeName == "void" ? typeof(void) : Type.GetType(typeName);
         }
 
         /// <summary>
@@ -152,12 +203,10 @@ namespace SimpleScheme
             int n = Length(args);
             List<Type> array = new List<Type>(n);
 
-            if (args is Pair)
+            while (args is Pair)
             {
-                foreach (var elem in (Pair)args)
-                {
-                    array.Add(ToClass(elem));
-                }
+                array.Add(ToClass(First(args)));
+                args = Rest(args);
             }
 
             return array;
@@ -171,8 +220,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
         /// <param name="additionalArgs">A list of the additional args, not supplied by the caller.</param>
-        /// <returns>A (CLR) list of arguments for the method call.</returns>
-        protected List<object> ToArgList(object args, object[] additionalArgs)
+        /// <returns>An array of arguments for the method call.</returns>
+        protected object[] ToArgList(object args, object[] additionalArgs)
         {
             int n = Length(args);
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
@@ -184,35 +233,35 @@ namespace SimpleScheme
                     " args to " + Name);
             }
 
-            List<object> array = new List<object>(n);
+            object[] array = new object[n + additionalN];
 
-            if (args is Pair)
+            int i = 0;
+            int a = 0;
+            while (args is Pair)
             {
-                int i = 0;
-                foreach (var elem in (Pair)args)
+                object elem = First(args);
+                if (this.ArgClasses[i] == typeof(int))
                 {
-                    if (this.ArgClasses[i] == typeof(int))
-                    {
-                        array.Add((int)Number.Num(elem));
-                    }
-                    else if (this.ArgClasses[i] == typeof(string))
-                    {
-                        array.Add(SchemeString.AsString(elem, false));
-                    }
-                    else
-                    {
-                        array.Add(elem);
-                    }
-
-                    i++;
+                    array[a++] = (int)Number.Num(elem);
                 }
+                else if (this.ArgClasses[i] == typeof(string))
+                {
+                    array[a++] = SchemeString.AsString(elem, false);
+                }
+                else
+                {
+                    array[a++] = elem;
+                }
+
+                i++;
+                args = Rest(args);
             }
 
-            if (additionalArgs != null)
+            if (additionalArgs != null)    // required by style cop
             {
-                for (int i = 0; i < additionalN; i++)
+                for (i = 0; i < additionalN; i++)
                 {
-                    array.Add(additionalArgs[i]);
+                    array[a++] = additionalArgs[i];
                 }
             }
 
@@ -231,6 +280,20 @@ namespace SimpleScheme
             Type type = ToClass(x);
             Assembly assembly = type.Assembly;
             return assembly.CreateInstance(type.FullName);
+        }
+
+        /// <summary>
+        /// Create an array of instances of the given class.
+        /// </summary>
+        /// <param name="x">This is the class name.  It is either a type or the name 
+        ///    of a type.</param>
+        /// <param name="length">The array length.</param>
+        /// <returns>An array of the class.</returns>
+        private static object CreateArrayInstance(object x, object length)
+        {
+            Type type = ToClass(x);
+            int len = (int)Number.Num(length);
+            return Array.CreateInstance(type, len);
         }
     }
 

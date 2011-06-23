@@ -27,38 +27,49 @@ namespace SimpleScheme
         private readonly Procedure proc;
 
         /// <summary>
+        /// True if the map needs to return a result.
+        /// If false, don'b bother to accumulate the result.
+        /// Map needs the result, for-each does not.
+        /// </summary>
+        private readonly bool returnResult;
+
+        /// <summary>
         /// The initial value of the result.
-        /// This is either the empty list, or null.
-        /// If null, then no result is kept.
+        /// This is either an empty list, or null.
+        /// If null, then no result is returned.
         /// </summary>
         private readonly Pair result;
 
         /// <summary>
-        /// The lists to map
-        /// </summary>
-        private object lists;
-
-        /// <summary>
         /// Accumulates the returned result.
-        /// The is the end of the list that we are constructing.
+        /// The is the end of the list that we are constructing (result).
         /// </summary>
         private Pair accum;
 
         /// <summary>
+        /// The lists to map.
+        /// </summary>
+        private object lists;
+
+        /// <summary>
         /// Initializes a new instance of the EvaluateMap class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        /// <param name="proc">The proc to apply to each element of the list.</param>
-        /// <param name="result">The result is appended to this list.</param>
-        private EvaluateMap(Stepper caller, object expr, Environment env, Procedure proc, Pair result)
+        /// <param name="returnResult">Return the map map result if this is true.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateMap(Procedure proc, object expr, Environment env, bool returnResult, Stepper caller)
             : base(caller, expr, env)
         {
             this.proc = proc;
             this.lists = expr;
-            this.result = result;
-            this.accum = result;
+            this.returnResult = returnResult;
+            if (returnResult)
+            {
+                this.accum = this.result = MakeEmptyList();
+            }
+
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
@@ -74,14 +85,14 @@ namespace SimpleScheme
         /// <summary>
         /// Call the map evaluator
         /// </summary>
-        /// <param name="caller">The caller -- return to this when done.</param>
-        /// <param name="expr">The map list to traverse.</param>
         /// <param name="proc">The map proc.</param>
-        /// <param name="result">The result is appended to this.</param>
+        /// <param name="expr">The map list to traverse.</param>
+        /// <param name="returnResult">If true, return the result of the map.</param>
+        /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The step to execute.</returns>
-        public static Stepper Call(Stepper caller, object expr, Procedure proc, Pair result)
+        public static Stepper Call(Procedure proc, object expr, bool returnResult, Stepper caller)
         {
-            return new EvaluateMap(caller, expr, caller.Env, proc, result);
+            return new EvaluateMap(proc, expr, caller.Env, returnResult, caller);
         }
 
         /// <summary>
@@ -92,15 +103,15 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             // first check for degenerate cases
-            if (this.lists == null)
+            if (this.lists == List.Empty)
             {
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             if (!(this.lists is Pair))
             {
                 ErrorHandlers.Error("Map: illegal arg list: " + this.lists);
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             return ContinueHere(this.ApplyFunStep);
@@ -117,21 +128,21 @@ namespace SimpleScheme
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return this.proc.Apply(ContinueHere(this.CollectAndLoopStep), MapFun(First, MakeList(this.lists)));
+                return this.proc.Apply(MapFun(First, MakeList(this.lists)), ContinueHere(this.CollectAndLoopStep));
             }
 
             // if we are done, just return the result minus the dummy entry
-            return ReturnFromStep(Rest(this.result));
+            return ReturnFromStep(this.returnResult ? Rest(this.result) : Undefined.Instance);
         }
 
         /// <summary>
         /// Collect the result of the function application and loop back to do the next one.
         /// </summary>
-        /// <returns>Continue back in step 1.</returns>
+        /// <returns>Continue back in apply fun step.</returns>
         private Stepper CollectAndLoopStep()
         {
             // back from the evaluation -- save the result and keep going with the rest
-            if (this.result != null)
+            if (this.returnResult)
             {
                 // Builds a list by tacking new values onto the tail.
                 this.accum = (Pair)(this.accum.RestCell = MakeList(ReturnedExpr));

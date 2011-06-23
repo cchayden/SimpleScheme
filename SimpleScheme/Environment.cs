@@ -6,6 +6,7 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.Text;
+    using Obj = System.Object;
 
     /// <summary>
     /// Represents the interpreter environment.
@@ -16,6 +17,11 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Environment : ListPrimitives
     {
+        /// <summary>
+        /// Represents the end of the environment chain.
+        /// </summary>
+        private const Environment Empty = null;
+
         /// <summary>
         /// The symbol table for this enviornment.
         /// </summary>
@@ -59,7 +65,7 @@ namespace SimpleScheme
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
         /// <param name="parent">The parent environment.</param>
-        public Environment(object formals, object vals, Environment parent)
+        public Environment(Obj formals, Obj vals, Environment parent)
         {
             this.Parent = parent;
             this.Interp = parent.Interp;
@@ -101,6 +107,8 @@ namespace SimpleScheme
             Vector.DefinePrimitives(this);
             SchemeBoolean.DefinePrimitives(this);
             SchemeString.DefinePrimitives(this);
+            Character.DefinePrimitives(this);
+            Symbol.DefinePrimitives(this);
             ClrProcedure.DefinePrimitives(this);
             SynchronousClrProcedure.DefinePrimitives(this);
             AsynchronousClrProcedure.DefinePrimitives(this);
@@ -113,12 +121,12 @@ namespace SimpleScheme
                    "exit", 
                    (caller, args) =>
                        {
-                            System.Environment.Exit(First(args) == null ? 0 : (int)Number.Num(First(args)));
-                            return null;
+                            System.Environment.Exit(First(args) == List.Empty ? 0 : (int)Number.Num(First(args)));
+                            return Undefined.Instance;
                         },
                    0, 
                    1)
-                .DefinePrimitive("time-call", (caller, args) => EvaluateTimeCall.Call(caller, args), 1, 2);
+                .DefinePrimitive("time-call", (caller, args) => EvaluateTimeCall.Call(args, caller), 1, 2);
 
             return this;
         }
@@ -130,7 +138,7 @@ namespace SimpleScheme
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
         /// <returns>The variable added to the environment.</returns>
-        public object Define(object var, object val)
+        public Obj Define(Obj var, Obj val)
         {
             this.symbolTable.Add(var, val);
 
@@ -147,12 +155,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="symbol">The name of the variable to look up.</param>
         /// <returns>The value bound to the variable.</returns>
-        public object Lookup(string symbol)
+        public Obj Lookup(string symbol)
         {
             Environment env = this;
-            while (env != null)
+            while (env != Empty)
             {
-                object val;
+                Obj val;
                 if (env.symbolTable.Lookup(symbol, out val))
                 {
                     return val;
@@ -175,7 +183,7 @@ namespace SimpleScheme
         /// <param name="var">The variable name.</param>
         /// <param name="val">The new value for the variable.</param>
         /// <returns>The value that the variable was set to.</returns>
-        public object Set(object var, object val)
+        public Obj Set(Obj var, Obj val)
         {
             if (!(var is string))
             {
@@ -188,7 +196,7 @@ namespace SimpleScheme
                 return val;
             }
 
-            if (this.Parent != null)
+            if (this.Parent != Empty)
             {
                 return this.Parent.Set(symbol, val);
             }
@@ -198,7 +206,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Define a primitive, taking a variable number of arguments.
-        /// Creates a Primitive object and puts it in the environment associated 
+        /// Creates a Primitive and puts it in the environment associated 
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
@@ -206,7 +214,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Func<Stepper, object, object> operation, int minArgs, int maxArgs)
+        public Environment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
         {
             this.Define(name, new Primitive(operation, minArgs, maxArgs));
             return this;
@@ -221,7 +229,7 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Func<Stepper, object, object> operation, int numberOfArgs)
+        public Environment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
         {
             return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
         }
@@ -237,7 +245,7 @@ namespace SimpleScheme
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
-            while (env != null && levels > 0)
+            while (env != Empty && levels > 0)
             {
                 env.symbolTable.Dump(indent, sb);
                 levels--;
@@ -287,14 +295,14 @@ namespace SimpleScheme
         /// <param name="vars">The variable list</param>
         /// <param name="vals">The value list</param>
         /// <param name="count">The number of variables in the list</param>
-        /// <returns>True if the lists are both null, if the variable list is just a string, 
+        /// <returns>True if the lists are both empty lists, if the variable list is just a string, 
         /// or if they are both lists of the same length.</returns>
         private static bool NumberArgsOk(object vars, object vals, out int count)
         {
             count = 0;
             while (true)
             {
-                if ((vars == null && vals == null) || (vars is string))
+                if ((vars == List.Empty && vals == List.Empty) || (vars is string))
                 {
                     return true;
                 }
@@ -312,6 +320,10 @@ namespace SimpleScheme
 
         /// <summary>
         /// The symbol table for the environment.
+        /// This is the single most expensive part of the code.
+        /// Is there a way to make this faster?
+        /// Most symbol tables are small, but the base environment with the primitives is large.
+        /// Both of them are used very frequently.  Is there a way to look up symbols less?
         /// </summary>
         private class SymbolTable
         {
@@ -320,9 +332,13 @@ namespace SimpleScheme
             /// </summary>
             private readonly Dictionary<object, object> symbolTable;
 
+            /// <summary>
+            /// Initializes a new instance of the Environment.SymbolTable class.
+            /// </summary>
+            /// <param name="count">The number of symbol table slots to pre-allocate.</param>
             public SymbolTable(int count)
             {
-                symbolTable = new Dictionary<object, object>(count);
+                this.symbolTable = new Dictionary<object, object>(count);
             }
 
             /// <summary>
@@ -338,7 +354,7 @@ namespace SimpleScheme
                     return true;
                 }
 
-                val = null;
+                val = null;  // not used
                 return false;
             }
 
@@ -360,7 +376,7 @@ namespace SimpleScheme
             /// <param name="vals">The list of values.</param>
             public void AddList(object symbols, object vals)
             {
-                while (symbols != null)
+                while (symbols != List.Empty)
                 {
                     if (symbols is string)
                     {
@@ -391,6 +407,11 @@ namespace SimpleScheme
                 }
 
                 return false;
+            }
+
+            public void Clear()
+            {
+                this.symbolTable.Clear();
             }
 
             /// <summary>

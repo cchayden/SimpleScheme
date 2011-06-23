@@ -7,6 +7,7 @@ namespace SimpleScheme
     using System.Collections.Generic;
     using System.Text;
     using System.Threading;
+    using Obj = System.Object;
 
     /// <summary>
     /// Handles perf counters.
@@ -96,21 +97,21 @@ namespace SimpleScheme
         /// Dump the counters on the console.
         /// </summary>
         /// <returns>The result is unspecified.</returns>
-        private object DumpCounters()
+        private Obj DumpCounters()
         {
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
             Console.Out.WriteLine(sb.ToString());
-            return null;
+            return Undefined.Instance;
         }
 
         /// <summary>
         /// Get the counters, as a list of name/count pairs.
         /// </summary>
         /// <returns>The list of counterName/count pairs.</returns>
-        private object GetCounters()
+        private Obj GetCounters()
         {
-            Pair res = null;
+            object res = List.Empty;
             foreach (var kvp in counterNames)
             {
                 int count = this.counters[kvp.Value];
@@ -128,7 +129,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The counter name.</param>
         /// <returns>The counter value.</returns>
-        private object GetCounter(object name)
+        private Obj GetCounter(object name)
         {
             string counterName = name.ToString();
             if (counterNames.ContainsKey(counterName))
@@ -136,7 +137,7 @@ namespace SimpleScheme
                 return this.counters[counterNames[counterName]];
             }
 
-            return null;
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -161,14 +162,14 @@ namespace SimpleScheme
         /// Do not delete counter names.
         /// </summary>
         /// <returns>The result is unspecified.</returns>
-        private object ResetCounters()
+        private Obj ResetCounters()
         {
             for (int i = 0; i < this.counters.Length; i++)
             {
                 this.counters[i] = 0;
             }
 
-            return null;
+            return Undefined.Instance;
         }
     }
 }

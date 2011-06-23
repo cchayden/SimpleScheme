@@ -39,17 +39,17 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateList class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateList(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateList(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.objs = expr;
 
-            // start with an empty list
-            // the empty cell will be stripped off at the end
-            this.accum = this.result = MakeList(null);
+            // Start with an empty list.
+            // The empty cell will be stripped off at the end.
+            this.accum = this.result = MakeEmptyList();
             ContinueHere(this.EvalExprStep);
             IncrementCounter(counter);
         }
@@ -71,18 +71,18 @@ namespace SimpleScheme
         public static Stepper Call(Stepper caller, object expr)
         {
             // first check for degenerate cases
-            if (expr == null)
+            if (expr == List.Empty)
             {
-                return caller.ContinueStep(null);
+                return caller.ContinueStep(List.Empty);
             }
 
             if (!(expr is Pair))
             {
                 ErrorHandlers.Error("Illegal arg list: " + expr);
-                return caller.ContinueStep(null);
+                return caller.ContinueStep(Undefined.Instance);
             }
 
-            return new EvaluateList(caller, expr, caller.Env);
+            return new EvaluateList(expr, caller.Env, caller);
         }
         
         /// <summary>
@@ -92,7 +92,7 @@ namespace SimpleScheme
         private Stepper EvalExprStep()
         {
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(ContinueHere(this.LoopStep), First(this.objs));
+            return EvaluateExpression.Call(First(this.objs), ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -103,13 +103,13 @@ namespace SimpleScheme
         private Stepper LoopStep()
         {
             // back from the evaluation -- save the result and keep going with the rest
-            this.accum = (Pair)(this.accum.RestCell = new Pair(ReturnedExpr, null));
+            this.accum = (Pair)(this.accum.RestCell = MakeList(ReturnedExpr));
             this.objs = Rest(this.objs);
 
             if (this.objs is Pair)
             {
                 // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(this, First(this.objs));
+                return EvaluateExpression.Call(First(this.objs), this);
             }
 
             // We are done now, return

@@ -7,7 +7,7 @@
 (define Encoding "System.Text.Encoding")
 (define Decoder "System.Text.Decoder")
 
-;; define .NET methods
+;; define CLR methods
 (define WebRequest.Create (method WebRequest "Create" "string"))
 (define async #t)
 (if async 
@@ -32,12 +32,11 @@
   (let*
     ((resp (req.GetResponse (WebRequest.Create uri)))
      (stream (resp.GetResponseStream resp))
-     (out-string "")
-     (out '()))
+     (out-string ""))
      ; function to decode byte array into string
      ; return a string
 	 (define (decode buffer len)
-	   (let ((char-buffer (make-string 256)))
+	   (let ((char-buffer (make-string 1000)))
 		 (decoder.GetChars stream.Decode buffer 0 len char-buffer 0)
 		 (substring char-buffer 0 len)
 	 ))
@@ -47,24 +46,27 @@
 		(let* 
           ((buffer (new-array "byte" 256)) 
 		   (len (stream.ReadStream stream buffer 0 256)))
-			(display (string-append len " " uri))(newline)
+			(p (string-append len " " uri))
 			(if (> len 0)
-                 (set! out (cons (decode buffer len) out)))
+                 (set! out-string (string-append out-string (decode buffer len))))
 			len))  
-    (display (string-append "Uri " uri " : " (resp.GetContentLength resp)))(newline)
+    (p (string-append "Uri " uri " : " (resp.GetContentLength resp)))
     (do ((len 1 (read-buffer)))
-        ((= len 0) (string-concat (reverse out))))
+        ((<= len 0) out-string))
+    (p out-string)
   ))
 
+;(do ((x 0 (+ 1 x))) ((> x 10) x) (p x))
+;(do ((x 0)) ((> x 10) x) (set! x (+ 1 x)) (p x))
+
 ; sequential
-;(for-each get-content '("http://microsoft.com" "http://live.com" "http://wintellect.com" "http://chayden.net"))
+;(for-each get-content '("http://microsoft.com" "http://live.com" "http://wintellect.com"))
 
 ; parallel
-; These are parallel because, AT THE TOP LEVEL, the REPL continues after getting Suspend.
 (get-content "http://microsoft.com")
 (get-content "http://live.com")  
 (get-content "http://wintellect.com")
-(p (get-content "http://chayden.net"))
+(get-content "http://chayden.net")
  
 
 (p "loaded")

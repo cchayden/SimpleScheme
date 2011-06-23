@@ -26,11 +26,11 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateProc class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fn">The function to apply.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        /// <param name="fn">The function to apply.</param>
-        protected EvaluateProc(Stepper caller, object expr, Environment env, Procedure fn)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        protected EvaluateProc(Procedure fn, object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.fn = fn;
@@ -49,28 +49,23 @@ namespace SimpleScheme
         /// <summary>
         /// Call apply proc evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="expr">The expression to evaluate.</param>
         /// <param name="fn">The function to apply.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr, Procedure fn)
+        public static Stepper Call(Procedure fn, object expr, Stepper caller)
         {
-            return new EvaluateProc(caller, expr, caller.Env, fn);
+            return new EvaluateProc(fn, expr, caller.Env, caller);
         }
 
         /// <summary>
-        /// Provide TraceInfo that includes the proc to execute in addition to the name.
+        /// Provide TraceInfo: the name and the proc to execute.
         /// </summary>
         /// <returns>Trace info.</returns>
         public override string TraceInfo()
         {
-            string name = base.TraceInfo();
-            if (name == null)
-            {
-                return null;
-            }
-
-            return name + " " + this.fn;
+            string info = base.TraceInfo();
+            return info == null ? null : info + " " + this.fn;
         }
 
         /// <summary>
@@ -80,7 +75,7 @@ namespace SimpleScheme
         /// <returns>The result, or the next step to obtain it.</returns>
         protected Stepper ApplyStep()
         {
-            return this.fn.Apply(ContinueReturn(), ReturnedExpr);
+            return this.fn.Apply(ReturnedExpr, ContinueReturn());
         }
 
         /// <summary>

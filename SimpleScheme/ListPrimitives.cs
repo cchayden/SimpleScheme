@@ -21,7 +21,19 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(object a)
         {
-            return new Pair(a, null);
+            return new Pair(a, List.Empty);
+        }
+
+        /// <summary>
+        /// Create an empty list.
+        /// This is actually a Pair whose First is null.
+        /// This is not the same as List.Empty.
+        /// Used where we need a list to start with, the first cell is normally trimmed off later.
+        /// </summary>
+        /// <returns>A list whose first cell is null.</returns>
+        public static Pair MakeEmptyList()
+        {
+            return new Pair(List.Empty, List.Empty);
         }
 
         /// <summary>
@@ -33,7 +45,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(object a, object b)
         {
-            return new Pair(a, new Pair(b, null));
+            return new Pair(a, new Pair(b, List.Empty));
         }
 
         /// <summary>
@@ -46,7 +58,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(object a, object b, object c)
         {
-            return new Pair(a, new Pair(b, new Pair(c, null)));
+            return new Pair(a, new Pair(b, new Pair(c, List.Empty)));
         }
 
         /// <summary>
@@ -60,7 +72,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(object a, object b, object c, object d)
         {
-            return new Pair(a, new Pair(b, new Pair(c, new Pair(d, null))));
+            return new Pair(a, new Pair(b, new Pair(c, new Pair(d, List.Empty))));
         }
 
         /// <summary>
@@ -70,7 +82,7 @@ namespace SimpleScheme
         /// <returns>The items appended.</returns>
         public static object ListStar(object args)
         {
-            return Rest(args) == null ? 
+            return Rest(args) == List.Empty ? 
                 First(args) : 
                 Cons(First(args), ListStar(Rest(args)));
         }
@@ -79,10 +91,10 @@ namespace SimpleScheme
         /// Get the first member of a list.
         /// </summary>
         /// <param name="x">The list to use.</param>
-        /// <returns>The first member of the list, or null if not a list.</returns>
+        /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static object First(object x)
         {
-            return x is Pair ? ((Pair)x).FirstCell : null;
+            return x is Pair ? ((Pair)x).FirstCell : List.Empty;
         }
 
         /// <summary>
@@ -90,7 +102,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The list to use.</param>
         /// <returns>The second member of the list, 
-        /// or null if there is none.</returns>
+        /// or the empty list if there is none.</returns>
         public static object Second(object x)
         {
             return First(Rest(x));
@@ -100,7 +112,7 @@ namespace SimpleScheme
         /// Get the third member of a list.
         /// </summary>
         /// <param name="x">The list to use.</param>
-        /// <returns>The third member of the list, or null if there is none.</returns>
+        /// <returns>The third member of the list, or the empty list if there is none.</returns>
         public static object Third(object x)
         {
             return First(Rest(Rest(x)));
@@ -111,10 +123,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The list to use.</param>
         /// <returns>The rest -- the list with the first stripped off, 
-        /// or null if there is none.</returns>
+        /// or the empty list if there is none.</returns>
         public static object Rest(object x)
         {
-            return x is Pair ? ((Pair)x).RestCell : null;
+            return x is Pair ? ((Pair)x).RestCell : List.Empty;
         }
 
         /// <summary>
@@ -148,19 +160,18 @@ namespace SimpleScheme
 
         /// <summary>
         /// Traverse the given list, applying the given function to all elements.
-        /// Create a list if the results.
+        /// Create a list of the results.
         /// This is purely iterative.
         /// </summary>
         /// <param name="fun">The function to apply to each elment.</param>
         /// <param name="expr">The list to process.</param>
-        /// <returns>A list made up of the function results of each input element.</returns>
-        public static Pair MapFun(Func<object, object> fun, object expr)
+        /// <returns>A list made up of the function results of each input element.  Could be the empty list.</returns>
+        public static object MapFun(Func<object, object> fun, object expr)
         {
-            Pair result = MakeList(null);
+            Pair result = MakeEmptyList();
             Pair accum = result;
 
             // Iterate down the list, taking the function and building a list of the results.
-            // Avoid Pair iterator for speed.
             expr = First(expr);
             while (expr is Pair)
             {
@@ -168,7 +179,7 @@ namespace SimpleScheme
                 expr = ((Pair)expr).RestCell;
             }
 
-            return (Pair)Rest(result);
+            return Rest(result);
         }
     }
 }

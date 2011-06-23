@@ -25,10 +25,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateIf class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateIf(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateIf(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.EvaluateTestStep);
@@ -46,12 +46,12 @@ namespace SimpleScheme
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateIf(caller, expr, caller.Env);
+            return new EvaluateIf(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private Stepper EvaluateTestStep()
         {
-            return EvaluateExpression.Call(ContinueHere(this.EvaluateAlternativeStep), First(Expr));
+            return EvaluateExpression.Call(First(Expr), ContinueHere(this.EvaluateAlternativeStep));
         }
 
         /// <summary>
@@ -71,9 +71,8 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private Stepper EvaluateAlternativeStep()
         {
-            return EvaluateExpression.Call(
-                this.Caller, 
-                SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr));
+            object toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
+            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.Caller);
         }
     }
 }

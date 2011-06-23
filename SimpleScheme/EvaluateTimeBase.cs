@@ -36,10 +36,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateTimeBase class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        protected EvaluateTimeBase(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        protected EvaluateTimeBase(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.startMem = GC.GetTotalMemory(true);
@@ -54,7 +54,7 @@ namespace SimpleScheme
         protected Stepper InitialStep()
         {
             object y = Second(Expr);
-            this.counter = y == null ? 1 : (int)Number.Num(y);
+            this.counter = y == List.Empty ? 1 : (int)Number.Num(y);
             this.i = 0;
             return ContinueHere(this.Step1);
         }

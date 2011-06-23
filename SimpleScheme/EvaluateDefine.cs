@@ -21,10 +21,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateDefine class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateDefine(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateDefine(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.InitialStep);
@@ -42,12 +42,12 @@ namespace SimpleScheme
         /// <summary>
         /// Call a define evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateDefine(caller, expr, caller.Env);
+            return new EvaluateDefine(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -61,11 +61,10 @@ namespace SimpleScheme
             if (First(Expr) is Pair)
             {
                 // TODO rewrite
-                return EvaluateExpression.Call(
-                    ContinueHere(this.StoreStep1), Cons("lambda", Cons(Rest(First(Expr)), Rest(Expr))));
+                return EvaluateExpression.Call(Cons("lambda", Cons(Rest(First(Expr)), Rest(Expr))), ContinueHere(this.StoreStep1));
             }
 
-            return EvaluateExpression.Call(ContinueHere(this.StoreStep2), Second(Expr));
+            return EvaluateExpression.Call(Second(Expr), ContinueHere(this.StoreStep2));
         }
 
         /// <summary>

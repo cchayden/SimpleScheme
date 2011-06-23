@@ -102,12 +102,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the input port.
         /// </summary>
-        internal InputPort Input { get; private set; }
+        public InputPort Input { get; private set; }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal OutputPort Output { get; private set; }
+        public OutputPort Output { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
@@ -140,7 +140,7 @@ namespace SimpleScheme
                     (caller, args) =>
                         {
                             Console.Out.WriteLine(caller.StackBacktrace());
-                            return null;
+                            return Undefined.Instance;
                         },
                     0);
         }
@@ -198,7 +198,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            return this.EvalStep(EvaluateExpression.Call(this.halted, expr, env));
+            return this.EvalStep(EvaluateExpression.Call(expr, env, this.halted));
         }
 
         // TODO instead of calling Name in the step, call TraceStep.
@@ -214,7 +214,6 @@ namespace SimpleScheme
         /// <returns>The evaluation result, or suspended stepper.</returns>
         public object EvalStep(Stepper step)
         {
-            Stepper lastStep = null;
             while (true)
             {
                 if (step == Stepper.Suspended)
@@ -232,7 +231,7 @@ namespace SimpleScheme
                     return this.halted.ReturnedExpr;
                 }
 
-                if (this.Trace && lastStep != step)
+                if (this.Trace)
                 {
                     string info = step.TraceInfo();
                     if (info != null)
@@ -247,7 +246,6 @@ namespace SimpleScheme
                 }
 
                 step.IncrementCounter(counter);
-                lastStep = step;
                 step = step.Pc();
             }
         }
@@ -258,7 +256,7 @@ namespace SimpleScheme
         /// Evaluate whatever it contains.
         /// </summary>
         /// <param name="fileName">The filename.</param>
-        /// <returns>The result of evaluating the file contents.</returns>
+        /// <returns>Undefined value.</returns>
         public object LoadFile(object fileName)
         {
             string name = SchemeString.AsString(fileName, false);
@@ -275,26 +273,29 @@ namespace SimpleScheme
 
         /// <summary>
         /// Read from the input port and evaluate whatever is there.
+        /// Done for the side effect, not the result.
         /// </summary>
         /// <param name="inp">The input port.</param>
-        /// <returns>True always.</returns>
+        /// <returns>Undefined object.</returns>
         public object Load(InputPort inp)
         {
             while (true)
             {
-                object x;
-                if (InputPort.IsEOF(x = inp.Read()))
+                object input;
+                if (InputPort.IsEof(input = inp.Read()))
                 {
                     inp.Close();
-                    return SchemeBoolean.True;
+                    return Undefined.Instance;
                 }
 
-                object val = this.Eval(x);
+                this.Eval(input);
             }
         }
 
         /// <summary>
         /// Read from an input port, evaluate in the global environment, and print the result.
+        /// If value is undefined, do not print anything.
+        /// If the result is suspended, then don't print anything either.
         /// Catch and discard exceptions.
         /// </summary>
         /// <returns>The interpreter.</returns>
@@ -307,7 +308,7 @@ namespace SimpleScheme
                     object x;
                     this.Output.Print("> ");
                     this.Output.Flush();
-                    if (InputPort.IsEOF(x = this.Input.Read()))
+                    if (InputPort.IsEof(x = this.Input.Read()))
                     {
                         return this;
                     }
@@ -325,9 +326,12 @@ namespace SimpleScheme
                         null);
 #else
                     object val = this.Eval(x);
-                    OutputPort.Write(val, this.Output, true);
-                    this.Output.Println();
-                    this.Output.Flush();
+                    if (val != Undefined.Instance)
+                    {
+                        OutputPort.Write(val, this.Output, true);
+                        this.Output.Println();
+                        this.Output.Flush();
+                    }
 #endif
                 }
                 catch (Exception ex)
@@ -352,14 +356,14 @@ namespace SimpleScheme
 
         /// <summary>
         /// Read from a string and evaluate.
+        /// This is done for the side effects, not the value.
         /// </summary>
         /// <param name="str">The string to read and evaluate.</param>
-        /// <returns>The result of the evaluation</returns>
-        private object LoadString(string str)
+        private void LoadString(string str)
         {
             using (StringReader reader = new StringReader(str))
             {
-                return this.Load(new InputPort(reader));
+                this.Load(new InputPort(reader));
             }
         }
     }

@@ -65,22 +65,22 @@ namespace SimpleScheme
         /// Otherwise, the first argument is the class instance, and the rest are passed 
         ///    to the method.
         /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">Arguments to pass to the method.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to excute.</returns>
-        public override Stepper Apply(Stepper caller, object args)
+        public override Stepper Apply(object args, Stepper caller)
         {
             object target;
             object[] argArray;
             if (this.MethodInfo.IsStatic)
             {
                 target = null;
-                argArray = this.ToArgList(args, null).ToArray();
+                argArray = this.ToArgList(args, null);
             }
             else
             {
                 target = First(args);
-                argArray = this.ToArgList(Rest(args), null).ToArray();
+                argArray = this.ToArgList(Rest(args), null);
             }
 
             return caller.ContinueStep(this.MethodInfo.Invoke(target, argArray));

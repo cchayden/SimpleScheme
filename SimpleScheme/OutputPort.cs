@@ -27,16 +27,16 @@ namespace SimpleScheme
 
         /// <summary>
         /// Convert an object into an output port.
-        /// If the object is null, then return the interpreter's outpot port.
+        /// If the object is the empty list, then return the interpreter's outpot port.
         /// </summary>
         /// <param name="x">The object (should be an output port).</param>
-        /// <param name="interp">The interpreter to use if the port is null.</param>
+        /// <param name="outPort">The output port to use if the port is the empty list.</param>
         /// <returns>An output port.</returns>
-        public static OutputPort OutPort(object x, Interpreter interp)
+        public static OutputPort OutPort(object x, OutputPort outPort)
         {
-            if (x == null)
+            if (x == List.Empty)
             {
-                return interp.Output;
+                return outPort;
             }
 
             if (x is OutputPort)
@@ -44,7 +44,7 @@ namespace SimpleScheme
                 return (OutputPort)x;
             }
 
-            return OutPort(ErrorHandlers.Error("Expected an output port, got: " + x), interp);
+            return OutPort(ErrorHandlers.Error("Expected an output port, got: " + x), null);
         }
 
         /// <summary>
@@ -60,15 +60,15 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-output-file",
-                    (caller, args) => EvaluateCallWithOutputFile.Call(caller, args), 
+                    (caller, args) => EvaluateCallWithOutputFile.Call(args, caller), 
                     2)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
                 .DefinePrimitive(
                     "close-output-port",
                     (caller, args) =>
                         {
-                            OutPort(First(args), caller.Env.Interp).Close();
-                            return SchemeBoolean.True;
+                            OutPort(First(args), caller.Env.Interp.Output).Close();
+                            return Undefined.Instance;
                         },
                     1)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
@@ -77,7 +77,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
                 .DefinePrimitive(
                     "display",
-                    (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp), false),
+                    (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp.Output), false),
                     1, 
                     2)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
@@ -87,8 +87,8 @@ namespace SimpleScheme
                     (caller, args) =>
                         {
                             object first = First(args);
-                            OutPort(first, caller.Env.Interp).Println();
-                            OutPort(first, caller.Env.Interp).Flush();
+                            OutPort(first, caller.Env.Interp.Output).Println();
+                            OutPort(first, caller.Env.Interp.Output).Flush();
                             return SchemeBoolean.True;
                         },
                     0,
@@ -104,7 +104,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
                 .DefinePrimitive(
                    "write",
-                   (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp), true), 
+                   (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp.Output), true), 
                    1,
                    2)
                 .DefinePrimitive("p", (caller, args) => P(First(args)), 1, 1)
@@ -112,7 +112,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
                 .DefinePrimitive(
                     "write-char",
-                    (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp), false),
+                    (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp.Output), false),
                     1,
                     2)
                 .DefinePrimitive(
@@ -120,7 +120,7 @@ namespace SimpleScheme
                     (caller, args) =>
                         {
                             caller.Env.DumpEnv();
-                            return null;
+                            return Undefined.Instance;
                         },
                     0);
         }
@@ -136,7 +136,7 @@ namespace SimpleScheme
         {
             port.Print(SchemeString.AsString(x, quoted));
             port.Flush();
-            return x;
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -157,7 +157,6 @@ namespace SimpleScheme
 
         /// <summary>
         /// Print the object on the output port.
-        /// Calls ToString to convert the object to a string.
         /// </summary>
         /// <param name="x">The object to print.</param>
         public void Print(object x)

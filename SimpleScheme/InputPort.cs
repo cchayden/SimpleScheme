@@ -60,14 +60,14 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
-                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
+                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEof(First(args))), 1)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
-                .DefinePrimitive("call-with-input-file", (caller, args) => EvaluateCallWithInputFile.Call(caller, args), 2)
+                .DefinePrimitive("call-with-input-file", (caller, args) => EvaluateCallWithInputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (caller, args) => InPort(First(args), caller.Env.Interp).Close(), 1)
+                .DefinePrimitive("close-input-port", (caller, args) => InPort(First(args), caller.Env.Interp.Input).Close(), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (caller, args) => caller.Env.Interp.Input, 0)
-                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
+                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEof(First(args))), 1)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
                 .DefinePrimitive("input-port?", (caller, args) => SchemeBoolean.Truth(First(args) is InputPort), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
@@ -76,13 +76,13 @@ namespace SimpleScheme
                 .DefinePrimitive("open-input-file", (caller, args) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (caller, args) => InPort(First(args), caller.Env.Interp).PeekChar(), 0, 1)
+                .DefinePrimitive("peek-char", (caller, args) => InPort(First(args), caller.Env.Interp.Input).PeekChar(), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (caller, args) => InPort(First(args), caller.Env.Interp).Read(), 0, 1)
+                .DefinePrimitive("read", (caller, args) => InPort(First(args), caller.Env.Interp.Input).Read(), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (caller, args) => InPort(First(args), caller.Env.Interp).ReadChar(), 0, 1);
+                .DefinePrimitive("read-char", (caller, args) => InPort(First(args), caller.Env.Interp.Input).ReadChar(), 0, 1);
         }
 
         /// <summary>
@@ -90,23 +90,23 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object to test.</param>
         /// <returns>True if the object is EOF.</returns>
-        public static bool IsEOF(object x)
+        public static bool IsEof(object x)
         {
             return x as string == Eof;
         }
 
         /// <summary>
         /// Convert an object (containing an input port) into an InputPort.
-        /// If the given object is null, return the interpreter's input port.
+        /// If the given object is the empty list, return the interpreter's input port.
         /// </summary>
         /// <param name="x">The object containing the input port.</param>
-        /// <param name="interp">The interpreter with the default input port.</param>
+        /// <param name="inPort">The default input port.</param>
         /// <returns>An input port.</returns>
-        public static InputPort InPort(object x, Interpreter interp)
+        public static InputPort InPort(object x, InputPort inPort)
         {
-            if (x == null)
+            if (x == List.Empty)
             {
-                return interp.Input;
+                return inPort;
             }
 
             if (x is InputPort)
@@ -114,7 +114,7 @@ namespace SimpleScheme
                 return (InputPort)x;
             }
 
-            return InPort(ErrorHandlers.Error("Expected an input port, got: " + x), interp);
+            return InPort(ErrorHandlers.Error("Expected an input port, got: " + x), null);
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace SimpleScheme
                 return Eof;
             }
 
-            return SchemeString.Chr((char)p);
+            return Character.Chr((char)p);
         }
 
         /// <summary>
@@ -202,7 +202,7 @@ namespace SimpleScheme
                     return Eof;
                 }
 
-                return SchemeString.Chr((char)ch);
+                return Character.Chr((char)ch);
             }
             catch (IOException ex)
             {
@@ -282,7 +282,7 @@ namespace SimpleScheme
                             ErrorHandlers.Warn("EOF inside of a string.");
                         }
 
-                        return new SchemeString(buff);
+                        return SchemeString.MakeString(buff);
                     }
 
                 case '#':
@@ -308,25 +308,25 @@ namespace SimpleScheme
                                 token = this.NextToken();
                                 if (token is string && (token as string).Length == 1)
                                 {
-                                    return SchemeString.Chr((char)ch);
+                                    return Character.Chr((char)ch);
                                 }
 
                                 switch (token as string)
                                 {
                                     case "space":
-                                        return SchemeString.Chr(' ');
+                                        return Character.Chr(' ');
                                     case "newline":
-                                        return SchemeString.Chr('\n');
+                                        return Character.Chr('\n');
                                     default:
                                         // this isn't really right
                                         // #\<char> is required to have delimiter after char
                                         ErrorHandlers.Warn("#\\<char> must be followed by delimiter");
                                         this.tokStream.PushToken(token);
-                                        return SchemeString.Chr((char)ch);
+                                        return Character.Chr((char)ch);
                                 }
                             }
 
-                            return SchemeString.Chr((char)ch);
+                            return Character.Chr((char)ch);
 
                         case 'e':
                         case 'i':
@@ -388,7 +388,7 @@ namespace SimpleScheme
 
             if (token as string == ")")
             {
-                return null;  // there was no more
+                return List.Empty;  // there was no more
             }
 
             if (token as string == ".")
@@ -494,7 +494,7 @@ namespace SimpleScheme
                         return -1;
                     }
 
-                    return SchemeString.Chr((char)this.pushedChar);
+                    return Character.Chr((char)this.pushedChar);
                 }
 
                 return -2;
@@ -527,7 +527,7 @@ namespace SimpleScheme
                 try
                 {
                     this.inp.Close();
-                    return SchemeBoolean.True;
+                    return Undefined.Instance;
                 }
                 catch (IOException ex)
                 {

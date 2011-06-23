@@ -40,10 +40,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCond class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateCond(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateCond(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.clauses = expr;
@@ -62,18 +62,18 @@ namespace SimpleScheme
         /// <summary>
         /// Calls a cond evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (expr == null)
+            if (expr == List.Empty)
             {
                 return caller.ContinueStep(SchemeBoolean.False);
             }
 
-            return new EvaluateCond(caller, expr, caller.Env);
+            return new EvaluateCond(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -87,11 +87,11 @@ namespace SimpleScheme
             this.clause = First(this.clauses);
             if (First(this.clause) as string == "else")
             {
-                this.test = null;
+                this.test = List.Empty;
                 return ContinueHere(this.EvalConsequentStep);
             }
 
-            return EvaluateExpression.Call(ContinueHere(this.TestClauseStep), First(this.clause));
+            return EvaluateExpression.Call(First(this.clause), ContinueHere(this.TestClauseStep));
         }
 
         /// <summary>
@@ -110,9 +110,9 @@ namespace SimpleScheme
             }
 
             this.clauses = Rest(this.clauses);
-            if (this.clauses == null)
+            if (this.clauses == List.Empty)
             {
-                return ReturnFromStep(SchemeBoolean.False);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             return ContinueHere(this.EvalClauseStep);
@@ -126,7 +126,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private Stepper EvalConsequentStep()
         {
-            if (Rest(this.clause) == null)
+            if (Rest(this.clause) == List.Empty)
             {
                 // no consequent: return the test as the result
                 return ReturnFromStep(this.test);
@@ -135,11 +135,11 @@ namespace SimpleScheme
             if (Second(this.clause) as string == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(ContinueHere(this.ApplyRecipientStep), Third(this.clause));
+                return EvaluateExpression.Call(Third(this.clause), ContinueHere(this.ApplyRecipientStep));
             }
 
             // evaluate and return the sequence of expressions
-            return EvaluateSequence.Call(this.Caller, Rest(this.clause));
+            return EvaluateSequence.Call(Rest(this.clause), this.Caller);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper ApplyRecipientStep()
         {
-            return EvaluateProcQuoted.Call(this.Caller, MakeList(this.test), Procedure.Proc(ReturnedExpr));
+            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Caller);
         }
     }
 }

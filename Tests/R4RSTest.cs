@@ -49,7 +49,7 @@ namespace Tests
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
             object res = this.ReadAndEvaluate(Test);
-            Assert.AreEqual(17, List.Length(res), "Failed " + this.section);
+            Assert.AreEqual(17, ListPrimitives.Length(res), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
 
@@ -1079,7 +1079,7 @@ namespace Tests
         /// Test call/cc
         /// </summary>
         [TestMethod]
-        public void CallCCTest()
+        public void CallCcTest()
         {
             this.section = "6.9";
             this.ReadAndEvaluate(@"
@@ -1217,8 +1217,9 @@ namespace Tests
                 (test #\; read-char test-file)
                 (test write-test-obj read test-file)
                 (test load-test-obj read test-file)
-                (close-input-port test-file))
-                (define write-test-obj
+                (close-input-port test-file)
+                #t)
+              (define write-test-obj
                  '(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c)))
              (define load-test-obj
                  (list 'define 'foo (list 'quote write-test-obj)))");
@@ -1245,7 +1246,7 @@ namespace Tests
             this.Run("#t", "output-port?", "(output-port? test-file)");
             this.Run("#t", "close-output-port", @"(close-output-port test-file)
                                (check-test-file ""tmp2"")");
-            Assert.IsNull(this.ReadAndEvaluate("errs"));
+            Assert.AreEqual(List.Empty, this.ReadAndEvaluate("errs"));
         }
 
         /// <summary>
@@ -1272,7 +1273,7 @@ namespace Tests
             writer.WriteLine(@";;;(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c))
                      (define foo '(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c)))");
             writer.Close();
-            this.Run("#t", "loca", @"(load ""tmp1"")");
+            this.Run("<undefined>", "loca", @"(load ""tmp1"")");
             this.ReadAndEvaluate(@"(define write-test-obj
                  '(#t #f a () 9739 -3 . #((test) ""te \"" \"" st"" """" test #() b c)))");
             this.Run("#t", "loca", @"(test write-test-obj 'load foo)");
@@ -1340,7 +1341,7 @@ namespace Tests
                 while (true)
                 {
                     object x;
-                    if (InputPort.IsEOF(x = inp.Read()))
+                    if (InputPort.IsEof(x = inp.Read()))
                     {
                         return last;
                     }

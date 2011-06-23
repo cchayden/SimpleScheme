@@ -39,36 +39,32 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (caller, args) => Proc(First(args)).Apply(caller, ListStar(Rest(args))), 2, MaxInt)
+                .DefinePrimitive("apply", (caller, args) => Proc(First(args)).Apply(ListStar(Rest(args)), caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-current-continuation",
-                    (caller, args) => Proc(First(args)).Apply(
-                        caller,
-                        MakeList(new Continuation(EvaluateContinuation.Call(caller, First(args))))),
+                    (caller, args) => Proc(First(args)).Apply(MakeList(new Continuation(EvaluateContinuation.Call(First(args), caller))), caller),
                     1)
                 .DefinePrimitive(
                     "call/cc",
-                    (caller, args) => Proc(First(args)).Apply(
-                        caller,
-                        MakeList(new Continuation(EvaluateContinuation.Call(caller, First(args))))),
+                    (caller, args) => Proc(First(args)).Apply(MakeList(new Continuation(EvaluateContinuation.Call(First(args), caller))), caller),
                     1)
 
                  // Instead of returning a value, return an evaulator that can be run to get the value
-                .DefinePrimitive("eval", (caller, args) => EvaluateExpression.Call(caller, First(args), caller.Env), 1, 2)
+                .DefinePrimitive("eval", (caller, args) => EvaluateExpression.Call(First(args), caller.Env, caller), 1, 2)
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
                    "force",
                    (caller, args) =>
                    {
                        object first = First(args);
-                       return !(first is Procedure) ? first : Proc(first).Apply(caller, null);
+                       return !(first is Procedure) ? first : Proc(first).Apply(null, caller);
                    },
                    1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (caller, args) => EvaluateMap.Call(caller, Rest(args), Proc(First(args)), null), 1, MaxInt)
+                .DefinePrimitive("for-each", (caller, args) => EvaluateMap.Call(Proc(First(args)), Rest(args), false, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (caller, args) => EvaluateMap.Call(caller, Rest(args), Proc(First(args)), MakeList(null)), 1, MaxInt)
+                .DefinePrimitive("map", (caller, args) => EvaluateMap.Call(Proc(First(args)), Rest(args), true, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
                 .DefinePrimitive("procedure?", (caller, args) => SchemeBoolean.Truth(First(args) is Procedure), 1);
         }
@@ -105,25 +101,25 @@ namespace SimpleScheme
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">The arguments to the procedure, which have 
-        /// been evaluated.</param>
+        ///   been evaluated.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to run after the application.</returns>
-        public abstract Stepper Apply(Stepper caller, object args);
+        public abstract Stepper Apply(object args, Stepper caller);
 
         /// <summary>
         /// Evaluate the procedure.
         /// Macro, Closure, and other procs are evaluated differently.
         /// </summary>
-        /// <param name="caller">Return here when done.</param>
         /// <param name="args">The expression to evaluate.</param>
+        /// <param name="caller">Return here when done.</param>
         /// <returns>The next step toexecute.</returns>
-        public Stepper Evaluate(Stepper caller, object args)
+        public Stepper Evaluate(object args, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
             if (this is Macro)
             {
-                return EvaluateExpandMacro.Call(caller, args, (Macro)this);
+                return EvaluateExpandMacro.Call((Macro)this, args, caller);
             }
 
             // If the function is a closure, then create a new environment consisting of
@@ -134,14 +130,14 @@ namespace SimpleScheme
             if (this is Closure)
             {
                 // CLOSURE CALL -- capture the environment and evaluate the body
-                return EvaluateClosure.Call(caller, args, (Closure)this);
+                return EvaluateClosure.Call((Closure)this, args, caller);
             }
 
             // This is a procedure call.
             // In any other case, the function is a primitive, a continuation, or a ClrProcedure.
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
-            return EvaluateProc.Call(caller, args, this);
+            return EvaluateProc.Call(this, args, caller);
         }
     }
 }

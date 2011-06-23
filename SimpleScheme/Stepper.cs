@@ -174,6 +174,20 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Convert the stepper instance to a string.
+        /// Could also consider printing the Expr.
+        /// </summary>
+        /// <param name="quoted">True if the string should be quoted.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        public void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<stepper>");
+            }
+        }
+
+        /// <summary>
         /// Assign PC and return the current stepper.
         /// </summary>
         /// <param name="nextStep">The new PC value</param>
@@ -250,7 +264,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder sb)
         {
             sb.AppendFormat("Step {0}\n", this.Name);
-            string exp = this.Expr == null ? "()" : this.Expr.ToString();
+            string exp = this.Expr == List.Empty ? "()" : this.Expr.ToString();
             sb.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {

@@ -26,11 +26,11 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateExpandMacro class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fn">The macro to expand.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        /// <param name="fn">The macro to expand.</param>
-        private EvaluateExpandMacro(Stepper caller, object expr, Environment env, Macro fn)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateExpandMacro(Macro fn, object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.fn = fn;
@@ -49,13 +49,13 @@ namespace SimpleScheme
         /// <summary>
         /// Call an expand evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="expr">The expression to evaluate.</param>
         /// <param name="fn">The macro to expand.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr, Macro fn)
+        public static Stepper Call(Macro fn, object expr, Stepper caller)
         {
-            return new EvaluateExpandMacro(caller, expr, caller.Env, fn);
+            return new EvaluateExpandMacro(fn, expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace SimpleScheme
         /// <returns>The first step to evaluate to macro.</returns>
         private Stepper InitialStep()
         {
-            return this.fn.Apply(ContinueHere(this.ExpandStep), Expr);
+            return this.fn.Apply(Expr, ContinueHere(this.ExpandStep));
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace SimpleScheme
         /// <returns>The expanded macro.</returns>
         private Stepper ExpandStep()
         {
-            return EvaluateExpression.Call(ContinueReturn(), ReturnedExpr);
+            return EvaluateExpression.Call(ReturnedExpr, ContinueReturn());
         }
     }
 }

@@ -19,7 +19,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vector class.
         /// Creates the vector from a list of values.
         /// </summary>
         /// <param name="objs">A list of values to put in the vector.</param>
@@ -34,16 +33,16 @@ namespace SimpleScheme
             }
 
             int i = 0;
-            foreach (object elem in (Pair)objs)
+            while (objs is Pair)
             {
-                vec[i++] = elem;
+                vec[i++] = First(objs);
+                objs = Rest(objs);
             }
 
             return vec;
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vector class.
         /// Create a vector from a length and an optional fill value.
         /// </summary>
         /// <param name="length">The vector length.</param>
@@ -52,9 +51,9 @@ namespace SimpleScheme
         public static object[] MakeVector(object length, object fill)
         {
             object[] vec = new object[(int)Number.Num(length)];
-            if (fill == null)
+            if (fill == List.Empty)
             {
-                return vec;
+                fill = Undefined.Instance;
             }
 
             for (int i = 0; i < vec.Length; i++)
@@ -66,16 +65,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the length of the vector.
-        /// </summary>
-        /// <param name="vec">The vector to measure.</param>
-        /// <returns>The length of the vector.</returns>
-        public static int VectorLength(object[] vec)
-        {
-            return vec.Length;
-        }
-
-        /// <summary>
         /// Define the vector primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
@@ -83,6 +72,8 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
+                //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
+                .DefinePrimitive("list->vector", (caller, args) => MakeVector(First(args)), 1)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
                 .DefinePrimitive("make-vector", (caller, args) => MakeVector(First(args), Second(args)), 1, 2)
@@ -97,7 +88,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
                 .DefinePrimitive("vector-ref", (caller, args) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (caller, args) => Vec(First(args))[(int)Number.Num(Second(args))] = Third(args), 3)
+                .DefinePrimitive("vector-set!", (caller, args) => VectorSet(First(args), Second(args), Third(args)), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
                 .DefinePrimitive("vector?", (caller, args) => SchemeBoolean.Truth(First(args) is object[]), 1);
         }
@@ -138,9 +129,9 @@ namespace SimpleScheme
             buf.Append("#(");
             if (vec.Length > 0)
             {
-                for (int i = 0; i < vec.Length; i++)
+                foreach (object v in vec)
                 {
-                    SchemeString.AsString(vec[i], quoted, buf);
+                    SchemeString.AsString(v, quoted, buf);
                     buf.Append(' ');
                 }
 
@@ -166,17 +157,30 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Set a vector element.
+        /// </summary>
+        /// <param name="vector">The vector to set.</param>
+        /// <param name="k">The index into the vector to set.</param>
+        /// <param name="obj">The new value to set.</param>
+        /// <returns>Undefined value.</returns>
+        private static object VectorSet(object vector, object k, object obj)
+        {
+            Vec(vector)[(int)Number.Num(k)] = obj;
+            return Undefined.Instance;
+        }
+
+        /// <summary>
         /// Convert a vector into a list of objects.
-        /// If the object is not a vector, return null.
+        /// If the object is not a vector, return error.
         /// </summary>
         /// <param name="vector">The vector.</param>
-        /// <returns>The list, or null.</returns>
-        private static Pair VectorToList(object vector)
+        /// <returns>The list, or undefined.</returns>
+        private static object VectorToList(object vector)
         {
             if (vector is object[])
             {
                 object[] vec = (object[])vector;
-                Pair result = null;
+                object result = List.Empty;
                 for (int i = vec.Length - 1; i >= 0; i--)
                 {
                     result = Cons(vec[i], result);
@@ -186,7 +190,7 @@ namespace SimpleScheme
             }
 
             ErrorHandlers.Error("VectorToList: expected a vector, got: " + vector);
-            return null;
+            return List.Empty;
         }
 
         /// <summary>
@@ -205,11 +209,10 @@ namespace SimpleScheme
                     vec[i] = fill;
                 }
 
-                return false;
+                return Undefined.Instance;
             }
 
-            ErrorHandlers.Error("VectorFill: expected a vector, got: " + vector);
-            return null;
+            return ErrorHandlers.Error("VectorFill: expected a vector, got: " + vector);
         }
     }
 }

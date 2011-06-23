@@ -45,10 +45,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCase class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateCase(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateCase(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.EvaluateKeyStep);
@@ -66,12 +66,12 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a case evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <returns>The if evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>The case evaluator.</returns>
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateCase(caller, expr, caller.Env);
+            return new EvaluateCase(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace SimpleScheme
         private Stepper EvaluateKeyStep()
         {
             this.clauses = Rest(Expr);
-            return EvaluateExpression.Call(ContinueHere(this.AssignKey), First(Expr));
+            return EvaluateExpression.Call(First(Expr), ContinueHere(this.AssignKey));
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace SimpleScheme
         /// <returns>The steps to test che clauses.</returns>
         private Stepper CheckClauseStep()
         {
-            while (this.clauses != null)
+            while (this.clauses != List.Empty)
             {
                 object clause = First(this.clauses);
                 if (!(clause is Pair))
@@ -136,7 +136,7 @@ namespace SimpleScheme
             }
 
             // no clauses matched -- unspecified
-            return ReturnFromStep(null);
+            return ReturnFromStep(Undefined.Instance);
         }
 
         /// <summary>
@@ -145,14 +145,14 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper EvalExpr()
         {
-            if (this.exprList == null)
+            if (this.exprList == List.Empty)
             {
                 // if no expressions, return key value
                 return ReturnFromStep(this.keyVal);
             }
 
             // eval and return last expr
-            return EvaluateSequence.Call(this.Caller, this.exprList);
+            return EvaluateSequence.Call(this.exprList, this.Caller);
         }
     }
 }

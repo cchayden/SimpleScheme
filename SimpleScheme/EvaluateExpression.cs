@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using Obj = System.Object;
 
     /// <summary>
     /// The main evaluator for expressions.
@@ -29,26 +30,27 @@ namespace SimpleScheme
         /// <summary>
         /// A function to be evaluated (primitive, proc, macro, or closure).
         /// </summary>
-        private readonly object fn;
+        private readonly Obj fn;
 
         /// <summary>
         /// The arguments to the function.
         /// </summary>
-        private readonly object args;
+        private readonly Obj args;
 
         /// <summary>
         /// Initializes a new instance of the EvaluateExpression class.
+        /// If expr is needed in the base class, it can be supplied by
+        ///   Cons(fn, args).
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="fn">The function to evaluate.</param>
+        /// <param name="args">The function args to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateExpression(Stepper caller, object expr, Environment env)
-            : base(caller, expr, env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateExpression(Obj fn, Obj args, Environment env, Stepper caller)
+            : base(caller, null, env)
         {
-            // We are evaluating a pair.
-            // Split out the first item for special treatment.
-            this.fn = First(Expr);
-            this.args = Rest(Expr);
+            this.fn = fn;
+            this.args = args;
 
             ContinueHere(this.InitialStep);
             this.trace = false;
@@ -65,6 +67,9 @@ namespace SimpleScheme
 
         /// <summary>
         /// Define the list primitives.
+        /// Each of these could go through Call, but for those primitives that will really need to instantiate
+        ///   EvaluateExpression, we just do that directly.
+        /// Ususlly these constructs are not handled as primitives, but are instead
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
         public static void DefinePrimitives(Environment env)
@@ -72,81 +77,85 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-                .DefinePrimitive("and", (caller, args) => new EvaluateExpression(caller, Cons("and", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("and", (caller, args) => new EvaluateExpression("and", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                .DefinePrimitive("begin", (caller, args) => new EvaluateExpression(caller, Cons("begin", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("begin", (caller, args) => new EvaluateExpression("begin", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-                .DefinePrimitive("case", (caller, args) => new EvaluateExpression(caller, Cons("case", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("case", (caller, args) => new EvaluateExpression("case", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                .DefinePrimitive("cond", (caller, args) => new EvaluateExpression(caller, Cons("cond", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("cond", (caller, args) => new EvaluateExpression("cond", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                .DefinePrimitive("define", (caller, args) => new EvaluateExpression(caller, Cons("define", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("define", (caller, args) => new EvaluateExpression("define", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                 ////                           ...)
                 ////                           (<test> <expression> ...)
                 ////                         <command> ...)</r4rs>
-                .DefinePrimitive("do", (caller, args) => new EvaluateExpression(caller, Cons("do", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("do", (caller, args) => new EvaluateExpression("do", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                 //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-                .DefinePrimitive("if", (caller, args) => new EvaluateExpression(caller, Cons("if", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("if", (caller, args) => new EvaluateExpression("if", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
                 //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
                 //// <r4rs section="4.1.4">formals: <variable></r4rs>
                 //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-                .DefinePrimitive("lambda", (caller, args) => Call(caller, Cons("lambda", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("lambda", (caller, args) => Call("lambda", args, caller.Env, caller), 0, MaxInt)
                     //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                .DefinePrimitive("let", (caller, args) => new EvaluateExpression(caller, Cons("let", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("let", (caller, args) => new EvaluateExpression("let", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                .DefinePrimitive("let*", (caller, args) => new EvaluateExpression(caller, Cons("let*", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("let*", (caller, args) => new EvaluateExpression("let*", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                .DefinePrimitive("letrec", (caller, args) => new EvaluateExpression(caller, Cons("letrec", args), caller.Env), 0, MaxInt)
-                .DefinePrimitive("macro", (caller, args) => Call(caller, Cons("macro", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("letrec", (caller, args) => new EvaluateExpression("letrec", args, caller.Env, caller), 0, MaxInt)
+                .DefinePrimitive("macro", (caller, args) => Call("macro", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-                .DefinePrimitive("or", (caller, args) => new EvaluateExpression(caller, Cons("or", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("or", (caller, args) => new EvaluateExpression("or", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
-                .DefinePrimitive("quote", (caller, args) => Call(caller, Cons("quote", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("quote", (caller, args) => Call("quote", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                .DefinePrimitive("set!", (caller, args) => new EvaluateExpression(caller, Cons("set!", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("set!", (caller, args) => new EvaluateExpression("set!", args, caller.Env, caller), 0, MaxInt)
                 //// time
-                .DefinePrimitive("time", (caller, args) => new EvaluateExpression(caller, Cons("time", args), caller.Env), 0, MaxInt);
+                .DefinePrimitive("time", (caller, args) => new EvaluateExpression("time", args, caller.Env, caller), 0, MaxInt);
         }
 
         /// <summary>
-        /// Calls the main evaluator.
+        /// First check for a form that does not need to create an evaluator.  If it is one of these,
+        ///   just return the answer.  Otherwise create an EvaluateExpression to handle it.
         /// This version uses a supplied environment.  This is used with a closure
         ///   to evaluate in the closure's environment rather than in the current one.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to evaluate in.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr, Environment env)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If we don't need to do any steps, then
-            // do not create an evaluator object -- just return the value directly.
+            // do not create an evaluator -- just return the value directly.
+            //
+            // First look for a symbol.
             if (expr is string)
             {
-                // Evaluate a string by looking it up in the environment.
-                // It should correspond to a varialbe name, for which there 
+                // Evaluate a symbol by looking it up in the environment.
+                // It should correspond to a variable name, for which there 
                 //    is a corresponding value.
                 return caller.ContinueStep(env.Lookup((string)expr));
             }
 
+            // Look for all other non-pair forms.
             if (!(expr is Pair))
             {
                 // If we are evaluating something that is not a pair, 
@@ -155,9 +164,23 @@ namespace SimpleScheme
                 return caller.ContinueStep(expr);
             }
 
-            object fn = First(expr);
-            object args = Rest(expr);
+            // Break apart and evaluate the fn and args
+            return Call(First(expr), Rest(expr), env, caller);
+        }
 
+        /// <summary>
+        /// Calls the main evaluator.
+        /// Used by the primitives who have already separated the fun and args.
+        /// Also used by the Call above after the args are separated.
+        /// </summary>
+        /// <param name="fn">The function to evaluate.</param>
+        /// <param name="args">The args to evaluate.</param>
+        /// <param name="env">The environment to evaluate in.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>The evaluator.</returns>
+        public static Stepper Call(Obj fn, Obj args, Environment env, Stepper caller)
+        {
+            // Handle special forms that do not need an actual evaluuation.
             switch (fn as string)
             {
                 case "quote":
@@ -179,29 +202,18 @@ namespace SimpleScheme
             }
 
             // Actually create an evaluator to do the operation.
-            return new EvaluateExpression(caller, expr, env);
+            return new EvaluateExpression(fn, args, env, caller);
         }
 
         /// <summary>
         /// Calls the main evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
-            return Call(caller, expr, caller.Env);
-        }
-
-        /// <summary>
-        /// Evaluate a string by looking it up in the environment.
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <param name="env">The environment to evaluate it in.</param>
-        /// <returns>The value of the symbol.</returns>
-        private static object EvalString(string symbol, Environment env)
-        {
-            return env.Lookup(symbol);
+            return Call(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -229,7 +241,7 @@ namespace SimpleScheme
                     //   and returning the last.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateSequence.Call(ContinueReturn(), this.args);
+                    return EvaluateSequence.Call(this.args, ContinueReturn());
 
                 case "define":
                     // Define is a shortcut for lambda.
@@ -237,77 +249,77 @@ namespace SimpleScheme
                     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                    return EvaluateDefine.Call(ContinueReturn(), this.args);
+                    return EvaluateDefine.Call(this.args, ContinueReturn());
 
                 case "set!":
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
                     //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                    return EvaluateSet.Call(ContinueHere(this.ReturnStep), this.args);
+                    return EvaluateSet.Call(this.args, ContinueHere(this.ReturnStep));
 
                 case "if":
                     // Eval an if expression by evaluating the first clause, 
                     //    and then returning either the second or third.
                     //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-                    return EvaluateIf.Call(ContinueReturn(), this.args);
+                    return EvaluateIf.Call(this.args, ContinueReturn());
 
                 case "case":
                     //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                     //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-                    return EvaluateCase.Call(ContinueReturn(), this.args);
+                    return EvaluateCase.Call(this.args, ContinueReturn());
 
                 case "or":
                     //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-                    return EvaluateOr.Call(ContinueReturn(), this.args);
+                    return EvaluateOr.Call(this.args, ContinueReturn());
 
                 case "and":
                     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-                    return EvaluateAnd.Call(ContinueReturn(), this.args);
+                    return EvaluateAnd.Call(this.args, ContinueReturn());
 
                 case "cond":
                     //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                    return EvaluateCond.Call(ContinueReturn(), this.args);
+                    return EvaluateCond.Call(this.args, ContinueReturn());
 
                 case "let":
                     //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLet.Call(ContinueReturn(), this.args);
+                    return EvaluateLet.Call(this.args, ContinueReturn());
 
                 case "let*":
                     //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetStar.Call(ContinueReturn(), this.args);
+                    return EvaluateLetStar.Call(this.args, ContinueReturn());
 
                 case "letrec":
                     //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetRec.Call(ContinueReturn(), this.args);
+                    return EvaluateLetRec.Call(this.args, ContinueReturn());
 
                 case "do":
                     //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                     ////                           ...)
                     ////                           (<test> <expression> ...)
                     ////                         <command> ...)</r4rs>
-                    return EvaluateDo.Call(ContinueReturn(), this.args);
+                    return EvaluateDo.Call(this.args, ContinueReturn());
 
                 case "time":
-                    return EvaluateTime.Call(ContinueReturn(), this.args);
+                    return EvaluateTime.Call(this.args, ContinueReturn());
             }
 
             // If we get here, it wasn't one of the special forms.  
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
             //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            return Call(ContinueHere(this.ApplyProcStep), this.fn);
+            return Call(this.fn, ContinueHere(this.ApplyProcStep));
         }
 
         /// <summary>
@@ -318,7 +330,7 @@ namespace SimpleScheme
         private Stepper ApplyProcStep()
         {
             // Come here after evaluating fn
-            return Procedure.Proc(ReturnedExpr).Evaluate(ContinueReturn(), this.args);
+            return Procedure.Proc(ReturnedExpr).Evaluate(this.args, ContinueReturn());
         }
 
         /// <summary>

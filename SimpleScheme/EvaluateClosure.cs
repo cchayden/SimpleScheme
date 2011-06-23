@@ -30,14 +30,14 @@ namespace SimpleScheme
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
 
-      /// <summary>
+        /// <summary>
         /// Initializes a new instance of the EvaluateClosure class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="f">The closure to evaluate</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        /// <param name="f">The closure to evaluate</param>
-        private EvaluateClosure(Stepper caller, object expr, Environment env, Closure f)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateClosure(Closure f, object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.f = f;
@@ -57,13 +57,28 @@ namespace SimpleScheme
         /// <summary>
         /// Calls a closure evaluator
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="expr">The expression to evaluate.</param>
         /// <param name="f">The closure to evaluate</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        public static Stepper Call(Stepper caller, object expr, Closure f)
+        public static Stepper Call(Closure f, object expr, Stepper caller)
         {
-            return new EvaluateClosure(caller, expr, caller.Env, f);
+            return new EvaluateClosure(f, expr, caller.Env, caller);
+        }
+
+        /// <summary>
+        /// Trace information for the step.
+        /// Print the closure name in addition to args
+        /// </summary>
+        /// <returns>Info to print for the trace.</returns>
+        public override string TraceInfo()
+        {
+            if (base.TraceInfo() == null)
+            {
+                return null;
+            }
+
+            return this.Name + " {" + this.f.Name + "}";
         }
 
         /// <summary>

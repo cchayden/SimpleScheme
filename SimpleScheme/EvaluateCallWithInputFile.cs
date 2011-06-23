@@ -28,10 +28,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCallWithInputFile class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateCallWithInputFile(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateCallWithInputFile(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.InitialStep);
@@ -49,12 +49,12 @@ namespace SimpleScheme
         /// <summary>
         /// Call a new evaluator with an input file
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateCallWithInputFile(caller, expr, caller.Env);
+            return new EvaluateCallWithInputFile(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             this.port = OpenInputFile(First(Expr));
-            return Procedure.Proc(Second(Expr)).Apply(ContinueHere(this.ReturnStep), MakeList(this.port));
+            return Procedure.Proc(Second(Expr)).Apply(MakeList(this.port), ContinueHere(this.ReturnStep));
         }
 
         /// <summary>

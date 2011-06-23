@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
+
     /// <summary>
     /// Operations on boolean values.
     /// </summary>
@@ -11,12 +13,12 @@ namespace SimpleScheme
         /// <summary>
         /// Define the true object.
         /// </summary>
-        public static readonly bool True = true;
+        public const bool True = true;
 
         /// <summary>
         /// Define the false object.
         /// </summary>
-        public static readonly bool False = false;
+        public const bool False = false;
 
         /// <summary>
         /// Define the boolean primitives.
@@ -36,13 +38,13 @@ namespace SimpleScheme
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
                 .DefinePrimitive("not", (caller, args) => Truth(First(args) is bool && (bool)First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (caller, args) => Truth(First(args) == null), 1);
+                .DefinePrimitive("null?", (caller, args) => Truth(First(args) == List.Empty), 1);
         }
 
         /// <summary>
         /// Equality test for two objects.
         /// Two objects are equal if they:
-        ///   are both null
+        ///   are both empty lists
         ///   are both strings containing the same characters
         ///   are both vectors whose members are all equal, or
         ///   are equal by their type-specific Equals function.
@@ -52,21 +54,21 @@ namespace SimpleScheme
         /// <returns>True if the objects are equal.</returns>
         public static bool Equal(object obj1, object obj2)
         {
-            // both null
-            if (obj1 == null || obj2 == null)
+            // both empty list
+            if (obj1 == List.Empty || obj2 == List.Empty)
             {
                 return obj1 == obj2;
             }
 
             // test strings
-            if (obj1 is SchemeString)
+            if (obj1 is char[])
             {
-                if (!(obj2 is SchemeString))
+                if (!(obj2 is char[]))
                 {
                     return false;
                 }
 
-                return SchemeString.Equal((SchemeString)obj1, (SchemeString)obj2);
+                return SchemeString.Equal((char[])obj1, (char[])obj2);
             }
 
             // test vectors
@@ -112,8 +114,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         public static bool IsFalse(object value)
         {
-            bool? x = AsBoolean(value);
-            return x.HasValue && x.Value == false;
+            return (value is bool) && ((bool)value) == false;
         }
 
         /// <summary>
@@ -124,8 +125,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
         public static bool IsTrue(object value)
         {
-            bool? x = AsBoolean(value);
-            return x.HasValue && x.Value;
+            return (value is bool) && (bool)value;
         }
 
         /// <summary>
@@ -140,18 +140,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Turn an object that is a boolean into a bool.
+        /// Convert the bool instance to a string.
         /// </summary>
-        /// <param name="value">The object to convert.</param>
-        /// <returns>The boolean value, or else null if not a boolean.</returns>
-        private static bool? AsBoolean(object value)
+        /// <param name="val">The boolean value to convert.</param>
+        /// <param name="quoted">True if the string should be quoted.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        public static void AsString(bool val, bool quoted, StringBuilder buf)
         {
-            if (!(value is bool))
-            {
-                return null;
-            }
-
-            return (bool)value;
+            buf.Append(val ? "#t" : "#f");
         }
     }
 }

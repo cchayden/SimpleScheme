@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="AsynchronousClrProcedure.cs" />
     <Compile Include="AsyncResult.cs" />
+    <Compile Include="Character.cs" />
     <Compile Include="Counter.cs" />
     <Compile Include="EvaluateAnd.cs">
       <SubType>Code</SubType>
@@ -89,7 +90,9 @@
     <Compile Include="Interpreter.cs" />
     <Compile Include="SchemePrimitives.cs" />
     <Compile Include="ErrorHandlers.cs" />
+    <Compile Include="Symbol.cs" />
     <Compile Include="SynchronousClrProcedure.cs" />
+    <Compile Include="Undefined.cs" />
     <Compile Include="Vector.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -51,10 +51,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateDo class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateDo(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateDo(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             ContinueHere(this.InitialStep);
@@ -72,12 +72,12 @@ namespace SimpleScheme
         /// <summary>
         /// Call let evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateDo(caller, expr, caller.Env);
+            return new EvaluateDo(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -88,7 +88,8 @@ namespace SimpleScheme
         /// <returns>The third, if it exists, otherwise the first.</returns>
         private static object ThirdOrFirst(object x)
         {
-            return Third(x) ?? First(x);
+            object res = Third(x);
+            return res == List.Empty ? First(x) : res;
         }
 
         /// <summary>
@@ -99,16 +100,16 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the inits.</returns>
         private Stepper InitialStep()
         {
-            if (Expr == null)
+            if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Do: wrong number of arguments");
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Do: illegal arg list: " + Expr);
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             object bindings = First(Expr);
@@ -120,9 +121,9 @@ namespace SimpleScheme
             this.exprs = Rest(Second(Expr));
             this.commands = Rest(Rest(Expr));
 
-            if (test == null)
+            if (test == List.Empty)
             {
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             // prepare test proc to execute each time through
@@ -155,7 +156,13 @@ namespace SimpleScheme
                 // test is true
                 // Evaluate exprs and return the value of the last
                 //   in the environment of the vars.
-                return EvaluateSequence.Call(ContinueReturn(), this.exprs);
+                // If no exprs, unspecified.
+                if (this.exprs == List.Empty)
+                {
+                    return ReturnFromStep(Undefined.Instance);
+                }
+
+                return EvaluateSequence.Call(this.exprs, ContinueReturn());
             }
             
             // test is false

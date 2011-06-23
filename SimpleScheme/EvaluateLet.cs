@@ -51,13 +51,13 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateLet class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateLet(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateLet(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
-            this.name = null;
+            this.name = Undefined.Instance;
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
@@ -73,12 +73,12 @@ namespace SimpleScheme
         /// <summary>
         /// Call let evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateLet(caller, expr, caller.Env);
+            return new EvaluateLet(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -92,16 +92,16 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the constructed lambda.</returns>
         private Stepper InitialStep()
         {
-            if (Expr == null)
+            if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Let: wrong number of arguments");
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Let: illegal arg list: " + Expr);
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             if (First(Expr) is string)
@@ -117,18 +117,18 @@ namespace SimpleScheme
                 this.body = Rest(Expr);
             }
 
-            if (this.body == null)
+            if (this.body == List.Empty)
             {
-                return ReturnFromStep(null);
+                return ReturnFromStep(Undefined.Instance);
             }
 
             this.vars = MapFun(First, MakeList(this.bindings));
             this.inits = MapFun(Second, MakeList(this.bindings));
 
-            if (this.name == null)
+            if (this.name == Undefined.Instance)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(ContinueReturn(), this.inits, new Closure(this.vars, this.body, this.Env));
+                return EvaluateProc.Call(new Closure(this.vars, this.body, this.Env), this.inits, ContinueReturn());
             }
 
             // named let -- eval the inits in the outer environment
@@ -146,7 +146,7 @@ namespace SimpleScheme
         {
             Closure fn = new Closure(this.vars, this.body, this.Env);
             fn.Env.Define(this.name, fn);
-            return fn.Apply(ContinueReturn(), ReturnedExpr);
+            return fn.Apply(ReturnedExpr, ContinueReturn());
         }
     }
 }

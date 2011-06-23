@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// A closure stores the environment and a program to run.
     /// It can be executed later, through Apply.
@@ -22,7 +24,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        public Closure(object formalParameters, object body, Environment env)
+        public Closure(Obj formalParameters, Obj body, Environment env)
         {
             this.FormalParameters = formalParameters;
             this.Env = env;
@@ -32,12 +34,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a list of variable names, to be matched with values later.
         /// </summary>
-        public object FormalParameters { get; private set; }
+        public Obj FormalParameters { get; private set; }
 
         /// <summary>
         /// Gets the program to execute.
         /// </summary>
-        public object Body { get; private set; }
+        public Obj Body { get; private set; }
 
         /// <summary>
         /// Gets the environment in which to execute.
@@ -48,12 +50,12 @@ namespace SimpleScheme
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
         /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">The values to be matched with the variable names.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Stepper caller, object args)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
-            return EvaluateSequence.Call(caller, this.Body, new Environment(this.FormalParameters, args, this.Env));
+            return EvaluateSequence.Call(this.Body, new Environment(this.FormalParameters, args, this.Env), caller);
         }
 
         /// <summary>
@@ -65,7 +67,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public Stepper ApplyWithCurrentEnv(Stepper caller)
         {
-            return EvaluateSequence.Call(caller, this.Body, caller.Env);
+            return EvaluateSequence.Call(this.Body, caller.Env, caller);
         }
 
         /// <summary>
@@ -85,8 +87,8 @@ namespace SimpleScheme
         /// <returns>String representing the closure.</returns>
         protected string ToString(string tag)
         {
-            string formals = this.FormalParameters == null ? "()" : this.FormalParameters.ToString();
-            string body = this.Body == null ? "()" : this.Body.ToString();
+            string formals = this.FormalParameters == List.Empty ? "()" : this.FormalParameters.ToString();
+            string body = this.Body == List.Empty ? "()" : this.Body.ToString();
             return string.Format("({0} {1} {2})", tag, formals, body);
         }
     }

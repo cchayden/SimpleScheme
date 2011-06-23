@@ -3,7 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
+    using Obj = System.Object;
 
     /// <summary>
     /// Primitive procedures.
@@ -34,7 +34,7 @@ namespace SimpleScheme
         /// (1) a value, the operation result, or
         /// (2) a Stepper, the next step to execute. 
         /// </summary>
-        private readonly Func<Stepper, object, object> operation;
+        private readonly Op operation;
 
         /// <summary>
         /// The minimum number of arguments expected.
@@ -52,12 +52,20 @@ namespace SimpleScheme
         /// <param name="operation">The code to carry out the operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
-        public Primitive(Func<Stepper, object, object> operation, int minArgs, int maxArgs)
+        public Primitive(Op operation, int minArgs, int maxArgs)
         {
             this.operation = operation;
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
         }
+
+        /// <summary>
+        /// The signature for primitives.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <param name="args">The primitive's arguments</param>
+        /// <returns>The primitive's result.</returns>
+        public delegate Obj Op(Stepper caller, Obj args);
 
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
@@ -69,10 +77,10 @@ namespace SimpleScheme
         /// If there is a result available immediately, this returns it by storing it
         ///   in ReturnedResult and returning to the caller.
         /// </summary>
-        /// <param name="caller">The calling Stepper.</param>
         /// <param name="args">The arguments to the primitive.</param>
+        /// <param name="caller">The calling Stepper.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Stepper caller, object args)
+        public override Stepper Apply(object args, Stepper caller)
         {
             // First check the number of arguments
             int numArgs = Length(args);

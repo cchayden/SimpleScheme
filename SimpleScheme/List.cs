@@ -1,13 +1,21 @@
-﻿// <copyright file="List.cs" company="Charles Hayden">
+﻿//#define EMPTY
+// <copyright file="List.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
+
     /// <summary>
     /// List utilities used by the primitives.
     /// </summary>
     public sealed class List : ListPrimitives
     {
+        /// <summary>
+        /// The empty list is represented by null.
+        /// </summary>
+        public static readonly object Empty = new EmptyList();
+        //public const object Empty = null;
+        
         /// <summary>
         /// Do all the combination car-cdr functions.
         /// </summary>
@@ -34,7 +42,7 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.3">(append <list> ...)</r4rs>
-                .DefinePrimitive("append", (caller, args) => args == null ? null : Append(args), 0, MaxInt)
+                .DefinePrimitive("append", (caller, args) => Append(args), 0, MaxInt)
                 //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
                 .DefinePrimitive("assoc", (caller, args) => MemberAssoc(First(args), Second(args), 'a', ' '), 2)
                 //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
@@ -55,10 +63,6 @@ namespace SimpleScheme
                 .DefinePrimitive("length", (caller, args) => Number.Num(Length(First(args))), 1)
                 //// <r4rs section="6.3">(list <obj> ...)</r4rs>
                 .DefinePrimitive("list", (caller, args) => args, 0, MaxInt)
-                //// <r4rs section="6.7">(list->string <chars>)</r4rs>
-                .DefinePrimitive("list->string", (caller, args) => SchemeString.ListToString(First(args)), 1)
-                //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (caller, args) => Vector.MakeVector(First(args)), 1)
                 //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
                 .DefinePrimitive(
                    "list-ref",
@@ -75,20 +79,7 @@ namespace SimpleScheme
                    },
                     2)
                 //// <r4rs section="6.3">(list-tail <list> <k>)</r4rs>
-                .DefinePrimitive(
-                   "list-tail",
-                   (caller, args) =>
-                   {
-                       object first = First(args);
-                       object second = Second(args);
-                       for (int k = (int)Number.Num(second); k > 0; k--)
-                       {
-                           first = Rest(first);
-                       }
-
-                       return first;
-                   },
-                    2)
+                .DefinePrimitive("list-tail", (caller, args) => ListTail(First(args), Second(args)), 2)
                 //// <r4rs section="6.3">(list? <obj>)</r4rs>
                 .DefinePrimitive("list?", (caller, args) => SchemeBoolean.Truth(IsList(First(args))), 1)
                 //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
@@ -142,9 +133,13 @@ namespace SimpleScheme
         /// <returns>The object that has just been modified.</returns>
         private static object SetFirst(object x, object y)
         {
-            return x is Pair ? 
-                ((Pair)x).FirstCell = y : 
-                ErrorHandlers.Error("SetFirst: attempt to set-car of a non-Pair: " + SchemeString.AsString(x));
+            if (x is Pair)
+            {
+                ((Pair)x).FirstCell = y;
+                return Undefined.Instance;
+            }
+
+            return ErrorHandlers.Error("SetFirst: attempt to set-car of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
@@ -155,9 +150,13 @@ namespace SimpleScheme
         /// <returns>The object that has just been modified.</returns>
         private static object SetRest(object x, object y)
         {
-            return x is Pair ? 
-                ((Pair)x).RestCell = y : 
-                ErrorHandlers.Error("SetRest: attempt to set-cdr of a non-Pair: " + SchemeString.AsString(x));
+            if (x is Pair)
+            {
+                ((Pair)x).RestCell = y;
+                return Undefined.Instance;
+            }
+
+            return ErrorHandlers.Error("SetRest: attempt to set-cdr of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
@@ -168,7 +167,7 @@ namespace SimpleScheme
         /// <returns>The reversed list.</returns>
         private static object Reverse(object x)
         {
-            object result = null;
+            object result = Empty;
             while (x is Pair)
             {
                 result = Cons(First(x), result);
@@ -187,10 +186,15 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static object Append(object args)
         {
-            Pair result = MakeList(null);
+            if (args == Empty)
+            {
+                return Empty;
+            }
+
+            Pair result = MakeEmptyList();
             Pair accum = result;
 
-            while (Rest(args) != null)
+            while (Rest(args) != Empty)
             {
                 accum = Append(accum, First(args));
                 args = Rest(args);
@@ -211,7 +215,7 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, object toCopy)
         {
-            while (toCopy != null)
+            while (toCopy != Empty)
             {
                 tail.RestCell = MakeList(First(toCopy));
                 toCopy = Rest(toCopy);
@@ -230,7 +234,7 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (x == null)
+                if (x == Empty)
                 {
                     return true;
                 }
@@ -248,6 +252,22 @@ namespace SimpleScheme
 
                 x = rest;
             }
+        }
+
+        /// <summary>
+        /// Take the k-th tail of the list.
+        /// </summary>
+        /// <param name="list">The starting list.</param>
+        /// <param name="k">The number of tails to take.</param>
+        /// <returns>The list after stepping down k steps.</returns>
+        private static object ListTail(object list, object k)
+        {
+            for (int i = (int)Number.Num(k); i > 0; i--)
+            {
+                list = Rest(list);
+            }
+
+            return list;
         }
 
         /// <summary>
@@ -293,6 +313,15 @@ namespace SimpleScheme
             }
 
             return SchemeBoolean.False;
+        }
+
+        /// <summary>
+        /// This represents the empty list.
+        /// The empty list could just as well be represented by null, but that loses some type
+        ///   safety, since it is compatible with any type.
+        /// </summary>
+        private class EmptyList
+        {
         }
     }
 }

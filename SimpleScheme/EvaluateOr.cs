@@ -28,10 +28,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateOr class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateOr(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateOr(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.tests = expr;
@@ -50,18 +50,18 @@ namespace SimpleScheme
         /// <summary>
         /// Calls an or evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The or evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (expr == null)
+            if (expr == List.Empty)
             {
                 return caller.ContinueStep(SchemeBoolean.False);
             }
 
-            return new EvaluateOr(caller, expr, caller.Env);
+            return new EvaluateOr(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private Stepper EvalTestStep()
         {
-            var nextStep = Rest(this.tests) == null ? (StepperFunction)this.ReturnStep : this.LoopStep;
-            return EvaluateExpression.Call(ContinueHere(nextStep), First(this.tests));
+            var nextStep = Rest(this.tests) == List.Empty ? (StepperFunction)this.ReturnStep : this.LoopStep;
+            return EvaluateExpression.Call(First(this.tests), ContinueHere(nextStep));
         }
 
         /// <summary>

@@ -27,10 +27,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateSequence class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateSequence(Stepper caller, object expr, Environment env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateSequence(object expr, Environment env, Stepper caller)
             : base(caller, expr, env)
         {
             this.expressions = expr;
@@ -49,24 +49,24 @@ namespace SimpleScheme
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to evaluate in.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr, Environment env)
+        public static Stepper Call(object expr, Environment env, Stepper caller)
         {
-            return new EvaluateSequence(caller, expr, env);
+            return new EvaluateSequence(expr, env, caller);
         }
 
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateSequence(caller, expr, caller.Env);
+            return new EvaluateSequence(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -77,8 +77,8 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalExprStep()
         {
-            var nextStep = Rest(this.expressions) == null ? (StepperFunction)this.ReturnStep : this.LoopStep;
-            return EvaluateExpression.Call(ContinueHere(nextStep), First(this.expressions));
+            var nextStep = Rest(this.expressions) == List.Empty ? (StepperFunction)this.ReturnStep : this.LoopStep;
+            return EvaluateExpression.Call(First(this.expressions), ContinueHere(nextStep));
         }
 
         /// <summary>

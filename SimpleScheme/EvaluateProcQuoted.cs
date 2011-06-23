@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     /// <summary>
     /// Apply a proc to args without evaluation.
+    /// Used to evaluate cond expressions.
     /// </summary>
     public sealed class EvaluateProcQuoted : EvaluateProc
     {
@@ -21,12 +22,12 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateProcQuoted class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fn">The function to apply.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        /// <param name="fn">The function to apply.</param>
-        private EvaluateProcQuoted(Stepper caller, object expr, Environment env, Procedure fn)
-            : base(caller, expr, env, fn)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateProcQuoted(Procedure fn, object expr, Environment env, Stepper caller)
+            : base(fn, expr, env, caller)
         {
             ContinueStep(expr);
             ContinueHere(this.ApplyStep);
@@ -44,13 +45,13 @@ namespace SimpleScheme
         /// <summary>
         /// Call apply proc evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="expr">The expression to evaluate.</param>
         /// <param name="fn">The function to apply.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static new Stepper Call(Stepper caller, object expr, Procedure fn)
+        public static new Stepper Call(Procedure fn, object expr, Stepper caller)
         {
-            return new EvaluateProcQuoted(caller, expr, caller.Env, fn);
+            return new EvaluateProcQuoted(fn, expr, caller.Env, caller);
         }
     }
 }

@@ -23,25 +23,13 @@ namespace Tests
         public TestContext TestContext { get; set; }
 
         /// <summary>
-        /// A test for AsBoolean
-        /// </summary>
-        [TestMethod]
-        [DeploymentItem("SimpleScheme.dll")]
-        public void AsBooleanTest()
-        {
-            Assert.AreEqual(true, SchemeBoolean_Accessor.AsBoolean(true));
-            Assert.AreEqual(false, SchemeBoolean_Accessor.AsBoolean(false));
-            Assert.AreEqual(null, SchemeBoolean_Accessor.AsBoolean(1));
-        }
-
-        /// <summary>
         /// A test for Chr
         /// </summary>
         [TestMethod]
         public void ChrTest()
         {
-            Assert.AreEqual('a', SchemeString.Chr('a'));
-            AssertEx.Throws(() => SchemeString.Chr(0));
+            Assert.AreEqual('a', Character.Chr('a'));
+            AssertEx.Throws(() => Character.Chr(0));
         }
 
         /// <summary>
@@ -108,8 +96,8 @@ namespace Tests
         [TestMethod]
         public void EqualTest()
         {
-            Assert.IsTrue(SchemeBoolean.Equal(null, null));
-            Assert.IsFalse(SchemeBoolean.Equal(null, 1));
+            Assert.IsTrue(SchemeBoolean.Equal(List.Empty, List.Empty));
+            Assert.IsFalse(SchemeBoolean.Equal(List.Empty, 1));
             Assert.IsTrue(SchemeBoolean.Equal("abc", "abc"));
             Assert.IsFalse(SchemeBoolean.Equal("abc", "ab"));
             Assert.IsFalse(SchemeBoolean.Equal("abc", 1));
@@ -170,14 +158,15 @@ namespace Tests
             var files = new string[0];
             var accessor = new Interpreter_Accessor(false, null, files);
             Interpreter interpreter = accessor.Target as Interpreter;
-            Assert.AreEqual(accessor.Input, InputPort.InPort(null, interpreter));
+            Assert.IsNotNull(interpreter);
+            Assert.AreEqual(accessor.Input, InputPort.InPort(List.Empty, interpreter.Input));
             using (StringReader reader = new StringReader("abc"))
             {
                 InputPort input = new InputPort(reader);
-                Assert.AreEqual(input, InputPort.InPort(input, interpreter));
+                Assert.AreEqual(input, InputPort.InPort(input, interpreter.Input));
             }
 
-            AssertEx.Throws(() => InputPort.InPort(1, interpreter));
+            AssertEx.Throws(() => InputPort.InPort(1, interpreter.Input));
         }
 
         /// <summary>
@@ -190,14 +179,15 @@ namespace Tests
             var files = new string[0];
             var accessor = new Interpreter_Accessor(false, null, files);
             Interpreter interpreter = accessor.Target as Interpreter;
-            Assert.AreEqual(accessor.Output, OutputPort.OutPort(null, interpreter));
+            Assert.IsNotNull(interpreter);
+            Assert.AreEqual(accessor.Output, OutputPort.OutPort(List.Empty, interpreter.Output));
             using (StringWriter writer = new StringWriter())
             {
                 OutputPort output = new OutputPort(writer);
-                Assert.AreEqual(output, OutputPort.OutPort(output, interpreter));
+                Assert.AreEqual(output, OutputPort.OutPort(output, interpreter.Output));
             }
 
-            AssertEx.Throws(() => OutputPort.OutPort(1, interpreter));
+            AssertEx.Throws(() => OutputPort.OutPort(1, interpreter.Output));
         }
 
         /// <summary>
@@ -256,7 +246,7 @@ namespace Tests
             var actual = ListPrimitives.MakeList(10);
             Assert.AreEqual(1, ListPrimitives.Length(actual));
             Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.IsNull(ListPrimitives.Rest(actual));
+            Assert.AreEqual(List.Empty, ListPrimitives.Rest(actual));
         }
 
         /// <summary>
@@ -269,7 +259,7 @@ namespace Tests
             Assert.AreEqual(2, ListPrimitives.Length(actual));
             Assert.AreEqual(10, ListPrimitives.First(actual));
             Assert.AreEqual(11, ListPrimitives.First(ListPrimitives.Rest(actual)));
-            Assert.IsNull(ListPrimitives.Rest(ListPrimitives.Rest(actual)));
+            Assert.AreEqual(List.Empty, ListPrimitives.Rest(ListPrimitives.Rest(actual)));
         }
 
         /// <summary>
@@ -286,7 +276,7 @@ namespace Tests
             actual = ListPrimitives.ListStar(ListPrimitives.Cons(10, ListPrimitives.Cons(11, ListPrimitives.MakeList(12))));
             Assert.AreEqual(10, ListPrimitives.First(actual));
             Assert.AreEqual(11, ListPrimitives.Second(actual));
-            Assert.IsNull(ListPrimitives.Third(actual));
+            Assert.AreEqual(List.Empty, ListPrimitives.Third(actual));
         }
 
         /// <summary>
@@ -295,10 +285,15 @@ namespace Tests
         [TestMethod]
         public void ListToStringTest()
         {
+            var expected = new[] { 'a', 'b' };
             var actual = SchemeString.ListToString(ListPrimitives.MakeList('a', 'b'));
-            Assert.AreEqual("ab", actual.AsString());
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], actual[i]);
+            }
+
             actual = SchemeString.ListToString(1);
-            Assert.AreEqual(string.Empty, actual.AsString());
+            Assert.AreEqual(0, actual.Length);
             AssertEx.Throws(() => SchemeString.ListToString(ListPrimitives.MakeList(1, 2)));
         }
 
@@ -354,8 +349,8 @@ namespace Tests
         [TestMethod]
         public void StrTest()
         {
-            var actual = SchemeString_Accessor.Str(new SchemeString("abc"));
-            Assert.AreEqual(3, actual.StringLength);
+            var actual = SchemeString_Accessor.Str(SchemeString.MakeString("abc"));
+            Assert.AreEqual(3, actual.Length);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);
             Assert.AreEqual('c', actual[2]);
@@ -367,14 +362,15 @@ namespace Tests
         [TestMethod]
         public void AsStringTest()
         {
-            Assert.AreEqual("()", SchemeString.AsString(null));
+            Assert.AreEqual("()", SchemeString.AsString(List.Empty));
             Assert.AreEqual("1", SchemeString.AsString(1.0));
             Assert.AreEqual("1.5", SchemeString.AsString(1.5));
             Assert.AreEqual("#\\a", SchemeString.AsString('a'));
             Assert.AreEqual("(1 . 2)", SchemeString.AsString(new Pair(1, 2)));
             Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2)));
-            Assert.AreEqual(@"""abc""", SchemeString.AsString(new SchemeString("abc")));
-            Assert.AreEqual(@"""\""""", SchemeString.AsString(new SchemeString(@"""")));
+            Assert.AreEqual(@"abc", SchemeString.AsString("abc"));
+            char[] empty = new char[0];
+            Assert.AreEqual(@"""""", SchemeString.AsString(empty));
             var test = new object[] { 1, 2 };
             Assert.AreEqual("#(1 2)", SchemeString.AsString(test));
             Assert.AreEqual("#t", SchemeString.AsString(true));
@@ -388,14 +384,14 @@ namespace Tests
         [TestMethod]
         public void AsStringTestWithQuote()
         {
-            Assert.AreEqual("()", SchemeString.AsString(null, false));
+            Assert.AreEqual("()", SchemeString.AsString(List.Empty, false));
             Assert.AreEqual("1", SchemeString.AsString(1.0, false));
             Assert.AreEqual("1.5", SchemeString.AsString(1.5, false));
             Assert.AreEqual("a", SchemeString.AsString('a', false));
             Assert.AreEqual("(1 . 2)", SchemeString.AsString(new Pair(1, 2), false));
             Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2), false));
-            Assert.AreEqual("abc", SchemeString.AsString(new SchemeString("abc"), false));
-            Assert.AreEqual(@"""", SchemeString.AsString(new SchemeString(@""""), false));
+            Assert.AreEqual("abc", SchemeString.AsString("abc", false));
+            Assert.AreEqual(@"""", SchemeString.AsString(@"""", false));
             var test = new object[] { 1, 2 };
             Assert.AreEqual("#(1 2)", SchemeString.AsString(test, false));
             Assert.AreEqual("#t", SchemeString.AsString(true, false));
@@ -411,7 +407,7 @@ namespace Tests
         {
             StringBuilder buf = new StringBuilder().Append("x");
             SchemeString.AsString(null, false, buf);
-            Assert.AreEqual("x()", buf.ToString());
+            Assert.AreEqual("x", buf.ToString());
             buf = new StringBuilder().Append("x");
             SchemeString.AsString(1.0, false, buf);
             Assert.AreEqual("x1", buf.ToString());
@@ -422,7 +418,7 @@ namespace Tests
             SchemeString.AsString('a', false, buf);
             Assert.AreEqual("xa", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeString.AsString(new SchemeString("abc"), false, buf);
+            SchemeString.AsString("abc", false, buf);
             Assert.AreEqual("xabc", buf.ToString());
         }
 
@@ -433,8 +429,8 @@ namespace Tests
         [TestMethod]
         public void SymTest()
         {
-            Assert.AreEqual("abc", SchemeString_Accessor.Sym("abc"));
-            AssertEx.Throws(() => SchemeString_Accessor.Sym(1));
+            Assert.AreEqual("abc", Symbol.Sym("abc"));
+            AssertEx.Throws(() => Symbol.Sym(1));
         }
 
         /// <summary>
@@ -483,7 +479,7 @@ namespace Tests
             {
                 OutputPort w = new OutputPort(writer);
                 var actual = OutputPort.Write("abc", w, false);
-                Assert.AreEqual("abc", actual);
+                Assert.AreEqual(Undefined.Instance, actual);
                 Assert.AreEqual("abc", writer.ToString());
             }
         }

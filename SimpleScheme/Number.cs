@@ -13,12 +13,12 @@ namespace SimpleScheme
         /// <summary>
         /// Define the zero object.
         /// </summary>
-        private const double Zero = 0.0D;
+        public const double Zero = 0.0D;
 
         /// <summary>
         /// Define the one object.
         /// </summary>
-        private const double One = 1.0D;
+        public const double One = 1.0D;
 
         /// <summary>
         /// Define the numeric primitives.
@@ -54,6 +54,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(/ <z>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z1> <z2> ...)</r4rs>
                 .DefinePrimitive("/", (caller, args) => NumCompute(Rest(args), '/', Num(First(args))), 1, MaxInt)
+                .DefinePrimitive("=", (caller, args) => NumCompare(args, '='), 2, MaxInt)
                 //// <r4rs section="6.5.5">(< <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive("<", (caller, args) => NumCompare(args, '<'), 2, MaxInt)
                 //// <r4rs section="6.5.5">(> <z1> <z2> <z3> ...)</r4rs>
@@ -110,15 +111,15 @@ namespace SimpleScheme
                    },
                     2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (caller, args) => args == null ? Zero : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (caller, args) => args == List.Empty ? Zero : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive("inexact?", (caller, args) => SchemeBoolean.Truth(!IsExact(First(args))), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
-                .DefinePrimitive("integer->char", (caller, args) => SchemeString.Chr((char)(int)Num(First(args))), 1)
+                .DefinePrimitive("integer->char", (caller, args) => Character.Chr((char)(int)Num(First(args))), 1)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive("integer?", (caller, args) => SchemeBoolean.Truth(IsExact(First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (caller, args) => args == null ? One : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (caller, args) => args == List.Empty ? One : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive("log", (caller, args) => Num(Math.Log(Num(First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
@@ -225,12 +226,10 @@ namespace SimpleScheme
         {
             long gcd = 0;
 
-            if (args is Pair)
+            while (args is Pair)
             {
-                foreach (var elem in (Pair)args)
-                {
-                    gcd = Gcd2(Math.Abs((long)Num(elem)), gcd);
-                }
+                gcd = Gcd2(Math.Abs((long)Num(First(args))), gcd);
+                args = Rest(args);
             }
 
             return Num(gcd);
@@ -272,14 +271,12 @@ namespace SimpleScheme
         {
             long lcm = 1;
 
-            if (args is Pair)
+            while (args is Pair)
             {
-                foreach (var elem in (Pair)args)
-                {
-                    long n = Math.Abs((long)Num(elem));
-                    long g = Gcd2(n, lcm);
-                    lcm = g == 0 ? g : (n / g) * lcm;
-                }
+                long n = Math.Abs((long)Num(First(args)));
+                long g = Gcd2(n, lcm);
+                lcm = g == 0 ? g : (n / g) * lcm;
+                args = Rest(args);
             }
 
             return Num(lcm);
@@ -297,10 +294,10 @@ namespace SimpleScheme
             int numberBase = y is double ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
-                return new SchemeString(Convert.ToString((long)Num(x), numberBase));
+                return Convert.ToString((long)Num(x), numberBase).ToCharArray();
             }
 
-            return new SchemeString(x.ToString());
+            return x.ToString().ToCharArray();
         }
 
         /// <summary>
@@ -383,7 +380,7 @@ namespace SimpleScheme
         /// with the starting value.</returns>
         private static object NumCompute(object args, char op, double result)
         {
-            if (args == null)
+            if (args == List.Empty)
             {
                 // If there are no numbers, apply a unary operation on the starting value.
                 switch (op)

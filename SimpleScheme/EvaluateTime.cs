@@ -22,11 +22,11 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateTime class.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluateTime(Stepper caller, object expr, Environment env)
-            : base(caller, expr, env)
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateTime(object expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             IncrementCounter(counter);
         }
@@ -42,12 +42,12 @@ namespace SimpleScheme
         /// <summary>
         /// Call a timed evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(object expr, Stepper caller)
         {
-            return new EvaluateTime(caller, expr, caller.Env);
+            return new EvaluateTime(expr, caller.Env, caller);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Stepper Step1()
         {
-            return EvaluateExpression.Call(ContinueHere(this.Step2), First(Expr));
+            return EvaluateExpression.Call(First(Expr), ContinueHere(this.Step2));
         }
     }
 }

@@ -74,22 +74,22 @@ namespace SimpleScheme
         /// Otherwise, the first argument is the class instance, and the rest are passed 
         ///    to the method.
         /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="args">Arguments to pass to the method.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Stepper caller, object args)
+        public override Stepper Apply(object args, Stepper caller)
         {
             object target;
             object[] argArray;
             if (this.MethodInfo.IsStatic)
             {
                 target = null;
-                argArray = this.ToArgListBegin(args, new AsyncState(target, caller)).ToArray();
+                argArray = this.ToArgListBegin(args, new AsyncState(target, caller));
             }
             else
             {
                 target = First(args);
-                argArray = this.ToArgListBegin(Rest(args), new AsyncState(target, caller)).ToArray();
+                argArray = this.ToArgListBegin(Rest(args), new AsyncState(target, caller));
             }
 
             this.MethodInfo.Invoke(target, argArray);
@@ -107,7 +107,7 @@ namespace SimpleScheme
         {
             List<Type> array = ClassList(args);
             array.Add(ToClass("System.AsyncCallback"));
-            array.Add(ToClass("object"));
+            array.Add(ToClass("System.Object"));
 
             return array;
         }
@@ -122,7 +122,7 @@ namespace SimpleScheme
         /// <param name="args">A list of the method arguments.</param>
         /// <param name="state">State, passed on to completion function.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private List<object> ToArgListBegin(object args, object state)
+        private object[] ToArgListBegin(object args, object state)
         {
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
             return ToArgList(args, additionalArgs);
