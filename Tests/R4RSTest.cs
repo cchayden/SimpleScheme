@@ -980,6 +980,18 @@ namespace Tests
             this.RunTest(@"(test '#() make-vector 0 'a) ");
         }
 
+        [TestMethod]
+        public void TempTest()
+        {
+            scheme.Trace = true;
+            object res = ReadAndEvaluate(@"(call-with-current-continuation
+                             (lambda (exit)
+	                           (for-each (lambda (x) (if (negative? x) (exit x)))
+		                            '(54 0 37 -3 245 19))
+	                           #t))");
+            Assert.AreEqual(-3.0, res);
+        }
+
         /// <summary>
         /// Test control features
         /// </summary>

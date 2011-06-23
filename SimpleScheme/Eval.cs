@@ -104,7 +104,7 @@ namespace SimpleScheme
         /// <summary>
         /// Create the map evaluator
         /// </summary>
-        /// <param name="interp">The interpreter to use diring evaluation.</param>
+        /// <param name="interp">The interpreter to use during evaluation.</param>
         /// <param name="parent">The caller, to return to after evaluation is over.</param>
         /// <param name="expr">The map list to traverse.</param>
         /// <param name="env">The evaluation environment.</param>
@@ -114,6 +114,19 @@ namespace SimpleScheme
         public static Stepper CallMap(Scheme interp, Stepper parent, object expr, Environment env, Procedure proc, Pair result)
         {
             return new EvaluatorMap(interp, parent, expr, env, proc, result);
+        }
+
+        /// <summary>
+        /// Create the continuation evaluator
+        /// </summary>
+        /// <param name="interp">The interpreter to use.</param>
+        /// <param name="parent">The caller, to return to after the continuation proc is applied.</param>
+        /// <param name="expr">The (what is this ???).</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <returns>The step to execute.</returns>
+        public static Stepper CallContinuation(Scheme interp, Stepper parent, object expr, Environment env)
+        {
+            return new EvaluatorContinuation(interp, parent, expr, env);
         }
 
         /// <summary>
@@ -144,6 +157,12 @@ namespace SimpleScheme
         {
             this.RetExpr = retVal;
             return this.Parent;
+        }
+
+        public Stepper SubReturn(object retVal, Stepper returnTo)
+        {
+            this.RetExpr = retVal;
+            return returnTo;
         }
 
         /// <summary>

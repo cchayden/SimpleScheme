@@ -13,31 +13,28 @@ namespace SimpleScheme
     /// </summary>
     public class Continuation : Procedure
     {
-#if OLD
         /// <summary>
         /// The exception to throw.
         /// </summary>
         private readonly Exception cc;
-#else
-        private readonly Evaluator step;
-#endif
+        private readonly Stepper step;
 
-#if OLD
         /// <summary>
         /// Initializes a new instance of the Continuation class.
         /// </summary>
         /// <param name="cc">The exception to throw.</param>
-        public Continuation(Exception cc)
+        /// <param name="step">The continuation to return to when applied.</param>
+        public Continuation(Exception cc, Stepper step)
         {
             this.cc = cc;
+            this.step = step;
         }
-#else
 
-        public Continuation(Evaluator step)
+
+        public Continuation(Stepper step)
         {
             this.step = step;
         }
-#endif
 
         /// <summary>
         /// Gets the value to return as the result of executing the continuation.
@@ -57,11 +54,8 @@ namespace SimpleScheme
 #if OLD
             throw this.cc;
 #else
-            return parent;
+            return this.step.SubReturn(First(args), this.step.Parent);
 #endif
         }
     }
 }
-
-// TODO need to define an Evaluator that captures the Value in the RetExpr.
-// Then remember this evaluator, and have Apply return it.

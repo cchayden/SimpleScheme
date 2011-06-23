@@ -1,4 +1,5 @@
-﻿// <copyright file="Primitive.cs" company="Charles Hayden">
+﻿#define OLD
+// <copyright file="Primitive.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -888,8 +889,9 @@ namespace SimpleScheme
                     return Stepper.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), null);
 
                 case OpCode.CALLCC:
+#if OLD
                     Exception cc = new Exception();
-                    Continuation proc = new Continuation(cc);
+                    Continuation proc = new Continuation(cc, Stepper.CallContinuation(interp, parent, x, parent.Env));
                     try
                     {
                         // TODO apply must not return evaluator here, otherwise we will lose the
@@ -905,6 +907,10 @@ namespace SimpleScheme
 
                         throw;
                     }
+#else
+                    Continuation proc = new Continuation(Stepper.CallContinuation(interp, parent, x, parent.Env));
+                    return Proc(x).Apply(interp, parent, List(proc));
+#endif
 
                     // 6.10 INPUT AND OUTPUT
                 case OpCode.EOFOBJECTQ:

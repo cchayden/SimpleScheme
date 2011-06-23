@@ -37,6 +37,7 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         public Scheme(bool loadStandardMacros, IEnumerable<string> files)
         {
+            Trace = false;
             Primitive.InstallPrimitives(this.GlobalEnvironment);
             try
             {
@@ -47,9 +48,12 @@ namespace SimpleScheme
                     this.Load(SchemePrimitives.Extensions);
                 }
 
-                foreach (string file in files)
+                if (files != null)
                 {
-                    this.Load(file);
+                    foreach (string file in files)
+                    {
+                        this.Load(file);
+                    }
                 }
             }
             catch (Exception ex)
@@ -66,6 +70,8 @@ namespace SimpleScheme
             : this(true, null)
         {
         }
+
+        public bool Trace { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the Scheme class.
@@ -123,9 +129,16 @@ namespace SimpleScheme
             int steps = 0;
             Stepper eval = Stepper.CallMain(this, null, expr, env);
             Stepper nextStep = eval;
+            if (Trace)
+            {
+                Console.WriteLine(" --->");                
+            }
             while (true)
             {
-                // Console.WriteLine("Evaluating {0} {1}", eval.Expr, eval.Pc);
+                if (Trace)
+                {
+                    Console.WriteLine("Evaluating {0} {1} {2}", eval.Expr, nextStep.GetType(), eval.Pc, steps);
+                }
                 nextStep = nextStep.EvalStep();
                 if (nextStep == null)
                 {
@@ -136,7 +149,10 @@ namespace SimpleScheme
                 steps++;
             }
 
-            Console.WriteLine("Steps: {0}", steps);
+            if (Trace)
+            {
+                Console.WriteLine(" <--- Steps: {0}", steps);
+            }
             return eval.RetExpr;
         }
 

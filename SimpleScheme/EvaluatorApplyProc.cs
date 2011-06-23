@@ -4,6 +4,8 @@
 
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
     /// Stepper contains all the individual evaluators
     /// </summary>
@@ -19,6 +21,9 @@ namespace SimpleScheme
             /// </summary>
             private readonly object fn;
 
+            private static int Counter = 0;
+            private readonly int instanceCounter;
+
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorApplyProc class.
             /// </summary>
@@ -31,6 +36,9 @@ namespace SimpleScheme
                 : base(interp, parent, expr, env)
             {
                 this.fn = fn;
+                Counter++;
+                instanceCounter = Counter;
+                Console.WriteLine("ApplyProc: {0} {1}", expr, instanceCounter);
             }
 
             /// <summary>
@@ -52,9 +60,12 @@ namespace SimpleScheme
                             return this.SubCall((Stepper)res);
                         }
 
+                        Pc = 3;
                         return SubReturn(res);
                     case 2:
                         return SubReturn(ReturnedExpr);
+                    case 3:
+                        break;
                 }
 
                 return EvalError("ApplyProc: program counter error");

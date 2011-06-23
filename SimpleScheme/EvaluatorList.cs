@@ -80,6 +80,13 @@ namespace SimpleScheme
                         Pc = 1;
                         this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
                         Expr = Rest(Expr);
+
+                        // optimization -- skip loop if we are done
+                        if (! (Expr is Pair))
+                        {
+                            return this.SubReturn(this.result.Rest);
+                        }
+
                         return SubContinue();
                 }
 
