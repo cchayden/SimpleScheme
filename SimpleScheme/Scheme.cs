@@ -96,7 +96,7 @@ namespace SimpleScheme
         public object Eval(object expr, Environment env)
         {
             Evaluator stop = new EvaluatorReturn();
-            var eval = new EvaluatorMain(this, stop, expr, env);
+            Evaluator eval = new EvaluatorMain(this, stop, expr, env);
             Evaluator nextStep = eval;
             while (true)
             {
@@ -106,9 +106,10 @@ namespace SimpleScheme
                 {
                     break;
                 }
+                eval = nextStep;
             }
 
-            return eval.Expr;
+            return eval.RetExpr;
         }
 
         /// <summary>

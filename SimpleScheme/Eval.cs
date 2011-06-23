@@ -1,10 +1,9 @@
-﻿// <copyright file="Eval.cs" company="Charles Hayden">
+﻿#define OLDxx
+// <copyright file="Eval.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
-    // TODO pull individual Evaluators out of Evaluator
-    // TODO make evaluator the base class -- give better isolation
     using System;
 
     /// <summary>
@@ -37,10 +36,20 @@ namespace SimpleScheme
         private object expr;
 
         /// <summary>
+        /// The returned expr;
+        /// </summary>
+        private object retExpr;
+
+        /// <summary>
         /// The evaluation environment.  If the environment is changes as a result
         ///   of evaluation, then the new environment is here after evaluation.
         /// </summary>
         private Environment env;
+
+        /// <summary>
+        /// The returned environment.
+        /// </summary>
+        private Environment retEnv;
 
         /// <summary>
         /// A program oounter.
@@ -66,8 +75,8 @@ namespace SimpleScheme
         {
             this.interp = interp;
             this.parent = parent;
-            this.expr = expr;
-            this.env = env;
+            this.retExpr = this.expr = expr;
+            this.retEnv = this.env = env;
             this.pc = 0;
             this.called = null;
         }
@@ -85,6 +94,12 @@ namespace SimpleScheme
             set { expr = value; }
         }
 
+        public object RetExpr
+        {
+            get { return this.retExpr; }
+            set { retExpr = value; }
+        }
+
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
         /// </summary>
@@ -92,6 +107,12 @@ namespace SimpleScheme
         {
             get { return this.env; }
             set { env = value; }
+        }
+
+        public Environment RetEnv
+        {
+            get { return this.retEnv; }
+            set { retEnv = value; }
         }
 
         protected int Pc
@@ -148,26 +169,47 @@ namespace SimpleScheme
         /// <returns></returns>
         protected Evaluator EvalContinue()
         {
-            called = this;
+            called = null;
             return this;
         }
     }
 
+    /// <summary>
+    /// This evaluator is used to signal the end of evaulation.
+    /// This is the evaluator that the top level evaulator "returns" to.
+    /// </summary>
     public class EvaluatorReturn : Evaluator
     {
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorReturn class.
+        /// </summary>
         public EvaluatorReturn()
             : base(null, null, null, null)
         {
         }
 
+        /// <summary>
+        /// This evaluator should never execute steps.
+        /// </summary>
+        /// <returns>Throws an exception -- does not return.</returns>
         public override Evaluator EvalStep()
         {
             throw new Exception("Do not call RvaluatorReturn::EvalStep");
         }
     }
 
-        public class EvaluatorMain : Evaluator
+    /// <summary>
+    /// The main evaluator for expressions.
+    /// </summary>
+    public class EvaluatorMain : Evaluator
     {
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorMain class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
         public EvaluatorMain(Scheme interp, Evaluator parent, object expr, Environment env) 
                 : base(interp, parent, expr, env)
         {
@@ -186,21 +228,26 @@ namespace SimpleScheme
         {
             if (this.Called != null)
             {
-                this.Expr = this.Called.Expr;
-                this.Env = this.Called.Env;
+                this.Expr = this.Called.RetExpr;
+                this.Env = this.Called.RetEnv;
             }
 
             if (this.Pc == PcReturn)
             {
+                this.RetExpr = this.Expr;
                 return this.Parent;
             }
+
+            // set default return values
+            this.RetExpr = this.Expr;
+            this.RetEnv = this.Env;
 
             if (this.Expr is string)
             {
                 // Evaluate a string by looking it up in the environment.
                 // It should correspond to a varialbe name, for which there 
                 //    is a corresponding value.
-                this.Expr = this.Env.Lookup((string)this.Expr);
+                this.RetExpr = this.Env.Lookup((string)this.Expr);
                 return EvalReturn();
             }
 
@@ -222,7 +269,7 @@ namespace SimpleScheme
             {
                 case "quote":
                     // Evaluate quoted expression by just returning the expression.
-                    this.Expr = First(args);
+                    this.RetExpr = First(args);
                     return EvalReturn();
 
                 case "begin":
@@ -254,17 +301,16 @@ namespace SimpleScheme
                     }
 
                 case "cond":
-                    this.Expr = this.ReduceCond(args);
-                    return EvalContinue();
+                    return SubEval(new EvaluatorReduceCond(this.Interp, this, args, this.Env));
 
                 case "lambda":
                     // Evaluate a lambda by creating a closure.
-                    this.Expr = new Closure(First(args), Rest(args), this.Env);
+                    this.RetExpr = new Closure(First(args), Rest(args), this.Env);
                     return EvalReturn();
 
                 case "macro":
                     // Evaluate a macro by creating a macro.
-                    this.Expr = new Macro(First(args), Rest(args), this.Env);
+                    this.RetExpr = new Macro(First(args), Rest(args), this.Env);
                     return EvalReturn();
             }
 
@@ -290,117 +336,28 @@ namespace SimpleScheme
             {
                 // CLOSURE CALL -- capture the environment and continue with the body
                 Closure f = (Closure)fn;
-                this.Expr = f.Body;
-                this.Env = new Environment(f.Parms, this.EvalList(args), f.Env);
-                return EvalContinue();
+                SubEvalReturn(new EvaluatorClosure(Interp, this, args, Env, f));
             }
 
             // This is a procedure call.
             // In any other case, the function is a primitive or a user-defined function.
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
-            this.Expr = this.ApplyProc(fn, args);
-            return EvalReturn();
-        }
-
-        /// <summary>
-        /// Evaluate the items in a list, given the environment.
-        /// This is done to the args of a procedure call (except for special forms).
-        /// This is an iterative, rather than a recursive one.
-        /// </summary>
-        /// <param name="list">The list of items to evaluate.</param>
-        /// <returns>A list of the evaluated items.</returns>
-        private Pair EvalList(object list)
-        {
-            if (list == null)
-            {
-                return null;
-            }
-
-            if (!(list is Pair))
-            {
-                Error("Illegal arg list: " + list);
-                return null;
-            }
-
-            Pair result = List(null); // empty cell will be stripped off below
-            Pair accum = result;
-            while (list is Pair)
-            {
-                object value = this.Interp.Eval(First(list), this.Env);
-                accum = (Pair)(accum.Rest = List(value));
-                list = Rest(list);
-            }
-
-            return (Pair)result.Rest;
-        }
-
-        /// <summary>
-        /// Handle a cond by iterating down the list of clauses.
-        /// The clauses are (guard expression) pairs.
-        /// If they are exhausted, return False.
-        /// If we find a True guard or an else, then:
-        ///     If the clause has no expression, return the guard.
-        ///     Otherwise return the expression to be evaluated.
-        /// </summary>
-        /// <param name="clauses">The clauses to evaluate</param>
-        /// <returns>Another expression to evaluate instead.</returns>
-        private object ReduceCond(object clauses)
-        {
-            object result = null;
-            while (true)
-            {
-                if (clauses == null)
-                {
-                    return False;
-                }
-
-                object clause = First(clauses);
-                clauses = Rest(clauses);
-                bool convert;
-                if (First(clause) as string == "else")
-                {
-                    convert = true;
-                }
-                else
-                {
-                    result = this.Interp.Eval(First(clause), this.Env);
-                    convert = Truth(result);
-                }
-
-                if (convert)
-                {
-                    if (Rest(clause) == null)
-                    {
-                        return List("quote", result);
-                    }
-
-                    if (Second(clause) as string == "=>")
-                    {
-                        return List(Third(clause), List("quote", result));
-                    }
-
-                    return Cons("begin", Rest(clause));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Apply the function to the args in a given environment.
-        /// </summary>
-        /// <param name="fn">The proc to apply.</param>
-        /// <param name="args">The proc args.</param>
-        /// <returns>The result of the application.</returns>
-        private object ApplyProc(object fn, object args)
-        {
-            return Procedure.Proc(fn).Apply(this.Interp, this.EvalList(args));
+            return SubEvalReturn(new EvaluatorApplyProc(Interp, this, args, Env, fn));
         }
     }
 
     public class EvaluatorSet : Evaluator
     {
-        private object temp;
+        private object first;
 
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorSet class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
         public EvaluatorSet(Scheme interp, Evaluator parent, object expr, Environment env) 
             : base(interp, parent, expr, env) { }
 
@@ -410,26 +367,33 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public override Evaluator EvalStep()
         {
-            switch (this.Pc)
+            switch(Pc)
             {
                 case 0:
-                    this.temp = this.Interp.Eval(Second(this.Expr), this.Env);
-                    this.Pc = 1;
-                    return this;
+                    Pc = 1;
+                    first = First(this.Expr);
+                    return SubEval(new EvaluatorMain(Interp, this, Second(this.Expr), this.Env));
                 case 1:
-                    this.Expr = this.Env.Set(First(this.Expr), this.temp);
+                    this.RetExpr = this.Env.Set(first, Called.RetExpr);
                     break;
             }
-
             return this.Parent;
         }
         
     }
 
+    /// <summary>
+    /// Evaluate a define expression.
+    /// </summary>
     public class EvaluatorDefine : Evaluator
     {
-        private object temp;
-
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorDefine class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
         public EvaluatorDefine(Scheme interp, Evaluator parent, object expr, Environment env) 
             : base(interp, parent, expr, env) { }
 
@@ -440,39 +404,44 @@ namespace SimpleScheme
         /// <returns>The evaluated definition.</returns>
         public override Evaluator EvalStep()
         {
-            switch (this.Pc)
+            switch (Pc)
             {
                 case 0:
+                    if (First(this.Expr) is Pair)
                     {
-                        if (First(this.Expr) is Pair)
-                        {
-                            this.temp = this.Interp.Eval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))), this.Env);
-                            this.Pc = 1;
-                        }
-                        else
-                        {
-                            this.temp = this.Interp.Eval(Second(this.Expr), this.Env);
-                            this.Pc = 2;
-                        }
+                        Pc = 1;
+                        return SubEval(new EvaluatorMain(Interp, this, Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))), this.Env));
                     }
-
-                    return this;
+                    else
+                    {
+                        Pc = 2;
+                        return SubEval(new EvaluatorMain(Interp, this, (Second(this.Expr)), this.Env));
+                    }
                 case 1:
-                    this.Expr = this.Env.Define(First(First(this.Expr)), this.temp);
+                    this.RetExpr = this.Env.Define(First(First(this.Expr)), Called.RetExpr);
                     break;
                 case 2:
-                     this.Expr = this.Env.Define(First(this.Expr),  this.temp);
+                    this.RetExpr = this.Env.Define(First(this.Expr), Called.RetExpr);
                     break;
             }
-
             return this.Parent;
         }
-        
     }
+
+    /// <summary>
+    /// Evaluate an if expression.
+    /// Evaluate the first part, then depending on its truth value, either
+    ///   evaluate the second or third part.
+    /// </summary>
     public class EvaluatorIf : Evaluator
     {
-        private object temp;
-
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorIf class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
         public EvaluatorIf(Scheme interp, Evaluator parent, object expr, Environment env) 
             : base(interp, parent, expr, env) { }
 
@@ -482,14 +451,13 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public override Evaluator EvalStep()
         {
-            switch (this.Pc)
+            switch (Pc)
             {
                 case 0:
-                    this.temp = this.Interp.Eval(First(this.Expr), this.Env);
-                    this.Pc = 1;
-                    return this;
+                    Pc = 1;
+                    return SubEval(new EvaluatorMain(Interp, this, First(this.Expr), this.Env));
                 case 1:
-                    Expr = Truth(this.temp) ? Second(this.Expr) : Third(this.Expr);
+                    this.RetExpr = Truth(Called.RetExpr) ? Second(this.Expr) : Third(this.Expr);
                     break;
             }
             return this.Parent;
@@ -498,27 +466,282 @@ namespace SimpleScheme
 
     public class EvaluatorSequence : Evaluator
     {
-        public EvaluatorSequence(Scheme interp, Evaluator parent, object expr, Environment env) 
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorSequence class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        public EvaluatorSequence(Scheme interp, Evaluator parent, object expr, Environment env)
             : base(interp, parent, expr, env) { }
 
         /// <summary>
         /// Evaluate a sequence of objects, returning the last.
+        /// This was a simple while loop that has been split in the middle.
         /// </summary>
         /// <returns>The next step.</returns>
+#if OLD
         public override Evaluator EvalStep()
         {
-            if (Pc == 1)
+            switch (this.Pc)
             {
-                this.Expr = Rest(this.Expr);
+                case 0:
+                    if (Rest(this.Expr) != null)
+                    {
+                        this.Interp.Eval(First(this.Expr), this.Env);     // TODO fix
+                        this.Pc = 1;
+                        return this;
+                    }
+                    this.RetExpr = First(this.Expr);
+                    break;
+                case 1:
+                    this.Expr = Rest(this.Expr);
+                    this.Pc = 0;
+                    return this;
             }
-            if (Rest(this.Expr) != null)
-            {
-                this.Pc = 1;
-                this.Interp.Eval(First(this.Expr), this.Env);
-                return this;
-            }
-            this.Expr = First(this.Expr);
             return this.Parent;
         }
+#else
+        public override Evaluator EvalStep()
+        {
+            switch (this.Pc)
+            {
+                case 0:
+                    if (Rest(this.Expr) != null)
+                    {
+                        this.Pc = 1;
+                        return SubEval(new EvaluatorMain(Interp, this, First(this.Expr), this.Env));
+                    }
+                    this.RetExpr = First(this.Expr);
+                    break;
+                case 1:
+                    this.RetExpr = Rest(Called.RetExpr);
+                    this.Pc = 0;
+                    return this;
+            }
+            return this.Parent;
+        }
+#endif
+    }
+
+    /// <summary>
+    /// Evaluate the items in a list, given the environment.
+    /// This is done to the args of a procedure call (except for special forms).
+    /// This is an iterative, rather than a recursive one.
+    /// </summary>
+    public class EvaluatorList : Evaluator
+    {
+        private Pair result;
+        private object value;
+        private Pair accum;
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorList class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        public EvaluatorList(Scheme interp, Evaluator parent, object expr, Environment env)
+            : base(interp, parent, expr, env) { }
+
+        /// <summary>
+        /// Evaluate a list of expressions.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Evaluator EvalStep()
+        {
+            switch (this.Pc)
+            {
+                case 0:
+                    if (this.Expr == null)
+                    {
+                        this.RetExpr = null;
+                        break;
+                    }
+
+                    if (!(this.Expr is Pair))
+                    {
+                        Error("Illegal arg list: " + this.Expr);
+                        this.RetExpr = null;
+                        break;
+                    }
+                    accum = result = List(null); // empty cell will be stripped off below
+                    Pc = 1;
+                    return this;
+                case 1:
+                    if (this.Expr is Pair)
+                    {
+                        value = this.Interp.Eval(First(this.Expr), this.Env);     // TODO fix
+                        accum = (Pair) (accum.Rest = List(value));
+                        Expr = Rest(Expr);
+                        return this;
+                    }
+                    this.RetExpr = result.Rest;
+                    break;
+            }
+            return this.Parent;
+        }
+    }
+
+    /// <summary>
+    /// Evaluate a closure
+    /// </summary>
+    public class EvaluatorClosure : Evaluator
+    {
+        private readonly Closure f;
+        
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorSet class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="f">The closure to evaluate</param>
+        public EvaluatorClosure(Scheme interp, Evaluator parent, object expr, Environment env, Closure f) 
+            : base(interp, parent, expr, env)
+        {
+            this.f = f;
+            this.RetExpr = f.Body;
+        }
+
+        /// <summary>
+        /// Evaluate a set! expression.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Evaluator EvalStep()
+        {
+            switch (this.Pc)
+            {
+                case 0:
+                    Pc = 1;
+                    Called = new EvaluatorList(Interp, this, Expr, Env);
+                    return Called;
+                case 1:
+                    this.RetEnv = new Environment(f.Parms, Called.RetExpr, f.Env);
+                    break;
+            }
+            return this.Parent;
+        }
+        
+    }
+
+    /// <summary>
+    /// Evaluate args and apply a proc to it.
+    /// </summary>
+    public class EvaluatorApplyProc : Evaluator
+    {
+        private readonly object fn;
+        
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorSet class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        public EvaluatorApplyProc(Scheme interp, Evaluator parent, object expr, Environment env, object fn) 
+            : base(interp, parent, expr, env)
+        {
+            this.fn = fn;
+        }
+
+        /// <summary>
+        /// Evaluate a proc application.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Evaluator EvalStep()
+        {
+            switch (this.Pc)
+            {
+                case 0:
+                    Pc = 1;
+                    Called = new EvaluatorList(Interp, this, Expr, Env);
+                    return Called;
+                case 1:
+                    this.RetExpr = Procedure.Proc(fn).Apply(this.Interp, Called.RetExpr);
+                    break;
+            }
+            return this.Parent;
+        }
+        
+    }
+
+    /// <summary>
+    /// Reduce a conditiona;
+    /// </summary>
+    public class EvaluatorReduceCond : Evaluator
+    {
+        private object result;
+        private object clause;
+        
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorSet class.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        public EvaluatorReduceCond(Scheme interp, Evaluator parent, object expr, Environment env) 
+            : base(interp, parent, expr, env)
+        {
+            result = null;
+        }
+
+        /// <summary>
+        /// Handle a cond by iterating down the list of clauses.
+        /// The clauses are (guard expression) pairs.
+        /// If they are exhausted, return False.
+        /// If we find a True guard or an else, then:
+        ///     If the clause has no expression, return the guard.
+        ///     Otherwise return the expression to be evaluated.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Evaluator EvalStep()
+        {
+            switch (this.Pc)
+            {
+                case 0:
+                    if (Expr == null)
+                    {
+                        RetExpr = False;
+                        return this.Parent;
+                    }
+                    clause = First(Expr);
+                    Expr = Rest(Expr);
+                    if (First(clause) as string == "else")
+                    {
+                        Pc = 2;
+                    }
+                    else
+                    {
+                        Pc = 1;
+                        result = this.Interp.Eval(First(clause), this.Env);    // TODO fix
+                    }
+                    return this;
+                case 1:
+                    Pc = Truth(result) ? 2 : 0;
+                    return this;
+                case 2:
+                    if (Rest(clause) == null)
+                    {
+                        RetExpr =  List("quote", result);
+                        break;
+                    }
+
+                    if (Second(clause) as string == "=>")
+                    {
+                        RetExpr = List(Third(clause), List("quote", result));
+                        break;
+                    }
+
+                    RetExpr = Cons("begin", Rest(clause));
+                    break;
+            }
+            return this.Parent;
+        }
+        
     }
 }
