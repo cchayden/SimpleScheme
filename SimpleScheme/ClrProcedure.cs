@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
 
     /// <summary>
@@ -12,34 +13,34 @@ namespace SimpleScheme
     public abstract class ClrProcedure : Procedure
     {
         /// <summary>
-        /// Information about the CLR method to be called.
-        /// </summary>
-        protected MethodInfo methodInfo;
-
-        protected string className;
-
-        /// <summary>
-        /// The types of the arguments.
-        /// </summary>
-        protected Type[] argClasses;
-
-        /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
         /// This allows calls into CLR methods.
         /// The name of the method and the class that it is found in must be supplied.
         /// Also, a list of the types of the method arguments must be given.
         /// </summary>
         /// <param name="methodName">The name of the CLR method.</param>
-        /// <param name="targetClassName">The name of the class containing the method.</param>
+        /// <param name="targetClassName">The name of the class containing the method.
         /// of the method.</param>
         protected ClrProcedure(string methodName, object targetClassName)
         {
-            this.className = SchemeString.AsString(targetClassName, false);
-            this.Name = className + "." + methodName;
+            this.ClassName = SchemeString.AsString(targetClassName, false);
+            this.Name = this.ClassName + "." + methodName;
         }
 
-        protected abstract object[] ToArray(object args);
+        /// <summary>
+        /// Gets or sets the name of the class containing the method to invoke.
+        /// </summary>
+        protected string ClassName { get; set; }
 
+        /// <summary>
+        /// Gets or sets information about the CLR method to be called.
+        /// </summary>
+        protected MethodInfo MethodInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the types of the arguments.
+        /// </summary>
+        protected List<Type> ArgClasses { get; set; }
 
         /// <summary>
         /// Create an instance of the given class.
@@ -90,28 +91,25 @@ namespace SimpleScheme
                 case "long": return typeof(long);
                 case "float": return typeof(float);
                 case "double": return typeof(double);
+                case "string": return typeof(string);
+                case "object": return typeof(object);
                 default: return Type.GetType(typeName);
             }
         }
 
         /// <summary>
         /// Take a list of Type or type name elements and create a corresponding 
-        ///   array of Type.
+        ///   List of Type.
         /// </summary>
         /// <param name="args">A list of Type or type name elements.  There may be more than this.</param>
-        /// <param name="n">The number of args to caeate.</param>
         /// <returns>An array of Type objects corresponding to the list.</returns>
-        protected Type[] ClassArray(object args, int n)
+        protected List<Type> ClassList(object args)
         {
-            if (n == 0)
-            {
-                return Type.EmptyTypes;
-            }
-
-            Type[] array = new Type[n];
+            int n = Length(args);
+            List<Type> array = new List<Type>(n);
             for (int i = 0; i < n; i++)
             {
-                array[i] = ToClass(First(args));
+                array.Add(ToClass(First(args)));
                 args = Rest(args);
             }
 
@@ -119,17 +117,19 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Take a list of CLR method arguments and turn them into an array, suitable for
+        /// Take a list of CLR method arguments and turn them into a list, suitable for
         ///   calling the method.
         /// Check to make sure the number and types of the arguments in the list match 
         ///    what is expected.
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
-        /// <param name="n">The number of arguments to create.</param>
-        /// <returns>An array of arguments for the method call.</returns>
-        protected object[] ToArray(object args, int n)
+        /// <param name="additionalArgs">A list of the additional args, not supplied by the caller.</param>
+        /// <returns>A (CLR) list of arguments for the method call.</returns>
+        protected List<object> ToArgList(object args, object[] additionalArgs)
         {
-            int diff = n - this.argClasses.Length;
+            int n = Length(args);
+            int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
+            int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
             {
                 Error(Math.Abs(diff) + 
@@ -137,28 +137,32 @@ namespace SimpleScheme
                     " args to " + Name);
             }
 
-            object[] array = new object[n];
-            for (int i = 0; i < n && i < this.argClasses.Length; i++)
+            List<object> array = new List<object>(n);
+            for (int i = 0; i < n; i++)
             {
-                if (this.argClasses[i] == typeof(int))
+                if (this.ArgClasses[i] == typeof(int))
                 {
-                    array[i] = (int)NumberUtils.Num(First(args));
+                    array.Add((int)NumberUtils.Num(First(args)));
                 }
-                else if (this.argClasses[i] == typeof(string))
+                else if (this.ArgClasses[i] == typeof(string))
                 {
-                    array[i] = SchemeString.AsString(First(args), false);
+                    array.Add(SchemeString.AsString(First(args), false));
                 }
                 else
                 {
-                    array[i] = First(args);
+                    array.Add(First(args));
                 }
 
                 args = Rest(args);
             }
 
+            for (int i = 0; i < additionalN; i++)
+            {
+                array.Add(additionalArgs[i]);
+            }
+
             return array;
         }
-
     }
 
     // TODO write unit tests

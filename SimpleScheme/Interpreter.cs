@@ -187,19 +187,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Read from a string and evaluate.
-        /// </summary>
-        /// <param name="str">The string to read and evaluate.</param>
-        /// <returns>The result of the evaluation</returns>
-        private object LoadString(string str)
-        {
-            using (StringReader reader = new StringReader(str))
-            {
-                return this.Load(new InputPort(reader));
-            }
-        }
-
-        /// <summary>
         /// Read from an input port, evaluate in the global environment, and print the result.
         /// Catch and discard exceptions.
         /// </summary>
@@ -225,6 +212,19 @@ namespace SimpleScheme
                 {
                     Console.WriteLine("Caught exception {0}", ex.Message);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Read from a string and evaluate.
+        /// </summary>
+        /// <param name="str">The string to read and evaluate.</param>
+        /// <returns>The result of the evaluation</returns>
+        private object LoadString(string str)
+        {
+            using (StringReader reader = new StringReader(str))
+            {
+                return this.Load(new InputPort(reader));
             }
         }
     }

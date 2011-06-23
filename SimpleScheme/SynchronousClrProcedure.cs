@@ -12,14 +12,25 @@ namespace SimpleScheme
     /// </summary>
     public class SynchronousClrProcedure : ClrProcedure
     {
-        public SynchronousClrProcedure(string methodName, object targetClassName, object argClassNames)
+        /// <summary>
+        /// Initializes a new instance of the SynchronousClrProcedure class.
+        /// </summary>
+        /// <param name="targetClassName">The class of the object to invoke.</param>
+        /// <param name="methodName">The method to invoke.</param>
+        /// <param name="argClassNames">The types of each argument.</param>
+        public SynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
             : base(methodName, targetClassName)
         {
             try
             {
-                this.argClasses = ClassArray(argClassNames);
-                Type cls = ToClass(className);
-                this.methodInfo = cls.GetMethod(methodName, this.argClasses);
+                this.ArgClasses = ClassList(argClassNames);
+                Type cls = ToClass(ClassName);
+                if (cls == null)
+                {
+                    Error("Bad class: can't load class " + ClassName);
+                }
+
+                this.MethodInfo = cls.GetMethod(methodName, this.ArgClasses.ToArray());
             }
             catch (TypeLoadException)
             {
@@ -31,31 +42,7 @@ namespace SimpleScheme
             }
         }
 
-        /// <summary>
-        /// Take a list of Type or type name elements and create a corresponding 
-        ///   array of Type.
-        /// </summary>
-        /// <param name="args">A list of Type or type name elements.</param>
-        /// <returns>An array of Type objects corresponding to the list.</returns>
-        protected Type[] ClassArray(object args)
-        {
-            return ClassArray(args, Length(args));
-        }
-
-        /// <summary>
-        /// Take a list of CLR method arguments and turn them into an array, suitable for
-        ///   calling the method.
-        /// Check to make sure the number and types of the arguments in the list match 
-        ///    what is expected.
-        /// </summary>
-        /// <param name="args">A list of the method arguments.</param>
-        /// <returns>An array of arguments for the method call.</returns>
-        protected override object[] ToArray(object args)
-        {
-            return ToArray(args, Length(args));
-        }
-
-        // TODO mabye this could be moved to base class.
+        // TODO maybe this could be moved to base class.
 
         /// <summary>
         /// Apply the method to the given arguments.
@@ -68,9 +55,26 @@ namespace SimpleScheme
         /// <returns>The result of executing the method.</returns>
         public override object Apply(Stepper parent, object args)
         {
+#if DEBUG
+            object target;
+            object[] argArray;
+            if (this.MethodInfo.IsStatic)
+            {
+                target = null;
+                argArray = this.ToArgList(args, null).ToArray();
+            }
+            else
+            {
+                target = First(args);
+                argArray = this.ToArgList(Rest(args), null).ToArray();
+            }
+
+            return this.MethodInfo.Invoke(target, argArray);
+#else
             return this.methodInfo.IsStatic ? 
-                this.methodInfo.Invoke(null, this.ToArray(args)) : 
-                this.methodInfo.Invoke(First(args), this.ToArray(Rest(args)));
+                this.methodInfo.Invoke(null, this.ToArgList(args).ToArray()) : 
+                this.methodInfo.Invoke(First(args), this.ToArgList(Rest(args)).ToArray());
+#endif
         }
     }
 }
