@@ -91,7 +91,7 @@ namespace SimpleScheme
                         {
                             // Grab the arguments to the applications (the head of each list).
                             // The the proc is applied to them.
-                            object x = this.proc.Apply(this, MapFun(List.First, List.MakeList(Expr)));
+                            object x = this.proc.Apply(this, List.MapFun(List.First, List.MakeList(Expr)));
                             if (x is Stepper)
                             {
                                 return GoToStep((Stepper)x, PC.Step2);
@@ -114,38 +114,13 @@ namespace SimpleScheme
                         }
 
                         // Step down each of the lists
-                        Expr = MapFun(List.Rest, List.MakeList(Expr));
+                        Expr = List.MapFun(List.Rest, List.MakeList(Expr));
                         Pc = PC.Step1;
                         continue;
                 }
 
                 return ErrorHandlers.EvalError("Map: program counter error");
             }
-        }
-
-        /// <summary>
-        /// Traverse the given list, applying the given function to all elements.
-        /// This is purely iterative.
-        /// </summary>
-        /// <param name="fun">The function to apply to each elment.</param>
-        /// <param name="expr">The list to process.</param>
-        /// <returns>A list made up of the function results of each input element.</returns>
-        private static Pair MapFun(Func<object, object> fun, object expr)
-        {
-            Pair result = List.MakeList(null);
-            Pair accum = result;
-
-            // Iterate down the list, taking the function and building a list of the results.
-            expr = List.First(expr);
-            // TODO convert to user foreach
-            while (expr is Pair)
-            {
-                // Builds a list by tacking new values onto the tail.
-                accum = (Pair)(accum.Rest = List.MakeList(fun(List.First(expr))));
-                expr = List.Rest(expr);
-            }
-
-            return (Pair)List.Rest(result);
         }
     }
 }

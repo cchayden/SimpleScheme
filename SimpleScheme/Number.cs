@@ -53,7 +53,7 @@ namespace SimpleScheme
         public static object Gcd(object args)
         {
             long gcd = 0;
-            // TODO convert to user foreach
+            // TODO convert to use foreach
             while (args is Pair)
             {
                 gcd = Gcd2(Math.Abs((long)Num(List.First(args))), gcd);
@@ -103,7 +103,7 @@ namespace SimpleScheme
         public static object Lcm(object args)
         {
             long lcm = 1;
-            // TODO convert to user foreach
+            // TODO convert to use foreach
             while (args is Pair)
             {
                 long n = Math.Abs((long)Num(List.First(args)));
@@ -143,7 +143,7 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         public static object NumCompare(object args, char op)
         {
-            // TODO convert to user foreach
+            // TODO convert to use foreach
             while (List.Rest(args) is Pair)
             {
                 double x = Num(List.First(args));
@@ -230,7 +230,7 @@ namespace SimpleScheme
                 }
             }
 
-            // TODO convert to user foreach
+            // TODO convert to use foreach
             while (args is Pair)
             {
                 double x = Num(List.First(args));

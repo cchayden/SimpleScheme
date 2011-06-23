@@ -318,6 +318,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Create a let evaluator
+        /// </summary>
+        /// <param name="expr">The bindings and body</param>
+        /// <returns>The body evaluated in the given bindings.</returns>
+        protected Stepper CallLet(object expr)
+        {
+            return EvaluateLet.New(expr, this.Env, this);
+        }
+
+        /// <summary>
         /// Create a cond evaluator.
         /// </summary>
         /// <param name="expr">The cond to evaluate.</param>

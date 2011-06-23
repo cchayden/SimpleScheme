@@ -72,7 +72,7 @@ namespace SimpleScheme
                         else
                         {
                             Pc = PC.Step1;
-                            return CallEval(List.First(clause));
+                            return CallEval(List.First(this.clause));
                         }
 
                         continue;

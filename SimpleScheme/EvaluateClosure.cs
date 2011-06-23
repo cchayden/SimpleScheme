@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
     /// Evaluate a closure
     /// </summary>
@@ -52,6 +54,7 @@ namespace SimpleScheme
                     return CallList(Expr);
 
                 case PC.Step1:
+                    //Console.WriteLine("({0} {1})", this.f.Name, List.First(ReturnedExpr));
                     return ReturnFromStep(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
             }
 

@@ -23,4 +23,10 @@
 (get-content-length "http://live.com")  
 (get-content-length "http://wintellect.com")
  
+(define len 
+  (lambda (ls) 
+    (if (null? ls) 
+    	0 
+		(+ (len(cdr ls)) 1))))
+
 (p "loaded")

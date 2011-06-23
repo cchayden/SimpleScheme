@@ -38,6 +38,10 @@
   <ItemGroup>
     <Compile Include="AsynchronousClrProcedure.cs" />
     <Compile Include="AsyncResult.cs" />
+    <Compile Include="EvaluateAnd.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EvaluateLet.cs" />
     <Compile Include="SchemeBoolean.cs" />
     <Compile Include="Closure.cs" />
     <Compile Include="ClrProcedure.cs" />
@@ -48,7 +52,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Stepper.cs" />
-    <Compile Include="EvaluateAnd.cs" />
     <Compile Include="EvaluateTimeCall.cs" />
     <Compile Include="EvaluateApplyProc.cs" />
     <Compile Include="EvaluateCallWithInputFile.cs" />

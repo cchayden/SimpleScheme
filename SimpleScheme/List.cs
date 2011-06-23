@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
     /// List utilities used by the primitives.
     /// </summary>
@@ -29,6 +31,15 @@ namespace SimpleScheme
         public static Pair MakeList(object a, object b)
         {
             return new Pair(a, new Pair(b, null));
+        }
+
+        public static Pair MakeList(object a, object b, object c)
+        {
+            return new Pair(a, new Pair(b, new Pair(c, null)));
+        }
+        public static Pair MakeList(object a, object b, object c, object d)
+        {
+            return new Pair(a, new Pair(b, new Pair(c, new Pair(d, null))));
         }
 
         /// <summary>
@@ -161,9 +172,36 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Traverse the given list, applying the given function to all elements.
+        /// Create a list if the results.
+        /// This is purely iterative.
+        /// </summary>
+        /// <param name="fun">The function to apply to each elment.</param>
+        /// <param name="expr">The list to process.</param>
+        /// <returns>A list made up of the function results of each input element.</returns>
+        public static Pair MapFun(Func<object, object> fun, object expr)
+        {
+            Pair result = MakeList(null);
+            Pair accum = result;
+
+            // Iterate down the list, taking the function and building a list of the results.
+            expr = First(expr);
+            if (expr is Pair)
+            {
+                foreach (object elem in (Pair)expr)
+                {
+                    // Builds a list by tacking new values onto the tail.
+                    accum = (Pair)(accum.Rest = MakeList(fun(elem)));
+                }
+            }
+
+            return (Pair)Rest(result);
+        }
+
+        /// <summary>
         /// Append a list of lists, making one longer list.
         /// The appending only goes one level deep.
-        /// The very last list is not copied, but is not copied, but is instead shared.
+        /// The very last list is not copied, but is instead shared.
         /// </summary>
         /// <param name="args">A list of lists.  Each of the lists in this list is appended together.</param>
         /// <returns>A list of the given list elements.</returns>
@@ -171,7 +209,7 @@ namespace SimpleScheme
         {
             Pair result = MakeList(null);
             Pair accum = result;
-            // TODO convert to user foreach
+
             while (Rest(args) != null)
             {
                 accum = Append(accum, First(args));
@@ -179,6 +217,7 @@ namespace SimpleScheme
             }
 
             accum.Rest = First(args);
+
             return Rest(result);
         }
 
@@ -242,7 +281,7 @@ namespace SimpleScheme
         /// <returns>The results that wer found.</returns>
         public static object MemberAssoc(object obj, object list, char m, char eq)
         {
-            // TODO convert to user foreach
+            // TODO convert to use foreach
             while (list is Pair)
             {
                 object target = m == 'm' ? First(list) : First(First(list));

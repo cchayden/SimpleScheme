@@ -187,8 +187,9 @@ namespace Tests
             this.RunTest("(test 6 'let (let ((x 2) (y 3)) (* x y)))");
             this.RunTest("(test 35 'let (let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))))");
             this.RunTest("(test 70 'let* (let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x))))");
-            this.RunTest(@"(test #t 'letrec (letrec ((even?
-			               (lambda (n) (if (zero? n) #t (odd? (- n 1)))))
+            this.RunTest(@"(test #t 'letrec (letrec 
+                             ((even?
+    			               (lambda (n) (if (zero? n) #t (odd? (- n 1)))))
 			                 (odd?
 			                   (lambda (n) (if (zero? n) #f (even? (- n 1))))))
 		                            (even? 88)))");

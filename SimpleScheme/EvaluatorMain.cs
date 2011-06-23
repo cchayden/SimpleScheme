@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
     /// The main evaluator for expressions.
     /// </summary>
@@ -77,6 +79,7 @@ namespace SimpleScheme
                         // Split out the first item for special treatment.
                         this.fn = List.First(this.Expr);
                         this.args = List.Rest(this.Expr);
+//                        Console.WriteLine("{0} {1}", this.fn, this.args);
 
                         // Look for one of the special forms. 
                         switch (this.fn as string)
@@ -126,6 +129,9 @@ namespace SimpleScheme
                             case "cond":
                                 return GoToStep(CallReduceCond(this.args), PC.Step2);
 
+                            case "let":
+                                return GoToStep(CallLet(this.args), PC.Step3);
+
                             case "lambda":
                                 // Evaluate a lambda by creating a closure.
                                 return ReturnFromStep(new Closure(List.First(this.args), List.Rest(this.args), this.Env));
@@ -142,7 +148,7 @@ namespace SimpleScheme
 
                     case PC.Step1:
                         // Come here after evaluating fn
-                        // make sure we don't assigne expr, since we need it intact below
+                        // Make sure we don't assigne expr, since we need it intact below.
                         this.fn = ReturnedExpr;
 
                         // If the function is a macro, expand it and then continue.

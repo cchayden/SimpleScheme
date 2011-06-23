@@ -1,5 +1,4 @@
-﻿#define ASYNC
-// <copyright file="Interpreter.cs" company="Charles Hayden">
+﻿// <copyright file="Interpreter.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -115,14 +114,20 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object x)
         {
-            return this.Eval(x, this.GlobalEnvironment, null);
+            return this.Eval(x, this.GlobalEnvironment);
         }
 
-#if ASYNC
+        /// <summary>
+        /// Begin an asynchronous evaluation
+        /// </summary>
+        /// <param name="x">The expression to evaluate.</param>
+        /// <param name="cb">Call this when evaluation is complete.</param>
+        /// <param name="state">Pass this through for the callback function.</param>
+        /// <returns>Async result, used to monitor progress.</returns>
         public IAsyncResult BeginEval(object x, AsyncCallback cb, object state)
         {
             this.asyncResult = new AsyncResult<object>(cb, state);
-            object res = this.Eval(x, this.GlobalEnvironment, this.asyncResult);
+            object res = this.Eval(x, this.GlobalEnvironment);
             if (res == Stepper.Suspended)
             {
                 return this.asyncResult;
@@ -136,11 +141,15 @@ namespace SimpleScheme
             return this.asyncResult;
         }
 
-        public object EndEval(IAsyncResult asyncResult)
+        /// <summary>
+        /// End asynchronous evaluation and get the result.
+        /// </summary>
+        /// <param name="ar">Async result from callback.</param>
+        /// <returns>The expression value.</returns>
+        public object EndEval(IAsyncResult ar)
         {
-            return ((AsyncResult<object>)asyncResult).EndInvoke();
+            return ((AsyncResult<object>)ar).EndInvoke();
         }
-#endif
 
         /// <summary>
         /// Evaluate an expression in an environment.
@@ -149,7 +158,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        public object Eval(object expr, Environment env, IAsyncResult ar)
+        public object Eval(object expr, Environment env)
         {
             return this.EvalStep(Stepper.CallEvaluate(expr, env, this.halted));
         }
@@ -172,7 +181,7 @@ namespace SimpleScheme
                 nextStep = nextStep.RunStep();
                 if (nextStep == Stepper.Suspended)
                 {
-                    return nextStep;
+            return nextStep;
                 }
 
                 if (nextStep == this.halted)

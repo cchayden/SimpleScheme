@@ -57,16 +57,6 @@ namespace SimpleScheme
                         exp))))
             (expand-quasiquote x 0)))
 
-        (define let
-          (macro (bindings . body)
-            (define (named-let name bindings body)
-              `(let ((,name #f))
-                 (set! ,name (lambda ,(map first bindings) . ,body))
-                 (,name . ,(map second bindings))))
-            (if (symbol? bindings)
-              (named-let bindings (first body) (rest body))
-              `((lambda ,(map first bindings) . ,body) . ,(map second bindings)))))
-
         (define let*
           (macro (bindings . body)
             (if (null? bindings) `((lambda () . ,body))

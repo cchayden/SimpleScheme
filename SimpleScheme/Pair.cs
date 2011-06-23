@@ -122,7 +122,7 @@ namespace SimpleScheme
             object tail = this.Rest;
 
             int len = 0;
-            // TODO convert to user foreach
+            // TODO convert to use foreach
             while (tail is Pair)
             {
                 buf.Append(' ');
