@@ -1,8 +1,11 @@
-﻿// <copyright file="Eval.cs" company="Charles Hayden">
+﻿#define OLDIF
+// <copyright file="Eval.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
+    // TODO pull individual steppers out of Evaluator
+    // TODO make evaluator the base class -- give better isolation
     using System;
 
     /// <summary>
@@ -14,36 +17,42 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public class Evaluator : SchemeUtils
+    public abstract class Evaluator : SchemeUtils
     {
         /// <summary>
         /// The scheme interpreter.
         /// </summary>
-        private readonly Scheme interp;
+        protected readonly Scheme interp;
 
         /// <summary>
         /// The parent evaluator.
         /// Return to this one when done.
         /// </summary>
-        private readonly Stepper parent;
+        protected readonly Stepper parent;
 
         /// <summary>
         /// The expression being evaluated.  During evaluation, this is 
         ///   replaced by the results of evaluation.  At the conclusion of evaluation
         ///   this holds the final result.
         /// </summary>
-        private object expr;
+        protected object expr;
 
         /// <summary>
         /// The evaluation environment.  If the environment is changes as a result
         ///   of evaluation, then the new environment is here after evaluation.
         /// </summary>
-        private Environment env;
+        protected Environment env;
 
         /// <summary>
         /// A program oounter.
         /// </summary>
-        private int pc;
+        protected int pc;
+
+        /// <summary>
+        /// The function that we called.
+        /// Valid when pc > 0.
+        /// </summary>
+        protected Evaluator called;
 
         /// <summary>
         /// Initializes a new instance of the Evaluator class.
@@ -52,7 +61,7 @@ namespace SimpleScheme
         /// <param name="parent">The parent evaluator.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluator environment.</param>
-        public Evaluator(Scheme interp, Stepper parent, object expr, Environment env)
+        protected Evaluator(Scheme interp, Stepper parent, object expr, Environment env)
         {
             this.interp = interp;
             this.parent = parent;
@@ -65,12 +74,23 @@ namespace SimpleScheme
         /// Gets the expression being evaluated.  Aftet execution is done, this is the
         ///     evaluation result.
         /// </summary>
-        public object Expr { get { return expr; } }
+        public object Expr
+        {
+            get { return this.expr; }
+        }
 
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
         /// </summary>
-        public Environment Env { get { return env; } }
+        public Environment Env
+        {
+            get { return this.env; }
+        }
+
+        public int Pc
+        {
+            get { return this.pc; }
+        }
 
         /// <summary>
         /// This is not meant to be called, but is returned as an indication that
@@ -83,6 +103,16 @@ namespace SimpleScheme
             throw new Exception("This should not be called");
         }
 
+        public abstract Stepper EvalStep();
+    }
+
+    public class EvaluatorMain : Evaluator
+    {
+        public EvaluatorMain(Scheme interp, Stepper parent, object expr, Environment env) 
+                : base(interp, parent, expr, env)
+        {
+        }
+
         /// <summary>
         /// Evaluate an expression in the given environment, one step at a time.
         /// The expression and environment are given in the constructor.
@@ -92,18 +122,30 @@ namespace SimpleScheme
         ///   and apply the procedure to the evaluated results.
         /// </summary>
         /// <returns>The next step to execute.</returns>
-        public Stepper EvalStep()
+        public override Stepper EvalStep()
         {
-            if (expr is string)
+
+            if (this.pc == 1)
+            {
+                this.expr = this.called.Expr;
+                return this.parent;
+            }
+
+            if (this.pc == 101)
+            {
+                this.expr = this.called.Expr;
+            }
+
+            if (this.expr is string)
             {
                 // Evaluate a string by looking it up in the environment.
                 // It should correspond to a varialbe name, for which there 
                 //    is a corresponding value.
-                expr = env.Lookup((string)expr);
+                this.expr = this.env.Lookup((string)this.expr);
                 return this.parent;
             }
 
-            if (!(expr is Pair))
+            if (!(this.expr is Pair))
             {
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.
@@ -113,24 +155,25 @@ namespace SimpleScheme
 
             // We are evaluating a pair.
             // Split out the first item for special treatment.
-            object fn = First(expr);
-            object args = Rest(expr);
+            object fn = First(this.expr);
+            object args = Rest(this.expr);
 
             // Look for one of the special forms. 
             switch (fn as string)
             {
                 case "quote":
                     // Evaluate quoted expression by just returning the expression.
-                    expr = First(args);
+                    this.expr = First(args);
                     return this.parent;
 
                 case "begin":
                     {
                         // Evaluate begin by evaluating all the items in order, 
                         //   and returning the last.
-                        var eval = new Evaluator(this.interp, this.EvalStep, args, env);
-                        var next = eval.EvalSequence();
-                        expr = eval.Expr;
+                        this.called = new EvaluatorSequence(this.interp, this.EvalStep, args, this.env);
+                        var next = this.called.EvalStep();
+                        // pc = 1;
+                        this.expr = this.called.Expr;    //////////////////
                         return next;
                     }
 
@@ -138,55 +181,60 @@ namespace SimpleScheme
                     {
                         // Define is a shortcut for lambda.
                         // Evaluate by splicing lambda on the front and evaluating that.
-                        this.EvalDefine(args);
-                        return this.parent;
+                        this.called = new EvaluatorDefine(this.interp, this.parent, args, this.env);
+                        return this.called.EvalStep;
                     }
 
                 case "set!":
                     {
                         // Evaluate a set! expression by evaluating the second, 
                         //   then setting the first to it.
-                        var eval = new Evaluator(this.interp, this.EvalStep, args, env);
-                        var next = eval.EvalSet();
-                        expr = eval.Expr;
-                        return next;
+                        this.called = new EvaluatorSet(this.interp, this.EvalStep, args, this.env);
+                        this.pc = 101;
+                        return this.called.EvalStep;
                     }
 
                 case "if":
                     {
                         // Eval an if expression by evaluating the first clause, 
                         //    and then returning either the second or third.
-                        var eval = new Evaluator(this.interp, this.EvalStep, args, env);
-                        var next = eval.EvalIf();
-                        expr = eval.Expr;
+#if OLDIF
+                        this.called = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
+                        var next = this.called.EvalStep();
+                        this.expr = this.called.Expr;     /////////////////////////////
                         return next;
+#else
+                        this.called1 = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
+                        pc = 101;
+                        return called1.EvalStep;
+#endif
                     }
 
                 case "cond":
-                    expr = this.ReduceCond(args);
+                    this.expr = this.ReduceCond(args);
                     return this.EvalStep;
 
                 case "lambda":
                     // Evaluate a lambda by creating a closure.
-                    expr = new Closure(First(args), Rest(args), env);
+                    this.expr = new Closure(First(args), Rest(args), this.env);
                     return this.parent;
 
                 case "macro":
                     // Evaluate a macro by creating a macro.
-                    expr = new Macro(First(args), Rest(args), env);
+                    this.expr = new Macro(First(args), Rest(args), this.env);
                     return this.parent;
             }
 
             // If we get here, it wasn't one of the special forms.  
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
-            fn = this.interp.Eval(fn, env);
+            fn = this.interp.Eval(fn, this.env);
 
             // If the function is a macro, expand it and then continue.
             if (fn is Macro)
             {
                 Macro m = (Macro)fn;
-                expr = m.Expand(this.interp, (Pair)expr, args);
+                this.expr = m.Expand(this.interp, (Pair)this.expr, args);
                 return this.EvalStep;
             }
 
@@ -199,8 +247,8 @@ namespace SimpleScheme
             {
                 // CLOSURE CALL -- capture the environment and continue with the body
                 Closure f = (Closure)fn;
-                expr = f.Body;
-                env = new Environment(f.Parms, this.EvalList(args), f.Env);
+                this.expr = f.Body;
+                this.env = new Environment(f.Parms, this.EvalList(args), f.Env);
                 return this.EvalStep;
             }
 
@@ -208,54 +256,44 @@ namespace SimpleScheme
             // In any other case, the function is a primitive or a user-defined function.
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
-            expr = this.ApplyProc(fn, args);
+            this.expr = this.ApplyProc(fn, args);
             return this.parent;
         }
 
-        /// <summary>
-        /// Evaluate a define expression.
-        /// Handle the define syntax shortcut by inserting lambda.
-        /// </summary>
-        /// <param name="args">The body of the define</param>
-        /// <returns>The evaluated definition.</returns>
-        private void EvalDefine(object args)
-        {
-            object value;
-            if (First(args) is Pair)
-            {
-                value = this.interp.Eval(Cons("lambda", Cons(Rest(First(args)), Rest(args))), env);
-                expr = env.Define(First(First(args)), value);
-            }
-            else
-            {
-                value = this.interp.Eval(Second(args), env);
-                expr = env.Define(First(args), value);
-            }
-        }
 
-        /// <summary>
-        /// Evaluate a set! expression.
-        /// </summary>
-        /// <returns>The next step to execute.</returns>
-        private Stepper EvalSet()
+#if OLDIF
+        private Stepper EvalIf()
         {
-            var args = expr;
-            object temp = this.interp.Eval(Second(args), env);
-            expr = env.Set(First(args), temp);
+            object value = this.interp.Eval(First(this.expr), this.env);
+ Console.WriteLine("EvalIf {0} {1}", this.expr, value);
+            this.expr = Truth(value) ? Second(this.expr) : Third(this.expr);
+Console.WriteLine("EvalIf result: {0}", this.expr);
             return this.parent;
         }
-
+#else
+        private object value;
         /// <summary>
         /// Evaluate an if expression.
         /// </summary>
         /// <returns>The next step to execute.</returns>
         private Stepper EvalIf()
         {
-            var args = expr;
-            object temp = this.interp.Eval(First(args), env);
-            expr = Truth(temp) ? Second(args) : Third(args);
+            switch (this.pc)
+            {
+                case 0:
+                    this.value = this.interp.Eval(First(this.expr), this.env);
+ Console.WriteLine("EvalIf 1 {0} {1}", expr, value);
+                    this.pc = 1;
+                    return this.EvalIf;
+                case 1:
+ Console.WriteLine("EvalIf 2 {0} {1}", this.expr, this.value);
+                    expr = Truth(this.value) ? Second(this.expr) : Third(this.expr);
+Console.WriteLine("EvalIf result: {0}", expr);
+                    break;
+            }
             return this.parent;
         }
+#endif
 
         /// <summary>
         /// Evaluate a sequence of objects, returning the last.
@@ -263,14 +301,13 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalSequence()
         {
-            var args = expr;
-            while (Rest(args) != null)
+            while (Rest(this.expr) != null)
             {
-                this.interp.Eval(First(args), env);
-                args = Rest(args);
+                this.interp.Eval(First(this.expr), this.env);
+                this.expr = Rest(this.expr);
             }
 
-            expr = First(args);
+            this.expr = First(this.expr);
             return this.parent;
         }
 
@@ -298,7 +335,7 @@ namespace SimpleScheme
             Pair accum = result;
             while (list is Pair)
             {
-                object value = this.interp.Eval(First(list), env);
+                object value = this.interp.Eval(First(list), this.env);
                 accum = (Pair)(accum.Rest = List(value));
                 list = Rest(list);
             }
@@ -335,7 +372,7 @@ namespace SimpleScheme
                 }
                 else
                 {
-                    result = this.interp.Eval(First(clause), env);
+                    result = this.interp.Eval(First(clause), this.env);
                     convert = Truth(result);
                 }
 
@@ -366,5 +403,150 @@ namespace SimpleScheme
         {
             return Procedure.Proc(fn).Apply(this.interp, this.EvalList(args));
         }
+    }
+
+    public class EvaluatorSet : Evaluator
+    {
+        private object temp;
+
+        public EvaluatorSet(Scheme interp, Stepper parent, object expr, Environment env) 
+            : base(interp, parent, expr, env) { }
+
+        /// <summary>
+        /// Evaluate a set! expression.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Stepper EvalStep()
+        {
+            switch (this.pc)
+            {
+                case 0:
+                    this.temp = this.interp.Eval(Second(this.expr), this.env);
+                    this.pc = 1;
+                    return this.EvalStep;
+                case 1:
+                    this.expr = this.env.Set(First(this.expr), this.temp);
+                    break;
+            }
+
+            return this.parent;
+        }
+        
+    }
+
+    public class EvaluatorDefine : Evaluator
+    {
+        private object temp;
+
+        public EvaluatorDefine(Scheme interp, Stepper parent, object expr, Environment env) 
+            : base(interp, parent, expr, env) { }
+
+        /// <summary>
+        /// Evaluate a define expression.
+        /// Handle the define syntax shortcut by inserting lambda.
+        /// </summary>
+        /// <returns>The evaluated definition.</returns>
+        public override Stepper EvalStep()
+        {
+            switch (this.pc)
+            {
+                case 0:
+                    {
+                        if (First(this.expr) is Pair)
+                        {
+                            this.temp = this.interp.Eval(Cons("lambda", Cons(Rest(First(this.expr)), Rest(this.expr))), this.env);
+                            this.pc = 1;
+                        }
+                        else
+                        {
+                            this.temp = this.interp.Eval(Second(this.expr), this.env);
+                            this.pc = 2;
+                        }
+                    }
+
+                    return this.EvalStep;
+                case 1:
+                    this.expr = this.env.Define(First(First(this.expr)), this.temp);
+                    break;
+                case 2:
+                     this.expr = this.env.Define(First(this.expr),  this.temp);
+                    break;
+            }
+
+            return this.parent;
+        }
+        
+    }
+#if OLDIF
+    public class EvaluatorIf : Evaluator
+    {
+        private object temp;
+
+        public EvaluatorIf(Scheme interp, Stepper parent, object expr, Environment env) 
+            : base(interp, parent, expr, env) { }
+
+        public override Stepper EvalStep()
+        {
+            object value = this.interp.Eval(First(this.expr), this.env);
+ Console.WriteLine("EvalIf {0} {1}", this.expr, value);
+            this.expr = Truth(value) ? Second(this.expr) : Third(this.expr);
+Console.WriteLine("EvalIf result: {0}", this.expr);
+            return this.parent;
+        }
+    }
+#else
+    public class EvaluatorIf : Evaluator
+    {
+        private object temp;
+
+        public EvaluatorIf(Scheme interp, Stepper parent, object expr, Environment env) 
+            : base(interp, parent, expr, env) { }
+
+        /// <summary>
+        /// Evaluate an if expression.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Stepper EvalStep()
+        {
+            switch (this.pc)
+            {
+                case 0:
+                    this.temp = this.interp.Eval(First(this.expr), this.env);
+ Console.WriteLine("EvalIf 1 {0} {1}", this.expr, this.temp);
+                    this.pc = 1;
+                    return this.EvalStep;
+                case 1:
+ Console.WriteLine("EvalIf 2 {0} {1}", this.expr, this.temp);
+                    expr = Truth(this.temp) ? Second(this.expr) : Third(this.expr);
+Console.WriteLine("EvalIf result: {0}", expr);
+                    break;
+            }
+            return this.parent;
+        }
+    }
+#endif        
+
+    public class EvaluatorSequence : Evaluator
+    {
+        public EvaluatorSequence(Scheme interp, Stepper parent, object expr, Environment env) 
+            : base(interp, parent, expr, env) { }
+
+        /// <summary>
+        /// Evaluate a sequence of objects, returning the last.
+        /// </summary>
+        /// <returns>The next step.</returns>
+        public override Stepper EvalStep()
+        {
+            while (Rest(this.expr) != null)
+            {
+                this.interp.Eval(First(this.expr), this.env);
+                this.expr = Rest(this.expr);
+            }
+
+            this.expr = First(this.expr);
+            return this.parent;
+        }
+
+        
     }
 }
