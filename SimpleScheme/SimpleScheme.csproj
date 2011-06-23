@@ -41,6 +41,16 @@
     <Compile Include="Continuation.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="Eval.cs" />
+    <Compile Include="EvaluatorApplyProc.cs" />
+    <Compile Include="EvaluatorClosure.cs" />
+    <Compile Include="EvaluatorDefine.cs" />
+    <Compile Include="EvaluatorIf.cs" />
+    <Compile Include="EvaluatorList.cs" />
+    <Compile Include="EvaluatorMain.cs" />
+    <Compile Include="EvaluatorReduceCond.cs" />
+    <Compile Include="EvaluatorReturn.cs" />
+    <Compile Include="EvaluatorSequence.cs" />
+    <Compile Include="EvaluatorSet.cs" />
     <Compile Include="InputPort.cs" />
     <Compile Include="Macro.cs" />
     <Compile Include="Pair.cs" />
