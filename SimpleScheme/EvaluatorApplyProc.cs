@@ -4,8 +4,9 @@
 
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -13,6 +14,9 @@ namespace SimpleScheme
         /// </summary>
         private class EvaluatorApplyProc : Evaluator
         {
+            /// <summary>
+            /// The proc or primitive to apply.
+            /// </summary>
             private readonly object fn;
 
             /// <summary>
@@ -41,17 +45,19 @@ namespace SimpleScheme
                         Pc = 1;
                         return CallList(Expr);
                     case 1:
-                        object res = Procedure.Proc(fn).Apply(this.Interp, this, ReturnedExpr);
+                        object res = Procedure.Proc(this.fn).Apply(this.Interp, this, ReturnedExpr);
                         if (res is Evaluator)
                         {
                             Pc = 2;
-                            return SubCall((Evaluator) res);
+                            return this.SubCall((Evaluator)res);
                         }
+
                         return SubReturn(res);
                     case 2:
                         return SubReturn(ReturnedExpr);
                 }
-                throw new Exception("Program counter error");
+
+                return EvalError("ApplyProc: program counter error");
             }
         }
     }

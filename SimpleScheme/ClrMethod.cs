@@ -35,7 +35,7 @@ namespace SimpleScheme
         /// <param name="methodName">The name of the CLR method.</param>
         /// <param name="targetClassName">The name of the class containing the method.</param>
         /// <param name="argClassNames">A list of names of classes, the "types" of the arguments 
-        ///    of the method.</param>
+        /// of the method.</param>
         public ClrMethod(string methodName, object targetClassName, object argClassNames)
         {
             this.Name = targetClassName + "." + methodName;
@@ -76,6 +76,7 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="interpreter">The interpreter supplies the global environment.</param>
+        /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">Arguments to pass to the method.</param>
         /// <returns>The result of executing the method.</returns>
         public override object Apply(Scheme interpreter, Evaluator parent, object args)

@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -12,10 +13,13 @@ namespace SimpleScheme
         /// </summary>
         private class EvaluatorClosure : Evaluator
         {
+            /// <summary>
+            /// The closure to apply.
+            /// </summary>
             private readonly Closure f;
 
             /// <summary>
-            /// Initializes a new instance of the EvaluatorSet class.
+            /// Initializes a new instance of the EvaluatorClosure class.
             /// </summary>
             /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
@@ -40,10 +44,11 @@ namespace SimpleScheme
                         Pc = 1;
                         return CallList(Expr);
                     case 1:
-                        this.RetEnv = new Environment(f.Parms, ReturnedExpr, f.Env);
-                        return SubReturn(f.Body);
+                        this.RetEnv = new Environment(this.f.Parms, ReturnedExpr, this.f.Env);
+                        return SubReturn(this.f.Body);
                 }
-                throw new Exception("program counter error");
+
+                return EvalError("Closure: program counter error");
             }
         }
     }

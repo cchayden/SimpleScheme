@@ -1,11 +1,11 @@
-﻿#define OLDxx
-// <copyright file="EvaluatorMain.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluatorMain.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -37,6 +37,10 @@ namespace SimpleScheme
         {
             private object fn;
             private object args;
+            private const int pcBegin = 0;
+            private const int pcMiddle = 1;
+            private const int pcLoop = 2;
+            private const int pcReturn = 3;
 
             /// <summary>
             /// Initializes a new instance of the EvaluatorMain class.
@@ -63,7 +67,7 @@ namespace SimpleScheme
             {
                 switch (this.Pc)
                 {
-                    case 0:
+                    case pcBegin:
                         if (this.Expr is string)
                         {
                             // Evaluate a string by looking it up in the environment.
@@ -96,7 +100,7 @@ namespace SimpleScheme
                                 {
                                     // Evaluate begin by evaluating all the items in order, 
                                     //   and returning the last.
-                                    Pc = 1;
+                                    Pc = pcLoop;
                                     return CallSequence(args);
                                 }
 
@@ -104,7 +108,7 @@ namespace SimpleScheme
                                 {
                                     // Define is a shortcut for lambda.
                                     // Evaluate by splicing lambda on the front and evaluating that.
-                                    Pc = 2;
+                                    Pc = pcReturn;
                                     return CallDefine(args);
                                 }
 
@@ -112,7 +116,7 @@ namespace SimpleScheme
                                 {
                                     // Evaluate a set! expression by evaluating the second, 
                                     //   then setting the first to it.
-                                    Pc = 2;
+                                    Pc = pcReturn;
                                     return CallSet(args);
                                 }
 
@@ -120,12 +124,12 @@ namespace SimpleScheme
                                 {
                                     // Eval an if expression by evaluating the first clause, 
                                     //    and then returning either the second or third.
-                                    Pc = 1;
+                                    Pc = pcLoop;
                                     return CallIf(args);
                                 }
 
                             case "cond":
-                                Pc = 1;
+                                Pc = pcLoop;
                                 return CallReduceCond(args);
 
                             case "lambda":
@@ -140,22 +144,10 @@ namespace SimpleScheme
                         // If we get here, it wasn't one of the special forms.  
                         // So we need to evaluate the first item (the function) in preparation for
                         //    doing a procedure call.
-                        Pc = 3;
+                        Pc = pcMiddle;
                         return CallEval(fn);
 
-                    case 1:
-                        // Loop: copy results of return to Expr/Env and evaluate again
-                        this.Expr = this.ReturnedExpr;
-                        this.Env = this.ReturnedEnv;
-                        Pc = 0;
-                        return this;
-
-                    case 2:
-                        // Assign return value and return to caller.
-                        this.Env = this.ReturnedEnv;
-                        return SubReturn(this.ReturnedExpr);
-
-                    case 3:
+                    case pcMiddle:
                         // Come here after evaluating fn
                         // make sure we don't assigne expr, since we need it intact below
                         fn = ReturnedExpr;
@@ -163,16 +155,8 @@ namespace SimpleScheme
                         // If the function is a macro, expand it and then continue.
                         if (fn is Macro)
                         {
-                            Macro m = (Macro)fn;
-#if OLD
-                            // TODO by passing null, we disable eval flattening
-                            this.Expr = m.Expand(this.Interp, null, (Pair)this.Expr, args);
-                            Pc = 0;
-                            return SubContinue();
-#else
-                            Pc = 1;
-                            return CallExpand(this.Expr, args, m);
-#endif
+                            Pc = pcLoop;
+                            return CallExpand(args, (Macro)fn);
                         }
 
                         // If the function is a closure, then create a new environment consisting of
@@ -183,19 +167,31 @@ namespace SimpleScheme
                         if (fn is Closure)
                         {
                             // CLOSURE CALL -- capture the environment and continue with the body
-                            Closure f = (Closure)fn;
-                            Pc = 1;
-                            return CallClosure(args, f);
+                            Pc = pcLoop;
+                            return CallClosure(args, (Closure)fn);
                         }
 
                         // This is a procedure call.
                         // In any other case, the function is a primitive or a user-defined function.
                         // Evaluate the arguments in the environment, then apply the function 
                         //    to the arguments.
-                        Pc = 2;
+                        Pc = pcReturn;
                         return CallApplyProc(args, fn);
+
+                    case pcLoop:
+                        // Loop: copy results of return to Expr/Env and evaluate again
+                        this.Expr = this.ReturnedExpr;
+                        this.Env = this.ReturnedEnv;
+                        Pc = pcBegin;
+                        return this;
+
+                    case pcReturn:
+                        // Assign return value and return to caller.
+                        this.Env = this.ReturnedEnv;
+                        return SubReturn(this.ReturnedExpr);
+
                 }
-                throw new Exception("EvaluatorMain pc error");
+                return EvalError("EvaluatorMain: program counter error");
             }
         }
     }

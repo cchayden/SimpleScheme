@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -20,7 +21,9 @@ namespace SimpleScheme
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
             public EvaluatorDefine(Scheme interp, Evaluator parent, object expr, Environment env)
-                : base(interp, parent, expr, env) { }
+                : base(interp, parent, expr, env)
+            {
+            }
 
             /// <summary>
             /// Evaluate a define expression.
@@ -37,6 +40,7 @@ namespace SimpleScheme
                             Pc = 1;
                             return CallEval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))));
                         }
+
                         Pc = 2;
                         return CallEval(Second(this.Expr));
                     case 1:
@@ -44,7 +48,8 @@ namespace SimpleScheme
                     case 2:
                         return SubReturn(this.Env.Define(First(this.Expr), ReturnedExpr));
                 }
-                throw new Exception("program counter error");
+
+                return EvalError("Define: program counter error");
             }
         }
     }

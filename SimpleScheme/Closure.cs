@@ -45,15 +45,16 @@ namespace SimpleScheme
         ///   list of variable names saved when the continuation was created.
         /// </summary>
         /// <param name="interpreter">The interpreter, which has the global environment.</param>
+        /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <returns>The results of executing the program.</returns>
         public override object Apply(Scheme interpreter, Evaluator parent, object args)
         {
-            // TODO handle the case where this is called by Macro Expand
             if (parent == null)
             {
                 return interpreter.Eval(this.Body, new Environment(this.Parms, args, this.Env));
             }
+
             return Evaluator.CallMain(interpreter, parent, this.Body, new Environment(this.Parms, args, this.Env));
         }
     }

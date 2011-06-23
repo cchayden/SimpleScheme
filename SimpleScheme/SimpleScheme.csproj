@@ -36,7 +36,6 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActivationRecord.cs" />
     <Compile Include="Closure.cs" />
     <Compile Include="ClrMethod.cs" />
     <Compile Include="Continuation.cs" />
@@ -49,6 +48,7 @@
     <Compile Include="EvaluatorIf.cs" />
     <Compile Include="EvaluatorList.cs" />
     <Compile Include="EvaluatorMain.cs" />
+    <Compile Include="EvaluatorMap.cs" />
     <Compile Include="EvaluatorReduceCond.cs" />
     <Compile Include="EvaluatorSequence.cs" />
     <Compile Include="EvaluatorSet.cs" />

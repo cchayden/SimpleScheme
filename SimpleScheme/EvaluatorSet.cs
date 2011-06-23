@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         private class EvaluatorSet : Evaluator
@@ -36,7 +37,7 @@ namespace SimpleScheme
                     case 1:
                         return SubReturn(this.Env.Set(first, ReturnedExpr));
                 }
-                throw new Exception("program counter error");
+                return EvalError("Set: program counter error");
             }
 
         }

@@ -3,6 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         private class ActivationRecord

@@ -204,7 +204,6 @@ namespace SimpleScheme
             SETCAR = -5,
             SETCDR = -6,
             TIMECALL = -11,
-            MACROEXPAND = -12,
             ERROR = -13,
             LISTSTAR = -14,
         }
@@ -328,7 +327,6 @@ namespace SimpleScheme
                 .DefPrim("list?", OpCode.LISTQ, 1)
                 .DefPrim("load", OpCode.LOAD, 1)
                 .DefPrim("log", OpCode.LOG, 1)
-                .DefPrim("macro-expand", OpCode.MACROEXPAND, 1)
                 .DefPrim("make-string", OpCode.MAKESTRING, 1, 2)
                 .DefPrim("make-vector", OpCode.MAKEVECTOR, 1, 2)
                 .DefPrim("map", OpCode.MAP, 1, MaxInt)
@@ -872,15 +870,10 @@ namespace SimpleScheme
                     // 6.9 CONTROL FEATURES
                 case OpCode.EVAL:
                     // Instead of returning a value, return an evaulator that can be run to get the value
-                    return Evaluator.CallMain(interp, parent, x, interp.GlobalEnvironment);
+                    return Evaluator.CallMain(interp, parent, x, parent.Env);
 
                 case OpCode.FORCE:
                     return !(x is Procedure) ? x : Proc(x).Apply(interp, parent, null);
-
-                case OpCode.MACROEXPAND:
-                    // Either returns the expansion, or else an Evaluator that will do
-                    //   then expansion
-                    return Macro.MacroExpand(interp, parent, x);
 
                 case OpCode.PROCEDUREQ:
                     return Truth(x is Procedure);
@@ -889,10 +882,10 @@ namespace SimpleScheme
                     return Proc(x).Apply(interp, parent, ListStar(Rest(args)));
 
                 case OpCode.MAP:
-                    return Map(Proc(x), Rest(args), interp, parent, List(null));
+                    return Evaluator.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), List(null));
 
                 case OpCode.FOREACH:
-                    return Map(Proc(x), Rest(args), interp, parent, null);
+                    return Evaluator.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), null);
 
                 case OpCode.CALLCC:
                     Exception cc = new Exception();
@@ -1230,63 +1223,6 @@ namespace SimpleScheme
             }
 
             return Num(lcm);
-        }
-
-        /// <summary>
-        /// Apply a procedure to the elements of a list, giving a list of results.
-        /// Does not check for equal length lists -- creates as many results as the 
-        ///   first list and substitutes empty lists for missing args.  The effect 
-        ///   depends on how the proc handles these empty lists.
-        /// </summary>
-        /// <param name="proc">The proc to apply to each element.  It takes as many arguments 
-        ///     as the length of the list args.</param>
-        /// <param name="args">The list of lists to use.</param>
-        /// <param name="interp">The interpreter context.</param>
-        /// <param name="parent">The calling Evaluator.</param>
-        /// <param name="result">The result so far.  Starts as the empty list.</param>
-        /// <returns>A list made up of the proc applied to corresponding elements of 
-        ///     each of the elements of args.</returns>
-        private static Pair Map(Procedure proc, object args, Scheme interp, Evaluator parent, Pair result)
-        {
-            Pair accum = result;
-            if (Rest(args) == null)
-            {
-                // One list given -- iterate down it, applying the proc
-                //  and building a list of the results.
-                args = First(args);
-                while (args is Pair)
-                {
-                    object x = proc.Apply(interp, null, List(First(args)));
-                    if (accum != null)
-                    {
-                        // Builds a list by tacking new values onto the tail.
-                        accum = (Pair)(accum.Rest = List(x));
-                    }
-
-                    args = Rest(args);
-                }
-            }
-            else
-            {
-                Procedure car = (Procedure)Evaluator.GlobalEvalString("car", interp);
-                Procedure cdr = (Procedure)Evaluator.GlobalEvalString("cdr", interp);
-                while (First(args) is Pair)
-                {
-                    // Inner Map prepares a list of the first element of each list.
-                    // The the proc is applied to it.
-                    object x = proc.Apply(interp, null, Map(car, List(args), interp, parent, List(null)));
-                    if (accum != null)
-                    {
-                        // Builds a list by tacking new values onto the tail.
-                        accum = (Pair)(accum.Rest = List(x));
-                    }
-
-                    // Make a list that has the rest of each of the given lists.
-                    args = Map(cdr, List(args), interp, parent, List(null));
-                }
-            }
-
-            return (Pair)Rest(result);
         }
 
         /// <summary>

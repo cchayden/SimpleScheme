@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -14,7 +15,14 @@ namespace SimpleScheme
         /// </summary>
         private class EvaluatorList : Evaluator
         {
-            private Pair result;
+            /// <summary>
+            /// The result that will be returned.
+            /// </summary>
+            private readonly Pair result;
+
+            /// <summary>
+            /// The end of the list we are constructing for return.
+            /// </summary>
             private Pair accum;
 
             /// <summary>
@@ -25,7 +33,12 @@ namespace SimpleScheme
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
             public EvaluatorList(Scheme interp, Evaluator parent, object expr, Environment env)
-                : base(interp, parent, expr, env) { }
+                : base(interp, parent, expr, env)
+            {
+                // start with an empty list
+                // the empty cell will be stripped off at the end
+                this.accum = this.result = List(null); 
+            }
 
             /// <summary>
             /// Evaluate a list of expressions.
@@ -47,10 +60,10 @@ namespace SimpleScheme
                             Error("Illegal arg list: " + this.Expr);
                             return SubReturn(null);
                         }
-                        // start with an empty list
-                        accum = result = List(null); // empty cell will be stripped off below
+
                         Pc = 1;
                         return SubContinue();
+
                     case 1:
                         if (this.Expr is Pair)
                         {
@@ -58,16 +71,19 @@ namespace SimpleScheme
                             Pc = 2;
                             return CallEval(First(this.Expr));
                         }
+
                         // if we are done, just return the result minus the dummy entry
-                        return SubReturn(result.Rest);
+                        return this.SubReturn(this.result.Rest);
+
                     case 2:
                         // back from the evaluation -- save the result and keep going with the rest
                         Pc = 1;
-                        accum = (Pair)(accum.Rest = List(ReturnedExpr));
+                        this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
                         Expr = Rest(Expr);
                         return SubContinue();
                 }
-                throw new Exception("program counter error");
+
+                return EvalError("List: program counter error");
             }
         }
     }

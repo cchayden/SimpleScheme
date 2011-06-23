@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -44,6 +45,7 @@ namespace SimpleScheme
                         {
                             return SubReturn(False);
                         }
+
                         clause = First(Expr);
                         Expr = Rest(Expr);
                         if (First(clause) as string == "else")
@@ -56,11 +58,14 @@ namespace SimpleScheme
                             Pc = 1;
                             return CallEval(First(clause));
                         }
+
                         return SubContinue();
+
                     case 1:
                         result = ReturnedExpr;
                         Pc = Truth(result) ? 2 : 0;
                         return SubContinue();
+
                     case 2:
                         if (Rest(clause) == null)
                         {
@@ -74,7 +79,7 @@ namespace SimpleScheme
 
                         return SubReturn(Cons("begin", Rest(clause)));
                 }
-                throw new Exception("program counter error");
+                return EvalError("ReduceCond: program counter error");
             }
         }
     }

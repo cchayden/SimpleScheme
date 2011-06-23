@@ -145,6 +145,12 @@ namespace SimpleScheme
             throw new SchemeException(message);
         }
 
+        public static Evaluator EvalError(string message)
+        {
+            Console.Error.WriteLine("**** ERROR: " + message);
+            throw new SchemeException(message);
+        }
+
         /// <summary>
         /// Display a warning and return a warning string.
         /// </summary>

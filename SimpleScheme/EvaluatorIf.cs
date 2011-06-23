@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         /// <summary>
@@ -22,7 +23,9 @@ namespace SimpleScheme
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
             public EvaluatorIf(Scheme interp, Evaluator parent, object expr, Environment env)
-                : base(interp, parent, expr, env) { }
+                : base(interp, parent, expr, env)
+            {
+            }
 
             /// <summary>
             /// Evaluate an if expression.
@@ -38,7 +41,8 @@ namespace SimpleScheme
                     case 1:
                         return SubReturn(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
                 }
-                throw new Exception("program counter error");
+
+                return EvalError("If: program counter error");
             }
         }
     }

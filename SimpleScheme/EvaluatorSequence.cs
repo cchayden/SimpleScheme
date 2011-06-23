@@ -3,8 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
+    /// <summary>
+    /// Evaluator contains all the individual evaluators
+    /// </summary>
     public partial class Evaluator
     {
         private class EvaluatorSequence : Evaluator
@@ -34,13 +35,15 @@ namespace SimpleScheme
                             this.Pc = 1;
                             return CallEval(First(this.Expr));
                         }
+
                         return SubReturn(First(this.Expr));
+
                     case 1:
                         this.Expr = Rest(this.Expr);
                         this.Pc = 0;
                         return SubContinue();
                 }
-                throw new Exception("program counter error");
+                return EvalError("Sequence: program counter error");
             }
         }
     }
