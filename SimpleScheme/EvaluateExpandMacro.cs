@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorExpand.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateExpandMacro.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Expand a macro.
     /// </summary>
-    public class EvaluatorExpand : Stepper
+    public class EvaluateExpandMacro : Stepper
     {
         /// <summary>
         /// The macro to expand.
@@ -14,13 +14,13 @@ namespace SimpleScheme
         private readonly Macro fn;
 
         /// <summary>
-        /// Initializes a new instance of the EvaluatorExpand class.
+        /// Initializes a new instance of the EvaluateExpandMacro class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="fn">The macro to expand.</param>
-        private EvaluatorExpand(Stepper parent, object expr, Environment env, Macro fn)
+        private EvaluateExpandMacro(Stepper parent, object expr, Environment env, Macro fn)
             : base(parent, expr, env)
         {
             this.fn = fn;
@@ -29,14 +29,14 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a new expand evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="fn">The macro to expand.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static EvaluatorExpand New(Stepper parent, object expr, Environment env, Macro fn)
+        public static EvaluateExpandMacro New(object expr, Environment env, Macro fn, Stepper parent)
         {
-            return new EvaluatorExpand(parent, expr, env, fn);
+            return new EvaluateExpandMacro(parent, expr, env, fn);
         }
 
         /// <summary>
@@ -51,13 +51,13 @@ namespace SimpleScheme
                     object expanded = this.fn.Apply(this, Expr);
                     if (expanded is Stepper)
                     {
-                        return GoToStep(PC.Step1, (Stepper)expanded);
+                        return GoToStep((Stepper)expanded, PC.Step1);
                     }
 
                     return EvalError("Expand: should not get here");
 
                 case PC.Step1:
-                    return SubReturn(ReturnedExpr);
+                    return ReturnFromStep(ReturnedExpr);
             }
 
             return EvalError("Expand: program counter error");

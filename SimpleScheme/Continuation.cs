@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="step">The continuation to return to when applied.</param>
         public Continuation(Stepper step)
         {
-            this.step = step;
+            this.step = step.Parent.Parent;
         }
 
         /// <summary>
@@ -29,14 +29,16 @@ namespace SimpleScheme
 
         /// <summary>
         /// Execute the continuation.
+        /// Transfers execution to the step saved when the continuation was created.
+        /// The environment in effect at that time is also restored.
         /// </summary>
-        /// <param name="parent">The calling evaluator.</param>
+        /// <param name="parent">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <param name="args">The value to return.</param>
         /// <returns>The result of applying the continuation.</returns>
         public override object Apply(Stepper parent, object args)
         {
             this.Value = First(args);
-            return Stepper.TransferToStep(First(args), this.step.Env, this.step.Parent.Parent);
+            return Stepper.TransferToStep(this.step, First(args), this.step.Env);
         }
 
         /// <summary>

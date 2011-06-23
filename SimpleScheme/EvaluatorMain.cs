@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// The main evaluator for expressions.
     /// </summary>
-    public class EvaluatorMain : Stepper
+    public class EvaluatorMain : EvaluatorBase
     {
         /// <summary>
         /// A function to be evaluated (primitive, proc, macro, or closure).
@@ -32,11 +32,11 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a main evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static EvaluatorMain New(Stepper parent, object expr, Environment env)
+        public static EvaluatorMain New(object expr, Environment env, Stepper parent)
         {
             return new EvaluatorMain(parent, expr, env);
         }
@@ -62,7 +62,7 @@ namespace SimpleScheme
                             // Evaluate a string by looking it up in the environment.
                             // It should correspond to a varialbe name, for which there 
                             //    is a corresponding value.
-                            return SubReturn(EvalString((string)this.Expr, this.Env));
+                            return ReturnFromStep(EvalString((string)this.Expr, this.Env));
                         }
 
                         if (!(this.Expr is Pair))
@@ -70,7 +70,7 @@ namespace SimpleScheme
                             // If we are evaluating something that is not a pair, 
                             //    it must be a constant.
                             // Return the integer, real, boolean, or vector.
-                            return SubReturn(this.Expr);
+                            return ReturnFromStep(this.Expr);
                         }
 
                         // We are evaluating a pair.
@@ -83,62 +83,62 @@ namespace SimpleScheme
                         {
                             case "quote":
                                 // Evaluate quoted expression by just returning the expression.
-                                return SubReturn(First(this.args));
+                                return ReturnFromStep(First(this.args));
 
                             case "begin":
                                 {
                                     // Evaluate begin by evaluating all the items in order, 
                                     //   and returning the last.
-                                    return GoToStep(PC.Step2, CallSequence(this.args));
+                                    return GoToStep(CallSequence(this.args), PC.Step2);
                                 }
 
                             case "define":
                                 {
                                     // Define is a shortcut for lambda.
                                     // Evaluate by splicing lambda on the front and evaluating that.
-                                    return GoToStep(PC.Step3, CallDefine(this.args));
+                                    return GoToStep(CallDefine(this.args), PC.Step3);
                                 }
 
                             case "set!":
                                 {
                                     // Evaluate a set! expression by evaluating the second, 
                                     //   then setting the first to it.
-                                    return GoToStep(PC.Step3, CallSet(this.args));
+                                    return GoToStep(CallSet(this.args), PC.Step3);
                                 }
 
                             case "if":
                                 {
                                     // Eval an if expression by evaluating the first clause, 
                                     //    and then returning either the second or third.
-                                    return GoToStep(PC.Step2, CallIf(this.args));
+                                    return GoToStep(CallIf(this.args), PC.Step2);
                                 }
 
                             case "or":
                                 {
-                                    return GoToStep(PC.Step3, CallOr(this.args));
+                                    return GoToStep(CallOr(this.args), PC.Step3);
                                 }
 
                             case "and":
                                 {
-                                    return GoToStep(PC.Step3, CallAnd(this.args));
+                                    return GoToStep(CallAnd(this.args), PC.Step3);
                                 }
 
                             case "cond":
-                                return GoToStep(PC.Step2, CallReduceCond(this.args));
+                                return GoToStep(CallReduceCond(this.args), PC.Step2);
 
                             case "lambda":
                                 // Evaluate a lambda by creating a closure.
-                                return SubReturn(new Closure(First(this.args), Rest(this.args), this.Env));
+                                return ReturnFromStep(new Closure(First(this.args), Rest(this.args), this.Env));
 
                             case "macro":
                                 // Evaluate a macro by creating a macro.
-                                return SubReturn(new Macro(First(this.args), Rest(this.args), this.Env));
+                                return ReturnFromStep(new Macro(First(this.args), Rest(this.args), this.Env));
                         }
 
                         // If we get here, it wasn't one of the special forms.  
                         // So we need to evaluate the first item (the function) in preparation for
                         //    doing a procedure call.
-                        return GoToStep(PC.Step1, CallEval(this.fn));
+                        return GoToStep(CallEval(this.fn), PC.Step1);
 
                     case PC.Step1:
                         // Come here after evaluating fn
@@ -148,7 +148,7 @@ namespace SimpleScheme
                         // If the function is a macro, expand it and then continue.
                         if (this.fn is Macro)
                         {
-                            return GoToStep(PC.Step2, CallExpand(this.args, (Macro)this.fn));
+                            return GoToStep(CallExpandMacro(this.args, (Macro)this.fn), PC.Step2);
                         }
 
                         // If the function is a closure, then create a new environment consisting of
@@ -159,14 +159,14 @@ namespace SimpleScheme
                         if (this.fn is Closure)
                         {
                             // CLOSURE CALL -- capture the environment and continue with the body
-                            return GoToStep(PC.Step2, CallClosure(this.args, (Closure)this.fn));
+                            return GoToStep(CallClosure(this.args, (Closure)this.fn), PC.Step2);
                         }
 
                         // This is a procedure call.
                         // In any other case, the function is a primitive or a user-defined function.
                         // Evaluate the arguments in the environment, then apply the function 
                         //    to the arguments.
-                        return GoToStep(PC.Step3, CallApplyProc(this.args, this.fn));
+                        return GoToStep(CallApplyProc(this.args, this.fn), PC.Step3);
 
                     case PC.Step2:
                         // Loop: copy results of return to Expr/Env and evaluate again
@@ -177,11 +177,22 @@ namespace SimpleScheme
 
                     case PC.Step3:
                         // Assign return value and return to caller.
-                        return SubReturn(this.ReturnedExpr, this.ReturnedEnv);
+                        return ReturnFromStep(this.ReturnedExpr, this.ReturnedEnv);
                 }
 
                 return EvalError("EvaluatorMain: program counter error");
             }
+        }
+
+        /// <summary>
+        /// Evaluate a string by looking it up in the environment.
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="env">The environment to evaluate it in.</param>
+        /// <returns>The value of the symbol.</returns>
+        private static object EvalString(string symbol, Environment env)
+        {
+            return env.Lookup(symbol);
         }
     }
 }

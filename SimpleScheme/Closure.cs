@@ -49,10 +49,8 @@ namespace SimpleScheme
         /// <returns>The results of executing the program.</returns>
         public override object Apply(Stepper parent, object args)
         {
-            return EvaluatorMain.New(
-                parent, 
-                this.Body, 
-                new Environment(this.FormalParameters, args, this.Env));
+            return EvaluatorMain.New(this.Body, 
+                new Environment(this.FormalParameters, args, this.Env), parent);
         }
 
         /// <summary>

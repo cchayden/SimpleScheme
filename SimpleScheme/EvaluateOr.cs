@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorOr.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateOr.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -7,15 +7,15 @@ namespace SimpleScheme
     /// Evaluate a sequence of clauses by evaluating each member.
     /// If a value is not #f then return it.  Otherwise return the last value.
     /// </summary>
-    public class EvaluatorOr : Stepper
+    public class EvaluateOr : EvaluatorBase
     {
         /// <summary>
-        /// Initializes a new instance of the EvaluatorOr class.
+        /// Initializes a new instance of the EvaluateOr class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorOr(Stepper parent, object expr, Environment env)
+        private EvaluateOr(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
         }
@@ -23,13 +23,13 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a new or evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The or evaluator.</returns>
-        public static EvaluatorOr New(Stepper parent, object expr, Environment env)
+        public static EvaluateOr New(object expr, Environment env, Stepper parent)
         {
-            return new EvaluatorOr(parent, expr, env);
+            return new EvaluateOr(parent, expr, env);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (this.Expr == null)
                         {
-                            return SubReturn(False);
+                            return ReturnFromStep(False);
                         }
 
                         this.Pc = PC.Step1;
@@ -58,7 +58,7 @@ namespace SimpleScheme
                     case PC.Step2:
                         if (Truth(this.ReturnedExpr))
                         {
-                            return SubReturn(this.ReturnedExpr);
+                            return ReturnFromStep(this.ReturnedExpr);
                         }
 
                         this.Expr = Rest(this.Expr);
@@ -66,7 +66,7 @@ namespace SimpleScheme
                         continue;
 
                     case PC.Step3:
-                        return SubReturn(this.ReturnedExpr);
+                        return ReturnFromStep(this.ReturnedExpr);
                 }
 
                 return EvalError("Or: program counter error");

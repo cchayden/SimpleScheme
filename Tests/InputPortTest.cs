@@ -139,7 +139,7 @@ namespace Tests
             TestNextToken("#\\stop", "s");
             TestNextToken("#\\nop", "n");
             TestNextToken("#\\quit", "q");
-            var expected = new object[] { "a", "b", "c" };
+            var expected = new Vector(new object[] { "a", "b", "c" });
             TestNextToken("#( a b c)", expected);
         }
 
@@ -265,14 +265,9 @@ namespace Tests
                 {
                     Assert.AreEqual(expected, actual);
                 } 
-                else if (actual is char[])
+                else if (actual is SchemeString)
                 {
-                    char[] chars = actual as char[];
-                    Assert.AreEqual(expected.Length, chars.Length);
-                    for (int i = 0; i < expected.Length; i++)
-                    {
-                        Assert.AreEqual(expected[i], chars[i]);
-                    }
+                    Assert.AreEqual(expected, ((SchemeString)actual).AsString());
                 }
                 else if (actual is char)
                 {
@@ -305,12 +300,12 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
-        private static void TestNextToken(string input, object[] expected)
+        private static void TestNextToken(string input, Vector expected)
         {
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                var actual = accessor.NextToken() as object[];
+                var actual = accessor.NextToken() as Vector;
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Length, actual.Length);
                 for (int i = 0; i < expected.Length; i++)

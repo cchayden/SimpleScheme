@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorList.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateList.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// This is done to the args of a procedure call (except for special forms).
     /// This is an iterative, rather than a recursive one.
     /// </summary>
-    public class EvaluatorList : Stepper
+    public class EvaluateList : Stepper
     {
         /// <summary>
         /// The result that will be returned.
@@ -21,12 +21,12 @@ namespace SimpleScheme
         private Pair accum;
 
         /// <summary>
-        /// Initializes a new instance of the EvaluatorList class.
+        /// Initializes a new instance of the EvaluateList class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorList(Stepper parent, object expr, Environment env)
+        private EvaluateList(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
             // start with an empty list
@@ -37,13 +37,13 @@ namespace SimpleScheme
         /// <summary>
         /// Create a list evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        public static EvaluatorList New(Stepper parent, object expr, Environment env)
+        public static EvaluateList New(object expr, Environment env, Stepper parent)
         {
-            return new EvaluatorList(parent, expr, env);
+            return new EvaluateList(parent, expr, env);
         }
 
         /// <summary>
@@ -60,13 +60,13 @@ namespace SimpleScheme
                         // first check for degenerate cases
                         if (this.Expr == null)
                         {
-                            return SubReturn(null);
+                            return ReturnFromStep(null);
                         }
 
                         if (!(this.Expr is Pair))
                         {
                             Error("Illegal arg list: " + this.Expr);
-                            return SubReturn(null);
+                            return ReturnFromStep(null);
                         }
 
                         Pc = PC.Step1;
@@ -86,7 +86,7 @@ namespace SimpleScheme
                         // if we are done now, return
                         if (!(Expr is Pair))
                         {
-                            return SubReturn(this.result.Rest);
+                            return ReturnFromStep(this.result.Rest);
                         }
 
                         continue;

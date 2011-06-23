@@ -7,6 +7,10 @@ namespace SimpleScheme
 
     /// <summary>
     /// Represents the interpreter environment.
+    /// The environment is part of a chain, made up of the Parent links, that represents the dynamic context.
+    /// At the bottom of the chain is the global environment, created by the single-arg constructor.
+    /// Each link in the chain contains a symbol table of the bindings at that level.
+    /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
     public sealed class Environment : SchemeUtils
     {
@@ -19,7 +23,8 @@ namespace SimpleScheme
         /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
         /// </summary>
-        public Environment(Scheme interp)
+        /// <param name="interp">The interpreter, containing the global environment.</param>
+        public Environment(Interpreter interp)
         {
             this.Interp = interp;
         }
@@ -27,8 +32,7 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the Environment class.
         /// Start out with a set of variable bindings and a parent environment.
-        /// The environment is kept in two lists, meaning that they have to be searched linearly 
-        ///    to find anything.
+        /// The initial variable bindings are the formal parameters and the corresponding argument values.
         /// </summary>
         /// <param name="vars">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
@@ -50,7 +54,13 @@ namespace SimpleScheme
         /// </summary>
         public Environment Parent { get; private set; }
 
-        public Scheme Interp { get; private set; }
+        /// <summary>
+        /// Gets the interpreter used to hold the global context.
+        /// The bottom environment holds the interpreter, but each one copies from its
+        ///   parent, so that it can be accessed directly.
+        /// This field is written only in the constructor -- it is never modified.
+        /// </summary>
+        public Interpreter Interp { get; private set; }
 
         /// <summary>
         /// Add a new definition into the environment.
@@ -121,7 +131,7 @@ namespace SimpleScheme
                 return this.Parent.Lookup(symbol);
             }
 
-            return Error("Unbound variable: " + symbol);
+            return Error("Lookup: unbound variable: " + symbol);
         }
 
         /// <summary>
@@ -138,7 +148,7 @@ namespace SimpleScheme
         {
             if (!(var is string))
             {
-                return Error("Attempt to set a non-symbol: " + StringUtils.AsString(var));
+                return Error("Attempt to set a non-symbol: " + SchemeString.AsString(var));
             }
 
             string symbol = (string)var;

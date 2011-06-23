@@ -18,7 +18,7 @@ namespace Tests
         /// <summary>
         /// A scheme interpreter, created for each test.
         /// </summary>
-        private Scheme scheme;
+        private Interpreter interpreter;
 
         /// <summary>
         /// The section of R4Rs begin tested.
@@ -37,7 +37,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.scheme = new Scheme();
+            this.interpreter = new Interpreter();
         }
 
         /// <summary>
@@ -1277,7 +1277,7 @@ namespace Tests
                         return last;
                     }
 
-                    last = this.scheme.Eval(x);
+                    last = this.interpreter.Eval(x);
                 }
             }
         }

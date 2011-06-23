@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.IO;
     using System.Text;
 
@@ -53,6 +54,25 @@ namespace SimpleScheme
         public static bool IsEOF(object x)
         {
             return x as string == Eof;
+        }
+
+        /// <summary>
+        /// Convert an object (containing an input port) into an InputPort.
+        /// If the given object is null, return the interpreter's input port.
+        /// </summary>
+        /// <param name="x">The object containing the input port.</param>
+        /// <param name="interp">The interpreter with the default input port.</param>
+        /// <returns>An input port.</returns>
+        public static InputPort InPort(object x, Interpreter interp)
+        {
+            try
+            {
+                return x == null ? interp.Input : (InputPort)x;
+            }
+            catch (InvalidCastException)
+            {
+                return InPort(Error("Expected an input port, got: " + x), interp);
+            }
         }
 
         /// <summary>
@@ -220,7 +240,7 @@ namespace SimpleScheme
                             Warn("EOF inside of a string.");
                         }
 
-                        return buff.ToString().ToCharArray();
+                        return new SchemeString(buff.ToString());
                     }
 
                 case '#':
@@ -236,7 +256,7 @@ namespace SimpleScheme
 
                         case '(':
                             this.inStream.PushChar('(');
-                            return VectorUtils.ListToVector(this.Read());
+                            return Vector.ListToVector(this.Read());
 
                         case '\\':
                             ch = this.inStream.Read();

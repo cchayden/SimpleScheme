@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorReduceCond.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateCond.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Reduce a conditiona;
     /// </summary>
-    public class EvaluatorReduceCond : Stepper
+    public class EvaluateCond : Stepper
     {
         /// <summary>
         /// The result to be returned.
@@ -19,12 +19,12 @@ namespace SimpleScheme
         private object clause;
 
         /// <summary>
-        /// Initializes a new instance of the EvaluatorReduceCond class.
+        /// Initializes a new instance of the EvaluateCond class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorReduceCond(Stepper parent, object expr, Environment env)
+        private EvaluateCond(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
         }
@@ -36,9 +36,9 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static EvaluatorReduceCond New(Stepper parent, object expr, Environment env)
+        public static EvaluateCond New(Stepper parent, object expr, Environment env)
         {
-            return new EvaluatorReduceCond(parent, expr, env);
+            return new EvaluateCond(parent, expr, env);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (Expr == null)
                         {
-                            return SubReturn(False);
+                            return ReturnFromStep(False);
                         }
 
                         this.clause = First(Expr);
@@ -85,15 +85,15 @@ namespace SimpleScheme
                     case PC.Step2:
                         if (Rest(this.clause) == null)
                         {
-                            return SubReturn(List("quote", this.result));
+                            return ReturnFromStep(List("quote", this.result));
                         }
 
                         if (Second(this.clause) as string == "=>")
                         {
-                            return SubReturn(List(Third(this.clause), List("quote", this.result)));
+                            return ReturnFromStep(List(Third(this.clause), List("quote", this.result)));
                         }
 
-                        return SubReturn(Cons("begin", Rest(this.clause)));
+                        return ReturnFromStep(Cons("begin", Rest(this.clause)));
                 }
 
                 return EvalError("ReduceCond: program counter error");

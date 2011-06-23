@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorClosure.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateClosure.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a closure
     /// </summary>
-    public class EvaluatorClosure : Stepper
+    public class EvaluateClosure : Stepper
     {
         /// <summary>
         /// The closure to apply.
@@ -14,13 +14,13 @@ namespace SimpleScheme
         private readonly Closure f;
 
         /// <summary>
-        /// Initializes a new instance of the EvaluatorClosure class.
+        /// Initializes a new instance of the EvaluateClosure class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="f">The closure to evaluate</param>
-        private EvaluatorClosure(Stepper parent, object expr, Environment env, Closure f)
+        private EvaluateClosure(Stepper parent, object expr, Environment env, Closure f)
             : base(parent, expr, env)
         {
             this.f = f;
@@ -29,14 +29,14 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a closure evaluator
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="f">The closure to evaluate</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        public static EvaluatorClosure New(Stepper parent, object expr, Environment env, Closure f)
+        public static EvaluateClosure New(object expr, Environment env, Closure f, Stepper parent)
         {
-            return new EvaluatorClosure(parent, expr, env, f);
+            return new EvaluateClosure(parent, expr, env, f);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace SimpleScheme
                     return CallList(Expr);
 
                 case PC.Step1:
-                    return SubReturn(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
+                    return ReturnFromStep(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
             }
 
             return EvalError("Closure: program counter error");

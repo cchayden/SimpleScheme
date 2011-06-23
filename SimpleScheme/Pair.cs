@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// <returns>A string representing the pair.</returns>
         public override string ToString()
         {
-            return StringUtils.AsString(this, true);
+            return SchemeString.AsString(this, true);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to write the string into.</param>
         public void AsString(bool quoted, StringBuilder buf)
         {
-            if (this.Rest is Pair && SchemeUtils.Rest(this.Rest) == null)
+            if (this.Rest is Pair && Rest(this.Rest) == null)
             {
                 string special = null;
 
@@ -108,14 +108,14 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    StringUtils.AsString(Second(this), quoted, buf);
+                    SchemeString.AsString(Second(this), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            StringUtils.AsString(this.First, quoted, buf);
+            SchemeString.AsString(this.First, quoted, buf);
 
             object tail = this.Rest;
 
@@ -123,7 +123,7 @@ namespace SimpleScheme
             while (tail is Pair)
             {
                 buf.Append(' ');
-                StringUtils.AsString(((Pair)tail).First, quoted, buf);
+                SchemeString.AsString(((Pair)tail).First, quoted, buf);
                 object oldTail = tail;
                 tail = ((Pair)tail).Rest;
                 len++;
@@ -147,7 +147,7 @@ namespace SimpleScheme
             if (tail != null)
             {
                 buf.Append(" . ");
-                StringUtils.AsString(tail, quoted, buf);
+                SchemeString.AsString(tail, quoted, buf);
             }
 
             buf.Append(')');

@@ -1,31 +1,122 @@
-﻿// <copyright file="StringUtils.cs" company="Charles Hayden">
+﻿// <copyright file="SchemeString.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
-    /// String utilities used by the primitives.
+    /// This represents scheme strings.
+    /// They are represented internally as a character array.
     /// </summary>
-    public class StringUtils : SchemeUtils
+    public class SchemeString : SchemeUtils, IEnumerable<char>
     {
+        /// <summary>
+        /// The characters making up the string.
+        /// </summary>
+        private string str;
+
+        /// <summary>
+        /// Initializes a new instance of the SchemeString class.
+        /// </summary>
+        /// <param name="str">The characters that make up the string.</param>
+        public SchemeString(string str)
+        {
+            this.str = str;
+        }
+
+        /// <summary>
+        /// Gets the string length.
+        /// </summary>
+        public new int Length
+        {
+            get { return this.str.Length; }
+        }
+
+        /// <summary>
+        /// Gets a character from the string.
+        /// </summary>
+        /// <param name="i">The index of the character in the string.</param>
+        /// <returns>The indexed character.</returns>
+        public char this[int i]
+        {
+            get
+            {
+                return this.str[i];
+            }
+
+            set
+            {
+                StringBuilder sb = new StringBuilder(this.str);
+                sb[i] = value;
+                this.str = sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Compare two strings.
+        /// </summary>
+        /// <param name="xstr">The first string.</param>
+        /// <param name="ystr">The second string.</param>
+        /// <param name="ci">Case invariant flag.</param>
+        /// <returns>Zero if the strings are the same, negative if the first is less, positive
+        /// if the second is less.</returns>
+        public static int Compare(SchemeString xstr, SchemeString ystr, bool ci)
+        {
+            for (int i = 0; i < xstr.str.Length; i++)
+            {
+                int diff = !ci
+                               ? xstr.str[i] - ystr.str[i]
+                               : char.ToLower(xstr.str[i]) - char.ToLower(ystr.str[i]);
+                if (diff != 0)
+                {
+                    return diff;
+                }
+            }
+
+            return xstr.str.Length - ystr.str.Length;
+        }
+
+        /// <summary>
+        /// Tests two strings for equality.
+        /// </summary>
+        /// <param name="xstr">The first string.</param>
+        /// <param name="ystr">The second string.</param>
+        /// <returns>True if the strings are equal.</returns>
+        public static bool Equal(SchemeString xstr, SchemeString ystr)
+        {
+            if (xstr.str.Length != ystr.str.Length)
+            {
+                return false;
+            }
+
+            for (int i = xstr.str.Length - 1; i >= 0; i--)
+            {
+                if (xstr.str[i] != ystr.str[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Turn an object (storing a string) into an array of characters.
         /// </summary>
         /// <param name="x">The string object.</param>
         /// <returns>The character array.</returns>
-        public static char[] Str(object x)
+        public static SchemeString Str(object x)
         {
-            try
+            if (x is SchemeString)
             {
-                return (char[])x;
+                return (SchemeString)x;
             }
-            catch (InvalidCastException)
-            {
-                return Str(Error("expected a string, got: " + x));
-            }
+
+            return Str(Error("Expected a string, got: " + x));
         }
 
         /// <summary>
@@ -33,9 +124,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="chars">The object that is a list of chars.</param>
         /// <returns>The caracter array made up of the chars.</returns>
-        public static char[] ListToString(object chars)
+        public static SchemeString ListToString(object chars)
         {
-            char[] str = new char[Length(chars)];
+            char[] str = new char[SchemeUtils.Length(chars)];
 
             int i = 0;
             while (chars is Pair)
@@ -45,7 +136,24 @@ namespace SimpleScheme
                 i++;
             }
 
-            return str;
+            return new SchemeString(new string(str));
+        }
+
+        /// <summary>
+        /// Convert a string to a list of characters.
+        /// </summary>
+        /// <param name="s">The string to convert.</param>
+        /// <returns>A list of the characters.</returns>
+        public static object StringToList(object s)
+        {
+            Pair result = null;
+            SchemeString str = Str(s);
+            for (int i = str.Length - 1; i >= 0; i--)
+            {
+                result = Cons(Chr(str[i]), result);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -54,7 +162,7 @@ namespace SimpleScheme
         /// <param name="args">The list of items.</param>
         /// <returns>A character array of all the elements, converted to strings 
         /// and appended.</returns>
-        public static char[] StringAppend(object args)
+        public static SchemeString StringAppend(object args)
         {
             StringBuilder result = new StringBuilder();
             while (args is Pair)
@@ -63,7 +171,7 @@ namespace SimpleScheme
                 args = Rest(args);
             }
 
-            return result.ToString().ToCharArray();
+            return new SchemeString(result.ToString());
         }
 
         /// <summary>
@@ -77,25 +185,12 @@ namespace SimpleScheme
         /// positive if first is greater.</returns>
         public static int StringCompare(object x, object y, bool ci)
         {
-            if (x is char[] && y is char[])
+            if (x is SchemeString && y is SchemeString)
             {
-                char[] xc = (char[])x;
-                char[] yc = (char[])y;
-                for (int i = 0; i < xc.Length; i++)
-                {
-                    int diff = !ci ? 
-                        xc[i] - yc[i] : 
-                        char.ToLower(xc[i]) - char.ToLower(yc[i]);
-                    if (diff != 0)
-                    {
-                        return diff;
-                    }
-                }
-
-                return xc.Length - yc.Length;
+                return SchemeString.Compare((SchemeString)x, (SchemeString)y, ci);
             }
 
-            Error("expected two strings, got: " + AsString(List(x, y)));
+            Error("StringCompare: expected two strings, got: " + AsString(List(x, y)));
             return 0;
         }
 
@@ -185,9 +280,9 @@ namespace SimpleScheme
             {
                 ((Pair)x).AsString(quoted, buf);
             }
-            else if (x is char[])
+            else if (x is SchemeString)
             {
-                char[] chars = (char[])x;
+                SchemeString chars = (SchemeString)x;
                 if (quoted)
                 {
                     buf.Append('"');
@@ -208,9 +303,9 @@ namespace SimpleScheme
                     buf.Append('"');
                 }
             }
-            else if (x is object[])
+            else if (x is Vector)
             {
-                object[] v = (object[])x;
+                Vector v = (Vector)x;
                 buf.Append("#(");
                 for (int i = 0; i < v.Length; i++)
                 {
@@ -235,6 +330,47 @@ namespace SimpleScheme
             {
                 buf.Append(x);
             }
+        }
+
+        /// <summary>
+        /// Gets the SchemeString as a string.
+        /// </summary>
+        /// <returns>The contained string.</returns>
+        public string AsString()
+        {
+            return this.str;
+        }
+
+        /// <summary>
+        /// Enumerates characters from the string.
+        /// </summary>
+        /// <returns>The string characters.</returns>
+        public IEnumerator<char> GetEnumerator()
+        {
+            foreach (char c in this.str)
+            {
+                yield return c;
+            }
+        }
+
+        /// <summary>
+        /// Gets the string enumerator.
+        /// </summary>
+        /// <returns>The string enumerator.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Get a substring from the string.
+        /// </summary>
+        /// <param name="start">The starting character position.</param>
+        /// <param name="len">The number of characters.</param>
+        /// <returns>A substring, starting at the given position.</returns>
+        public SchemeString Substring(int start, int len)
+        {
+            return new SchemeString(this.str.Substring(start, len));
         }
     }
 }

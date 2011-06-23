@@ -1,4 +1,4 @@
-﻿// <copyright file="ClrMethod.cs" company="Charles Hayden">
+﻿// <copyright file="ClrProcedure.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,15 +6,17 @@ namespace SimpleScheme
     using System;
     using System.Reflection;
 
+    // TODO write test cases for this
+
     /// <summary>
     /// Executes a function provided in the CLR.
     /// </summary>
-    public sealed class ClrMethod : Procedure
+    public sealed class ClrProcedure : Procedure
     {
         /// <summary>
         /// Information about the CLR method to be called.
         /// </summary>
-        private readonly MethodInfo method;
+        private readonly MethodInfo methodInfo;
 
         /// <summary>
         /// The types of the arguments.
@@ -22,12 +24,7 @@ namespace SimpleScheme
         private readonly Type[] argClasses;
 
         /// <summary>
-        /// True if the method is static.
-        /// </summary>
-        private readonly bool isStatic;
-
-        /// <summary>
-        /// Initializes a new instance of the ClrMethod class.
+        /// Initializes a new instance of the ClrProcedure class.
         /// This allows calls into CLR methods.
         /// The name of the method and the class that it is found in must be supplied.
         /// Also, a list of the types of the method arguments must be given.
@@ -36,14 +33,15 @@ namespace SimpleScheme
         /// <param name="targetClassName">The name of the class containing the method.</param>
         /// <param name="argClassNames">A list of names of classes, the "types" of the arguments 
         /// of the method.</param>
-        public ClrMethod(string methodName, object targetClassName, object argClassNames)
+        public ClrProcedure(string methodName, object targetClassName, object argClassNames)
         {
-            this.Name = targetClassName + "." + methodName;
+            string className = SchemeString.AsString(targetClassName, false);
+            this.Name = className + "." + methodName;
             try
             {
                 this.argClasses = ClassArray(argClassNames);
-                this.method = ToClass(targetClassName).GetMethod(methodName, this.argClasses);
-                this.isStatic = this.method.IsStatic;
+                Type cls = ToClass(className);
+                this.methodInfo = cls.GetMethod(methodName, this.argClasses);
             }
             catch (TypeLoadException)
             {
@@ -80,9 +78,9 @@ namespace SimpleScheme
         /// <returns>The result of executing the method.</returns>
         public override object Apply(Stepper parent, object args)
         {
-            return this.isStatic ? 
-                this.method.Invoke(null, this.ToArray(args)) : 
-                this.method.Invoke(First(args), this.ToArray(Rest(args)));
+            return this.methodInfo.IsStatic ? 
+                this.methodInfo.Invoke(null, this.ToArray(args)) : 
+                this.methodInfo.Invoke(First(args), this.ToArray(Rest(args)));
         }
 
         /// <summary>
@@ -91,7 +89,7 @@ namespace SimpleScheme
         /// <returns>The string form of the continuation.</returns>
         public override string ToString()
         {
-            return string.Format("ClrMethod {0}", this.Name);
+            return string.Format("ClrProcedure {0}", this.Name);
         }
 
         /// <summary>
@@ -108,7 +106,7 @@ namespace SimpleScheme
                 return (Type)arg;
             }
 
-            var typeName = StringUtils.AsString(arg, false);
+            var typeName = SchemeString.AsString(arg, false);
             switch (typeName)
             {
                 case "void": return typeof(void);
@@ -133,6 +131,10 @@ namespace SimpleScheme
         private static Type[] ClassArray(object args)
         {
             int n = Length(args);
+            if (n == 0)
+            {
+                return Type.EmptyTypes;
+            }
             Type[] array = new Type[n];
             for (int i = 0; i < n; i++)
             {
@@ -171,7 +173,7 @@ namespace SimpleScheme
                 }
                 else if (this.argClasses[i] == typeof(string))
                 {
-                    array[i] = StringUtils.AsString(First(args), false);
+                    array[i] = SchemeString.AsString(First(args), false);
                 }
                 else
                 {
@@ -183,5 +185,11 @@ namespace SimpleScheme
 
             return array;
         }
+    }
+
+    public class TestClass
+    {
+        public static string TestMethod1() { return "test 1"; }
+        public string TestMethod2() { return "test 2"; }
     }
 }

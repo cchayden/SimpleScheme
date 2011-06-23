@@ -3,12 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.IO;
 
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public class OutputPort
+    public class OutputPort : SchemeUtils
     {
         /// <summary>
         /// The output port to write to.
@@ -22,6 +23,62 @@ namespace SimpleScheme
         public OutputPort(TextWriter outp)
         {
             this.outp = outp;
+        }
+
+        /// <summary>
+        /// Convert an object into an output port.
+        /// If the object is null, then return the interpreter's outpot port.
+        /// </summary>
+        /// <param name="x">The object (should be an output port).</param>
+        /// <param name="interp">The interpreter to use if the port is null.</param>
+        /// <returns>An output port.</returns>
+        public static OutputPort OutPort(object x, Interpreter interp)
+        {
+            try
+            {
+                return x == null ? interp.Output : (OutputPort)x;
+            }
+            catch (InvalidCastException)
+            {
+                return OutPort(Error("Expected an output port, got: " + x), interp);
+            }
+        }
+
+        /// <summary>
+        /// Write an object into an output port.
+        /// </summary>
+        /// <param name="x">The object to write.</param>
+        /// <param name="port">The output port.</param>
+        /// <param name="quoted">Whether to quote strings and chars.</param>
+        /// <returns>The object that was output.</returns>
+        public static object Write(object x, OutputPort port, bool quoted)
+        {
+            port.Print(SchemeString.AsString(x, quoted));
+            port.Flush();
+            return x;
+        }
+
+        /// <summary>
+        /// Print the object on the console.
+        /// </summary>
+        /// <param name="x">The object to print.</param>
+        /// <returns>The object printed.</returns>
+        public static object P(object x)
+        {
+            Console.Out.WriteLine(SchemeString.AsString(x));
+            return x;
+        }
+
+        /// <summary>
+        /// Print the object on the console along with a message.
+        /// </summary>
+        /// <param name="msg">The message.</param>
+        /// <param name="x">The object to print.</param>
+        /// <returns>The object printed.</returns>
+        public static object P(string msg, object x)
+        {
+            Console.Out.WriteLine(msg + ": " + SchemeString.AsString(x));
+            return x;
         }
 
         /// <summary>

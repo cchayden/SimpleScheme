@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorIf.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateIf.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -8,15 +8,15 @@ namespace SimpleScheme
     /// Evaluate the first part, then depending on its truth value, either
     ///   evaluate the second or third part.
     /// </summary>
-    public class EvaluatorIf : Stepper
+    public class EvaluateIf : Stepper
     {
         /// <summary>
-        /// Initializes a new instance of the EvaluatorIf class.
+        /// Initializes a new instance of the EvaluateIf class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorIf(Stepper parent, object expr, Environment env)
+        private EvaluateIf(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
         }
@@ -24,13 +24,13 @@ namespace SimpleScheme
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static EvaluatorIf New(Stepper parent, object expr, Environment env)
+        public static EvaluateIf New(object expr, Environment env, Stepper parent)
         {
-            return new EvaluatorIf(parent, expr, env);
+            return new EvaluateIf(parent, expr, env);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace SimpleScheme
                     return CallEval(First(this.Expr));
 
                 case PC.Step1:
-                    return SubReturn(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
+                    return ReturnFromStep(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
             }
 
             return EvalError("If: program counter error");

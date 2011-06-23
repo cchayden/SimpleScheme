@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorAnd.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateAnd.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -7,15 +7,15 @@ namespace SimpleScheme
     /// Evaluate a sequence by evaluating each member.
     /// If a value is #f then return it.  Otherwise return the last value.
     /// </summary>
-    public class EvaluatorAnd : Stepper
+    public class EvaluateAnd : Stepper
     {
         /// <summary>
-        /// Initializes a new instance of the EvaluatorAnd class.
+        /// Initializes a new instance of the EvaluateAnd class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorAnd(Stepper parent, object expr, Environment env)
+        private EvaluateAnd(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
         }
@@ -23,13 +23,13 @@ namespace SimpleScheme
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        public static EvaluatorAnd New(Stepper parent, object expr, Environment env)
+        public static EvaluateAnd New(object expr, Environment env, Stepper parent)
         {
-            return new EvaluatorAnd(parent, expr, env);
+            return new EvaluateAnd(parent, expr, env);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (this.Expr == null)
                         {
-                            return SubReturn(True);
+                            return ReturnFromStep(True);
                         }
 
                         this.Pc = PC.Step1;
@@ -58,7 +58,7 @@ namespace SimpleScheme
                     case PC.Step2:
                         if (IsFalse(this.ReturnedExpr))
                         {
-                            return SubReturn(False);
+                            return ReturnFromStep(False);
                         }
 
                         this.Expr = Rest(this.Expr);
@@ -66,7 +66,7 @@ namespace SimpleScheme
                         continue;
 
                     case PC.Step3:
-                        return SubReturn(this.ReturnedExpr);
+                        return ReturnFromStep(this.ReturnedExpr);
                 }
 
                 return EvalError("And: program counter error");

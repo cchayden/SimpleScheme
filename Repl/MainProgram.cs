@@ -18,7 +18,7 @@ namespace Repl
         /// <param name="args">These are files to read initially.</param>
         public static void Main(string[] args)
         {
-            new Scheme(args).ReadEvalWriteLoop();
+            new Interpreter(args).ReadEvalWriteLoop();
         }
     }
 }

@@ -11,44 +11,6 @@ namespace SimpleScheme
     public class FileUtils : SchemeUtils
     {
         /// <summary>
-        /// Convert an object (containing an input port) into an InputPort.
-        /// If the given object is null, return the interpreter's input port.
-        /// </summary>
-        /// <param name="x">The object containing the input port.</param>
-        /// <param name="interp">The interpreter with the default input port.</param>
-        /// <returns>An input port.</returns>
-        public static InputPort InPort(object x, Scheme interp)
-        {
-            try
-            {
-                return x == null ? interp.Input : (InputPort)x;
-            }
-            catch (InvalidCastException)
-            {
-                return InPort(Error("expected an input port, got: " + x), interp);
-            }
-        }
-
-        /// <summary>
-        /// Convert an object into an output port.
-        /// If the object is null, then return the interpreter's outpot port.
-        /// </summary>
-        /// <param name="x">The object (should be an output port).</param>
-        /// <param name="interp">The interpreter to use if the port is null.</param>
-        /// <returns>An output port.</returns>
-        public static OutputPort OutPort(object x, Scheme interp)
-        {
-            try
-            {
-                return x == null ? interp.Output : (OutputPort)x;
-            }
-            catch (InvalidCastException)
-            {
-                return OutPort(Error("expected an output port, got: " + x), interp);
-            }
-        }
-
-        /// <summary>
         /// Write an object into an output port.
         /// </summary>
         /// <param name="x">The object to write.</param>
@@ -57,7 +19,7 @@ namespace SimpleScheme
         /// <returns>The object that was output.</returns>
         public static object Write(object x, OutputPort port, bool quoted)
         {
-            port.Print(StringUtils.AsString(x, quoted));
+            port.Print(SchemeString.AsString(x, quoted));
             port.Flush();
             return x;
         }
@@ -69,7 +31,7 @@ namespace SimpleScheme
         /// <returns>The object printed.</returns>
         public static object P(object x)
         {
-            Console.Out.WriteLine(StringUtils.AsString(x));
+            Console.Out.WriteLine(SchemeString.AsString(x));
             return x;
         }
 
@@ -81,7 +43,7 @@ namespace SimpleScheme
         /// <returns>The object printed.</returns>
         public static object P(string msg, object x)
         {
-            Console.Out.WriteLine(msg + ": " + StringUtils.AsString(x));
+            Console.Out.WriteLine(msg + ": " + SchemeString.AsString(x));
             return x;
         }
     }

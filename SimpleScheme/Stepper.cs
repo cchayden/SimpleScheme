@@ -6,8 +6,14 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public abstract partial class Stepper : SchemeUtils
+    public abstract class Stepper : SchemeUtils
     {
+        /// <summary>
+        /// The suspend stepper is used to indicate suspension, when stepping
+        ///   needs to be delayed but is not complete.
+        /// </summary>
+        private static readonly Stepper suspend = new EvaluatorBase();
+
         /// <summary>
         /// Initializes a new instance of the Stepper class.
         /// </summary>
@@ -35,17 +41,17 @@ namespace SimpleScheme
             Initial,
 
             /// <summary>
-            /// Step 1
+            /// Evaluator Step 1
             /// </summary>
             Step1,
 
             /// <summary>
-            /// Step 2
+            /// Evaluator Step 2
             /// </summary>
             Step2,
 
             /// <summary>
-            /// Step 3
+            /// Evaluator Step 3
             /// </summary>
             Step3,
 
@@ -55,6 +61,16 @@ namespace SimpleScheme
             ///   and trigger an error.
             /// </summary>
             Final
+        }
+
+        /// <summary>
+        /// Gets the singleton suspend stepper.
+        /// This is used when stepper needs to suspend itself.
+        /// </summary>
+        /// <returns>A default stepper.</returns>
+        public static Stepper Suspend
+        {
+            get { return suspend; }
         }
 
         /// <summary>
@@ -91,108 +107,15 @@ namespace SimpleScheme
         // Standalone evaluators
 
         /// <summary>
-        /// Create a halt stepper.
-        /// This is used to get Eval started.
-        /// </summary>
-        /// <returns>Adefault stepper.</returns>
-        public static Stepper Halt()
-        {
-            return new EvaluatorInitial();
-        }
-
-        /// <summary>
-        /// Create a suspend stepper.
-        /// This is used when stepper needs to suspend itself.
-        /// </summary>
-        /// <returns>Adefault stepper.</returns>
-        public static Stepper Suspend()
-        {
-            return new EvaluatorInitial();
-        }
-
-        /// <summary>
-        /// Evaluate a string by looking it up in the environment.
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <param name="env">The environment to evaluate it in.</param>
-        /// <returns>The value of the symbol.</returns>
-        public static object EvalString(string symbol, Environment env)
-        {
-            return env.Lookup(symbol);
-        }
-
-        /// <summary>
         /// Create a main evaluator.
         /// </summary>
-        /// <param name="parent">The caller, to return to after evaluation is over.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment.</param>
+        /// <param name="parent">The caller, to return to after evaluation is over.</param>
         /// <returns>The step to run next.</returns>
-        public static Stepper CallEvaluate(Stepper parent, object expr, Environment env)
+        public static Stepper CallEvaluate(object expr, Environment env, Stepper parent)
         {
-            return EvaluatorMain.New(parent, expr, env);
-        }
-
-        /// <summary>
-        /// Create the map evaluator
-        /// </summary>
-        /// <param name="parent">The caller, to return to after evaluation is over.</param>
-        /// <param name="expr">The map list to traverse.</param>
-        /// <param name="env">The evaluation environment.</param>
-        /// <param name="proc">The map proc.</param>
-        /// <param name="result">The result is appended to this.</param>
-        /// <returns>The step to execute.</returns>
-        public static Stepper CallMap(Stepper parent, object expr, Environment env, Procedure proc, Pair result)
-        {
-            return new EvaluatorMap(parent, expr, env, proc, result);
-        }
-
-        /// <summary>
-        /// Create the continuation stepper
-        /// </summary>
-        /// <param name="parent">The caller, to return to after the continuation proc is applied.</param>
-        /// <param name="expr">The (what is this ???).</param>
-        /// <param name="env">The evaluation environment.</param>
-        /// <returns>The step to execute.</returns>
-        public static Stepper CallContinuation(Stepper parent, object expr, Environment env)
-        {
-            return new EvaluatorContinuation(parent, expr, env);
-        }
-
-        /// <summary>
-        /// Create a stepper for call-with-input-file
-        /// </summary>
-        /// <param name="parent">The caller, to return to after the operation is complete.</param>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment.</param>
-        /// <returns>The step to execute.</returns>
-        public static Stepper CallWithInputFile(Stepper parent, object expr, Environment env)
-        {
-            return new EvaluatorCallWithInputFile(parent, expr, env);
-        }
-
-        /// <summary>
-        /// Create a stepper for call-with-output-file
-        /// </summary>
-        /// <param name="parent">The caller, to return to after the operation is complete.</param>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment.</param>
-        /// <returns>The step to execute.</returns>
-        public static Stepper CallWithOutputFile(Stepper parent, object expr, Environment env)
-        {
-            return new EvaluatorCallWithOutputFile(parent, expr, env);
-        }
-
-        /// <summary>
-        /// Create a stepper for time-call
-        /// </summary>
-        /// <param name="parent">The caller, to return to after the operation is complete.</param>
-        /// <param name="expr">The expression to evaluate and the number of times to execute it.</param>
-        /// <param name="env">The evaluation environment.</param>
-        /// <returns>The step to execute.</returns>
-        public static Stepper CallTimeCall(Stepper parent, object expr, Environment env)
-        {
-            return new EvaluatorTimeCall(parent, expr, env);
+            return EvaluatorMain.New(expr, env, parent);
         }
 
         /// <summary>
@@ -202,11 +125,11 @@ namespace SimpleScheme
         /// The Call/CC handler uses this to transfer to a saved continuation, otherwise
         ///     is is used only for returns.
         /// </summary>
+        /// <param name="nextStep">The stepper to transfer to.</param>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
-        /// <param name="nextStep">The stepper to transfer to.</param>
         /// <returns>The next step.  This is in the parent for return.</returns>
-        public static Stepper TransferToStep(object expr, Environment env, Stepper nextStep)
+        public static Stepper TransferToStep(Stepper nextStep, object expr, Environment env)
         {
             nextStep.ReturnedExpr = expr;
             nextStep.ReturnedEnv = env;
@@ -220,15 +143,67 @@ namespace SimpleScheme
         public abstract Stepper RunStep();
 
         /// <summary>
+        /// Create the map evaluator
+        /// </summary>
+        /// <param name="expr">The map list to traverse.</param>
+        /// <param name="proc">The map proc.</param>
+        /// <param name="result">The result is appended to this.</param>
+        /// <returns>The step to execute.</returns>
+        public Stepper CallMap(object expr, Procedure proc, Pair result)
+        {
+            return EvaluateMap.New(expr, this.Env, proc, result, this);
+        }
+
+        /// <summary>
+        /// Create the continuation stepper
+        /// </summary>
+        /// <param name="expr">The (what is this ???).</param>
+        /// <returns>The step to execute.</returns>
+        public Stepper CallContinuation(object expr)
+        {
+            return EvaluateContinuation.New(expr, this.Env, this);
+        }
+
+        /// <summary>
+        /// Create a stepper for call-with-input-file
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <returns>The step to execute.</returns>
+        public Stepper CallWithInputFile(object expr)
+        {
+            return EvaluateCallWithInputFile.New(expr, this.Env, this);
+        }
+
+        /// <summary>
+        /// Create a stepper for call-with-output-file
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <returns>The step to execute.</returns>
+        public Stepper CallWithOutputFile(object expr)
+        {
+            return EvaluateCallWithOutputFile.New(expr, this.Env, this);
+        }
+
+        /// <summary>
+        /// Create a stepper for time-call
+        /// </summary>
+        /// <param name="expr">The expression to evaluate and the number of times to execute it.</param>
+        /// <returns>The step to execute.</returns>
+        public Stepper CallTimeCall(object expr)
+        {
+            return EvaluateTimeCall.New(expr, this.Env, this);
+        }
+
+        /// <summary>
         /// Goes to the given step.
         /// Can be used to make a call to a sub-evaluator.
         /// The caller typically creates an evaluator and passes into this method.
         /// The called stepper is responsible for returning the result into ReturnedExpr and ReturnedEnv.
         /// </summary>
-        /// <param name="pc">The next program counter value for this stepper.</param>
         /// <param name="nextStep">The evaluator to go to.</param>
+        /// <param name="pc">The next program counter value for this stepper.</param>
         /// <returns>The next step to execute.</returns>
-        protected Stepper GoToStep(PC pc, Stepper nextStep)
+        protected Stepper GoToStep(Stepper nextStep, PC pc)
         {
             this.Pc = pc;
             return nextStep;
@@ -242,10 +217,10 @@ namespace SimpleScheme
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next step, which is in the parent.</returns>
-        protected Stepper SubReturn(object expr, Environment env)
+        protected Stepper ReturnFromStep(object expr, Environment env)
         {
             this.Pc = PC.Final;
-            return TransferToStep(expr, env, this.Parent);
+            return TransferToStep(this.Parent, expr, env);
         }
 
         /// <summary>
@@ -254,10 +229,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <returns>The next step, which is in the parent.</returns>
-        protected Stepper SubReturn(object expr)
+        protected Stepper ReturnFromStep(object expr)
         {
             this.Pc = PC.Final;
-            return TransferToStep(expr, this.Env, this.Parent);
+            return TransferToStep(this.Parent, expr, this.Env);
         }
 
         /// <summary>
@@ -265,9 +240,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The new expr value.</param>
         /// <returns>The next step, which is this stepper.</returns>
-        protected Stepper SubContinue(object expr)
+        protected Stepper ContinueStep(object expr)
         {
-            return TransferToStep(expr, this.Env, this);
+            return TransferToStep(this, expr, this.Env);
         }
 
         // Create Sub Evaluators
@@ -275,81 +250,81 @@ namespace SimpleScheme
         /// <summary>
         /// Recursive Stepper call.
         /// </summary>
-        /// <param name="args">The expression to evaluate.</param>
+        /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The next evaluation step.</returns>
-        protected Stepper CallEval(object args)
+        protected Stepper CallEval(object expr)
         {
-            return EvaluatorMain.New(this, args, this.Env);
+            return EvaluatorMain.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create a sequence evaluator.
         /// </summary>
-        /// <param name="args">The sequence to evaluate.</param>
+        /// <param name="expr">The sequence to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallSequence(object args)
+        protected Stepper CallSequence(object expr)
         {
-            return EvaluatorSequence.New(this, args, this.Env);
+            return EvaluateSequence.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create a define evaluator.
         /// </summary>
-        /// <param name="args">The define to evaluate.</param>
+        /// <param name="expr">The define to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallDefine(object args)
+        protected Stepper CallDefine(object expr)
         {
-            return EvaluatorDefine.New(this, args, this.Env);
+            return EvaluateDefine.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create a set! evaluator.
         /// </summary>
-        /// <param name="args">The set! to evaluate.</param>
+        /// <param name="expr">The set! to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallSet(object args)
+        protected Stepper CallSet(object expr)
         {
-            return EvaluatorSet.New(this, args, this.Env);
+            return EvaluateSet.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create a if evaluator.
         /// </summary>
-        /// <param name="args">The if to evaluate.</param>
+        /// <param name="expr">The if to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallIf(object args)
+        protected Stepper CallIf(object expr)
         {
-            return EvaluatorIf.New(this, args, this.Env);
+            return EvaluateIf.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create an or evaluator.
         /// </summary>
-        /// <param name="args">The or clauses to evaluate.</param>
+        /// <param name="expr">The or clauses to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallOr(object args)
+        protected Stepper CallOr(object expr)
         {
-            return EvaluatorOr.New(this, args, this.Env);
+            return EvaluateOr.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
-        /// <param name="args">The or clauses to evaluate.</param>
+        /// <param name="expr">The or clauses to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallAnd(object args)
+        protected Stepper CallAnd(object expr)
         {
-            return EvaluatorAnd.New(this, args, this.Env);
+            return EvaluateAnd.New(expr, this.Env, this);
         }
 
         /// <summary>
         /// Create a cond evaluator.
         /// </summary>
-        /// <param name="args">The cond to evaluate.</param>
+        /// <param name="expr">The cond to evaluate.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallReduceCond(object args)
+        protected Stepper CallReduceCond(object expr)
         {
-            return EvaluatorReduceCond.New(this, args, this.Env);
+            return EvaluateCond.New(this, expr, this.Env);
         }
 
         /// <summary>
@@ -359,40 +334,40 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallList(object args)
         {
-            return EvaluatorList.New(this, args, this.Env);
+            return EvaluateList.New(args, this.Env, this);
         }
 
         /// <summary>
         /// Create a apply evaluator.
         /// </summary>
-        /// <param name="args">The application to evaluate.</param>
+        /// <param name="expr">The application to evaluate.</param>
         /// <param name="fn">The proc to apply.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallApplyProc(object args, object fn)
+        protected Stepper CallApplyProc(object expr, object fn)
         {
-            return EvaluatorApplyProc.New(this, args, this.Env, fn);
+            return EvaluateApplyProc.New(expr, this.Env, fn, this);
         }
 
         /// <summary>
         /// Create a closure evaluator.
         /// </summary>
-        /// <param name="args">The closure to evaluate.</param>
+        /// <param name="expr">The closure to evaluate.</param>
         /// <param name="f">The enclosing closure.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallClosure(object args, Closure f)
+        protected Stepper CallClosure(object expr, Closure f)
         {
-            return EvaluatorClosure.New(this, args, this.Env, f);
+            return EvaluateClosure.New(expr, this.Env, f, this);
         }
 
         /// <summary>
         /// Create a macro expander.
         /// </summary>
-        /// <param name="args">The macro args.</param>
+        /// <param name="expr">The macro args.</param>
         /// <param name="fn">The macro object.</param>
         /// <returns>The step to execute.</returns>
-        protected Stepper CallExpand(object args, Macro fn)
+        protected Stepper CallExpandMacro(object expr, Macro fn)
         {
-            return EvaluatorExpand.New(this, args, this.Env, fn);
+            return EvaluateExpandMacro.New(expr, this.Env, fn, this);
         }
     }
 }

@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics;
-
     /// <summary>
     /// A procedure is executable. 
     /// It supports an Apply method.
@@ -44,7 +42,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return Proc(Error("Not a procedure: " + StringUtils.AsString(x)));
+            return Proc(Error("Not a procedure: " + SchemeString.AsString(x)));
         }
 
         /// <summary>
@@ -66,9 +64,6 @@ namespace SimpleScheme
         /// <returns>The name of the proc.</returns>
         public override string ToString()
         {
-            if (this.Name == AnonymousProc)
-            {
-            }
             return "{" + this.Name + "}";
         }
 

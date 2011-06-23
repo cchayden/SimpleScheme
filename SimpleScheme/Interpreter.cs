@@ -1,4 +1,4 @@
-﻿// <copyright file="Scheme.cs" company="Charles Hayden">
+﻿// <copyright file="Interpreter.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -11,28 +11,23 @@ namespace SimpleScheme
     /// The scheme interpreter instance.
     /// Each one of these is a complete interpreter, independent of others.
     /// </summary>
-    public sealed class Scheme : SchemeUtils
+    public sealed class Interpreter : SchemeUtils
     {
         /// <summary>
-        /// This stepper is used to indicate that evaluation is suspended.
+        /// The initial step.  When complete, evaluation is done.
         /// </summary>
-        public static readonly Stepper Suspend = Stepper.Suspend();
-
+        private readonly Stepper halt;
+        
         /// <summary>
-        /// The stepper that is used to start an evaluation.
-        /// Its steps are never executed, but it is used to received returned values.
-        /// </summary>
-        private static readonly Stepper Halt = Stepper.Halt();
-
-        /// <summary>
-        /// Initializes a new instance of the Scheme class.
+        /// Initializes a new instance of the Interpreter class.
         /// Create an interpreter and install the primitives into the global environment.
         /// Then read a list of files.
         /// </summary>
         /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
         /// <param name="files">The files to read.</param>
-        public Scheme(bool loadStandardMacros, IEnumerable<string> files)
+        public Interpreter(bool loadStandardMacros, IEnumerable<string> files)
         {
+            this.halt = new EvaluatorBase();
             this.Trace = false;
             this.Input = new InputPort(Console.In);
             this.Output = new OutputPort(Console.Out);
@@ -42,15 +37,15 @@ namespace SimpleScheme
             {
                 if (loadStandardMacros)
                 {
-                    this.Load(SchemePrimitives.Code);
-                    this.Load(SchemePrimitives.Extensions);
+                    this.LoadString(SchemePrimitives.Code);
+                    this.LoadString(SchemePrimitives.Extensions);
                 }
 
                 if (files != null)
                 {
                     foreach (string file in files)
                     {
-                        this.Load(file);
+                        this.LoadFile(file);
                     }
                 }
             }
@@ -61,20 +56,21 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Initializes a new instance of the Scheme class.
+        /// Initializes a new instance of the Interpreter class.
         /// Set up the most common way -- with standard macros and no files.
         /// </summary>
-        public Scheme()
+        public Interpreter()
             : this(true, null)
         {
+            this.halt = new EvaluatorBase();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Scheme class.
+        /// Initializes a new instance of the Interpreter class.
         /// Read a set of files initially.
         /// </summary>
         /// <param name="files">The files to read.</param>
-        public Scheme(IEnumerable<string> files)
+        public Interpreter(IEnumerable<string> files)
             : this(true, files)
         {
         }
@@ -118,7 +114,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            return this.EvalStep(Stepper.CallEvaluate(Halt, expr, env));
+            return this.EvalStep(Stepper.CallEvaluate(expr, env, this.halt));
         }
 
         /// <summary>
@@ -137,14 +133,14 @@ namespace SimpleScheme
                 }
 
                 nextStep = nextStep.RunStep();
-                if (nextStep == Suspend)
+                if (nextStep == Stepper.Suspend)
                 {
                     return nextStep;
                 }
 
-                if (nextStep == Halt)
+                if (nextStep == this.halt)
                 {
-                    return Halt.ReturnedExpr;
+                    return this.halt.ReturnedExpr;
                 }
             }
         }
@@ -156,9 +152,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fileName">The filename.</param>
         /// <returns>The result of evaluating the file contents.</returns>
-        public object Load(object fileName)
+        public object LoadFile(object fileName)
         {
-            string name = StringUtils.AsString(fileName, false);
+            string name = SchemeString.AsString(fileName, false);
             try
             {
                 return this.Load(
@@ -166,7 +162,7 @@ namespace SimpleScheme
             }
             catch (IOException)
             {
-                return Error("can't load " + name);
+                return Error("Load: can't load " + name);
             }
         }
 
@@ -195,7 +191,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The string to read and evaluate.</param>
         /// <returns>The result of the evaluation</returns>
-        public object Load(string str)
+        private object LoadString(string str)
         {
             using (StringReader reader = new StringReader(str))
             {
@@ -221,7 +217,7 @@ namespace SimpleScheme
                         return;
                     }
 
-                    FileUtils.Write(this.Eval(x), this.Output, true);
+                    OutputPort.Write(this.Eval(x), this.Output, true);
                     this.Output.Println();
                     this.Output.Flush();
                 }

@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorDefine.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateDefine.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,15 +6,15 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a define expression.
     /// </summary>
-    public class EvaluatorDefine : Stepper
+    public class EvaluateDefine : Stepper
     {
         /// <summary>
-        /// Initializes a new instance of the EvaluatorDefine class.
+        /// Initializes a new instance of the EvaluateDefine class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorDefine(Stepper parent, object expr, Environment env)
+        private EvaluateDefine(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
         }
@@ -22,13 +22,13 @@ namespace SimpleScheme
         /// <summary>
         /// Create a define evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static EvaluatorDefine New(Stepper parent, object expr, Environment env)
+        public static EvaluateDefine New(object expr, Environment env, Stepper parent)
         {
-            return new EvaluatorDefine(parent, expr, env);
+            return new EvaluateDefine(parent, expr, env);
         }
 
         /// <summary>
@@ -51,10 +51,10 @@ namespace SimpleScheme
                     return CallEval(Second(this.Expr));
 
                 case PC.Step1:
-                    return SubReturn(this.Env.Define(First(First(this.Expr)), ReturnedExpr));
+                    return ReturnFromStep(this.Env.Define(First(First(this.Expr)), ReturnedExpr));
 
                 case PC.Step2:
-                    return SubReturn(this.Env.Define(First(this.Expr), ReturnedExpr));
+                    return ReturnFromStep(this.Env.Define(First(this.Expr), ReturnedExpr));
             }
 
             return EvalError("Define: program counter error");

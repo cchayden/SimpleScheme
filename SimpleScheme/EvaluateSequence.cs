@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorSequence.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateSequence.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,15 +6,15 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
-    public class EvaluatorSequence : Stepper
+    public class EvaluateSequence : EvaluatorBase
     {
         /// <summary>
-        /// Initializes a new instance of the EvaluatorSequence class.
+        /// Initializes a new instance of the EvaluateSequence class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
-        private EvaluatorSequence(Stepper parent, object expr, Environment env)
+        private EvaluateSequence(Stepper parent, object expr, Environment env)
             : base(parent, expr, env)
         {
         }
@@ -22,13 +22,13 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a sequence evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static EvaluatorSequence New(Stepper parent, object expr, Environment env)
+        public static EvaluateSequence New(object expr, Environment env, Stepper parent)
         {
-            return new EvaluatorSequence(parent, expr, env);
+            return new EvaluateSequence(parent, expr, env);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (Rest(this.Expr) == null)
                         {
-                            return SubReturn(First(this.Expr));
+                            return ReturnFromStep(First(this.Expr));
                         }
 
                         this.Pc = PC.Step1;

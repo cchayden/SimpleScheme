@@ -54,55 +54,25 @@ namespace SimpleScheme
             }
 
             // test strings
-            if (x is char[])
+            if (x is SchemeString)
             {
-                if (!(y is char[]))
+                if (!(y is SchemeString))
                 {
                     return false;
                 }
 
-                char[] xc = (char[])x;
-                char[] yc = (char[])y;
-                if (xc.Length != yc.Length)
-                {
-                    return false;
-                }
-
-                for (int i = xc.Length - 1; i >= 0; i--)
-                {
-                    if (xc[i] != yc[i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
+                return SchemeString.Equal((SchemeString)x, (SchemeString)y);
             }
 
             // test vectors
-            if (x is object[])
+            if (x is Vector)
             {
-                if (!(y is object[]))
+                if (!(y is Vector))
                 {
                     return false;
                 }
 
-                object[] xo = (object[])x;
-                object[] yo = (object[])y;
-                if (xo.Length != yo.Length)
-                {
-                    return false;
-                }
-
-                for (int i = xo.Length - 1; i >= 0; i--)
-                {
-                    if (!Equal(xo[i], yo[i]))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
+                return Vector.Equal((Vector)x, (Vector)y);
             }
 
             // delegate to first member, use C# equality
@@ -275,7 +245,7 @@ namespace SimpleScheme
         {
             return x is Pair ? 
                 ((Pair)x).First = y : 
-                Error("Attempt to set-car of a non-Pair: " + StringUtils.AsString(x));
+                Error("SetFirst: attempt to set-car of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
@@ -286,7 +256,7 @@ namespace SimpleScheme
         /// <returns>The object that has just been modified.</returns>
         public static object SetRest(object x, object y)
         {
-            return x is Pair ? ((Pair)x).Rest = y : Error("Attempt to set-cdr of a non-Pair: " + StringUtils.AsString(x));
+            return x is Pair ? ((Pair)x).Rest = y : Error("SetRest: attempt to set-cdr of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
@@ -329,7 +299,7 @@ namespace SimpleScheme
         {
             if (!(x is char))
             {
-                return Chr(Error("expected a char, got: " + x));
+                return Chr(Error("Expected a char, got: " + x));
             }
 
             return (char)x;
@@ -370,7 +340,7 @@ namespace SimpleScheme
             }
             catch (InvalidCastException)
             {
-                return Sym(Error("expected a symbol, got: " + x));
+                return Sym(Error("Expected a symbol, got: " + x));
             }
         }
 

@@ -115,10 +115,10 @@ namespace SimpleScheme
             int numberBase = y is double ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
-                return Convert.ToString((long)Num(x), numberBase).ToCharArray();
+                return new SchemeString(Convert.ToString((long) Num(x), numberBase));
             }
 
-            return x.ToString().ToCharArray();
+            return new SchemeString(x.ToString());
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        Error("internal error: unrecognized op: " + op);
+                        Error("Internal error: unrecognized number compare flag: " + op);
                         break;
                 }
             }
@@ -257,7 +257,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        Error("internal error: unrecognized op: " + op);
+                        Error("Internal error: unrecognized number compute flag: " + op);
                         break;
                 }
             }

@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluatorApplyProc.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateApplyProc.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
-    public class EvaluatorApplyProc : Stepper
+    public class EvaluateApplyProc : Stepper
     {
         /// <summary>
         /// The proc or primitive to apply.
@@ -14,13 +14,13 @@ namespace SimpleScheme
         private readonly object fn;
 
         /// <summary>
-        /// Initializes a new instance of the EvaluatorApplyProc class.
+        /// Initializes a new instance of the EvaluateApplyProc class.
         /// </summary>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="fn">The function to apply.</param>
-        private EvaluatorApplyProc(Stepper parent, object expr, Environment env, object fn)
+        private EvaluateApplyProc(Stepper parent, object expr, Environment env, object fn)
             : base(parent, expr, env)
         {
             this.fn = fn;
@@ -29,14 +29,14 @@ namespace SimpleScheme
         /// <summary>
         /// Creates a new apply proc evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="fn">The function to apply.</param>
+        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static EvaluatorApplyProc New(Stepper parent, object expr, Environment env, object fn)
+        public static EvaluateApplyProc New(object expr, Environment env, object fn, Stepper parent)
         {
-            return new EvaluatorApplyProc(parent, expr, env, fn);
+            return new EvaluateApplyProc(parent, expr, env, fn);
         }
 
         /// <summary>
@@ -57,12 +57,12 @@ namespace SimpleScheme
                         object res = Procedure.Proc(this.fn).Apply(this, ReturnedExpr);
                         if (res is Stepper)
                         {
-                            return this.GoToStep(PC.Step2, (Stepper)res);
+                            return this.GoToStep((Stepper)res, PC.Step2);
                         }
 
-                        return SubReturn(res);
+                        return ReturnFromStep(res);
                     case PC.Step2:
-                        return SubReturn(ReturnedExpr);
+                        return ReturnFromStep(ReturnedExpr);
                 }
 
                 return EvalError("ApplyProc: program counter error");
