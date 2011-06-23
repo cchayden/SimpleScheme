@@ -119,13 +119,29 @@ namespace SimpleScheme
 
             object tail = this.Rest;
 
-            // TODO this can get into an infinite loop.
-            // TODO PairListTest constructs a pair with a loop.  If you try to print it, it loops.
+            int len = 0;
             while (tail is Pair)
             {
                 buf.Append(' ');
-               StringUtils.AsString(((Pair)tail).First, quoted, buf);
+                StringUtils.AsString(((Pair)tail).First, quoted, buf);
+                object oldTail = tail;
                 tail = ((Pair)tail).Rest;
+                len++;
+                if (tail == oldTail)
+                {
+                    // this is a circular structure -- truncate
+                    buf.Append(" ... [circular list]");
+                    tail = null;
+                    break;
+                }
+
+                if (len > 1000)
+                {
+                    // maybe this is a circular structure -- truncate
+                    buf.Append(" ... [too long]");
+                    tail = null;
+                    break;
+                }
             }
 
             if (tail != null)

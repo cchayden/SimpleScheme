@@ -1,5 +1,4 @@
-﻿#define OLD
-// <copyright file="Primitive.cs" company="Charles Hayden">
+﻿// <copyright file="Primitive.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -91,6 +90,7 @@ namespace SimpleScheme
             TIMES,
             TRUNCATE,
             WRITE,
+            P,
             APPEND,
             BOOLEANQ,
             SQRT,
@@ -207,9 +207,8 @@ namespace SimpleScheme
             EXIT = -4,
             SETCAR = -5,
             SETCDR = -6,
-            TIMECALL = -11,
-            ERROR = -13,
-            LISTSTAR = -14,
+            TIMECALL = -7,
+            ERROR = -8,
         }
 
         // ReSharper restore InconsistentNaming
@@ -400,6 +399,7 @@ namespace SimpleScheme
                 .DefPrim("vector-set!", OpCode.VECTORSET, 3)
                 .DefPrim("vector?", OpCode.VECTORQ, 1)
                 .DefPrim("write", OpCode.WRITE, 1, 2)
+                .DefPrim("p", OpCode.P, 1, 1)
                 .DefPrim("write-char", OpCode.DISPLAY, 1, 2)
                 .DefPrim("zero?", OpCode.ZEROQ, 1)
 
@@ -409,8 +409,7 @@ namespace SimpleScheme
                 .DefPrim("method", OpCode.METHOD, 2, MaxInt)
                 .DefPrim("exit", OpCode.EXIT, 0, 1)
                 .DefPrim("error", OpCode.ERROR, 0, MaxInt)
-                .DefPrim("time-call", OpCode.TIMECALL, 1, 2)
-                .DefPrim("_list*", OpCode.LISTSTAR, 0, MaxInt);
+                .DefPrim("time-call", OpCode.TIMECALL, 1, 2);
 
             return env;
         }
@@ -421,11 +420,10 @@ namespace SimpleScheme
         /// If parent is null, then it will not return a Stepper, so when that is not
         ///   acceptable, pass null for parent.
         /// </summary>
-        /// <param name="interp">The interpreter context.</param>
         /// <param name="parent">The calling Stepper.</param>
         /// <param name="args">The arguments to the primitive.</param>
         /// <returns>The result of the application.</returns>
-        public override object Apply(Scheme interp, Stepper parent, object args)
+        public override object Apply(Stepper parent, object args)
         {
             int numArgs = Length(args);
             if (numArgs < this.minArgs)
@@ -440,148 +438,149 @@ namespace SimpleScheme
                              this.Name + ": " + args);
             }
 
-            object x = First(args);
-            object y = Second(args);
+            object head = First(args);
+            object tail = Second(args);
+            Scheme interp = parent.Env.Interp;
 
             switch (this.operCode)
             {
                     // 6.1 BOOLEANS
                 case OpCode.NOT:
-                    return Truth(x is bool && (bool)x == false);
+                    return Truth(head is bool && (bool)head == false);
 
                 case OpCode.BOOLEANQ:
-                    return Truth(x is bool);
+                    return Truth(head is bool);
 
                 case OpCode.EQVQ:
-                    return Truth(Eqv(x, y));
+                    return Truth(Eqv(head, tail));
 
                 case OpCode.EQQ:
                     // return Truth(x == y);
-                    return Truth(Eqv(x, y));
+                    return Truth(Eqv(head, tail));
 
                 case OpCode.EQUALQ:
                     // return Truth(x.Equals(y));
-                    return Truth(Equal(x, y));
+                    return Truth(Equal(head, tail));
 
                     // 6.2 EQUIVALENCE PREDICATES
                 case OpCode.PAIRQ:
-                    return Truth(x is Pair);
+                    return Truth(head is Pair);
 
                 case OpCode.LISTQ:
-                    return Truth(IsList(x));
+                    return Truth(ListUtils.IsList(head));
 
                 case OpCode.CXR:
                     for (int i = this.Name.Length - 2; i >= 1; i--)
                     {
-                        x = this.Name[i] == 'a' ? First(x) : Rest(x);
+                        head = this.Name[i] == 'a' ? First(head) : Rest(head);
                     }
 
-                    return x;
+                    return head;
 
                 case OpCode.CONS:
-                    return Cons(x, y);
+                    return Cons(head, tail);
 
                 case OpCode.CAR:
-                    return First(x);
+                    return First(head);
 
                 case OpCode.CDR:
-                    return Rest(x);
+                    return Rest(head);
 
                 case OpCode.SETCAR:
-                    return SetFirst(x, y);
+                    return SetFirst(head, tail);
 
                 case OpCode.SETCDR:
-                    return SetRest(x, y);
+                    return SetRest(head, tail);
 
                 case OpCode.SECOND:
-                    return Second(x);
+                    return Second(head);
 
                 case OpCode.THIRD:
-                    return Third(x);
+                    return Third(head);
 
                 case OpCode.NULLQ:
-                    return Truth(x == null);
+                    return Truth(head == null);
 
                 case OpCode.LIST:
                     return args;
 
                 case OpCode.LENGTH:
-                    return NumberUtils.Num(Length(x));
+                    return NumberUtils.Num(Length(head));
 
                 case OpCode.APPEND:
-                    return args == null ? null : Append(args);
+                    return args == null ? null : ListUtils.Append(args);
 
                 case OpCode.REVERSE:
-                    return Reverse(x);
+                    return Reverse(head);
 
                 case OpCode.LISTTAIL:
-                    for (int k = (int)NumberUtils.Num(y); k > 0; k--)
+                    for (int k = (int)NumberUtils.Num(tail); k > 0; k--)
                     {
-                        x = Rest(x);
+                        head = Rest(head);
                     }
 
-                    return x;
+                    return head;
 
                 case OpCode.LISTREF:
-                    for (int k = (int)NumberUtils.Num(y); k > 0; k--)
+                    for (int k = (int)NumberUtils.Num(tail); k > 0; k--)
                     {
-                        x = Rest(x);
+                        head = Rest(head);
                     }
 
-                    return First(x);
+                    return First(head);
 
                 case OpCode.MEMQ:
-                    return MemberAssoc(x, y, 'm', 'q');
+                    return ListUtils.MemberAssoc(head, tail, 'm', 'q');
 
                 case OpCode.MEMV:
-                    return MemberAssoc(x, y, 'm', 'v');
+                    return ListUtils.MemberAssoc(head, tail, 'm', 'v');
 
                 case OpCode.MEMBER:
-                    return MemberAssoc(x, y, 'm', ' ');
+                    return ListUtils.MemberAssoc(head, tail, 'm', ' ');
 
                 case OpCode.ASSQ:
-                    return MemberAssoc(x, y, 'a', 'q');
+                    return ListUtils.MemberAssoc(head, tail, 'a', 'q');
 
                 case OpCode.ASSV:
-                    return MemberAssoc(x, y, 'a', 'v');
+                    return ListUtils.MemberAssoc(head, tail, 'a', 'v');
 
                 case OpCode.ASSOC:
-                    return MemberAssoc(x, y, 'a', ' ');
+                    return ListUtils.MemberAssoc(head, tail, 'a', ' ');
 
                     // 6.4 SYMBOLS
                 case OpCode.SYMBOLQ:
-                    return Truth(x is string);
+                    return Truth(head is string);
 
                 case OpCode.SYMBOLTOSTRING:
-                    return Sym(x).ToCharArray();
+                    return Sym(head).ToCharArray();
 
                 case OpCode.STRINGTOSYMBOL:
-                    return string.Intern(new string(StringUtils.Str(x)));
+                    return string.Intern(new string(StringUtils.Str(head)));
 
                     // 6.5 NUMBERS
                 case OpCode.NUMBERQ:
-                    return Truth(x is byte || x is int || x is long || x is float || x is double);
+                    return Truth(head is byte || head is int || head is long || head is float || head is double);
 
                 case OpCode.ODDQ:
-                    return Truth(Math.Abs(NumberUtils.Num(x)) % 2 != 0);
+                    return Truth(Math.Abs(NumberUtils.Num(head)) % 2 != 0);
 
                 case OpCode.EVENQ:
-                    return Truth(Math.Abs(NumberUtils.Num(x)) % 2 == 0);
+                    return Truth(Math.Abs(NumberUtils.Num(head)) % 2 == 0);
 
                 case OpCode.ZEROQ:
-                    return Truth(NumberUtils.Num(x) == 0);
+                    return Truth(NumberUtils.Num(head) == 0);
 
                 case OpCode.POSITIVEQ:
-                    return Truth(NumberUtils.Num(x) > 0);
+                    return Truth(NumberUtils.Num(head) > 0);
 
                 case OpCode.NEGATIVEQ:
-                    return Truth(NumberUtils.Num(x) < 0);
+                    return Truth(NumberUtils.Num(head) < 0);
 
                 case OpCode.INTEGERQ:
-                    return Truth(NumberUtils.IsExact(x));
+                    return Truth(NumberUtils.IsExact(head));
 
                 case OpCode.INEXACTQ:
-                    return Truth(!NumberUtils.IsExact(x));
+                    return Truth(!NumberUtils.IsExact(head));
 
                 case OpCode.LT:
                     return NumberUtils.NumCompare(args, '<');
@@ -599,93 +598,93 @@ namespace SimpleScheme
                     return NumberUtils.NumCompare(args, 'G');
 
                 case OpCode.MAX:
-                    return NumberUtils.NumCompute(args, 'X', NumberUtils.Num(x));
+                    return NumberUtils.NumCompute(args, 'X', NumberUtils.Num(head));
 
                 case OpCode.MIN:
-                    return NumberUtils.NumCompute(args, 'N', NumberUtils.Num(x));
+                    return NumberUtils.NumCompute(args, 'N', NumberUtils.Num(head));
 
                 case OpCode.PLUS:
                     return NumberUtils.NumCompute(args, '+', 0.0);
 
                 case OpCode.MINUS:
-                    return NumberUtils.NumCompute(Rest(args), '-', NumberUtils.Num(x));
+                    return NumberUtils.NumCompute(Rest(args), '-', NumberUtils.Num(head));
 
                 case OpCode.TIMES:
                     return NumberUtils.NumCompute(args, '*', 1.0);
 
                 case OpCode.DIVIDE:
-                    return NumberUtils.NumCompute(Rest(args), '/', NumberUtils.Num(x));
+                    return NumberUtils.NumCompute(Rest(args), '/', NumberUtils.Num(head));
 
                 case OpCode.QUOTIENT:
-                    double d = NumberUtils.Num(x) / NumberUtils.Num(y);
+                    double d = NumberUtils.Num(head) / NumberUtils.Num(tail);
                     return NumberUtils.Num(d > 0 ? Math.Floor(d) : Math.Ceiling(d));
 
                 case OpCode.REMAINDER:
-                    return NumberUtils.Num((long)NumberUtils.Num(x) % (long)NumberUtils.Num(y));
+                    return NumberUtils.Num((long)NumberUtils.Num(head) % (long)NumberUtils.Num(tail));
 
                 case OpCode.MODULO:
-                    long xi = (long)NumberUtils.Num(x);
-                    long yi = (long)NumberUtils.Num(y);
+                    long xi = (long)NumberUtils.Num(head);
+                    long yi = (long)NumberUtils.Num(tail);
                     long m = xi % yi;
                     return NumberUtils.Num(xi * yi > 0 || m == 0 ? m : m + yi);
 
                 case OpCode.ABS:
-                    return NumberUtils.Num(Math.Abs(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Abs(NumberUtils.Num(head)));
 
                 case OpCode.FLOOR:
-                    return NumberUtils.Num(Math.Floor(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Floor(NumberUtils.Num(head)));
 
                 case OpCode.CEILING:
-                    return NumberUtils.Num(Math.Ceiling(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Ceiling(NumberUtils.Num(head)));
 
                 case OpCode.TRUNCATE:
-                    d = NumberUtils.Num(x);
+                    d = NumberUtils.Num(head);
                     return NumberUtils.Num(d < 0.0D ? Math.Ceiling(d) : Math.Floor(d));
 
                 case OpCode.ROUND:
-                    return NumberUtils.Num(Math.Round(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Round(NumberUtils.Num(head)));
 
                 case OpCode.EXP:
-                    return NumberUtils.Num(Math.Exp(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Exp(NumberUtils.Num(head)));
 
                 case OpCode.LOG:
-                    return NumberUtils.Num(Math.Log(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Log(NumberUtils.Num(head)));
 
                 case OpCode.SIN:
-                    return NumberUtils.Num(Math.Sin(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Sin(NumberUtils.Num(head)));
 
                 case OpCode.COS:
-                    return NumberUtils.Num(Math.Cos(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Cos(NumberUtils.Num(head)));
 
                 case OpCode.TAN:
-                    return NumberUtils.Num(Math.Tan(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Tan(NumberUtils.Num(head)));
 
                 case OpCode.ASIN:
-                    return NumberUtils.Num(Math.Asin(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Asin(NumberUtils.Num(head)));
 
                 case OpCode.ACOS:
-                    return NumberUtils.Num(Math.Acos(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Acos(NumberUtils.Num(head)));
 
                 case OpCode.ATAN:
-                    return NumberUtils.Num(Math.Atan(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Atan(NumberUtils.Num(head)));
 
                 case OpCode.SQRT:
-                    return NumberUtils.Num(Math.Sqrt(NumberUtils.Num(x)));
+                    return NumberUtils.Num(Math.Sqrt(NumberUtils.Num(head)));
 
                 case OpCode.EXPT:
-                    if (NumberUtils.Num(x) == 0.0 && NumberUtils.Num(y) < 0.0)
+                    if (NumberUtils.Num(head) == 0.0 && NumberUtils.Num(tail) < 0.0)
                     {
                         // Math.Pow gives infinity for this case
                         return NumberUtils.Num(0.0);
                     }
 
-                    return NumberUtils.Num(Math.Pow(NumberUtils.Num(x), NumberUtils.Num(y)));
+                    return NumberUtils.Num(Math.Pow(NumberUtils.Num(head), NumberUtils.Num(tail)));
 
                 case OpCode.NUMBERTOSTRING:
-                    return NumberUtils.NumberToString(x, y);
+                    return NumberUtils.NumberToString(head, tail);
 
                 case OpCode.STRINGTONUMBER:
-                    return StringUtils.StringToNumber(x, y);
+                    return StringUtils.StringToNumber(head, tail);
 
                 case OpCode.GCD:
                     return args == null ? Zero : NumberUtils.Gcd(args);
@@ -695,78 +694,78 @@ namespace SimpleScheme
 
                     // 6.6 CHARACTERS
                 case OpCode.CHARQ:
-                    return Truth(x is char);
+                    return Truth(head is char);
 
                 case OpCode.CHARALPHABETICQ:
-                    return Truth(char.IsLetter(Chr(x)));
+                    return Truth(char.IsLetter(Chr(head)));
 
                 case OpCode.CHARNUMERICQ:
-                    return Truth(char.IsDigit(Chr(x)));
+                    return Truth(char.IsDigit(Chr(head)));
 
                 case OpCode.CHARWHITESPACEQ:
-                    return Truth(char.IsWhiteSpace(Chr(x)));
+                    return Truth(char.IsWhiteSpace(Chr(head)));
 
                 case OpCode.CHARUPPERCASEQ:
-                    return Truth(char.IsUpper(Chr(x)));
+                    return Truth(char.IsUpper(Chr(head)));
 
                 case OpCode.CHARLOWERCASEQ:
-                    return Truth(char.IsLower(Chr(x)));
+                    return Truth(char.IsLower(Chr(head)));
 
                 case OpCode.CHARTOINTEGER:
-                    return (double)Chr(x);
+                    return (double)Chr(head);
 
                 case OpCode.INTEGERTOCHAR:
-                    return Chr((char)(int)NumberUtils.Num(x));
+                    return Chr((char)(int)NumberUtils.Num(head));
 
                 case OpCode.CHARUPCASE:
-                    return Chr(char.ToUpper(Chr(x)));
+                    return Chr(char.ToUpper(Chr(head)));
 
                 case OpCode.CHARDOWNCASE:
-                    return Chr(char.ToLower(Chr(x)));
+                    return Chr(char.ToLower(Chr(head)));
 
                 case OpCode.CHARCMPEQ:
-                    return Truth(CharCompare(x, y, false) == 0);
+                    return Truth(CharCompare(head, tail, false) == 0);
 
                 case OpCode.CHARCMPLT:
-                    return Truth(CharCompare(x, y, false) < 0);
+                    return Truth(CharCompare(head, tail, false) < 0);
 
                 case OpCode.CHARCMPGT:
-                    return Truth(CharCompare(x, y, false) > 0);
+                    return Truth(CharCompare(head, tail, false) > 0);
 
                 case OpCode.CHARCMPGE:
-                    return Truth(CharCompare(x, y, false) >= 0);
+                    return Truth(CharCompare(head, tail, false) >= 0);
 
                 case OpCode.CHARCMPLE:
-                    return Truth(CharCompare(x, y, false) <= 0);
+                    return Truth(CharCompare(head, tail, false) <= 0);
 
                 case OpCode.CHARCICMPEQ:
-                    return Truth(CharCompare(x, y, true) == 0);
+                    return Truth(CharCompare(head, tail, true) == 0);
 
                 case OpCode.CHARCICMPLT:
-                    return Truth(CharCompare(x, y, true) < 0);
+                    return Truth(CharCompare(head, tail, true) < 0);
 
                 case OpCode.CHARCICMPGT:
-                    return Truth(CharCompare(x, y, true) > 0);
+                    return Truth(CharCompare(head, tail, true) > 0);
 
                 case OpCode.CHARCICMPGE:
-                    return Truth(CharCompare(x, y, true) >= 0);
+                    return Truth(CharCompare(head, tail, true) >= 0);
 
                 case OpCode.CHARCICMPLE:
-                    return Truth(CharCompare(x, y, true) <= 0);
+                    return Truth(CharCompare(head, tail, true) <= 0);
 
                 case OpCode.ERROR:
                     return Error(StringUtils.AsString(args));
 
                     // 6.7 STRINGS
                 case OpCode.STRINGQ:
-                    return Truth(x is char[]);
+                    return Truth(head is char[]);
 
                 case OpCode.MAKESTRING:
                     {
-                        char[] str = new char[(int)NumberUtils.Num(x)];
-                        if (y != null)
+                        char[] str = new char[(int)NumberUtils.Num(head)];
+                        if (tail != null)
                         {
-                            char c = Chr(y);
+                            char c = Chr(tail);
                             for (int i = str.Length - 1; i >= 0; i--)
                             {
                                 str[i] = c;
@@ -780,20 +779,20 @@ namespace SimpleScheme
                     return StringUtils.ListToString(args);
 
                 case OpCode.STRINGLENGTH:
-                    return NumberUtils.Num(StringUtils.Str(x).Length);
+                    return NumberUtils.Num(StringUtils.Str(head).Length);
 
                 case OpCode.STRINGREF:
-                    return Chr(StringUtils.Str(x)[(int)NumberUtils.Num(y)]);
+                    return Chr(StringUtils.Str(head)[(int)NumberUtils.Num(tail)]);
 
                 case OpCode.STRINGSET:
                     object z = Third(args);
-                    StringUtils.Str(x)[(int)NumberUtils.Num(y)] = Chr(z);
+                    StringUtils.Str(head)[(int)NumberUtils.Num(tail)] = Chr(z);
                     return z;
 
                 case OpCode.SUBSTRING:
-                    int start = (int)NumberUtils.Num(y);
+                    int start = (int)NumberUtils.Num(tail);
                     int end = (int)NumberUtils.Num(Third(args));
-                    return new string(StringUtils.Str(x)).Substring(start, end - start).ToCharArray();
+                    return new string(StringUtils.Str(head)).Substring(start, end - start).ToCharArray();
 
                 case OpCode.STRINGAPPEND:
                     return StringUtils.StringAppend(args);
@@ -801,7 +800,7 @@ namespace SimpleScheme
                 case OpCode.STRINGTOLIST:
                     {
                         Pair result = null;
-                        char[] str = StringUtils.Str(x);
+                        char[] str = StringUtils.Str(head);
                         for (int i = str.Length - 1; i >= 0; i--)
                         {
                             result = Cons(Chr(str[i]), result);
@@ -811,49 +810,49 @@ namespace SimpleScheme
                     }
 
                 case OpCode.LISTTOSTRING:
-                    return StringUtils.ListToString(x);
+                    return StringUtils.ListToString(head);
 
                 case OpCode.STRINGCMPEQ:
-                    return Truth(StringUtils.StringCompare(x, y, false) == 0);
+                    return Truth(StringUtils.StringCompare(head, tail, false) == 0);
 
                 case OpCode.STRINGCMPLT:
-                    return Truth(StringUtils.StringCompare(x, y, false) < 0);
+                    return Truth(StringUtils.StringCompare(head, tail, false) < 0);
 
                 case OpCode.STRINGCMPGT:
-                    return Truth(StringUtils.StringCompare(x, y, false) > 0);
+                    return Truth(StringUtils.StringCompare(head, tail, false) > 0);
 
                 case OpCode.STRINGCMPGE:
-                    return Truth(StringUtils.StringCompare(x, y, false) >= 0);
+                    return Truth(StringUtils.StringCompare(head, tail, false) >= 0);
 
                 case OpCode.STRINGCMPLE:
-                    return Truth(StringUtils.StringCompare(x, y, false) <= 0);
+                    return Truth(StringUtils.StringCompare(head, tail, false) <= 0);
 
                 case OpCode.STRINGCICMPEQ:
-                    return Truth(StringUtils.StringCompare(x, y, true) == 0);
+                    return Truth(StringUtils.StringCompare(head, tail, true) == 0);
 
                 case OpCode.STRINGCICMPLT:
-                    return Truth(StringUtils.StringCompare(x, y, true) < 0);
+                    return Truth(StringUtils.StringCompare(head, tail, true) < 0);
 
                 case OpCode.STRINGCICMPGT:
-                    return Truth(StringUtils.StringCompare(x, y, true) > 0);
+                    return Truth(StringUtils.StringCompare(head, tail, true) > 0);
 
                 case OpCode.STRINGCICMPGE:
-                    return Truth(StringUtils.StringCompare(x, y, true) >= 0);
+                    return Truth(StringUtils.StringCompare(head, tail, true) >= 0);
 
                 case OpCode.STRINGCICMPLE:
-                    return Truth(StringUtils.StringCompare(x, y, true) <= 0);
+                    return Truth(StringUtils.StringCompare(head, tail, true) <= 0);
 
                     // 6.8 VECTORS
                 case OpCode.VECTORQ:
-                    return Truth(x is object[]);
+                    return Truth(head is object[]);
 
                 case OpCode.MAKEVECTOR:
-                    object[] vec = new object[(int)NumberUtils.Num(x)];
-                    if (y != null)
+                    object[] vec = new object[(int)NumberUtils.Num(head)];
+                    if (tail != null)
                     {
                         for (int i = 0; i < vec.Length; i++)
                         {
-                            vec[i] = y;
+                            vec[i] = tail;
                         }
                     }
 
@@ -863,112 +862,114 @@ namespace SimpleScheme
                     return VectorUtils.ListToVector(args);
 
                 case OpCode.VECTORLENGTH:
-                    return NumberUtils.Num(VectorUtils.Vec(x).Length);
+                    return NumberUtils.Num(VectorUtils.Vec(head).Length);
 
                 case OpCode.VECTORREF:
-                    return VectorUtils.Vec(x)[(int)NumberUtils.Num(y)];
+                    return VectorUtils.Vec(head)[(int)NumberUtils.Num(tail)];
 
                 case OpCode.VECTORSET:
-                    return VectorUtils.Vec(x)[(int)NumberUtils.Num(y)] = Third(args);
+                    return VectorUtils.Vec(head)[(int)NumberUtils.Num(tail)] = Third(args);
 
                 case OpCode.VECTORTOLIST:
-                    return VectorUtils.VectorToList(x);
+                    return VectorUtils.VectorToList(head);
 
                 case OpCode.LISTTOVECTOR:
-                    return VectorUtils.ListToVector(x);
+                    return VectorUtils.ListToVector(head);
 
                     // 6.9 CONTROL FEATURES
                 case OpCode.EVAL:
                     // Instead of returning a value, return an evaulator that can be run to get the value
-                    return Stepper.CallEvaluate(interp, parent, x, parent.Env);
+                    return Stepper.CallEvaluate(parent, head, parent.Env);
 
                 case OpCode.FORCE:
-                    return !(x is Procedure) ? x : Proc(x).Apply(interp, parent, null);
+                    return !(head is Procedure) ? head : Proc(head).Apply(parent, null);
 
                 case OpCode.PROCEDUREQ:
-                    return Truth(x is Procedure);
+                    return Truth(head is Procedure);
 
                 case OpCode.APPLY:
-                    return Proc(x).Apply(interp, parent, ListStar(Rest(args)));
+                    return Proc(head).Apply(parent, ListStar(Rest(args)));
 
                 case OpCode.MAP:
-                    return Stepper.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), List(null));
+                    return Stepper.CallMap(parent, Rest(args), parent.Env, Proc(head), List(null));
 
                 case OpCode.FOREACH:
-                    return Stepper.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), null);
+                    return Stepper.CallMap(parent, Rest(args), parent.Env, Proc(head), null);
 
                 case OpCode.CALLCC:
-                    return Proc(x).Apply(
-                        interp, 
+                    return Proc(head).Apply(
                         parent,
-                        List(new Continuation(Stepper.CallContinuation(interp, parent, x, parent.Env))));
+                        List(new Continuation(Stepper.CallContinuation(parent, head, parent.Env))));
 
                     // 6.10 INPUT AND OUTPUT
                 case OpCode.EOFOBJECTQ:
-                    return Truth(InputPort.IsEOF(x));
+                    return Truth(InputPort.IsEOF(head));
 
                 case OpCode.INPUTPORTQ:
-                    return Truth(x is InputPort);
+                    return Truth(head is InputPort);
 
                 case OpCode.CURRENTINPUTPORT:
                     return interp.Input;
 
                 case OpCode.OPENINPUTFILE:
-                    return Stepper.OpenInputFile(x);
+                    return Stepper.OpenInputFile(head);
 
                 case OpCode.CLOSEINPUTPORT:
-                    return FileUtils.InPort(x, interp).Close();
+                    return FileUtils.InPort(head, interp).Close();
 
                 case OpCode.OUTPUTPORTQ:
-                    return Truth(x is OutputPort);
+                    return Truth(head is OutputPort);
 
                 case OpCode.CURRENTOUTPUTPORT:
                     return interp.Output;
 
                 case OpCode.OPENOUTPUTFILE:
-                    return Stepper.OpenOutputFile(x);
+                    return Stepper.OpenOutputFile(head);
 
                 case OpCode.CALLWITHOUTPUTFILE:
-                    return Stepper.CallWithOutputFile(interp, parent, args, parent.Env);
+                    return Stepper.CallWithOutputFile(parent, args, parent.Env);
 
                 case OpCode.CALLWITHINPUTFILE:
-                    return Stepper.CallWithInputFile(interp, parent, args, parent.Env);
+                    return Stepper.CallWithInputFile(parent, args, parent.Env);
 
                 case OpCode.CLOSEOUTPUTPORT:
-                    FileUtils.OutPort(x, interp).Close();
+                    FileUtils.OutPort(head, interp).Close();
                     return True;
 
                 case OpCode.READCHAR:
-                    return FileUtils.InPort(x, interp).ReadChar();
+                    return FileUtils.InPort(head, interp).ReadChar();
 
                 case OpCode.PEEKCHAR:
-                    return FileUtils.InPort(x, interp).PeekChar();
+                    return FileUtils.InPort(head, interp).PeekChar();
 
                 case OpCode.LOAD:
-                    return interp.Load(x);
+                    return interp.Load(head);
 
                 case OpCode.READ:
-                    return FileUtils.InPort(x, interp).Read();
+                    return FileUtils.InPort(head, interp).Read();
 
                 case OpCode.EOF_OBJECT:
-                    return Truth(InputPort.IsEOF(x));
+                    return Truth(InputPort.IsEOF(head));
 
                 case OpCode.WRITE:
-                    return FileUtils.Write(x, FileUtils.OutPort(y, interp), true);
+                    return FileUtils.Write(head, FileUtils.OutPort(tail, interp), true);
+
+                case OpCode.P:
+                    return FileUtils.P(head);
 
                 case OpCode.DISPLAY:
-                    return FileUtils.Write(x, FileUtils.OutPort(y, interp), false);
+                    return FileUtils.Write(head, FileUtils.OutPort(tail, interp), false);
 
                 case OpCode.NEWLINE:
-                    FileUtils.OutPort(x, interp).Println();
-                    FileUtils.OutPort(x, interp).Flush();
+                    FileUtils.OutPort(head, interp).Println();
+                    FileUtils.OutPort(head, interp).Flush();
                     return True;
 
                     // EXTENSIONS
                 case OpCode.CLASS:
                     try
                     {
-                        return Type.GetType(StringUtils.AsString(x, false));
+                        return Type.GetType(StringUtils.AsString(head, false));
                     }
                     catch (TypeLoadException)
                     {
@@ -979,7 +980,7 @@ namespace SimpleScheme
                 case OpCode.NEW:
                     try
                     {
-                        return ClrMethod.CreateInstance(x);
+                        return ClrMethod.CreateInstance(head);
                     }
                     catch (ArgumentNullException)
                     {
@@ -1006,158 +1007,19 @@ namespace SimpleScheme
                     return False;
 
                 case OpCode.METHOD:
-                    return new ClrMethod(StringUtils.AsString(x, false), y, Rest(Rest(args)));
+                    return new ClrMethod(StringUtils.AsString(head, false), tail, Rest(Rest(args)));
 
                 case OpCode.EXIT:
-                    System.Environment.Exit(x == null ? 0 : (int)NumberUtils.Num(x));
+                    System.Environment.Exit(head == null ? 0 : (int)NumberUtils.Num(head));
                     return False; // required by style cop -- unnecessary
 
-                case OpCode.LISTSTAR:
-                    return ListStar(args);
-
                 case OpCode.TIMECALL:
-                    return Stepper.CallTimeCall(interp, parent, args, parent.Env);
+                    return Stepper.CallTimeCall(parent, args, parent.Env);
 
                 default:
-                    return Error("internal error: unknown primitive: " + this +
+                    return Error("Internal error: unknown primitive: " + this +
                                  " applied to " + args);
             }
-        }
-
-        /// <summary>
-        /// Append a list of lists, making one longer list.
-        /// The appending only goes one level deep.
-        /// The very last list is not copied, but is not copied, but is instead shared.
-        /// </summary>
-        /// <param name="args">A list of lists.  Each of the lists in this list is appended together.</param>
-        /// <returns>A list of the given list elements.</returns>
-        private static object Append(object args)
-        {
-            Pair result = List(null);
-            Pair accum = result;
-            while (Rest(args) != null)
-            {
-                accum = Append(accum, First(args));
-                args = Rest(args);
-            }
-
-            accum.Rest = First(args);
-            return Rest(result);
-        }
-
-        /// <summary>
-        /// Append one list to the tail of another.
-        /// The tail is modified destructively.
-        /// The appended list is copied.
-        /// </summary>
-        /// <param name="tail">The end of the first list, destructively appended to.</param>
-        /// <param name="toCopy">The second list, copied onto the first.</param>
-        /// <returns>The end of the second list, suitable for another call to this function. </returns>
-        private static Pair Append(Pair tail, object toCopy)
-        {
-            while (toCopy != null)
-            {
-                tail.Rest = List(First(toCopy));
-                toCopy = Rest(toCopy);
-                tail = (Pair)Rest(tail);
-            }
-
-            return tail;
-        }
-
-        /// <summary>
-        /// Compares two characters.
-        /// </summary>
-        /// <param name="x">The first char.</param>
-        /// <param name="y">The second char.</param>
-        /// <param name="ci">If true, make the comparison case insensitive.</param>
-        /// <returns>Negative if x is before y, positive if x is after y, 
-        /// or 0 if they are the same.</returns>
-        private static int CharCompare(object x, object y, bool ci)
-        {
-            char xc = Chr(x);
-            char yc = Chr(y);
-            if (ci)
-            {
-                xc = char.ToLower(xc);
-                yc = char.ToLower(yc);
-            }
-
-            return xc - yc;
-        }
-
-        /// <summary>
-        /// Tests to see if the given object is a list.
-        /// </summary>
-        /// <param name="x">The object to test.</param>
-        /// <returns>True if the object is a list.</returns>
-        private static bool IsList(object x)
-        {
-            while (true)
-            {
-                if (x == null)
-                {
-                    return true;
-                }
-
-                if (!(x is Pair))
-                {
-                    return false;
-                }
-
-                object rest = Rest(x);
-                if (rest == x)
-                {
-                    return false;
-                }
-
-                x = rest;
-            }
-        }
-
-        /// <summary>
-        /// Searches lists, used by memq, memv, and member.
-        /// Also used by assq, assv, and assoc.
-        /// </summary>
-        /// <param name="obj">The object to search for.</param>
-        /// <param name="list">The list to search in.</param>
-        /// <param name="m">If 'm', do member, if 'a' do assoc.</param>
-        /// <param name="eq">This gives the type of equality test to use.</param>
-        /// <returns>The results that wer found.</returns>
-        private static object MemberAssoc(object obj, object list, char m, char eq)
-        {
-            while (list is Pair)
-            {
-                object target = m == 'm' ? First(list) : First(First(list));
-                bool found;
-                switch (eq)
-                {
-                    case 'q':
-                        found = target == obj;
-                        break;
-
-                    case 'v':
-                        found = Eqv(target, obj);
-                        break;
-
-                    case ' ':
-                        found = Equal(target, obj);
-                        break;
-
-                    default:
-                        Warn("Bad option to memberAssoc: " + eq);
-                        return False;
-                }
-
-                if (found)
-                {
-                    return m == 'm' ? list : First(list);
-                }
-
-                list = Rest(list);
-            }
-
-            return False;
         }
     }
 }

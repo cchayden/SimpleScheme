@@ -4,55 +4,60 @@
 namespace SimpleScheme
 {
     /// <summary>
-    /// Stepper contains all the individual evaluators
+    /// Evaluate a define expression.
     /// </summary>
-    public partial class Stepper
+    public class EvaluatorDefine : Stepper
     {
         /// <summary>
-        /// Evaluate a define expression.
+        /// Initializes a new instance of the EvaluatorDefine class.
         /// </summary>
-        private class EvaluatorDefine : Stepper
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        private EvaluatorDefine(Stepper parent, object expr, Environment env)
+            : base(parent, expr, env)
         {
-            /// <summary>
-            /// Initializes a new instance of the Stepper.EvaluatorDefine class.
-            /// </summary>
-            /// <param name="interp">The interpreter.</param>
-            /// <param name="parent">The parent.  Return to this when done.</param>
-            /// <param name="expr">The expression to evaluate.</param>
-            /// <param name="env">The evaluation environment</param>
-            public EvaluatorDefine(Scheme interp, Stepper parent, object expr, Environment env)
-                : base(interp, parent, expr, env)
+        }
+
+        /// <summary>
+        /// Create a define evaluator.
+        /// </summary>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <returns>The define evaluator.</returns>
+        public static EvaluatorDefine New(Stepper parent, object expr, Environment env)
+        {
+            return new EvaluatorDefine(parent, expr, env);
+        }
+
+        /// <summary>
+        /// Evaluate a define expression.
+        /// Handle the define syntax shortcut by inserting lambda.
+        /// </summary>
+        /// <returns>The evaluated definition.</returns>
+        public override Stepper RunStep()
+        {
+            switch (Pc)
             {
+                case PC.Initial:
+                    if (First(this.Expr) is Pair)
+                    {
+                        Pc = PC.Step1;
+                        return CallEval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))));
+                    }
+
+                    Pc = PC.Step2;
+                    return CallEval(Second(this.Expr));
+
+                case PC.Step1:
+                    return SubReturn(this.Env.Define(First(First(this.Expr)), ReturnedExpr));
+
+                case PC.Step2:
+                    return SubReturn(this.Env.Define(First(this.Expr), ReturnedExpr));
             }
 
-            /// <summary>
-            /// Evaluate a define expression.
-            /// Handle the define syntax shortcut by inserting lambda.
-            /// </summary>
-            /// <returns>The evaluated definition.</returns>
-            public override Stepper RunStep()
-            {
-                switch (Pc)
-                {
-                    case PC.Initial:
-                        if (First(this.Expr) is Pair)
-                        {
-                            Pc = PC.Step1;
-                            return CallEval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))));
-                        }
-
-                        Pc = PC.Step2;
-                        return CallEval(Second(this.Expr));
-
-                    case PC.Step1:
-                        return SubReturn(this.Env.Define(First(First(this.Expr)), ReturnedExpr));
-
-                    case PC.Step2:
-                        return SubReturn(this.Env.Define(First(this.Expr), ReturnedExpr));
-                }
-
-                return EvalError("Define: program counter error");
-            }
+            return EvalError("Define: program counter error");
         }
     }
 }

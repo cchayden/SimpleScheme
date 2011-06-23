@@ -38,14 +38,13 @@ namespace SimpleScheme
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorMap class.
             /// </summary>
-            /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
             /// <param name="proc">The proc to apply to each element of the list.</param>
             /// <param name="result">The result is appended to this list.</param>
-            public EvaluatorMap(Scheme interp, Stepper parent, object expr, Environment env, Procedure proc, Pair result)
-                : base(interp, parent, expr, env)
+            public EvaluatorMap(Stepper parent, object expr, Environment env, Procedure proc, Pair result)
+                : base(parent, expr, env)
             {
                 this.proc = proc;
                 this.result = result;
@@ -83,7 +82,7 @@ namespace SimpleScheme
                             {
                                 // Grab the arguments to the applications (the head of each list).
                                 // The the proc is applied to them.
-                                object x = this.proc.Apply(Interp, this, MapFun(First, List(Expr)));
+                                object x = this.proc.Apply(this, MapFun(First, List(Expr)));
                                 if (x is Stepper)
                                 {
                                     return GoToStep(PC.Step2, (Stepper)x);

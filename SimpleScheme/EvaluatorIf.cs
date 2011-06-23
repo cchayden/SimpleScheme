@@ -4,47 +4,52 @@
 namespace SimpleScheme
 {
     /// <summary>
-    /// Stepper contains all the individual evaluators
+    /// Evaluate an if expression.
+    /// Evaluate the first part, then depending on its truth value, either
+    ///   evaluate the second or third part.
     /// </summary>
-    public partial class Stepper
+    public class EvaluatorIf : Stepper
     {
         /// <summary>
-        /// Evaluate an if expression.
-        /// Evaluate the first part, then depending on its truth value, either
-        ///   evaluate the second or third part.
+        /// Initializes a new instance of the EvaluatorIf class.
         /// </summary>
-        private class EvaluatorIf : Stepper
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        private EvaluatorIf(Stepper parent, object expr, Environment env)
+            : base(parent, expr, env)
         {
-            /// <summary>
-            /// Initializes a new instance of the Stepper.EvaluatorIf class.
-            /// </summary>
-            /// <param name="interp">The interpreter.</param>
-            /// <param name="parent">The parent.  Return to this when done.</param>
-            /// <param name="expr">The expression to evaluate.</param>
-            /// <param name="env">The evaluation environment</param>
-            public EvaluatorIf(Scheme interp, Stepper parent, object expr, Environment env)
-                : base(interp, parent, expr, env)
+        }
+
+        /// <summary>
+        /// Creates an if evaluator.
+        /// </summary>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <returns>The if evaluator.</returns>
+        public static EvaluatorIf New(Stepper parent, object expr, Environment env)
+        {
+            return new EvaluatorIf(parent, expr, env);
+        }
+
+        /// <summary>
+        /// Evaluate an if expression.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Stepper RunStep()
+        {
+            switch (Pc)
             {
+                case PC.Initial:
+                    Pc = PC.Step1;
+                    return CallEval(First(this.Expr));
+
+                case PC.Step1:
+                    return SubReturn(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
             }
 
-            /// <summary>
-            /// Evaluate an if expression.
-            /// </summary>
-            /// <returns>The next step to execute.</returns>
-            public override Stepper RunStep()
-            {
-                switch (Pc)
-                {
-                    case PC.Initial:
-                        Pc = PC.Step1;
-                        return CallEval(First(this.Expr));
-
-                    case PC.Step1:
-                        return SubReturn(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
-                }
-
-                return EvalError("If: program counter error");
-            }
+            return EvalError("If: program counter error");
         }
     }
 }

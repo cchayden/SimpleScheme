@@ -41,6 +41,7 @@
     <Compile Include="Continuation.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="FileUtils.cs" />
+    <Compile Include="ListUtils.cs" />
     <Compile Include="Stepper.cs" />
     <Compile Include="EvaluatorAnd.cs" />
     <Compile Include="EvaluatorTimeCall.cs" />

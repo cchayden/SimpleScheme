@@ -14,19 +14,9 @@ namespace SimpleScheme
     public sealed class Scheme : SchemeUtils
     {
         /// <summary>
-        /// The input port for the interpreter.
+        /// This stepper is used to indicate that evaluation is suspended.
         /// </summary>
-        private readonly InputPort input = new InputPort(Console.In);
-
-        /// <summary>
-        /// The output port for the interpreter.
-        /// </summary>
-        private readonly OutputPort output = new OutputPort(Console.Out);
-
-        /// <summary>
-        /// The interpreter global environment.
-        /// </summary>
-        private readonly Environment globalEnvironment = new Environment();
+        public static readonly Stepper Suspend = Stepper.Suspend();
 
         /// <summary>
         /// The stepper that is used to start an evaluation.
@@ -44,6 +34,9 @@ namespace SimpleScheme
         public Scheme(bool loadStandardMacros, IEnumerable<string> files)
         {
             this.Trace = false;
+            this.Input = new InputPort(Console.In);
+            this.Output = new OutputPort(Console.Out);
+            this.GlobalEnvironment = new Environment(this);
             Primitive.InstallPrimitives(this.GlobalEnvironment);
             try
             {
@@ -94,26 +87,17 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the input port.
         /// </summary>
-        internal InputPort Input
-        {
-            get { return this.input; }
-        }
+        internal InputPort Input { get; private set; }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal OutputPort Output
-        {
-            get { return this.output; }
-        }
+        internal OutputPort Output { get; private set; }
 
         /// <summary>
-        /// Gets the global environment for the interpreter.
+        /// Gets or setsthe global environment for the interpreter.
         /// </summary>
-        internal Environment GlobalEnvironment
-        {
-            get { return this.globalEnvironment; }
-        }
+        private Environment GlobalEnvironment { get; set; }
 
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
@@ -134,23 +118,35 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            int steps = 0;
-            Stepper nextStep = Stepper.CallEvaluate(this, Halt, expr, env);
+            return this.EvalStep(Stepper.CallEvaluate(Halt, expr, env));
+        }
+
+        /// <summary>
+        /// Perform steps until evaluation is complete or suspended.
+        /// After suspension, return to this entry point.
+        /// </summary>
+        /// <param name="nextStep">The step to perform first.</param>
+        /// <returns>The evaluation result, or suspended stepper.</returns>
+        public object EvalStep(Stepper nextStep)
+        {
             while (true)
             {
                 if (this.Trace)
                 {
-                    Console.WriteLine("{3} Evaluating {0} {1} {2}", nextStep.Expr, nextStep.GetType(), nextStep.Pc, steps++);
+                    Console.WriteLine("Evaluating {0} {1} {2}", nextStep.Expr, nextStep.GetType(), nextStep.Pc);
                 }
 
                 nextStep = nextStep.RunStep();
+                if (nextStep == Suspend)
+                {
+                    return nextStep;
+                }
+
                 if (nextStep == Halt)
                 {
-                    break;
+                    return Halt.ReturnedExpr;
                 }
             }
-
-            return Halt.ReturnedExpr;
         }
 
         /// <summary>

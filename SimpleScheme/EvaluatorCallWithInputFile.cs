@@ -1,7 +1,6 @@
 ﻿// <copyright file="EvaluatorCallWithInputFile.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
-
 namespace SimpleScheme
 {
     using System.IO;
@@ -45,12 +44,11 @@ namespace SimpleScheme
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorCallWithInputFile class.
             /// </summary>
-            /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
-            public EvaluatorCallWithInputFile(Scheme interp, Stepper parent, object expr, Environment env)
-                : base(interp, parent, expr, env)
+            public EvaluatorCallWithInputFile(Stepper parent, object expr, Environment env)
+                : base(parent, expr, env)
             {
             }
 
@@ -66,7 +64,7 @@ namespace SimpleScheme
                     {
                         case PC.Initial:
                             this.port = OpenInputFile(First(Expr));
-                            object z = Procedure.Proc(Second(Expr)).Apply(Interp, this, List(this.port));
+                            object z = Procedure.Proc(Second(Expr)).Apply(this, List(this.port));
                             if (z is Stepper)
                             {
                                 return GoToStep(PC.Step1, (Stepper)z);

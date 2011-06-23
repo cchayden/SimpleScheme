@@ -17,12 +17,11 @@ namespace SimpleScheme
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorContinuation class.
             /// </summary>
-            /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
-            public EvaluatorContinuation(Scheme interp, Stepper parent, object expr, Environment env)
-                : base(interp, parent, expr, env)
+            public EvaluatorContinuation(Stepper parent, object expr, Environment env)
+                : base(parent, expr, env)
             {
             }
 

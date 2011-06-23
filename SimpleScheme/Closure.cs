@@ -44,17 +44,25 @@ namespace SimpleScheme
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the continuation was created.
         /// </summary>
-        /// <param name="interpreter">The interpreter, which has the global environment.</param>
         /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <returns>The results of executing the program.</returns>
-        public override object Apply(Scheme interpreter, Stepper parent, object args)
+        public override object Apply(Stepper parent, object args)
         {
-            return Stepper.CallEvaluate(
-                interpreter, 
+            return EvaluatorMain.New(
                 parent, 
                 this.Body, 
                 new Environment(this.FormalParameters, args, this.Env));
+        }
+
+        /// <summary>
+        /// Display the closure as a string.  
+        /// Displays the formal parameters and the body, as it has been processed by the reader.
+        /// </summary>
+        /// <returns>The string form of the closure.</returns>
+        public override string ToString()
+        {
+            return string.Format("(lambda {0} {1})", this.FormalParameters, this.Body);
         }
     }
 }

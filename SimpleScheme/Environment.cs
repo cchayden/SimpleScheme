@@ -19,8 +19,9 @@ namespace SimpleScheme
         /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
         /// </summary>
-        public Environment()
+        public Environment(Scheme interp)
         {
+            this.Interp = interp;
         }
 
         /// <summary>
@@ -36,6 +37,7 @@ namespace SimpleScheme
         {
             this.symbolTable.AddList(vars, vals);
             this.Parent = parent;
+            this.Interp = parent.Interp;
 
             if (!NumberArgsOk(vars, vals))
             {
@@ -47,6 +49,8 @@ namespace SimpleScheme
         /// Gets the parent environment.
         /// </summary>
         public Environment Parent { get; private set; }
+
+        public Scheme Interp { get; private set; }
 
         /// <summary>
         /// Add a new definition into the environment.

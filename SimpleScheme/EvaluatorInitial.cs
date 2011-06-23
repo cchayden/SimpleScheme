@@ -19,7 +19,7 @@ namespace SimpleScheme
             /// This is never applied.
             /// </summary>
             public EvaluatorInitial()
-                : base(null, null, null, null)
+                : base(null, null, null)
             {
             }
 

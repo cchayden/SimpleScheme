@@ -1,5 +1,4 @@
-﻿#define NEW
-// <copyright file="InputPort.cs" company="Charles Hayden">
+﻿// <copyright file="InputPort.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -163,13 +162,6 @@ namespace SimpleScheme
             {
                 return token;
             }
-
-#if OLD
-            if (this.isPushedToken)
-            {
-                return this.PopToken();
-            }
-#endif
 
             int ch = this.inStream.ReadOrPop();
 

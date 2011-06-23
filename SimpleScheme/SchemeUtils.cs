@@ -336,6 +336,27 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Compares two characters.
+        /// </summary>
+        /// <param name="x">The first char.</param>
+        /// <param name="y">The second char.</param>
+        /// <param name="ci">If true, make the comparison case insensitive.</param>
+        /// <returns>Negative if x is before y, positive if x is after y, 
+        /// or 0 if they are the same.</returns>
+        public static int CharCompare(object x, object y, bool ci)
+        {
+            char xc = Chr(x);
+            char yc = Chr(y);
+            if (ci)
+            {
+                xc = char.ToLower(xc);
+                yc = char.ToLower(yc);
+            }
+
+            return xc - yc;
+        }
+
+        /// <summary>
         /// Turn an object that is a symbol into a string.
         /// It is stored as one already, so just verify that this is a symbol.
         /// </summary>

@@ -18,5 +18,15 @@ namespace SimpleScheme
             : base(parms, body, env)
         {
         }
+
+        /// <summary>
+        /// Display the macro as a string.  
+        /// Displays the formal parameters and the body, as it has been processed by the reader.
+        /// </summary>
+        /// <returns>The string form of the closure.</returns>
+        public override string ToString()
+        {
+            return string.Format("(macro {0} {1})", this.FormalParameters, this.Body);
+        }
     }
 }

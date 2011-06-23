@@ -40,12 +40,11 @@ namespace SimpleScheme
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorTimeCall class.
             /// </summary>
-            /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
-            public EvaluatorTimeCall(Scheme interp, Stepper parent, object expr, Environment env)
-                : base(interp, parent, expr, env)
+            public EvaluatorTimeCall(Stepper parent, object expr, Environment env)
+                : base(parent, expr, env)
             {
                 startMem = GC.GetTotalMemory(true);
                 stopwatch = Stopwatch.StartNew();
@@ -69,7 +68,7 @@ namespace SimpleScheme
                             continue;
 
                         case PC.Step1:
-                            object ans = Procedure.Proc(First(Expr)).Apply(Interp, this, null);
+                            object ans = Procedure.Proc(First(Expr)).Apply(this, null);
                             if (ans is Stepper)
                             {
                                 return GoToStep(PC.Step2, (Stepper)ans);

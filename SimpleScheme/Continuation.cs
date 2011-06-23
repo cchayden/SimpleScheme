@@ -30,14 +30,23 @@ namespace SimpleScheme
         /// <summary>
         /// Execute the continuation.
         /// </summary>
-        /// <param name="interpreter">The interpreter to execute in.</param>
         /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">The value to return.</param>
         /// <returns>The result of applying the continuation.</returns>
-        public override object Apply(Scheme interpreter, Stepper parent, object args)
+        public override object Apply(Stepper parent, object args)
         {
             this.Value = First(args);
             return Stepper.TransferToStep(First(args), this.step.Env, this.step.Parent.Parent);
+        }
+
+        /// <summary>
+        /// Display the continuation as a string.  
+        /// Displays the body, as it has been processed by the reader.
+        /// </summary>
+        /// <returns>The string form of the continuation.</returns>
+        public override string ToString()
+        {
+            return string.Format("call-with-current-continuation {0}", this.step.Expr);
         }
     }
 }

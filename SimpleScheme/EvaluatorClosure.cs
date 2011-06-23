@@ -4,52 +4,58 @@
 namespace SimpleScheme
 {
     /// <summary>
-    /// Stepper contains all the individual evaluators
+    /// Evaluate a closure
     /// </summary>
-    public partial class Stepper
+    public class EvaluatorClosure : Stepper
     {
         /// <summary>
-        /// Evaluate a closure
+        /// The closure to apply.
         /// </summary>
-        private class EvaluatorClosure : Stepper
+        private readonly Closure f;
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluatorClosure class.
+        /// </summary>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="f">The closure to evaluate</param>
+        private EvaluatorClosure(Stepper parent, object expr, Environment env, Closure f)
+            : base(parent, expr, env)
         {
-            /// <summary>
-            /// The closure to apply.
-            /// </summary>
-            private readonly Closure f;
+            this.f = f;
+        }
 
-            /// <summary>
-            /// Initializes a new instance of the Stepper.EvaluatorClosure class.
-            /// </summary>
-            /// <param name="interp">The interpreter.</param>
-            /// <param name="parent">The parent.  Return to this when done.</param>
-            /// <param name="expr">The expression to evaluate.</param>
-            /// <param name="env">The evaluation environment</param>
-            /// <param name="f">The closure to evaluate</param>
-            public EvaluatorClosure(Scheme interp, Stepper parent, object expr, Environment env, Closure f)
-                : base(interp, parent, expr, env)
+        /// <summary>
+        /// Creates a closure evaluator
+        /// </summary>
+        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="f">The closure to evaluate</param>
+        /// <returns>The closure evaluator..</returns>
+        public static EvaluatorClosure New(Stepper parent, object expr, Environment env, Closure f)
+        {
+            return new EvaluatorClosure(parent, expr, env, f);
+        }
+
+        /// <summary>
+        /// Evaluate a set! expression.
+        /// </summary>
+        /// <returns>The next step to execute.</returns>
+        public override Stepper RunStep()
+        {
+            switch (this.Pc)
             {
-                this.f = f;
+                case PC.Initial:
+                    Pc = PC.Step1;
+                    return CallList(Expr);
+
+                case PC.Step1:
+                    return SubReturn(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
             }
 
-            /// <summary>
-            /// Evaluate a set! expression.
-            /// </summary>
-            /// <returns>The next step to execute.</returns>
-            public override Stepper RunStep()
-            {
-                switch (this.Pc)
-                {
-                    case PC.Initial:
-                        Pc = PC.Step1;
-                        return CallList(Expr);
-
-                    case PC.Step1:
-                        return SubReturn(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
-                }
-
-                return EvalError("Closure: program counter error");
-            }
+            return EvalError("Closure: program counter error");
         }
     }
 }

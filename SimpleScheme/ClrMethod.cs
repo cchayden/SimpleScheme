@@ -75,15 +75,23 @@ namespace SimpleScheme
         /// Otherwise, the first argument is the class instance, and the rest are passed 
         ///    to the method.
         /// </summary>
-        /// <param name="interpreter">The interpreter supplies the global environment.</param>
         /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">Arguments to pass to the method.</param>
         /// <returns>The result of executing the method.</returns>
-        public override object Apply(Scheme interpreter, Stepper parent, object args)
+        public override object Apply(Stepper parent, object args)
         {
             return this.isStatic ? 
                 this.method.Invoke(null, this.ToArray(args)) : 
                 this.method.Invoke(First(args), this.ToArray(Rest(args)));
+        }
+
+        /// <summary>
+        /// Display the CLR proc name as a string.  
+        /// </summary>
+        /// <returns>The string form of the continuation.</returns>
+        public override string ToString()
+        {
+            return string.Format("ClrMethod {0}", this.Name);
         }
 
         /// <summary>
