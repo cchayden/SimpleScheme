@@ -31,6 +31,11 @@ namespace SimpleScheme
             return new EvaluateSequence(parent, expr, env);
         }
 
+        public static EvaluateSequence Call(Stepper caller, object expr)
+        {
+            return new EvaluateSequence(caller, expr, caller.Env);
+        }
+
         /// <summary>
         /// Evaluate a sequence of objects, returning the last.
         /// This was a simple while loop that has been split in the middle.
@@ -49,7 +54,7 @@ namespace SimpleScheme
                         }
 
                         this.Pc = PC.Step1;
-                        return CallEval(List.First(this.Expr));
+                        return EvaluatorMain.Call(this, List.First(this.Expr));
 
                     case PC.Step1:
                         this.Expr = List.Rest(this.Expr);

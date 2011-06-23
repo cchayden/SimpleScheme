@@ -47,17 +47,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a new map evaluator.
+        /// Call the map evaluator
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="proc">The proc to apply to each element of the list.</param>
-        /// <param name="result">The result is appended to this list.</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
-        /// <returns>The map evaluator.</returns>
-        public static EvaluateMap New(object expr, Environment env, Procedure proc, Pair result, Stepper parent)
+        /// <param name="caller">The caller -- return to this when done.</param>
+        /// <param name="expr">The map list to traverse.</param>
+        /// <param name="proc">The map proc.</param>
+        /// <param name="result">The result is appended to this.</param>
+        /// <returns>The step to execute.</returns>
+        public static EvaluateMap Call(Stepper caller, object expr, Procedure proc, Pair result)
         {
-            return new EvaluateMap(parent, expr, env, proc, result);
+            return new EvaluateMap(caller, expr, caller.Env, proc, result);
         }
 
         /// <summary>

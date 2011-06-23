@@ -24,13 +24,12 @@ namespace SimpleScheme
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static EvaluateIf New(object expr, Environment env, Stepper parent)
+        public static EvaluateIf Call(Stepper caller, object expr)
         {
-            return new EvaluateIf(parent, expr, env);
+            return new EvaluateIf(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -43,7 +42,7 @@ namespace SimpleScheme
             {
                 case PC.Initial:
                     Pc = PC.Step1;
-                    return CallEval(List.First(this.Expr));
+                    return EvaluatorMain.Call(this, List.First(this.Expr));
 
                 case PC.Step1:
                     return ReturnFromStep(SchemeBoolean.Truth(ReturnedExpr) ? List.Second(this.Expr) : List.Third(this.Expr));

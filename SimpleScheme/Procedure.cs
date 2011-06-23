@@ -30,6 +30,43 @@ namespace SimpleScheme
         public string Name { get; protected set; }
 
         /// <summary>
+        /// Define the procedure primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            const int MaxInt = int.MaxValue;
+            env
+                .DefinePrimitive("apply", (parent, args) => Proc(List.First(args)).Apply(parent, List.ListStar(List.Rest(args))), 2, MaxInt)
+                .DefinePrimitive(
+                    "call-with-current-continuation",
+                    (parent, args) => Proc(List.First(args)).Apply(
+                        parent,
+                        List.MakeList(new Continuation(EvaluateContinuation.Call(parent, List.First(args))))),
+                    1)
+                .DefinePrimitive(
+                    "call/cc",
+                    (parent, args) => Proc(List.First(args)).Apply(
+                        parent,
+                        List.MakeList(new Continuation(EvaluateContinuation.Call(parent, List.First(args))))),
+                    1)
+
+                 // Instead of returning a value, return an evaulator that can be run to get the value
+                .DefinePrimitive("eval", (parent, args) => EvaluatorMain.Call(parent, List.First(args), parent.Env), 1, 2)
+                .DefinePrimitive(
+                   "force",
+                   (parent, args) =>
+                   {
+                       object first = List.First(args);
+                       return !(first is Procedure) ? first : Proc(first).Apply(parent, null);
+                   },
+                   1)
+                .DefinePrimitive("for-each", (parent, args) => EvaluateMap.Call(parent, List.Rest(args), Proc(List.First(args)), null), 1, MaxInt)
+                .DefinePrimitive("map", (parent, args) => EvaluateMap.Call(parent, List.Rest(args), Proc(List.First(args)), List.MakeList(null)), 1, MaxInt)
+                .DefinePrimitive("procedure?", (parent, args) => SchemeBoolean.Truth(List.First(args) is Procedure), 1);
+        }
+
+        /// <summary>
         /// Convert the given object to a procedure.
         /// It should be one already: if not, throw an error.
         /// </summary>

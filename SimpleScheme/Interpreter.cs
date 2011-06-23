@@ -160,7 +160,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            return this.EvalStep(Stepper.CallEvaluate(expr, env, this.halted));
+            return this.EvalStep(EvaluatorMain.Call(this.halted, expr, env));
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace SimpleScheme
                 nextStep = nextStep.RunStep();
                 if (nextStep == Stepper.Suspended)
                 {
-            return nextStep;
+                    return nextStep;
                 }
 
                 if (nextStep == this.halted)

@@ -29,16 +29,15 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a closure evaluator
+        /// Calls a closure evaluator
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
         /// <param name="f">The closure to evaluate</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        public static EvaluateClosure New(object expr, Environment env, Closure f, Stepper parent)
+        public static EvaluateClosure Call(Stepper caller, object expr, Closure f)
         {
-            return new EvaluateClosure(parent, expr, env, f);
+            return new EvaluateClosure(caller, expr, caller.Env, f);
         }
 
         /// <summary>
@@ -51,7 +50,7 @@ namespace SimpleScheme
             {
                 case PC.Initial:
                     Pc = PC.Step1;
-                    return CallList(Expr);
+                    return EvaluateList.Call(this, Expr);
 
                 case PC.Step1:
                     //Console.WriteLine("({0} {1})", this.f.Name, List.First(ReturnedExpr));

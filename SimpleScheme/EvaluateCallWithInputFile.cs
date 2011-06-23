@@ -27,15 +27,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create a new evaluator
+        /// Call a new evaluator with an input file
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static EvaluateCallWithInputFile New(object expr, Environment env, Stepper parent)
+        public static EvaluateCallWithInputFile Call(Stepper caller, object expr)
         {
-            return new EvaluateCallWithInputFile(parent, expr, env);
+            return new EvaluateCallWithInputFile(caller, expr, caller.Env);
         }
 
         /// <summary>

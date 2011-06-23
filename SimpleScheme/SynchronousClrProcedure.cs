@@ -18,7 +18,7 @@ namespace SimpleScheme
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="methodName">The method to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        public SynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
+        private SynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
             : base(methodName, targetClassName)
         {
             try
@@ -40,6 +40,21 @@ namespace SimpleScheme
             {
                 ErrorHandlers.Error("Can't get method: " + this.Name);
             }
+        }
+
+        /// <summary>
+        /// Define the sync clr procedure primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static new void DefinePrimitives(Environment env)
+        {
+            const int MaxInt = int.MaxValue;
+            env
+                .DefinePrimitive(
+                   "method",
+                   (parent, args) => new SynchronousClrProcedure(List.First(args), SchemeString.AsString(List.Second(args), false), List.Rest(List.Rest(args))),
+                    2,
+                    MaxInt);
         }
 
         // TODO maybe this could be moved to base class.

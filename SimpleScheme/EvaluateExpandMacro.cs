@@ -27,16 +27,15 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a new expand evaluator.
+        /// Call an expand evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
         /// <param name="fn">The macro to expand.</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static EvaluateExpandMacro New(object expr, Environment env, Macro fn, Stepper parent)
+        public static EvaluateExpandMacro Call(Stepper caller, object expr, Macro fn)
         {
-            return new EvaluateExpandMacro(parent, expr, env, fn);
+            return new EvaluateExpandMacro(caller, expr, caller.Env, fn);
         }
 
         /// <summary>

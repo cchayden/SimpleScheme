@@ -46,15 +46,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create a new timed evaluator.
+        /// Call a timed evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static EvaluateTimeCall New(object expr, Environment env, Stepper parent)
+        public static EvaluateTimeCall Call(Stepper caller, object expr)
         {
-            return new EvaluateTimeCall(parent, expr, env);
+            return new EvaluateTimeCall(caller, expr, caller.Env);
         }
 
         /// <summary>

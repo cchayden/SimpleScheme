@@ -17,6 +17,17 @@ namespace SimpleScheme
         // Errors and Warnings
 
         /// <summary>
+        /// Define the error primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            const int MaxInt = int.MaxValue;
+            env
+                .DefinePrimitive("error", (parent, args) => Error(SchemeString.AsString(args)), 0, MaxInt);
+        }
+
+        /// <summary>
         /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
         /// </summary>

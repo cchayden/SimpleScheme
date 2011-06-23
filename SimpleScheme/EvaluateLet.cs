@@ -26,15 +26,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create a let evaluator.
+        /// Call a let evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static EvaluateLet New(object expr, Environment env, Stepper parent)
+        public static EvaluateLet Call(Stepper caller, object expr)
         {
-            return new EvaluateLet(parent, expr, env);
+            return new EvaluateLet(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -87,7 +86,7 @@ namespace SimpleScheme
                         if (name == null)
                         {
                             this.Pc = PC.Step1;
-                            return CallEval(innerLambda);
+                            return EvaluatorMain.Call(this, innerLambda);
                         } 
 
                         // named let -- create an outer lambda that defines the name
@@ -96,17 +95,17 @@ namespace SimpleScheme
                         object invoke = List.Cons(name, vals);
                         object letExpr = List.MakeList("lambda", List.MakeList(name), set, invoke);
                         this.Pc = PC.Step2;
-                        return CallEval(letExpr);
+                        return EvaluatorMain.Call(this, letExpr);
 
                     case PC.Step1:
                         // the rest of regular let
                         Pc = PC.Step3;
-                        return CallApplyProc(List.MapFun(List.Second, List.MakeList(this.bindings)), ReturnedExpr);
+                        return EvaluateApplyProc.Call(this, List.MapFun(List.Second, List.MakeList(this.bindings)), ReturnedExpr);
 
                     case PC.Step2:
                         // the rest of named let -- apply the lambda we defined before
                         Pc = PC.Step3;
-                        return CallApplyProc(List.MakeList(SchemeBoolean.False), ReturnedExpr);
+                        return EvaluateApplyProc.Call(this, List.MakeList(SchemeBoolean.False), ReturnedExpr);
 
                     case PC.Step3:
                         return ReturnFromStep(this.ReturnedExpr);

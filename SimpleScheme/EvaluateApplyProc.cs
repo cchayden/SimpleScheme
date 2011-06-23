@@ -27,16 +27,15 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a new apply proc evaluator.
+        /// Call apply proc evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
         /// <param name="fn">The function to apply.</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static EvaluateApplyProc New(object expr, Environment env, object fn, Stepper parent)
+        public static EvaluateApplyProc Call(Stepper caller, object expr, object fn)
         {
-            return new EvaluateApplyProc(parent, expr, env, fn);
+            return new EvaluateApplyProc(caller, expr, caller.Env, fn);
         }
 
         /// <summary>
@@ -51,7 +50,7 @@ namespace SimpleScheme
                 {
                     case PC.Initial:
                         Pc = PC.Step1;
-                        return CallList(Expr);
+                        return EvaluateList.Call(this, Expr);
 
                     case PC.Step1:
                         object res = Procedure.Proc(this.fn).Apply(this, ReturnedExpr);

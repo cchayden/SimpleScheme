@@ -1,6 +1,8 @@
 ﻿// <copyright file="ClrProcedure.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
+using System.IO;
+
 namespace SimpleScheme
 {
     using System;
@@ -43,17 +45,60 @@ namespace SimpleScheme
         protected List<Type> ArgClasses { get; set; }
 
         /// <summary>
-        /// Create an instance of the given class.
-        /// It is created using the default constructor.
+        /// Define the clr procedure primitives.
         /// </summary>
-        /// <param name="x">This is the class name.  It is either a type or the name 
-        ///    of a type.</param>
-        /// <returns>An instance of the class.</returns>
-        public static object CreateInstance(object x)
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static new void DefinePrimitives(Environment env)
         {
-            Type type = ToClass(x);
-            Assembly assembly = type.Assembly;
-            return assembly.CreateInstance(type.FullName);
+            env
+                .DefinePrimitive(
+                   "class", 
+                   (parent, args) =>
+                        {
+                            try
+                            {
+                                return Type.GetType(SchemeString.AsString(List.First(args), false));
+                            }
+                            catch (TypeLoadException)
+                            {
+                            }
+
+                            return SchemeBoolean.False;
+                        }, 
+                     1)
+                .DefinePrimitive(
+                    "new",
+                    (parent, args) =>
+                        {
+                            try
+                            {
+                                return CreateInstance(List.First(args));
+                            }
+                            catch (ArgumentNullException)
+                            {
+                            }
+                            catch (ArgumentException)
+                            {
+                            }
+                            catch (BadImageFormatException)
+                            {
+                            }
+                            catch (MissingMethodException)
+                            {
+                            }
+                            catch (FileLoadException)
+                            {
+                            }
+                            catch (FileNotFoundException)
+                            {
+                            }
+                            catch (TargetInvocationException)
+                            {
+                            }
+
+                            return SchemeBoolean.False;
+                        },
+                    1);
         }
 
         /// <summary>
@@ -107,6 +152,7 @@ namespace SimpleScheme
         {
             int n = List.Length(args);
             List<Type> array = new List<Type>(n);
+
             // TODO convert to use foreach
             for (int i = 0; i < n; i++)
             {
@@ -139,6 +185,7 @@ namespace SimpleScheme
             }
 
             List<object> array = new List<object>(n);
+
             // TODO convert to use foreach
             for (int i = 0; i < n; i++)
             {
@@ -164,6 +211,20 @@ namespace SimpleScheme
             }
 
             return array;
+        }
+
+        /// <summary>
+        /// Create an instance of the given class.
+        /// It is created using the default constructor.
+        /// </summary>
+        /// <param name="x">This is the class name.  It is either a type or the name 
+        ///    of a type.</param>
+        /// <returns>An instance of the class.</returns>
+        private static object CreateInstance(object x)
+        {
+            Type type = ToClass(x);
+            Assembly assembly = type.Assembly;
+            return assembly.CreateInstance(type.FullName);
         }
     }
 

@@ -23,13 +23,12 @@ namespace SimpleScheme
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        public static EvaluateAnd New(object expr, Environment env, Stepper parent)
+        public static EvaluateAnd Call(Stepper caller, object expr)
         {
-            return new EvaluateAnd(parent, expr, env);
+            return new EvaluateAnd(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -53,7 +52,7 @@ namespace SimpleScheme
 
                     case PC.Step1:
                         this.Pc = List.Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
-                        return CallEval(List.First(this.Expr));
+                        return EvaluatorMain.Call(this, List.First(this.Expr));
 
                     case PC.Step2:
                         if (SchemeBoolean.IsFalse(this.ReturnedExpr))

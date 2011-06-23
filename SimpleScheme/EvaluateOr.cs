@@ -21,15 +21,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a new or evaluator.
+        /// Calls an or evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The or evaluator.</returns>
-        public static EvaluateOr New(object expr, Environment env, Stepper parent)
+        public static EvaluateOr Call(Stepper caller, object expr)
         {
-            return new EvaluateOr(parent, expr, env);
+            return new EvaluateOr(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -53,7 +52,7 @@ namespace SimpleScheme
 
                     case PC.Step1:
                         this.Pc = List.Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
-                        return CallEval(List.First(this.Expr));
+                        return EvaluatorMain.Call(this, List.First(this.Expr));
 
                     case PC.Step2:
                         if (SchemeBoolean.Truth(this.ReturnedExpr))

@@ -37,7 +37,7 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("abc"))
             {
-                InputPort port = new InputPort(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader);
                 Assert.AreEqual('a', port.ReadChar());
                 Assert.AreEqual('b', port.ReadChar());
                 Assert.AreEqual('c', port.ReadChar());
@@ -53,7 +53,7 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("a"))
             {
-                InputPort port = new InputPort(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader);
                 Assert.AreEqual('a', port.PeekChar());
                 Assert.AreEqual('a', port.ReadChar());
                 Assert.AreEqual(InputPort.Eof, port.ReadChar());
@@ -68,7 +68,7 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("a"))
             {
-                InputPort port = new InputPort(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader);
                 Assert.AreEqual('a', port.PeekChar());
                 Assert.AreEqual('a', port.ReadChar());
                 port.PeekChar();

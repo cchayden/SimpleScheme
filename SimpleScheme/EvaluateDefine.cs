@@ -20,15 +20,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create a define evaluator.
+        /// Call a define evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static EvaluateDefine New(object expr, Environment env, Stepper parent)
+        public static EvaluateDefine Call(Stepper caller, object expr)
         {
-            return new EvaluateDefine(parent, expr, env);
+            return new EvaluateDefine(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -44,11 +43,11 @@ namespace SimpleScheme
                     if (List.First(this.Expr) is Pair)
                     {
                         Pc = PC.Step1;
-                        return CallEval(List.Cons("lambda", List.Cons(List.Rest(List.First(this.Expr)), List.Rest(this.Expr))));
+                        return EvaluatorMain.Call(this, List.Cons("lambda", List.Cons(List.Rest(List.First(this.Expr)), List.Rest(this.Expr))));
                     }
 
                     Pc = PC.Step2;
-                    return CallEval(List.Second(this.Expr));
+                    return EvaluatorMain.Call(this, List.Second(this.Expr));
 
                 case PC.Step1:
                     return ReturnFromStep(this.Env.Define(List.First(List.First(this.Expr)), ReturnedExpr));

@@ -32,15 +32,28 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a main evaluator.
+        /// Calls the main evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static EvaluatorMain New(object expr, Environment env, Stepper parent)
+        public static EvaluatorMain Call(Stepper caller, object expr)
         {
-            return new EvaluatorMain(parent, expr, env);
+            return new EvaluatorMain(caller, expr, caller.Env);
+        }
+
+        /// <summary>
+        /// Calls the main evaluator.
+        /// This version uses a supplied environment.  This is used with a closure
+        ///   to evaluate in the closure's environment rather than in the current one.
+        /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to evaluate in.</param>
+        /// <returns>The evaluator.</returns>
+        public static EvaluatorMain Call(Stepper caller, object expr, Environment env)
+        {
+            return new EvaluatorMain(caller, expr, env);
         }
 
         /// <summary>
@@ -92,45 +105,45 @@ namespace SimpleScheme
                                 {
                                     // Evaluate begin by evaluating all the items in order, 
                                     //   and returning the last.
-                                    return GoToStep(CallSequence(this.args), PC.Step2);
+                                    return GoToStep(EvaluateSequence.Call(this, this.args), PC.Step2);
                                 }
 
                             case "define":
                                 {
                                     // Define is a shortcut for lambda.
                                     // Evaluate by splicing lambda on the front and evaluating that.
-                                    return GoToStep(CallDefine(this.args), PC.Step3);
+                                    return GoToStep(EvaluateDefine.Call(this, this.args), PC.Step3);
                                 }
 
                             case "set!":
                                 {
                                     // Evaluate a set! expression by evaluating the second, 
                                     //   then setting the first to it.
-                                    return GoToStep(CallSet(this.args), PC.Step3);
+                                    return GoToStep(EvaluateSet.Call(this, this.args), PC.Step3);
                                 }
 
                             case "if":
                                 {
                                     // Eval an if expression by evaluating the first clause, 
                                     //    and then returning either the second or third.
-                                    return GoToStep(CallIf(this.args), PC.Step2);
+                                    return GoToStep(EvaluateIf.Call(this, this.args), PC.Step2);
                                 }
 
                             case "or":
                                 {
-                                    return GoToStep(CallOr(this.args), PC.Step3);
+                                    return GoToStep(EvaluateOr.Call(this, this.args), PC.Step3);
                                 }
 
                             case "and":
                                 {
-                                    return GoToStep(CallAnd(this.args), PC.Step3);
+                                    return GoToStep(EvaluateAnd.Call(this, this.args), PC.Step3);
                                 }
 
                             case "cond":
-                                return GoToStep(CallReduceCond(this.args), PC.Step2);
+                                return GoToStep(EvaluateCond.Call(this, this.args), PC.Step2);
 
                             case "let":
-                                return GoToStep(CallLet(this.args), PC.Step3);
+                                return GoToStep(EvaluateLet.Call(this, this.args), PC.Step3);
 
                             case "lambda":
                                 // Evaluate a lambda by creating a closure.
@@ -144,7 +157,7 @@ namespace SimpleScheme
                         // If we get here, it wasn't one of the special forms.  
                         // So we need to evaluate the first item (the function) in preparation for
                         //    doing a procedure call.
-                        return GoToStep(CallEval(this.fn), PC.Step1);
+                        return GoToStep(EvaluatorMain.Call(this, this.fn), PC.Step1);
 
                     case PC.Step1:
                         // Come here after evaluating fn
@@ -154,7 +167,7 @@ namespace SimpleScheme
                         // If the function is a macro, expand it and then continue.
                         if (this.fn is Macro)
                         {
-                            return GoToStep(CallExpandMacro(this.args, (Macro)this.fn), PC.Step2);
+                            return GoToStep(EvaluateExpandMacro.Call(this, this.args, (Macro)this.fn), PC.Step2);
                         }
 
                         // If the function is a closure, then create a new environment consisting of
@@ -165,14 +178,14 @@ namespace SimpleScheme
                         if (this.fn is Closure)
                         {
                             // CLOSURE CALL -- capture the environment and continue with the body
-                            return GoToStep(CallClosure(this.args, (Closure)this.fn), PC.Step2);
+                            return GoToStep(EvaluateClosure.Call(this, this.args, (Closure)this.fn), PC.Step2);
                         }
 
                         // This is a procedure call.
                         // In any other case, the function is a primitive or a user-defined function.
                         // Evaluate the arguments in the environment, then apply the function 
                         //    to the arguments.
-                        return GoToStep(CallApplyProc(this.args, this.fn), PC.Step3);
+                        return GoToStep(EvaluateApplyProc.Call(this, this.args, this.fn), PC.Step3);
 
                     case PC.Step2:
                         // Loop: copy results of return to Expr/Env and evaluate again

@@ -48,6 +48,46 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Define the output primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            env
+                .DefinePrimitive("call-with-output-file", (parent, args) => EvaluateCallWithOutputFile.Call(parent, args), 2)
+                .DefinePrimitive(
+                   "close-output-port",
+                   (parent, args) =>
+                   {
+                       OutPort(List.First(args), parent.Env.Interp).Close();
+                       return SchemeBoolean.True;
+                   },
+                   1)
+                .DefinePrimitive("current-output-port", (parent, args) => parent.Env.Interp.Output, 0)
+                .DefinePrimitive("display", (parent, args) => Write(List.First(args), OutPort(List.Second(args), parent.Env.Interp), false), 1, 2)
+                .DefinePrimitive(
+                   "newline",
+                   (parent, args) =>
+                   {
+                       object first = List.First(args);
+                       OutPort(first, parent.Env.Interp).Println();
+                       OutPort(first, parent.Env.Interp).Flush();
+                       return SchemeBoolean.True;
+                   },
+                    0,
+                    1)
+                .DefinePrimitive("open-output-file", (parent, args) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args)), 1)
+                .DefinePrimitive("output-port?", (parent, args) => SchemeBoolean.Truth(List.First(args) is OutputPort), 1)
+                .DefinePrimitive("write", (parent, args) => Write(List.First(args), OutPort(List.Second(args), parent.Env.Interp), true), 1, 2)
+                .DefinePrimitive("p", (parent, args) => P(List.First(args)), 1, 1)
+                .DefinePrimitive(
+                   "write-char", 
+                   (parent, args) => Write(List.First(args), OutPort(List.Second(args), parent.Env.Interp), false), 
+                   1, 
+                   2);
+        }
+
+        /// <summary>
         /// Write an object into an output port.
         /// </summary>
         /// <param name="x">The object to write.</param>
@@ -58,29 +98,6 @@ namespace SimpleScheme
         {
             port.Print(SchemeString.AsString(x, quoted));
             port.Flush();
-            return x;
-        }
-
-        /// <summary>
-        /// Print the object on the console.
-        /// </summary>
-        /// <param name="x">The object to print.</param>
-        /// <returns>The object printed.</returns>
-        public static object P(object x)
-        {
-            Console.Out.WriteLine(SchemeString.AsString(x));
-            return x;
-        }
-
-        /// <summary>
-        /// Print the object on the console along with a message.
-        /// </summary>
-        /// <param name="msg">The message.</param>
-        /// <param name="x">The object to print.</param>
-        /// <returns>The object printed.</returns>
-        public static object P(string msg, object x)
-        {
-            Console.Out.WriteLine(msg + ": " + SchemeString.AsString(x));
             return x;
         }
 
@@ -119,13 +136,26 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Print the object on the output port, followed by newline.
-        /// Calls ToString to convert the object to a string.
+        /// Print the object on the console.
         /// </summary>
         /// <param name="x">The object to print.</param>
-        public void Println(object x)
+        /// <returns>The object printed.</returns>
+        private static object P(object x)
         {
-            this.outp.WriteLine(x);
+            Console.Out.WriteLine(SchemeString.AsString(x));
+            return x;
+        }
+
+        /// <summary>
+        /// Print the object on the console along with a message.
+        /// </summary>
+        /// <param name="msg">The message.</param>
+        /// <param name="x">The object to print.</param>
+        /// <returns>The object printed.</returns>
+        private static object P(string msg, object x)
+        {
+            Console.Out.WriteLine(msg + ": " + SchemeString.AsString(x));
+            return x;
         }
     }
 }

@@ -3,7 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Collections.Generic;
+    using System.Text;
 
     /// <summary>
     /// Represents the interpreter environment.
@@ -12,7 +14,7 @@ namespace SimpleScheme
     /// Each link in the chain contains a symbol table of the bindings at that level.
     /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
-    public sealed partial class Environment
+    public sealed class Environment
     {
         /// <summary>
         /// The symbol table for this enviornment.
@@ -71,6 +73,40 @@ namespace SimpleScheme
         /// Gets the parent environment.
         /// </summary>
         public Environment Parent { get; private set; }
+
+        /// <summary>
+        /// Install primitives into the environment.
+        /// </summary>
+        /// <returns>The environment.</returns>
+        public Environment InstallPrimitives()
+        {
+            Number.DefinePrimitives(this);
+            Procedure.DefinePrimitives(this);
+            List.DefinePrimitives(this);
+            InputPort.DefinePrimitives(this);
+            OutputPort.DefinePrimitives(this);
+            Vector.DefinePrimitives(this);
+            SchemeBoolean.DefinePrimitives(this);
+            SchemeString.DefinePrimitives(this);
+            ClrProcedure.DefinePrimitives(this);
+            SynchronousClrProcedure.DefinePrimitives(this);
+            AsynchronousClrProcedure.DefinePrimitives(this);
+            ErrorHandlers.DefinePrimitives(this);
+
+            this
+                .DefinePrimitive(
+                   "exit", 
+                   (parent, args) =>
+                        {
+                            System.Environment.Exit(List.First(args) == null ? 0 : (int)Number.Num(List.First(args)));
+                            return null;
+                        },
+                   0, 
+                   1)
+                .DefinePrimitive("time-call", (parent, args) => EvaluateTimeCall.Call(parent, args), 1, 2);
+
+            return this;
+        }
 
         /// <summary>
         /// Add a new definition into the environment.
@@ -145,6 +181,76 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Define a primitive, taking a variable number of arguments.
+        /// Creates a Primitive object and puts it in the environment associated 
+        ///    with the given name.
+        /// </summary>
+        /// <param name="name">The primitive name.</param>
+        /// <param name="operation">The operation to perform.</param>
+        /// <param name="minArgs">The minimum number of arguments.</param>
+        /// <param name="maxArgs">The maximum number of arguments.</param>
+        /// <returns>A refernce to the environment.</returns>
+        public Environment DefinePrimitive(string name, Func<Stepper, object, object> operation, int minArgs, int maxArgs)
+        {
+            this.Define(name, new Primitive(operation, minArgs, maxArgs));
+            return this;
+        }
+
+        /// <summary>
+        /// Define a primitive, taking a fixed number of arguments.
+        /// Creates a Primitive object and puts it in the environment associated 
+        ///    with the given name.
+        /// </summary>
+        /// <param name="name">The primitive name.</param>
+        /// <param name="operation">The operation to perform.</param>
+        /// <param name="numberOfArgs">The number of arguments.</param>
+        /// <returns>A refernce to the environment.</returns>
+        public Environment DefinePrimitive(string name, Func<Stepper, object, object> operation, int numberOfArgs)
+        {
+            return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
+        }
+
+        /// <summary>
+        /// Dump the stack of environments.
+        /// At each level, sow the symbol table.
+        /// </summary>
+        /// <param name="nLevels">The number of levels to show.</param>
+        /// <returns>The environment stack, as a string.</returns>
+        public string Dump(int nLevels)
+        {
+            StringBuilder sb = new StringBuilder();
+            Environment env = this;
+            while (env != null && nLevels > 0)
+            {
+                env.symbolTable.Dump(sb);
+                sb.Append("-----\n");
+                env = env.Parent;
+                nLevels--;
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Dump the top level environment.
+        /// </summary>
+        /// <returns>The environment, as a string.</returns>
+        public string Dump()
+        {
+            return this.Dump(1);
+        }
+
+        /// <summary>
+        /// The default way to display environments during debugging.
+        /// </summary>
+        /// <returns>The environment as a string.</returns>
+        public override string ToString()
+        {
+            return "Environment \n" + this.Dump();
+        }
+
+
+        /// <summary>
         /// Check that the variable and value lists have the same length.
         /// Iterate down the lists together.
         /// If the vars list is not a proper list, but ends in a dotted pair whose 
@@ -171,36 +277,6 @@ namespace SimpleScheme
                 vars = List.Rest(vars);
                 vals = List.Rest(vals);
             }
-        }
-
-        /// <summary>
-        /// Define a primitive, taking a variable number of arguments.
-        /// Creates a Primitive object and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operationCode">The operationCode.</param>
-        /// <param name="minArgs">The minimum number of arguments.</param>
-        /// <param name="maxArgs">The maximum number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        private Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int minArgs, int maxArgs)
-        {
-            this.Define(name, new Primitive(operationCode, minArgs, maxArgs));
-            return this;
-        }
-
-        /// <summary>
-        /// Define a primitive, taking a fixed number of arguments.
-        /// Creates a Primitive object and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operationCode">The operationCode.</param>
-        /// <param name="numberOfArgs">The number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        private Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int numberOfArgs)
-        {
-            return this.DefinePrimitive(name, operationCode, numberOfArgs, numberOfArgs);
         }
 
         /// <summary>
@@ -280,6 +356,18 @@ namespace SimpleScheme
                 }
 
                 return false;
+            }
+
+            /// <summary>
+            /// Dump the symbol table to a string for printing.
+            /// </summary>
+            /// <param name="sb">A string builder to write the dump into.</param>
+            public void Dump(StringBuilder sb)
+            {
+                foreach (var kvp in this.symbolTable)
+                {
+                    sb.AppendFormat("{0} {1}\n", kvp.Key, kvp.Value);
+                }
             }
         }
     }

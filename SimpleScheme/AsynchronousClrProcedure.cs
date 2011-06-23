@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// <param name="targetClassName">The class name of the CLR function.</param>
         /// <param name="methodName">The method name of the CLR function.</param>
         /// <param name="argClassNames">The types of all method arguments.</param>
-        public AsynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
+        private AsynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
             : base(methodName, targetClassName)
         {
             try
@@ -51,6 +51,21 @@ namespace SimpleScheme
             {
                 ErrorHandlers.Error("Can't get method: " + this.Name);
             }
+        }
+
+        /// <summary>
+        /// Define the async clr procedure primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static new void DefinePrimitives(Environment env)
+        {
+            const int MaxInt = int.MaxValue;
+            env
+                .DefinePrimitive(
+                   "method-async",
+                   (parent, args) => new AsynchronousClrProcedure(List.First(args), SchemeString.AsString(List.Second(args), false), List.Rest(List.Rest(args))),
+                   2,
+                   MaxInt);
         }
 
         // TODO if this can be static or non-static, move synchronous version to base class and share.

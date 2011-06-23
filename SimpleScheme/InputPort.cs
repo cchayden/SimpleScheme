@@ -46,6 +46,26 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Define the input primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            env
+                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(List.First(args))), 1)
+                .DefinePrimitive("call-with-input-file", (parent, args) => EvaluateCallWithInputFile.Call(parent, args), 2)
+                .DefinePrimitive("close-input-port", (parent, args) => InPort(List.First(args), parent.Env.Interp).Close(), 1)
+                .DefinePrimitive("current-input-port", (parent, args) => parent.Env.Interp.Input, 0)
+                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(List.First(args))), 1)
+                .DefinePrimitive("input-port?", (parent, args) => SchemeBoolean.Truth(List.First(args) is InputPort), 1)
+                .DefinePrimitive("load", (parent, args) => parent.Env.Interp.LoadFile(List.First(args)), 1)
+                .DefinePrimitive("open-input-file", (parent, args) => EvaluateCallWithInputFile.OpenInputFile(List.First(args)), 1)
+                .DefinePrimitive("peek-char", (parent, args) => InPort(List.First(args), parent.Env.Interp).PeekChar(), 0, 1)
+                .DefinePrimitive("read", (parent, args) => InPort(List.First(args), parent.Env.Interp).Read(), 0, 1)
+                .DefinePrimitive("read-char", (parent, args) => InPort(List.First(args), parent.Env.Interp).ReadChar(), 0, 1);
+        }
+
+        /// <summary>
         /// Tests the object against EOF.
         /// </summary>
         /// <param name="x">The object to test.</param>
@@ -78,56 +98,12 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Take a peek at the next character, without consuming it.
-        /// </summary>
-        /// <returns>The next character (as a cell).</returns>
-        public object PeekChar()
-        {
-            int p = this.inStream.PeekCh();
-            if (p == -1)
-            {
-                return Eof;
-            }
-
-            return SchemeString.Chr((char)p);
-        }
-
-        /// <summary>
         /// Close the input port.
         /// </summary>
         /// <returns>True if the port was closed.</returns>
         public object Close()
         {
             return this.inStream.Close();
-        }
-
-        /// <summary>
-        /// Read a character from the input port.
-        /// Gets a pushed character, if present.
-        /// </summary>
-        /// <returns>The character read, or EOF.</returns>
-        public object ReadChar()
-        {
-            try
-            {
-                int ch = this.inStream.GetPushedChar();
-                if (ch == -2)
-                {
-                    ch = this.inStream.Read();
-                }
-
-                if (ch == -1)
-                {
-                    return Eof;
-                }
-
-                return SchemeString.Chr((char)ch);
-            }
-            catch (IOException ex)
-            {
-                ErrorHandlers.Warn("On input, exception: " + ex);
-                return Eof;
-            }
         }
 
         /// <summary>
@@ -167,6 +143,50 @@ namespace SimpleScheme
             catch (IOException ex)
             {
                 ErrorHandlers.Warn("On input, exception:" + ex);
+                return Eof;
+            }
+        }
+
+        /// <summary>
+        /// Take a peek at the next character, without consuming it.
+        /// </summary>
+        /// <returns>The next character (as a cell).</returns>
+        private object PeekChar()
+        {
+            int p = this.inStream.PeekCh();
+            if (p == -1)
+            {
+                return Eof;
+            }
+
+            return SchemeString.Chr((char)p);
+        }
+
+        /// <summary>
+        /// Read a character from the input port.
+        /// Gets a pushed character, if present.
+        /// </summary>
+        /// <returns>The character read, or EOF.</returns>
+        private object ReadChar()
+        {
+            try
+            {
+                int ch = this.inStream.GetPushedChar();
+                if (ch == -2)
+                {
+                    ch = this.inStream.Read();
+                }
+
+                if (ch == -1)
+                {
+                    return Eof;
+                }
+
+                return SchemeString.Chr((char)ch);
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.Warn("On input, exception: " + ex);
                 return Eof;
             }
         }

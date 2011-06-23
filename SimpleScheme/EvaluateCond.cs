@@ -30,15 +30,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a reduce cond evaluator.
+        /// Calls a reduce cond evaluator.
         /// </summary>
-        /// <param name="parent">The parent.  Return to this when done.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static EvaluateCond New(Stepper parent, object expr, Environment env)
+        public static EvaluateCond Call(Stepper caller, object expr)
         {
-            return new EvaluateCond(parent, expr, env);
+            return new EvaluateCond(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -72,7 +71,7 @@ namespace SimpleScheme
                         else
                         {
                             Pc = PC.Step1;
-                            return CallEval(List.First(this.clause));
+                            return EvaluatorMain.Call(this, List.First(this.clause));
                         }
 
                         continue;

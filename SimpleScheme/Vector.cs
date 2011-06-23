@@ -90,24 +90,20 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Enumerates characters from the vector.
+        /// Define the vector primitives.
         /// </summary>
-        /// <returns>The vector elements.</returns>
-        public IEnumerator<object> GetEnumerator()
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
         {
-            foreach (object obj in this.vec)
-            {
-                yield return obj;
-            }
-        }
-
-        /// <summary>
-        /// Gets the vector enumerator.
-        /// </summary>
-        /// <returns>The vector enumerator.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
+            const int MaxInt = int.MaxValue;
+            env
+                .DefinePrimitive("make-vector", (parent, args) => new Vector(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("vector", (parent, args) => new Vector(args), 0, MaxInt)
+                .DefinePrimitive("vector->list", (parent, args) => VectorToList(List.First(args)), 1)
+                .DefinePrimitive("vector-length", (parent, args) => Number.Num(Vec(List.First(args)).Length), 1)
+                .DefinePrimitive("vector-ref", (parent, args) => Vec(List.First(args))[(int)Number.Num(List.Second(args))], 2)
+                .DefinePrimitive("vector-set!", (parent, args) => Vec(List.First(args))[(int)Number.Num(List.Second(args))] = List.Third(args), 3)
+                .DefinePrimitive("vector?", (parent, args) => SchemeBoolean.Truth(List.First(args) is Vector), 1);
         }
 
         /// <summary>
@@ -135,11 +131,32 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Enumerates characters from the vector.
+        /// </summary>
+        /// <returns>The vector elements.</returns>
+        public IEnumerator<object> GetEnumerator()
+        {
+            foreach (object obj in this.vec)
+            {
+                yield return obj;
+            }
+        }
+
+        /// <summary>
+        /// Gets the vector enumerator.
+        /// </summary>
+        /// <returns>The vector enumerator.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        /// <summary>
         /// Convert an object that should be a vector into an array of objects.
         /// </summary>
         /// <param name="x">The vector.</param>
         /// <returns>The array of objects.</returns>
-        public static Vector Vec(object x)
+        private static Vector Vec(object x)
         {
             if (x is Vector) 
             {
@@ -155,7 +172,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The vector.</param>
         /// <returns>The list, or null.</returns>
-        public static Pair VectorToList(object x)
+        private static Pair VectorToList(object x)
         {
             if (x is Vector)
             {

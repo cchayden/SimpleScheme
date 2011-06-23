@@ -85,9 +85,9 @@ namespace Tests
         public void SetFirstTest()
         {
             var actual = List.Cons(1, 2);
-            List.SetFirst(actual, 10);
+            List_Accessor.SetFirst(actual, 10);
             Assert.AreEqual(10, List.First(actual));
-            AssertEx.Throws(() => List.SetFirst(1, 10));
+            AssertEx.Throws(() => List_Accessor.SetFirst(1, 10));
         }
 
         /// <summary>
@@ -97,9 +97,9 @@ namespace Tests
         public void SetRestTest()
         {
             var actual = List.Cons(1, 2);
-            List.SetRest(actual, 10);
+            List_Accessor.SetRest(actual, 10);
             Assert.AreEqual(10, List.Rest(actual));
-            AssertEx.Throws(() => List.SetRest(1, 10));
+            AssertEx.Throws(() => List_Accessor.SetRest(1, 10));
         }
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace Tests
         public void ReverseTest()
         {
             var test = List.MakeList(1, 2);
-            var actual = List.Reverse(test);
+            var actual = List_Accessor.Reverse(test);
             Assert.AreEqual(2, List.First(actual));
             Assert.AreEqual(1, List.First(List.Rest(actual)));
         }
@@ -354,7 +354,7 @@ namespace Tests
         [TestMethod]
         public void StrTest()
         {
-            var actual = SchemeString.Str(new SchemeString("abc"));
+            var actual = SchemeString_Accessor.Str(new SchemeString("abc"));
             Assert.AreEqual(3, actual.Length);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);
@@ -433,8 +433,8 @@ namespace Tests
         [TestMethod]
         public void SymTest()
         {
-            Assert.AreEqual("abc", SchemeString.Sym("abc"));
-            AssertEx.Throws(() => SchemeString.Sym(1));
+            Assert.AreEqual("abc", SchemeString_Accessor.Sym("abc"));
+            AssertEx.Throws(() => SchemeString_Accessor.Sym(1));
         }
 
         /// <summary>

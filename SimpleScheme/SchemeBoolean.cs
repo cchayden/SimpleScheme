@@ -19,6 +19,21 @@ namespace SimpleScheme
         public static readonly bool False = false;
 
         /// <summary>
+        /// Define the boolean primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            env
+                .DefinePrimitive("boolean?", (parent, args) => Truth(List.First(args) is bool), 1)
+                .DefinePrimitive("eq?", (parent, args) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("equal?", (parent, args) => Truth(Equal(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("eqv?", (parent, args) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("not", (parent, args) => Truth(List.First(args) is bool && (bool)List.First(args) == false), 1)
+                .DefinePrimitive("null?", (parent, args) => Truth(List.First(args) == null), 1);
+        }
+
+        /// <summary>
         /// Equality test for two objects.
         /// Two objects are equal if they:
         ///   are both null

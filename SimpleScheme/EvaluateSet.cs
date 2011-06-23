@@ -20,15 +20,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a set evaluator.
+        /// Calls a set evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static EvaluateSet New(object expr, Environment env, Stepper parent)
+        public static EvaluateSet Call(Stepper caller, object expr)
         {
-            return new EvaluateSet(parent, expr, env);
+            return new EvaluateSet(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -41,7 +40,7 @@ namespace SimpleScheme
             {
                 case PC.Initial:
                     Pc = PC.Step1;
-                    return CallEval(List.Second(this.Expr));
+                    return EvaluatorMain.Call(this, List.Second(this.Expr));
 
                 case PC.Step1:
                     return ReturnFromStep(this.Env.Set(List.First(this.Expr), ReturnedExpr));

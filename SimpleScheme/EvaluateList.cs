@@ -37,13 +37,12 @@ namespace SimpleScheme
         /// <summary>
         /// Create a list evaluator.
         /// </summary>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="parent">The parent.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        public static EvaluateList New(object expr, Environment env, Stepper parent)
+        public static EvaluateList Call(Stepper caller, object expr)
         {
-            return new EvaluateList(parent, expr, env);
+            return new EvaluateList(caller, expr, caller.Env);
         }
 
         /// <summary>
@@ -75,7 +74,7 @@ namespace SimpleScheme
                     case PC.Step1:
                         // there is more to do --  evaluate the first expression left
                         Pc = PC.Step2;
-                        return CallEval(List.First(this.Expr));
+                        return EvaluatorMain.Call(this, List.First(this.Expr));
 
                     case PC.Step2:
                         // back from the evaluation -- save the result and keep going with the rest

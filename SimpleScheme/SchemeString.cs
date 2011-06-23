@@ -78,34 +78,72 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Compare two strings.
+        /// Define the string primitives.
         /// </summary>
-        /// <param name="xstr">The first string.</param>
-        /// <param name="ystr">The second string.</param>
-        /// <param name="ci">Case invariant flag.</param>
-        /// <returns>Zero if the strings are the same, negative if the first is less, positive
-        /// if the second is less.</returns>
-        public static int Compare(SchemeString xstr, SchemeString ystr, bool ci)
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
         {
-            int diff = xstr.str.Length - ystr.str.Length;
-            if (diff != 0)
-            {
-                return diff;
-            }
+            const int MaxInt = int.MaxValue;
+            env
+                .DefinePrimitive("char->integer", (parent, args) => (double)SchemeString.Chr(List.First(args)), 1)
+                .DefinePrimitive("char-alphabetic?", (parent, args) => SchemeBoolean.Truth(char.IsLetter(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-ci<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) <= 0), 2)
+                .DefinePrimitive("char-ci<?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) < 0), 2)
+                .DefinePrimitive("char-ci=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) == 0), 2)
+                .DefinePrimitive("char-ci>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) >= 0), 2)
+                .DefinePrimitive("char-ci>?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), true) > 0), 2)
+                .DefinePrimitive("char-downcase", (parent, args) => SchemeString.Chr(char.ToLower(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-lower-case?", (parent, args) => SchemeBoolean.Truth(char.IsLower(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-numeric?", (parent, args) => SchemeBoolean.Truth(char.IsDigit(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-upcase", (parent, args) => SchemeString.Chr(char.ToUpper(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-upper-case?", (parent, args) => SchemeBoolean.Truth(char.IsUpper(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-whitespace?", (parent, args) => SchemeBoolean.Truth(char.IsWhiteSpace(SchemeString.Chr(List.First(args)))), 1)
+                .DefinePrimitive("char<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) <= 0), 2)
+                .DefinePrimitive("char<?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) < 0), 2)
+                .DefinePrimitive("char=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) == 0), 2)
+                .DefinePrimitive("char>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) >= 0), 2)
+                .DefinePrimitive("char>?", (parent, args) => SchemeBoolean.Truth(SchemeString.ChrCompare(List.First(args), List.Second(args), false) > 0), 2)
+                .DefinePrimitive("char?", (parent, args) => SchemeBoolean.Truth(List.First(args) is char), 1)
 
-            int len = xstr.str.Length;
-            for (int i = 0; i < len; i++)
-            {
-                diff = ci
-                           ? char.ToLower(xstr.str[i]) - char.ToLower(ystr.str[i])
-                           : xstr.str[i] - ystr.str[i];
-                if (diff != 0)
-                {
-                    return diff;
-                }
-            }
-
-            return 0;
+                .DefinePrimitive("make-string", (parent, args) => new SchemeString(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("string", (parent, args) => SchemeString.ListToString(args), 0, MaxInt)
+                .DefinePrimitive("string->list", (parent, args) => SchemeString.StringToList(List.First(args)), 1)
+                .DefinePrimitive("string->number", (parent, args) => SchemeString.StringToNumber(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("string->symbol", (parent, args) => string.Intern(SchemeString.Str(List.First(args)).AsString()), 1)
+                .DefinePrimitive("string-append", (parent, args) => SchemeString.StringAppend(args), 0, MaxInt)
+                .DefinePrimitive("string-ci<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) <= 0), 2)
+                .DefinePrimitive("string-ci<?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) < 0), 2)
+                .DefinePrimitive("string-ci=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) == 0), 2)
+                .DefinePrimitive("string-ci>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) >= 0), 2)
+                .DefinePrimitive("string-ci>?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), true) > 0), 2)
+                .DefinePrimitive("string-length", (parent, args) => Number.Num(SchemeString.Str(List.First(args)).Length), 1)
+                .DefinePrimitive("string-ref", (parent, args) => SchemeString.Chr(SchemeString.Str(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
+                .DefinePrimitive(
+                   "string-set!",
+                   (parent, args) =>
+                   {
+                       object z = List.Third(args);
+                       SchemeString.Str(List.First(args))[(int)Number.Num(List.Second(args))] = SchemeString.Chr(z);
+                       return z;
+                   },
+                    3)
+                .DefinePrimitive("string<=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) <= 0), 2)
+                .DefinePrimitive("string<?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) < 0), 2)
+                .DefinePrimitive("string=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) == 0), 2)
+                .DefinePrimitive("string>=?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) >= 0), 2)
+                .DefinePrimitive("string>?", (parent, args) => SchemeBoolean.Truth(SchemeString.StringCompare(List.First(args), List.Second(args), false) > 0), 2)
+                .DefinePrimitive("string?", (parent, args) => SchemeBoolean.Truth(List.First(args) is SchemeString), 1)
+                .DefinePrimitive(
+                    "substring",
+                    (parent, args) =>
+                    {
+                        int start = (int)Number.Num(List.Second(args));
+                        int end = (int)Number.Num(List.Third(args));
+                        return SchemeString.Str(List.First(args)).Substring(start, end - start);
+                    },
+                    3)
+                .DefinePrimitive("symbol->string", (parent, args) => new SchemeString(SchemeString.Sym(List.First(args))), 1)
+                .DefinePrimitive("symbol?", (parent, args) => SchemeBoolean.Truth(List.First(args) is string), 1);
         }
 
         /// <summary>
@@ -134,21 +172,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Turn an object (storing a string) into an array of characters.
-        /// </summary>
-        /// <param name="x">The string object.</param>
-        /// <returns>The character array.</returns>
-        public static SchemeString Str(object x)
-        {
-            if (x is SchemeString)
-            {
-                return (SchemeString)x;
-            }
-
-            return Str(ErrorHandlers.Error("Expected a string, got: " + x));
-        }
-
-        /// <summary>
         /// Convert a list of chars into a string.
         /// </summary>
         /// <param name="chars">The object that is a list of chars.</param>
@@ -165,88 +188,6 @@ namespace SimpleScheme
             }
 
             return new SchemeString(str.ToString());
-        }
-
-        /// <summary>
-        /// Convert a string to a list of characters.
-        /// </summary>
-        /// <param name="s">The string to convert.</param>
-        /// <returns>A list of the characters.</returns>
-        public static object StringToList(object s)
-        {
-            Pair result = null;
-            SchemeString str = Str(s);
-            for (int i = str.Length - 1; i >= 0; i--)
-            {
-                result = List.Cons(Chr(str[i]), result);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Convert all the elements of a list to strings and append them.
-        /// </summary>
-        /// <param name="args">The list of items.</param>
-        /// <returns>A character array of all the elements, converted to strings 
-        /// and appended.</returns>
-        public static SchemeString StringAppend(object args)
-        {
-            StringBuilder result = new StringBuilder();
-            // TODO convert to user foreach
-            while (args is Pair)
-            {
-                result.Append(AsString(List.First(args), false));
-                args = List.Rest(args);
-            }
-
-            return new SchemeString(result.ToString());
-        }
-
-        /// <summary>
-        /// Compare two strings.  Comparison may be case insensitive.
-        /// Return value indicating their relative order.
-        /// </summary>
-        /// <param name="x">The first string.</param>
-        /// <param name="y">The second string.</param>
-        /// <param name="ci">If true, make the comparison case insensitive.</param>
-        /// <returns>Negative if first string less then second, zero if they are equal, 
-        /// positive if first is greater.</returns>
-        public static int StringCompare(object x, object y, bool ci)
-        {
-            if (x is SchemeString && y is SchemeString)
-            {
-                return Compare((SchemeString)x, (SchemeString)y, ci);
-            }
-
-            ErrorHandlers.Error("StringCompare: expected two strings, got: " + AsString(x) + " and " + AsString(y));
-            return 0;
-        }
-
-        /// <summary>
-        /// Convert a string into a number, in a given number base.
-        /// </summary>
-        /// <param name="x">The value to convert.  This is first converted to a string, 
-        ///     then parsed as a number.</param>
-        /// <param name="y">The number base.  If not a number, then base 10 is used.</param>
-        /// <returns>The number represented by the string.</returns>
-        public static object StringToNumber(object x, object y)
-        {
-            int numberBase = y is double ? (int)Number.Num(y) : 10;
-            try
-            {
-                return numberBase == 10
-                           ? double.Parse(AsString(x, false))
-                           : Number.Num(Convert.ToInt64(AsString(x, false), numberBase));
-            }
-            catch (FormatException)
-            {
-                return SchemeBoolean.False;
-            }
-            catch (ArgumentException)
-            {
-                return SchemeBoolean.False;
-            }
         }
 
         /// <summary>
@@ -386,45 +327,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Compares two characters.
-        /// </summary>
-        /// <param name="x">The first char.</param>
-        /// <param name="y">The second char.</param>
-        /// <param name="ci">If true, make the comparison case insensitive.</param>
-        /// <returns>Negative if x is before y, positive if x is after y, 
-        /// or 0 if they are the same.</returns>
-        public static int ChrCompare(object x, object y, bool ci)
-        {
-            char xc = Chr(x);
-            char yc = Chr(y);
-            if (ci)
-            {
-                xc = char.ToLower(xc);
-                yc = char.ToLower(yc);
-            }
-
-            return xc - yc;
-        }
-
-        // Symbol operations
-
-        /// <summary>
-        /// Turn an object that is a symbol into a string.
-        /// It is stored as one already, so just verify that this is a symbol.
-        /// </summary>
-        /// <param name="x">The symbol.</param>
-        /// <returns>The corresponding string.</returns>
-        public static string Sym(object x)
-        {
-            if (x is string)
-            {
-                return (string)x;
-            }
-
-            return Sym(ErrorHandlers.Error("Expected a symbol, got: " + x));
-        }
-
-        /// <summary>
         /// Gets the SchemeString as a string.
         /// </summary>
         /// <returns>The contained string.</returns>
@@ -455,12 +357,180 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Compare two strings.
+        /// </summary>
+        /// <param name="xstr">The first string.</param>
+        /// <param name="ystr">The second string.</param>
+        /// <param name="ci">Case invariant flag.</param>
+        /// <returns>Zero if the strings are the same, negative if the first is less, positive
+        /// if the second is less.</returns>
+        private static int Compare(SchemeString xstr, SchemeString ystr, bool ci)
+        {
+            int diff = xstr.str.Length - ystr.str.Length;
+            if (diff != 0)
+            {
+                return diff;
+            }
+
+            int len = xstr.str.Length;
+            for (int i = 0; i < len; i++)
+            {
+                diff = ci
+                           ? char.ToLower(xstr.str[i]) - char.ToLower(ystr.str[i])
+                           : xstr.str[i] - ystr.str[i];
+                if (diff != 0)
+                {
+                    return diff;
+                }
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Turn an object (storing a string) into an array of characters.
+        /// </summary>
+        /// <param name="x">The string object.</param>
+        /// <returns>The character array.</returns>
+        private static SchemeString Str(object x)
+        {
+            if (x is SchemeString)
+            {
+                return (SchemeString)x;
+            }
+
+            return Str(ErrorHandlers.Error("Expected a string, got: " + x));
+        }
+
+        /// <summary>
+        /// Convert a string to a list of characters.
+        /// </summary>
+        /// <param name="s">The string to convert.</param>
+        /// <returns>A list of the characters.</returns>
+        private static object StringToList(object s)
+        {
+            Pair result = null;
+            SchemeString str = Str(s);
+            for (int i = str.Length - 1; i >= 0; i--)
+            {
+                result = List.Cons(Chr(str[i]), result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Convert all the elements of a list to strings and append them.
+        /// </summary>
+        /// <param name="args">The list of items.</param>
+        /// <returns>A character array of all the elements, converted to strings 
+        /// and appended.</returns>
+        private static SchemeString StringAppend(object args)
+        {
+            StringBuilder result = new StringBuilder();
+
+            // TODO convert to user foreach
+            while (args is Pair)
+            {
+                result.Append(AsString(List.First(args), false));
+                args = List.Rest(args);
+            }
+
+            return new SchemeString(result.ToString());
+        }
+
+        /// <summary>
+        /// Compare two strings.  Comparison may be case insensitive.
+        /// Return value indicating their relative order.
+        /// </summary>
+        /// <param name="x">The first string.</param>
+        /// <param name="y">The second string.</param>
+        /// <param name="ci">If true, make the comparison case insensitive.</param>
+        /// <returns>Negative if first string less then second, zero if they are equal, 
+        /// positive if first is greater.</returns>
+        private static int StringCompare(object x, object y, bool ci)
+        {
+            if (x is SchemeString && y is SchemeString)
+            {
+                return Compare((SchemeString)x, (SchemeString)y, ci);
+            }
+
+            ErrorHandlers.Error("StringCompare: expected two strings, got: " + AsString(x) + " and " + AsString(y));
+            return 0;
+        }
+
+        /// <summary>
+        /// Convert a string into a number, in a given number base.
+        /// </summary>
+        /// <param name="x">The value to convert.  This is first converted to a string, 
+        ///     then parsed as a number.</param>
+        /// <param name="y">The number base.  If not a number, then base 10 is used.</param>
+        /// <returns>The number represented by the string.</returns>
+        private static object StringToNumber(object x, object y)
+        {
+            int numberBase = y is double ? (int)Number.Num(y) : 10;
+            try
+            {
+                return numberBase == 10
+                           ? double.Parse(AsString(x, false))
+                           : Number.Num(Convert.ToInt64(AsString(x, false), numberBase));
+            }
+            catch (FormatException)
+            {
+                return SchemeBoolean.False;
+            }
+            catch (ArgumentException)
+            {
+                return SchemeBoolean.False;
+            }
+        }
+
+        /// <summary>
+        /// Compares two characters.
+        /// </summary>
+        /// <param name="x">The first char.</param>
+        /// <param name="y">The second char.</param>
+        /// <param name="ci">If true, make the comparison case insensitive.</param>
+        /// <returns>Negative if x is before y, positive if x is after y, 
+        /// or 0 if they are the same.</returns>
+        private static int ChrCompare(object x, object y, bool ci)
+        {
+            char xc = Chr(x);
+            char yc = Chr(y);
+            if (ci)
+            {
+                xc = char.ToLower(xc);
+                yc = char.ToLower(yc);
+            }
+
+            return xc - yc;
+        }
+
+        // Symbol operations
+
+        /// <summary>
+        /// Turn an object that is a symbol into a string.
+        /// It is stored as one already, so just verify that this is a symbol.
+        /// </summary>
+        /// <param name="x">The symbol.</param>
+        /// <returns>The corresponding string.</returns>
+        private static string Sym(object x)
+        {
+            if (x is string)
+            {
+                return (string)x;
+            }
+
+            return Sym(ErrorHandlers.Error("Expected a symbol, got: " + x));
+        }
+
+        /// <summary>
         /// Get a substring from the string.
         /// </summary>
         /// <param name="start">The starting character position.</param>
         /// <param name="len">The number of characters.</param>
         /// <returns>A substring, starting at the given position.</returns>
-        public SchemeString Substring(int start, int len)
+        private SchemeString Substring(int start, int len)
         {
             return new SchemeString(this.str.Substring(start, len));
         }
