@@ -82,19 +82,6 @@ namespace SimpleScheme
 
         /// <summary>
         /// Make a call to a sub-evaluator.
-        /// When that returns, store the result and return.
-        /// </summary>
-        /// <param name="toCall">The evaluator to call.</param>
-        /// <returns>The first step of the sub-evaluator.</returns>
-        protected Evaluator SubEvalReturn(Evaluator toCall)
-        {
-            this.Called = toCall;
-            Pc = PcReturn;
-            return toCall;
-        }
-
-        /// <summary>
-        /// Make a call to a sub-evaluator.
         /// When that returns, store the result but do not return.
         /// </summary>
         /// <param name="toCall">The evaluator to call.</param>
@@ -106,12 +93,24 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Store the result and return.
+        /// Make a call to a sub-evaluator.
+        /// When that returns, store the result and return.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
+        /// <param name="toCall">The evaluator to call.</param>
+        /// <returns>The first step of the sub-evaluator.</returns>
+        protected Evaluator SubEvalReturn(Evaluator toCall)
+        {
+            Pc = PcReturn;
+            return SubEval(toCall);
+        }
+
+        /// <summary>
+        /// Return immediately.
+        /// </summary>
+        /// <returns>The parent evaluator..</returns>
         protected Evaluator EvalReturn()
         {
-            return SubEvalReturn(this);
+            return this.Parent;
         }
 
         /// <summary>
@@ -122,6 +121,16 @@ namespace SimpleScheme
         {
             Called = null;
             return this;
+        }
+
+        /// <summary>
+        /// Recursive Evaluator call.
+        /// </summary>
+        /// <param name="args">The expression to evaluate.</param>
+        /// <returns>The next evaluation step.</returns>
+        protected Evaluator CallEval(object args)
+        {
+            return SubEval(new EvaluatorMain(this.Interp, this, args, this.Env));
         }
     }
 
@@ -177,6 +186,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public override Evaluator EvalStep()
         {
+            // pick up results of call
             if (this.Called != null)
             {
                 this.Expr = this.Called.RetExpr;
@@ -186,12 +196,8 @@ namespace SimpleScheme
             if (this.Pc == PcReturn)
             {
                 this.RetExpr = this.Expr;
-                return this.Parent;
+                return EvalReturn();
             }
-
-            // set default return values
-            this.RetExpr = this.Expr;
-            this.RetEnv = this.Env;
 
             if (this.Expr is string)
             {
@@ -207,6 +213,7 @@ namespace SimpleScheme
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.
                 // Return the integer, real, boolean, or vector.
+                this.RetExpr = this.Expr;
                 return EvalReturn();
             }
 
@@ -323,12 +330,12 @@ namespace SimpleScheme
                 case 0:
                     Pc = 1;
                     first = First(this.Expr);
-                    return SubEval(new EvaluatorMain(Interp, this, Second(this.Expr), this.Env));
+                    return CallEval(Second(this.Expr));
                 case 1:
                     this.RetExpr = this.Env.Set(first, Called.RetExpr);
                     break;
             }
-            return this.Parent;
+            return EvalReturn();
         }
         
     }
@@ -361,14 +368,10 @@ namespace SimpleScheme
                     if (First(this.Expr) is Pair)
                     {
                         Pc = 1;
-                        return SubEval(new EvaluatorMain(
-                            Interp, 
-                            this, 
-                            Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))), 
-                            this.Env));
+                        return CallEval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))));
                     }
                     Pc = 2;
-                    return SubEval(new EvaluatorMain(Interp, this, (Second(this.Expr)), this.Env));
+                    return CallEval(Second(this.Expr));
                 case 1:
                     this.RetExpr = this.Env.Define(First(First(this.Expr)), Called.RetExpr);
                     break;
@@ -376,7 +379,7 @@ namespace SimpleScheme
                     this.RetExpr = this.Env.Define(First(this.Expr), Called.RetExpr);
                     break;
             }
-            return this.Parent;
+            return EvalReturn();
         }
     }
 
@@ -407,12 +410,12 @@ namespace SimpleScheme
             {
                 case 0:
                     Pc = 1;
-                    return SubEval(new EvaluatorMain(Interp, this, First(this.Expr), this.Env));
+                    return CallEval(First(this.Expr));
                 case 1:
                     this.RetExpr = Truth(Called.RetExpr) ? Second(this.Expr) : Third(this.Expr);
                     break;
             }
-            return this.Parent;
+            return EvalReturn();
         }
     }
 
@@ -441,16 +444,16 @@ namespace SimpleScheme
                     if (Rest(this.Expr) != null)
                     {
                         this.Pc = 1;
-                        return SubEval(new EvaluatorMain(Interp, this, First(this.Expr), this.Env));
+                        return CallEval(First(this.Expr));
                     }
                     this.RetExpr = First(this.Expr);
                     break;
                 case 1:
                     this.Expr = Rest(this.Expr);
                     this.Pc = 0;
-                    return this;
+                    return EvalContinue();
             }
-            return this.Parent;
+            return EvalReturn();
         }
     }
 
@@ -499,13 +502,13 @@ namespace SimpleScheme
                     // start with an empty list
                     accum = result = List(null); // empty cell will be stripped off below
                     Pc = 1;
-                    return this;
+                    return EvalContinue();
                 case 1:
                     if (this.Expr is Pair)
                     {
                         // if there is more to do, evaluate the first expression
                         Pc = 2;
-                        return SubEval(new EvaluatorMain(Interp, this, First(this.Expr), this.Env));
+                        return CallEval(First(this.Expr));
                     }
                     // if we are done, just return the result minus the dummy entry
                     this.RetExpr = result.Rest;
@@ -515,9 +518,9 @@ namespace SimpleScheme
                     Pc = 1;
                     accum = (Pair) (accum.Rest = List(Called.RetExpr));
                     Expr = Rest(Expr);
-                    return this;
+                    return EvalContinue();
             }
-            return this.Parent;
+            return EvalReturn();
         }
     }
 
@@ -559,7 +562,7 @@ namespace SimpleScheme
                     this.RetEnv = new Environment(f.Parms, Called.RetExpr, f.Env);
                     break;
             }
-            return this.Parent;
+            return EvalReturn();
         }
         
     }
@@ -601,7 +604,7 @@ namespace SimpleScheme
                     this.RetExpr = Procedure.Proc(fn).Apply(this.Interp, Called.RetExpr);
                     break;
             }
-            return this.Parent;
+            return EvalReturn();
         }
         
     }
@@ -642,7 +645,7 @@ namespace SimpleScheme
                     if (Expr == null)
                     {
                         RetExpr = False;
-                        return this.Parent;
+                        return EvalReturn();
                     }
                     clause = First(Expr);
                     Expr = Rest(Expr);
@@ -654,13 +657,13 @@ namespace SimpleScheme
                     else
                     {
                         Pc = 1;
-                        return SubEval(new EvaluatorMain(Interp, this, First(clause), this.Env));
+                        return CallEval(First(clause));
                     }
-                    return this;
+                    return EvalContinue();
                 case 1:
                     result = Called.RetExpr;
                     Pc = Truth(result) ? 2 : 0;
-                    return this;
+                    return EvalContinue();
                 case 2:
                     if (Rest(clause) == null)
                     {
@@ -677,7 +680,7 @@ namespace SimpleScheme
                     RetExpr = Cons("begin", Rest(clause));
                     break;
             }
-            return this.Parent;
+            return EvalReturn();
         }
     }
 }
