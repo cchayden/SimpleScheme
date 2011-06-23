@@ -174,10 +174,5 @@ namespace SimpleScheme
 
             return array;
         }
-
-        public override Evaluator ApplyStep()
-        {
-            return null;
-        }
     }
 }

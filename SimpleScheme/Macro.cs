@@ -1,8 +1,11 @@
-﻿// <copyright file="Macro.cs" company="Charles Hayden">
+﻿#define OLDxx
+// <copyright file="Macro.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
     /// Represents a macro definition.
     /// </summary>
@@ -22,8 +25,8 @@ namespace SimpleScheme
         /// <summary>
         /// Exapnd the macro.
         /// </summary>
-        /// <param name="interpreter">The interpreter instance the expansion 
-        ///    takes place in.</param>
+        /// <param name="interpreter">The interpreter used in the expansion.</param>
+        /// <param name="parent">The calling Evaluator.</param>
         /// <param name="x">The macro args, consisting of the macro name and args.</param>
         /// <returns>The result of macro expansion.</returns>
         public static object MacroExpand(Scheme interpreter, Evaluator parent, object x)
@@ -33,21 +36,27 @@ namespace SimpleScheme
                 return x;
             }
 
-            object fn = interpreter.Eval(First(x), interpreter.GlobalEnvironment);
-            return !(fn is Macro) ? x : ((Macro)fn).Expand(interpreter, parent, (Pair)x, Rest(x));
+            // The only caller is Primitive.Apply
+            return parent.CallEvalExpand(First(x));
         }
 
         /// <summary>
         /// Expand the macro.
         /// </summary>
-        /// <param name="interpreter">The interpreter instance the expansion takes 
-        ///    place in.</param>
-        /// <param name="oldPair">???</param>
+        /// <param name="interpreter">The interpreter used in the expansion.</param>
+        /// <param name="parent">The calling Evaluator.</param>
+        /// <param name="oldPair">The expression to replace by the expansion.</param>
         /// <param name="args">The macro args.</param>
         /// <returns>The result of expanding the macro.</returns>
-        public Pair Expand(Scheme interpreter, Evaluator parent, Pair oldPair, object args)
+        public object Expand(Scheme interpreter, Evaluator parent, Pair oldPair, object args)
         {
             object expansion = Apply(interpreter, parent, args);
+            if (expansion is Evaluator) 
+            {
+                return expansion;
+            }
+
+            throw new Exception("should not get here");
             if (expansion is Pair)
             {
                 oldPair.First = ((Pair)expansion).First;

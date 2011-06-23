@@ -413,8 +413,12 @@ namespace SimpleScheme
 
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
+        /// This may return a result or an Evaluator, which can be used to get a result.
+        /// If parent is null, then it will not return an Evaluator, so when that is not
+        ///   acceptable, pass null for parent.
         /// </summary>
         /// <param name="interp">The interpreter context.</param>
+        /// <param name="parent">The calling Evaluator.</param>
         /// <param name="args">The arguments to the primitive.</param>
         /// <returns>The result of the application.</returns>
         public override object Apply(Scheme interp, Evaluator parent, object args)
@@ -874,6 +878,8 @@ namespace SimpleScheme
                     return !(x is Procedure) ? x : Proc(x).Apply(interp, parent, null);
 
                 case OpCode.MACROEXPAND:
+                    // Either returns the expansion, or else an Evaluator that will do
+                    //   then expansion
                     return Macro.MacroExpand(interp, parent, x);
 
                 case OpCode.PROCEDUREQ:
@@ -893,7 +899,9 @@ namespace SimpleScheme
                     Continuation proc = new Continuation(cc);
                     try
                     {
-                        return Proc(x).Apply(interp, parent, List(proc));
+                        // TODO apply must not return evaluator here, otherwise we will lose the
+                        //    context of catch
+                        return Proc(x).Apply(interp, null, List(proc));
                     }
                     catch (Exception ex)
                     {
@@ -935,7 +943,8 @@ namespace SimpleScheme
                     try
                     {
                         p = OpenOutputFile(x);
-                        z = Proc(y).Apply(interp, parent, List(p));
+                        // TODO apply can be delayed, in which case Close needs to be delayed as well.
+                        z = Proc(y).Apply(interp, null, List(p));
                     }
                     finally
                     {
@@ -952,7 +961,8 @@ namespace SimpleScheme
                     try
                     {
                         p2 = OpenInputFile(x);
-                        z = Proc(y).Apply(interp, parent, List(p2));
+                        // TODO apply can be delayed, in which case Close needs to be delayed as well.
+                        z = Proc(y).Apply(interp, null, List(p2));
                     }
                     finally
                     {
@@ -1052,6 +1062,7 @@ namespace SimpleScheme
                     int counter = y == null ? 1 : (int)Num(y);
                     for (int i = 0; i < counter; i++)
                     {
+                        // TODO if this returns Evaluator, then it has not actually done anything
                         ans = Proc(x).Apply(interp, parent, null);
                     }
 
@@ -1231,6 +1242,7 @@ namespace SimpleScheme
         ///     as the length of the list args.</param>
         /// <param name="args">The list of lists to use.</param>
         /// <param name="interp">The interpreter context.</param>
+        /// <param name="parent">The calling Evaluator.</param>
         /// <param name="result">The result so far.  Starts as the empty list.</param>
         /// <returns>A list made up of the proc applied to corresponding elements of 
         ///     each of the elements of args.</returns>
@@ -1601,11 +1613,6 @@ namespace SimpleScheme
             {
                 return False;
             }
-        }
-
-        public override Evaluator ApplyStep()
-        {
-            return null;
         }
     }
 }

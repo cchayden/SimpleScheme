@@ -42,10 +42,5 @@ namespace SimpleScheme
             this.Value = First(args);
             throw this.cc;
         }
-
-        public override Evaluator ApplyStep()
-        {
-            return null;
-        }
     }
 }

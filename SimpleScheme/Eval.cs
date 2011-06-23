@@ -88,10 +88,10 @@ namespace SimpleScheme
         /// Gets or sets the Evaluators program counter.
         /// Used to sequence through multiple steps.
         /// </summary>
-        protected int Pc
+        public int Pc
         {
             get { return frame.Pc; }
-            set { frame.Pc = value; }
+            protected set { frame.Pc = value; }
         }
 
         /// <summary>
@@ -171,6 +171,16 @@ namespace SimpleScheme
         protected Evaluator CallEval(object args)
         {
             return SubCall(new EvaluatorMain(this.Interp, this, args, this.Env));
+        }
+
+        /// <summary>
+        /// Recursive Evaluator call in the global environment.
+        /// </summary>
+        /// <param name="args">The expression to evaluate.</param>
+        /// <returns>The next evaluation step.</returns>
+        protected Evaluator CallEvalGlobal(object args)
+        {
+            return SubCall(new EvaluatorMain(this.Interp, this, args, this.Interp.GlobalEnvironment));
         }
 
         /// <summary>
@@ -254,6 +264,22 @@ namespace SimpleScheme
         protected Evaluator CallApplyProc(object args, object fn)
         {
             return SubCall(new EvaluatorApplyProc(Interp, this, args, Env, fn));
+        }
+
+        /// <summary>
+        /// Create a macro expander.
+        /// Evaluates the args, then expands.
+        /// </summary>
+        /// <param name="args">The macro to expand.</param>
+        /// <returns>The step to execute.</returns>
+        public Evaluator CallEvalExpand(object args)
+        {
+            return SubCall(new EvaluatorEvalExpand(Interp, this, args, Env));
+        }
+
+        public Evaluator CallExpand(object expr, object args, object fn)
+        {
+            return SubCall(new EvaluatorExpand(Interp, this, expr, Env, fn, args));
         }
     }
 }

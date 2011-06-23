@@ -45,6 +45,7 @@
     <Compile Include="EvaluatorApplyProc.cs" />
     <Compile Include="EvaluatorClosure.cs" />
     <Compile Include="EvaluatorDefine.cs" />
+    <Compile Include="EvaluatorExpand.cs" />
     <Compile Include="EvaluatorIf.cs" />
     <Compile Include="EvaluatorList.cs" />
     <Compile Include="EvaluatorMain.cs" />

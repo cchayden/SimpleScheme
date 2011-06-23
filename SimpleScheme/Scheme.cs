@@ -120,19 +120,22 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
+            int steps = 0;
             Evaluator eval = Evaluator.CallMain(this, null, expr, env);
             Evaluator nextStep = eval;
             while (true)
             {
-//Console.WriteLine("Evaluating {0} {1} {2}", eval.Expr, eval.Pc, eval.GetType());
+//Console.WriteLine("Evaluating {0} {1}", eval.Expr, eval.Pc);
                 nextStep = nextStep.EvalStep();
                 if (nextStep == null)
                 {
                     break;
                 }
                 eval = nextStep;
+                steps++;
             }
 
+            Console.WriteLine("Steps: {0}", steps);
             return eval.RetExpr;
         }
 

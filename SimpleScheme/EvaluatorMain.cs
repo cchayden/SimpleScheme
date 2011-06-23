@@ -1,4 +1,4 @@
-﻿#define NEW
+﻿#define OLDxx
 // <copyright file="EvaluatorMain.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
@@ -164,9 +164,15 @@ namespace SimpleScheme
                         if (fn is Macro)
                         {
                             Macro m = (Macro)fn;
-                            this.Expr = m.Expand(this.Interp, this, (Pair)this.Expr, args);
+#if OLD
+                            // TODO by passing null, we disable eval flattening
+                            this.Expr = m.Expand(this.Interp, null, (Pair)this.Expr, args);
                             Pc = 0;
                             return SubContinue();
+#else
+                            Pc = 1;
+                            return CallExpand(this.Expr, args, m);
+#endif
                         }
 
                         // If the function is a closure, then create a new environment consisting of

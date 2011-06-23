@@ -49,12 +49,12 @@ namespace SimpleScheme
         /// <returns>The results of executing the program.</returns>
         public override object Apply(Scheme interpreter, Evaluator parent, object args)
         {
-            return interpreter.Eval(this.Body, new Environment(this.Parms, args, this.Env));
-        }
-
-        public override Evaluator ApplyStep()
-        {
-            return null;
+            // TODO handle the case where this is called by Macro Expand
+            if (parent == null)
+            {
+                return interpreter.Eval(this.Body, new Environment(this.Parms, args, this.Env));
+            }
+            return Evaluator.CallMain(interpreter, parent, this.Body, new Environment(this.Parms, args, this.Env));
         }
     }
 }
