@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// This is an iterative, rather than a recursive one.
     /// </summary>
     //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-    public sealed class EvaluateMap : Stepper
+    internal sealed class EvaluateMap : Stepper
     {
         #region Fields
         /// <summary>
@@ -84,13 +84,13 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call the map evaluator
         /// </summary>
@@ -99,7 +99,7 @@ namespace SimpleScheme
         /// <param name="returnResult">If true, return the result of the map.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The step to execute.</returns>
-        public static Stepper Call(Procedure proc, Obj expr, bool returnResult, Stepper caller)
+        internal static Stepper Call(Procedure proc, Obj expr, bool returnResult, Stepper caller)
         {
             return new EvaluateMap(proc, expr, caller.Env, returnResult, caller);
         }

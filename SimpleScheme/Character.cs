@@ -11,12 +11,29 @@ namespace SimpleScheme
     /// </summary>
     public class Character : ListPrimitives
     {
+        #region Public Static Methods
+        /// <summary>
+        /// Convert an Obj containing a character into the character.
+        /// </summary>
+        /// <param name="c">The Obj containing the char.</param>
+        /// <returns>The character it contains.</returns>
+        public static char Chr(Obj c)
+        {
+            if (!(c is char))
+            {
+                return Chr(ErrorHandlers.Error("Expected a char, got: " + c));
+            }
+
+            return (char)c;
+        }
+        #endregion
+
         #region Define Primitives
         /// <summary>
         /// Define the character primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
@@ -60,22 +77,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Convert an Obj containing a character into the character.
-        /// </summary>
-        /// <param name="c">The Obj containing the char.</param>
-        /// <returns>The character it contains.</returns>
-        public static char Chr(Obj c)
-        {
-            if (!(c is char))
-            {
-                return Chr(ErrorHandlers.Error("Expected a char, got: " + c));
-            }
-
-            return (char)c;
-        }
-
+        #region Internal Static Methods
         /// <summary>
         /// Compares two characters.
         /// </summary>
@@ -84,7 +86,7 @@ namespace SimpleScheme
         /// <param name="ci">If true, make the comparison case insensitive.</param>
         /// <returns>Negative if x is before y, positive if x is after y, 
         /// or 0 if they are the same.</returns>
-        public static int ChrCompare(Obj x, Obj y, bool ci)
+        internal static int ChrCompare(Obj x, Obj y, bool ci)
         {
             char xc = Chr(x);
             char yc = Chr(y);

@@ -117,12 +117,12 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(str))
             {
-                InputPort inp = new InputPort(reader);
+                InputPort_Accessor inp = new InputPort_Accessor(reader);
                 Obj last = List.Empty;
                 while (true)
                 {
                     Obj x;
-                    if (InputPort.IsEof(x = inp.Read()))
+                    if (InputPort_Accessor.IsEof(x = inp.Read()))
                     {
                         return last;
                     }

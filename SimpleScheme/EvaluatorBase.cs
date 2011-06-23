@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Eval creates one of these to be the parent of its initial step.
     /// It is also used for a suspended evaluator in async operations.
     /// </summary>
-    public class EvaluatorBase : Stepper
+    internal class EvaluatorBase : Stepper
     {
         #region Constructor
         /// <summary>
@@ -18,7 +18,7 @@ namespace SimpleScheme
         /// This is never applied.
         /// </summary>
         /// <param name="name">The evaluator name.</param>
-        public EvaluatorBase(string name)
+        internal EvaluatorBase(string name)
             : base(name, null, null)
         {
         }
@@ -39,7 +39,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return "base"; }
         }

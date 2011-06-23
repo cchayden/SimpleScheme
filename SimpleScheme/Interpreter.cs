@@ -47,16 +47,16 @@ namespace SimpleScheme
             this.halted = new EvaluatorBase("halted");
             this.Trace = false;
             this.Count = false;
-            this.Input = new InputPort(reader);
-            this.Output = new OutputPort(writer);
+            this.Input = InputPort.New(reader);
+            this.Output = OutputPort.New(writer);
             if (primEnvironment == null)
             {
-                primEnvironment = new Environment();
+                primEnvironment = Environment.NewPrimitive();
                 Environment.InstallPrimitives(primEnvironment);
             }
 
             this.Counters = new Counter();
-            this.GlobalEnvironment = new Environment(this, primEnvironment);
+            this.GlobalEnvironment = Environment.NewGlobal(this, primEnvironment);
 
             try
             {
@@ -132,11 +132,6 @@ namespace SimpleScheme
 
         #region Accessors
         /// <summary>
-        /// Gets the counters collection.
-        /// </summary>
-        public Counter Counters { get; private set; }
-
-        /// <summary>
         /// Gets the input port.
         /// </summary>
         public InputPort Input { get; private set; }
@@ -145,6 +140,11 @@ namespace SimpleScheme
         /// Gets the output port.
         /// </summary>
         public OutputPort Output { get; private set; }
+
+        /// <summary>
+        /// Gets the counters collection.
+        /// </summary>
+        internal Counter Counters { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
@@ -160,27 +160,6 @@ namespace SimpleScheme
         /// Gets or setsthe global environment for the interpreter.
         /// </summary>
         private Environment GlobalEnvironment { get; set; }
-        #endregion
-
-        #region Define Primitives
-        /// <summary>
-        /// Define the counter primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
-        {
-            env
-                //// (trace-on)
-                .DefinePrimitive("trace-on", (args, caller) => caller.Env.Interp.Trace = true, 0)
-                //// (trace-off)
-                .DefinePrimitive("trace-off", (args, caller) => caller.Env.Interp.Trace = false, 0)
-                //// (counters-on)
-                .DefinePrimitive("counters-on", (args, caller) => caller.Env.Interp.Count = true, 0)
-                //// (counters-off)
-                .DefinePrimitive("counters-off", (args, caller) => caller.Env.Interp.Count = false, 0)
-                //// (backtrace)
-                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
-        }
         #endregion
 
         #region Public Methods
@@ -226,136 +205,6 @@ namespace SimpleScheme
         public object EndEval(IAsyncResult ar)
         {
             return ((AsyncResult<object>)ar).EndInvoke();
-        }
-
-        /// <summary>
-        /// Evaluate an expression in an environment.
-        /// Do it by executing a set of steps.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The environment in which to evaluate it.</param>
-        /// <returns>The result of the evaluation.</returns>
-        public Obj Eval(Obj expr, Environment env)
-        {
-            return this.EvalStep(EvaluateExpression.Call(expr, env, this.halted));
-        }
-
-        // TODO instead of calling Name in the step, call TraceStep.
-        // TODO TraceStep should show name and any relevant operands
-        // TODO evaluate-proc should show the proc name
-        // TODO It should do it only once per stepper
-
-        /// <summary>
-        /// Perform steps until evaluation is complete or suspended.
-        /// After suspension, return to this entry point.
-        /// </summary>
-        /// <param name="step">The step to perform first.</param>
-        /// <returns>The evaluation result, or suspended stepper.</returns>
-        public Obj EvalStep(Stepper step)
-        {
-            while (true)
-            {
-                if (step == Stepper.Suspended)
-                {
-                    return step;
-                }
-
-                if (step == this.halted)
-                {
-                    if (this.asyncResult != null)
-                    {
-                        this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
-                    }
-
-                    return this.halted.ReturnedExpr;
-                }
-
-                if (step == null)
-                {
-                    return ErrorHandlers.EvalError("PC bad value");
-                }
-
-                this.TraceStep(step);
-                step.IncrementCounter(counter);
-                step = step.RunStep();
-            }
-        }
-
-        /// <summary>
-        /// Load a file.  
-        /// Open the file and read it.
-        /// Evaluate whatever it contains.
-        /// </summary>
-        /// <param name="fileName">The filename.</param>
-        /// <returns>Undefined value.</returns>
-        public Obj LoadFile(object fileName)
-        {
-            string name = SchemeString.AsString(fileName, false);
-            try
-            {
-                return this.Load(
-                    new InputPort(new FileStream(name, FileMode.Open, FileAccess.Read)));
-            }
-            catch (IOException)
-            {
-                return ErrorHandlers.Error("Load: can't load " + name);
-            }
-        }
-
-        /// <summary>
-        /// Read from the input port and evaluate whatever is there.
-        /// Done for the side effect, not the result.
-        /// Since the result is never tested, asynchronous suspensions do not prevent the rest
-        /// of the file from being loaded.
-        /// </summary>
-        /// <param name="inp">The input port.</param>
-        /// <returns>Undefined instance.</returns>
-        public Obj Load(InputPort inp)
-        {
-            while (true)
-            {
-                Obj input;
-                if (InputPort.IsEof(input = inp.Read()))
-                {
-                    inp.Close();
-                    return Undefined.Instance;
-                }
-
-                this.Eval(input);
-            }
-        }
-
-        /// <summary>
-        /// Read an expression, evaluate it, and print the results.
-        /// </summary>
-        /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        public Obj ReadEvalPrint()
-        {
-            try
-            {
-                Obj expr;
-                this.Output.Print("> ");
-                this.Output.Flush();
-                if (InputPort.IsEof(expr = this.Input.Read()))
-                {
-                    return InputPort.Eof;
-                }
-
-                Obj val = this.Eval(expr);
-                if (val != Undefined.Instance)
-                {
-                    this.Output.Write(val);
-                    this.Output.Println();
-                    this.Output.Flush();
-                }
-
-                return val;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Caught exception {0}", ex.Message);
-                return Undefined.Instance;
-            }
         }
 
         /// <summary>
@@ -416,13 +265,166 @@ namespace SimpleScheme
                 prevExpr = expr;
             }
         }
+        #endregion
+
+        #region Define Primitives
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(Environment env)
+        {
+            env
+                //// (trace-on)
+                .DefinePrimitive("trace-on", (args, caller) => caller.Env.Interp.Trace = true, 0)
+                //// (trace-off)
+                .DefinePrimitive("trace-off", (args, caller) => caller.Env.Interp.Trace = false, 0)
+                //// (counters-on)
+                .DefinePrimitive("counters-on", (args, caller) => caller.Env.Interp.Count = true, 0)
+                //// (counters-off)
+                .DefinePrimitive("counters-off", (args, caller) => caller.Env.Interp.Count = false, 0)
+                //// (backtrace)
+                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Evaluate an expression in an environment.
+        /// Do it by executing a set of steps.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment in which to evaluate it.</param>
+        /// <returns>The result of the evaluation.</returns>
+        internal Obj Eval(Obj expr, Environment env)
+        {
+            return this.EvalStep(EvaluateExpression.Call(expr, env, this.halted));
+        }
+
+        // TODO instead of calling Name in the step, call TraceStep.
+        // TODO TraceStep should show name and any relevant operands
+        // TODO evaluate-proc should show the proc name
+        // TODO It should do it only once per stepper
+
+        /// <summary>
+        /// Perform steps until evaluation is complete or suspended.
+        /// After suspension, return to this entry point.
+        /// </summary>
+        /// <param name="step">The step to perform first.</param>
+        /// <returns>The evaluation result, or suspended stepper.</returns>
+        internal Obj EvalStep(Stepper step)
+        {
+            while (true)
+            {
+                if (step == Stepper.Suspended)
+                {
+                    return step;
+                }
+
+                if (step == this.halted)
+                {
+                    if (this.asyncResult != null)
+                    {
+                        this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
+                    }
+
+                    return this.halted.ReturnedExpr;
+                }
+
+                if (step == null)
+                {
+                    return ErrorHandlers.EvalError("PC bad value");
+                }
+
+                this.TraceStep(step);
+                step.IncrementCounter(counter);
+                step = step.RunStep();
+            }
+        }
+
+        /// <summary>
+        /// Load a file.  
+        /// Open the file and read it.
+        /// Evaluate whatever it contains.
+        /// </summary>
+        /// <param name="fileName">The filename.</param>
+        /// <returns>Undefined value.</returns>
+        internal Obj LoadFile(object fileName)
+        {
+            string name = SchemeString.AsString(fileName, false);
+            try
+            {
+                return this.Load(
+                    InputPort.New(new FileStream(name, FileMode.Open, FileAccess.Read)));
+            }
+            catch (IOException)
+            {
+                return ErrorHandlers.Error("Load: can't load " + name);
+            }
+        }
+
+        /// <summary>
+        /// Read from the input port and evaluate whatever is there.
+        /// Done for the side effect, not the result.
+        /// Since the result is never tested, asynchronous suspensions do not prevent the rest
+        /// of the file from being loaded.
+        /// </summary>
+        /// <param name="inp">The input port.</param>
+        /// <returns>Undefined instance.</returns>
+        internal Obj Load(InputPort inp)
+        {
+            while (true)
+            {
+                Obj input;
+                if (InputPort.IsEof(input = inp.Read()))
+                {
+                    inp.Close();
+                    return Undefined.Instance;
+                }
+
+                this.Eval(input);
+            }
+        }
+
+        /// <summary>
+        /// Read an expression, evaluate it, and print the results.
+        /// </summary>
+        /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
+        internal Obj ReadEvalPrint()
+        {
+            try
+            {
+                Obj expr;
+                this.Output.Print("> ");
+                this.Output.Flush();
+                if (InputPort.IsEof(expr = this.Input.Read()))
+                {
+                    return InputPort.Eof;
+                }
+
+                Obj val = this.Eval(expr);
+                if (val != Undefined.Instance)
+                {
+                    this.Output.Write(val);
+                    this.Output.Println();
+                    this.Output.Flush();
+                }
+
+                return val;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
+        }
 
         /// <summary>
         /// Increment the given counter.
         /// Skip if if counting is turned off.
         /// </summary>
         /// <param name="counterId">The counter to increment.</param>
-        public void IncrementCounter(int counterId)
+        internal void IncrementCounter(int counterId)
         {
             if (this.Count)
             {
@@ -454,7 +456,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                this.Load(new InputPort(reader));
+                this.Load(InputPort.New(reader));
             }
         }
 

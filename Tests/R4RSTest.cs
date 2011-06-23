@@ -1337,7 +1337,7 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(str))
             {
-                InputPort inp = new InputPort(reader);
+                InputPort_Accessor inp = new InputPort_Accessor(reader);
                 Obj last = List.Empty;
                 while (true)
                 {

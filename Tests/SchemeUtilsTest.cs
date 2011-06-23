@@ -115,9 +115,9 @@ namespace Tests
             Assert.IsTrue(SchemeBoolean.Equal(1.0, 1.0));
             Assert.IsFalse(SchemeBoolean.Equal(1.0, 2.0));
             Assert.IsTrue(SchemeBoolean.Equal(true, true));
-            Assert.IsFalse(SchemeBoolean.Equal(true, false));
-            Assert.IsTrue(SchemeBoolean.Equal('a', 'a'));
-            Assert.IsFalse(SchemeBoolean.Equal('a', 'b'));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(true, false));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal('a', 'a'));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal('a', 'b'));
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace Tests
             Assert.IsTrue(SchemeBoolean.Eqv(true, true));
             Assert.IsFalse(SchemeBoolean.Eqv(true, false));
             Assert.IsTrue(SchemeBoolean.Eqv('a', 'a'));
-            Assert.IsFalse(SchemeBoolean.Eqv('a', 'b'));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv('a', 'b'));
         }
 
         /// <summary>
@@ -160,14 +160,14 @@ namespace Tests
             var accessor = new Interpreter_Accessor(false, null, files);
             Interpreter interpreter = accessor.Target as Interpreter;
             Assert.IsNotNull(interpreter);
-            Assert.AreEqual(accessor.Input, InputPort.InPort(List.Empty, interpreter.Input));
+            Assert.AreEqual(accessor.Input, InputPort_Accessor.InPort(List.Empty, interpreter.Input));
             using (StringReader reader = new StringReader("abc"))
             {
-                InputPort input = new InputPort(reader);
-                Assert.AreEqual(input, InputPort.InPort(input, interpreter.Input));
+                InputPort_Accessor input = new InputPort_Accessor(reader);
+                Assert.AreEqual(input, InputPort_Accessor.InPort(input, interpreter.Input));
             }
 
-            AssertEx.Throws(() => InputPort.InPort(1, interpreter.Input));
+            AssertEx.Throws(() => InputPort_Accessor.InPort(1, interpreter.Input));
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace Tests
             Assert.AreEqual(accessor.Output, OutputPort_Accessor.OutPort(List.Empty, interpreter.Output));
             using (StringWriter writer = new StringWriter())
             {
-                OutputPort output = new OutputPort(writer);
+                OutputPort_Accessor output = new OutputPort_Accessor(writer);
                 Assert.AreEqual(output, OutputPort_Accessor.OutPort(output, interpreter.Output));
             }
 
@@ -273,7 +273,7 @@ namespace Tests
             Assert.AreEqual(10, actual);
             actual = ListPrimitives.ListStar(ListPrimitives.MakeList(10, 11));
             Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(11, ((Pair)actual).RestCell);
+            Assert.AreEqual(11, ListPrimitives.Rest((Pair)actual));
             actual = ListPrimitives.ListStar(ListPrimitives.Cons(10, ListPrimitives.Cons(11, ListPrimitives.MakeList(12))));
             Assert.AreEqual(10, ListPrimitives.First(actual));
             Assert.AreEqual(11, ListPrimitives.Second(actual));
@@ -287,15 +287,15 @@ namespace Tests
         public void ListToStringTest()
         {
             var expected = new[] { 'a', 'b' };
-            var actual = SchemeString.ListToString(ListPrimitives.MakeList('a', 'b'));
+            var actual = SchemeString_Accessor.ListToString(ListPrimitives.MakeList('a', 'b'));
             for (int i = 0; i < expected.Length; i++)
             {
                 Assert.AreEqual(expected[i], actual[i]);
             }
 
-            actual = SchemeString.ListToString(1);
+            actual = SchemeString_Accessor.ListToString(1);
             Assert.AreEqual(0, actual.Length);
-            AssertEx.Throws(() => SchemeString.ListToString(ListPrimitives.MakeList(1, 2)));
+            AssertEx.Throws(() => SchemeString_Accessor.ListToString(ListPrimitives.MakeList(1, 2)));
         }
 
         /// <summary>
@@ -304,13 +304,13 @@ namespace Tests
         [TestMethod]
         public void ListToVectorTest()
         {
-            var actual = Vector.MakeVector(ListPrimitives.MakeList(1, 2));
+            var actual = Vector.New(ListPrimitives.MakeList(1, 2));
             var expected = new Obj[] { 1, 2 };
             Assert.AreEqual(2, actual.Length);
             Assert.AreEqual(2, expected.Length);
             Assert.AreEqual(expected[0], actual[0]);
             Assert.AreEqual(expected[1], actual[1]);
-            actual = Vector.MakeVector(1);
+            actual = Vector.New(1);
             Assert.AreEqual(0, actual.Length);
         }
 
@@ -350,7 +350,7 @@ namespace Tests
         [TestMethod]
         public void StrTest()
         {
-            var actual = SchemeString_Accessor.Str(SchemeString.MakeString("abc"));
+            var actual = SchemeString.Str(SchemeString_Accessor.MakeString("abc"));
             Assert.AreEqual(3, actual.Length);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);
@@ -367,7 +367,7 @@ namespace Tests
             Assert.AreEqual("1", SchemeString.AsString(1.0));
             Assert.AreEqual("1.5", SchemeString.AsString(1.5));
             Assert.AreEqual("#\\a", SchemeString.AsString('a'));
-            Assert.AreEqual("(1 . 2)", SchemeString.AsString(new Pair(1, 2)));
+            Assert.AreEqual("(1 . 2)", SchemeString.AsString(Pair.New(1, 2)));
             Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2)));
             Assert.AreEqual(@"abc", SchemeString.AsString("abc"));
             char[] empty = new char[0];
@@ -389,7 +389,7 @@ namespace Tests
             Assert.AreEqual("1", SchemeString.AsString(1.0, false));
             Assert.AreEqual("1.5", SchemeString.AsString(1.5, false));
             Assert.AreEqual("a", SchemeString.AsString('a', false));
-            Assert.AreEqual("(1 . 2)", SchemeString.AsString(new Pair(1, 2), false));
+            Assert.AreEqual("(1 . 2)", SchemeString.AsString(Pair.New(1, 2), false));
             Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2), false));
             Assert.AreEqual("abc", SchemeString.AsString("abc", false));
             Assert.AreEqual(@"""", SchemeString.AsString(@"""", false));
@@ -441,10 +441,10 @@ namespace Tests
         public void VecTest()
         {
             var test = new Obj[] { 1, 2 };
-            Assert.AreEqual(2, Vector_Accessor.Vec(test).Length);
-            Assert.AreEqual(1, Vector_Accessor.Vec(test)[0]);
-            Assert.AreEqual(2, Vector_Accessor.Vec(test)[1]);
-            AssertEx.Throws(() => Vector_Accessor.Vec(1));
+            Assert.AreEqual(2, Vector.Vec(test).Length);
+            Assert.AreEqual(1, Vector.Vec(test)[0]);
+            Assert.AreEqual(2, Vector.Vec(test)[1]);
+            AssertEx.Throws(() => Vector.Vec(1));
         }
 
         /// <summary>
@@ -478,7 +478,7 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                OutputPort w = new OutputPort(writer);
+                OutputPort w = OutputPort.New(writer);
                 var actual = OutputPort_Accessor.Write("abc", w, false);
                 Assert.AreEqual(Undefined.Instance, actual);
                 Assert.AreEqual("abc", writer.ToString());

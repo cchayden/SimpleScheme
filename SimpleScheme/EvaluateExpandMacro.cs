@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Expand a macro.
     /// </summary>
-    public sealed class EvaluateExpandMacro : Stepper
+    internal sealed class EvaluateExpandMacro : Stepper
     {
         #region Fields
         /// <summary>
@@ -48,13 +48,13 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call an expand evaluator.
         /// </summary>
@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static Stepper Call(Macro fn, Obj expr, Stepper caller)
+        internal static Stepper Call(Macro fn, Obj expr, Stepper caller)
         {
             return new EvaluateExpandMacro(fn, expr, caller.Env, caller);
         }
@@ -81,7 +81,7 @@ namespace SimpleScheme
         /// <summary>
         /// Back here after macro is expanded.  Evaluate the result.
         /// </summary>
-        /// <returns>The expanded macro.</returns>
+        /// <returns>Return to caller with the expanded macro.</returns>
         private Stepper ExpandStep()
         {
             return EvaluateExpression.Call(ReturnedExpr, ContinueReturn());

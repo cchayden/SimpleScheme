@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// Define the list primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             const int MaxInt = int.MaxValue;
             env

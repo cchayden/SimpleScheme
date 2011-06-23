@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Evaluate an expression while timing it..
     /// This can evaluate the expression multiple times.
     /// </summary>
-    public sealed class EvaluateTimeCall : EvaluateTimeBase
+    internal sealed class EvaluateTimeCall : EvaluateTimeBase
     {
         #region Fields
         /// <summary>
@@ -41,7 +41,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
@@ -54,7 +54,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateTimeCall(expr, caller.Env, caller);
         }

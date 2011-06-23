@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// The main evaluator for expressions.
     /// </summary>
    //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-    public sealed class EvaluateExpression : Stepper
+    internal sealed class EvaluateExpression : Stepper
     {
         #region Fields
         /// <summary>
@@ -65,7 +65,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
@@ -79,7 +79,7 @@ namespace SimpleScheme
         /// Ususlly these constructs are not handled as primitives, but are instead
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -141,7 +141,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// First check for a form that does not need to create an evaluator.  If it is one of these,
         ///   just return the answer.  Otherwise create an EvaluateExpression to handle it.
@@ -152,7 +152,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.
@@ -185,7 +185,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return Call(expr, caller.Env, caller);
         }
@@ -249,7 +249,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalLambda(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(new Closure(First(args), Rest(args), env));
+            return caller.ContinueStep(Closure.New(First(args), Rest(args), env));
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalMacro(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(new Macro(First(args), Rest(args), env));
+            return caller.ContinueStep(Macro.New(First(args), Rest(args), env));
         }
         #endregion
 

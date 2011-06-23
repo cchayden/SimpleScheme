@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Evaluate a set! expression.
     /// </summary>
     //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
-    public sealed class EvaluateSet : Stepper
+    internal sealed class EvaluateSet : Stepper
     {
         #region Fields
         /// <summary>
@@ -42,20 +42,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Calls a set evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateSet(expr, caller.Env, caller);
         }

@@ -17,7 +17,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
     //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-    public sealed class EvaluateCase : Stepper
+    internal sealed class EvaluateCase : Stepper
     {
         #region Fields
         /// <summary>
@@ -65,20 +65,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Creates a case evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The case evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateCase(expr, caller.Env, caller);
         }
@@ -163,7 +163,7 @@ namespace SimpleScheme
             }
 
             // eval and return last expr
-            return EvaluateSequence.Call(this.exprList, this.ContinueReturn());
+            return EvaluateSequence.Call(this.exprList, this.Caller);
         }
         #endregion
     }

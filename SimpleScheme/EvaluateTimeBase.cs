@@ -7,13 +7,12 @@ namespace SimpleScheme
     using System.Diagnostics;
     using Obj = System.Object;
 
-
     /// <summary>
     /// Base class for EvaluateTime and EvaluateTimeCall.
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    public abstract class EvaluateTimeBase : Stepper
+    internal abstract class EvaluateTimeBase : Stepper
     {
         #region Fields
         /// <summary>

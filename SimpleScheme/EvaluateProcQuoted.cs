@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Apply a proc to args without evaluation.
     /// Used to evaluate cond expressions.
     /// </summary>
-    public sealed class EvaluateProcQuoted : EvaluateProc
+    internal sealed class EvaluateProcQuoted : EvaluateProc
     {
         #region Fields
         /// <summary>
@@ -44,13 +44,13 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call apply proc evaluator.
         /// </summary>
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static new Stepper Call(Procedure fn, Obj expr, Stepper caller)
+        internal static new Stepper Call(Procedure fn, Obj expr, Stepper caller)
         {
             return new EvaluateProcQuoted(fn, expr, caller.Env, caller);
         }

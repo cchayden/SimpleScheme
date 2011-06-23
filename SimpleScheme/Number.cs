@@ -16,12 +16,39 @@ namespace SimpleScheme
         /// <summary>
         /// Define the zero obj.
         /// </summary>
-        public const double Zero = 0.0D;
+        internal const double Zero = 0.0D;
 
         /// <summary>
         /// Define the one obj.
         /// </summary>
-        public const double One = 1.0D;
+        internal const double One = 1.0D;
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Convert an obj (containing a number) into a double.
+        /// </summary>
+        /// <param name="x">The obj to convert.</param>
+        /// <returns>The double contained in the obj.</returns>
+        public static double Num(Obj x)
+        {
+            try
+            {
+                return Convert.ToDouble(x);
+            }
+            catch (InvalidCastException)
+            {
+                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
+            }
+            catch (FormatException)
+            {
+                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
+            }
+            catch (OverflowException)
+            {
+                return Num(ErrorHandlers.Error("Number overflow, got: " + x));
+            }
+        }
         #endregion
 
         #region Define Primitives
@@ -29,7 +56,7 @@ namespace SimpleScheme
         /// Define the numeric primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             // not implemented
             //// <r4rs section="6.5.5">(numerator <q>)</r4rs>
@@ -143,33 +170,6 @@ namespace SimpleScheme
                 .DefinePrimitive("truncate", (args, caller) => Truncate(First(args)), 1)
                 //// <r4rs section="6.5.5">(zero? <z>)</r4rs>
                 .DefinePrimitive("zero?", (args, caller) => SchemeBoolean.Truth(Num(First(args)) == 0), 1);
-        }
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Convert an obj (containing a number) into a double.
-        /// </summary>
-        /// <param name="x">The obj to convert.</param>
-        /// <returns>The double contained in the obj.</returns>
-        public static double Num(Obj x)
-        {
-            try
-            {
-                return Convert.ToDouble(x);
-            }
-            catch (InvalidCastException)
-            {
-                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
-            }
-            catch (FormatException)
-            {
-                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
-            }
-            catch (OverflowException)
-            {
-                return Num(ErrorHandlers.Error("Number overflow, got: " + x));
-            }
         }
         #endregion
 

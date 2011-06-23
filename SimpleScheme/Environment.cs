@@ -39,7 +39,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Environment class.
         /// This is used to create the primitive environment.
         /// </summary>
-        public Environment()
+        private Environment()
         {
             this.symbolTable = new SymbolTable(0);
         }
@@ -51,7 +51,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="parent">The parent environment.</param>
-        public Environment(Interpreter interp, Environment parent)
+        private Environment(Interpreter interp, Environment parent)
         {
             this.Interp = interp;
             this.Parent = parent;
@@ -67,7 +67,7 @@ namespace SimpleScheme
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
         /// <param name="parent">The parent environment.</param>
-        public Environment(Obj formals, Obj vals, Environment parent)
+        private Environment(Obj formals, Obj vals, Environment parent)
         {
             this.Parent = parent;
             this.Interp = parent.Interp;
@@ -89,19 +89,57 @@ namespace SimpleScheme
         ///   parent, so that it can be accessed directly.
         /// This field is written only in the constructor -- it is never modified.
         /// </summary>
-        public Interpreter Interp { get; private set; }
+        internal Interpreter Interp { get; private set; }
 
         /// <summary>
         /// Gets the parent environment.
         /// </summary>
-        public Environment Parent { get; private set; }
+        internal Environment Parent { get; private set; }
         #endregion
 
         #region Public Static Methods
         /// <summary>
+        /// Create a new primitive environment.
+        /// This is used to share the primitives among several interpreters.
+        /// </summary>
+        /// <returns>The primitive environment.</returns>
+        public static Environment NewPrimitive()
+        {
+            return new Environment();
+        }
+
+        /// <summary>
+        /// Creates a new Environment.
+        /// This is used to create the global environment.
+        /// When we refer to "parent" we mean the enclosing lexical environment.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent environment.</param>
+        /// <returns>The global environment.</returns>
+        internal static Environment NewGlobal(Interpreter interp, Environment parent)
+        {
+            return new Environment(interp, parent);
+        }
+
+        /// <summary>
+        /// Create a new Environment.
+        /// This is for where there is a new binding context.
+        /// Start out with a set of variable bindings and a parent environment.
+        /// The initial variable bindings are the formal parameters and the corresponding argument values.
+        /// </summary>
+        /// <param name="formals">A list of variable names.</param>
+        /// <param name="vals">The values for these variables.</param>
+        /// <param name="parent">The parent environment.</param>
+        /// <returns>The new environment.</returns>
+        internal static Environment New(Obj formals, Obj vals, Environment parent)
+        {
+            return new Environment(formals, vals, parent);
+        }
+
+        /// <summary>
         /// Install primitives into the environment.
         /// </summary>
-        /// <returns>The environment.</returns>
+        /// <param name="env">The environment to define into.</param>
         public static void InstallPrimitives(Environment env)
         {
             EvaluateExpression.DefinePrimitives(env);
@@ -138,13 +176,24 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// The default way to display environments during debugging.
+        /// </summary>
+        /// <returns>The environment as a string.</returns>
+        public override string ToString()
+        {
+            return "Environment \n" + this.Dump();
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
         /// Add a new definition into the environment.
         /// If a procedure is being added, set its name.
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
         /// <returns>The variable added to the environment.</returns>
-        public Obj Define(Obj var, Obj val)
+        internal Obj Define(Obj var, Obj val)
         {
             if (var is string)
             {
@@ -166,7 +215,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="symbol">The name of the variable to look up.</param>
         /// <returns>The value bound to the variable.</returns>
-        public Obj Lookup(string symbol)
+        internal Obj Lookup(string symbol)
         {
             Environment env = this;
             while (env != Empty)
@@ -194,7 +243,7 @@ namespace SimpleScheme
         /// <param name="var">The variable name.</param>
         /// <param name="val">The new value for the variable.</param>
         /// <returns>The value that the variable was set to.</returns>
-        public Obj Set(Obj var, Obj val)
+        internal Obj Set(Obj var, Obj val)
         {
             if (!(var is string))
             {
@@ -225,7 +274,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
+        internal Environment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
         {
             this.Define(name, new Primitive(operation, minArgs, maxArgs));
             return this;
@@ -240,7 +289,7 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
+        internal Environment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
         {
             return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
         }
@@ -252,7 +301,7 @@ namespace SimpleScheme
         /// <param name="levels">The number of levels to show.</param>
         /// <param name="indent">The number of characters to indent.</param>
         /// <returns>The environment stack, as a string.</returns>
-        public string Dump(int levels, int indent)
+        internal string Dump(int levels, int indent)
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
@@ -274,7 +323,7 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
-        public void DumpEnv()
+        internal void DumpEnv()
         {
             Console.Out.WriteLine(this.Dump(100, 0));
         }
@@ -283,18 +332,9 @@ namespace SimpleScheme
         /// Dump the top level environment.
         /// </summary>
         /// <returns>The environment, as a string.</returns>
-        public string Dump()
+        internal string Dump()
         {
             return this.Dump(1, 0);
-        }
-
-        /// <summary>
-        /// The default way to display environments during debugging.
-        /// </summary>
-        /// <returns>The environment as a string.</returns>
-        public override string ToString()
-        {
-            return "Environment \n" + this.Dump();
         }
         #endregion
 
@@ -351,7 +391,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the Environment.SymbolTable class.
             /// </summary>
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
-            public SymbolTable(int count)
+            internal SymbolTable(int count)
             {
                 this.symbolTable = new Dictionary<string, Obj>(count);
             }
@@ -362,7 +402,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to look up.</param>
             /// <param name="val">Its returned value.</param>
             /// <returns>True if found in the symbol table, false if not found.</returns>
-            public bool Lookup(string symbol, out Obj val)
+            internal bool Lookup(string symbol, out Obj val)
             {
                 if (this.symbolTable.TryGetValue(symbol, out val))
                 {
@@ -378,7 +418,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            public void Add(string symbol, Obj val)
+            internal void Add(string symbol, Obj val)
             {
                 this.symbolTable[symbol] = val;
             }
@@ -389,7 +429,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public void AddList(Obj symbols, Obj vals)
+            internal void AddList(Obj symbols, Obj vals)
             {
                 while (symbols != List.Empty)
                 {
@@ -419,7 +459,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
             /// <returns>True if the value was found and stored, false if not found.</returns>
-            public bool Update(string symbol, Obj val)
+            internal bool Update(string symbol, Obj val)
             {
                 if (this.symbolTable.ContainsKey(symbol))
                 {
@@ -435,7 +475,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="indent">The number of characters to indent.</param>
             /// <param name="sb">A string builder to write the dump into.</param>
-            public void Dump(int indent, StringBuilder sb)
+            internal void Dump(int indent, StringBuilder sb)
             {
                 string initial = new string(' ', indent);
                 foreach (var key in this.symbolTable.Keys)

@@ -49,12 +49,16 @@ namespace Repl
         /// <param name="args">Files to read.</param>
         private void Run2(IEnumerable<string> args)
         {
-            Environment primEnvironment = new Environment();
+            Environment primEnvironment = Environment.NewPrimitive();
             Environment.InstallPrimitives(primEnvironment);
             new Interpreter(true, primEnvironment, args, Console.In, Console.Out)
                 .ReadEvalPrintLoop();
         }
 
+        /// <summary>
+        /// Get result from REPL
+        /// </summary>
+        /// <param name="args">Files to read.</param>
         private void Run3(IEnumerable<string> args)
         {
             var interp = new Interpreter(args);

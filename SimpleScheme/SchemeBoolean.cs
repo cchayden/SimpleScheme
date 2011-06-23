@@ -15,35 +15,12 @@ namespace SimpleScheme
         /// <summary>
         /// Define the true value.
         /// </summary>
-        public const bool True = true;
+        internal const bool True = true;
 
         /// <summary>
         /// Define the false value.
         /// </summary>
-        public const bool False = false;
-        #endregion
-
-        #region Define Primitives
-        /// <summary>
-        /// Define the boolean primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
-        {
-            env
-                //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(First(args) is bool), 1)
-                //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
-                //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(First(args), Second(args))), 2)
-                //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
-                //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(First(args) is bool && (bool)First(args) == false), 1)
-                //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(First(args) == List.Empty), 1);
-        }
+        internal const bool False = false;
         #endregion
 
         #region Public Static Methods
@@ -144,14 +121,39 @@ namespace SimpleScheme
         {
             return !IsFalse(obj);
         }
+        #endregion
 
+        #region Define Primitives
+        /// <summary>
+        /// Define the boolean primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(Environment env)
+        {
+            env
+                //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
+                .DefinePrimitive("boolean?", (args, caller) => Truth(First(args) is bool), 1)
+                //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
+                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
+                //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
+                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(First(args), Second(args))), 2)
+                //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
+                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
+                //// <r4rs section="6.1">(not <obj>)</r4rs>
+                .DefinePrimitive("not", (args, caller) => Truth(First(args) is bool && (bool)First(args) == false), 1)
+                //// <r4rs section="6.3">(null? <obj>)</r4rs>
+                .DefinePrimitive("null?", (args, caller) => Truth(First(args) == List.Empty), 1);
+        }
+        #endregion
+
+        #region Internal Static Methods
         /// <summary>
         /// Convert the bool instance to a string.
         /// </summary>
         /// <param name="val">The boolean value to convert.</param>
         /// <param name="quoted">True if the string should be quoted.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void AsString(bool val, bool quoted, StringBuilder buf)
+        internal static void AsString(bool val, bool quoted, StringBuilder buf)
         {
             buf.Append(val ? "#t" : "#f");
         }

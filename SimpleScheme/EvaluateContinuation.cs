@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Evaluate a continuation
     /// Capture the value to return and supply a step to resume.
     /// </summary>
-    public sealed class EvaluateContinuation : Stepper
+    internal sealed class EvaluateContinuation : Stepper
     {
         #region Fields
         /// <summary>
@@ -42,20 +42,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call a continuation evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The continuation evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateContinuation(expr, caller.Env, caller);            
         }

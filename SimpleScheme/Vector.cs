@@ -21,44 +21,28 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the vector primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
-        {
-            const int MaxInt = int.MaxValue;
-            env
-                //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (args, caller) => MakeVector(First(args)), 1)
-                //// <r4rs section="6.8">(make-vector <k>)</r4rs>
-                //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (args, caller) => MakeVector(First(args), Second(args)), 1, 2)
-                //// <r4rs section="6.8">(vector <obj>)</r4rs>
-                .DefinePrimitive("vector", (args, caller) => MakeVector(args), 0, MaxInt)
-                //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (args, caller) => VectorToList(First(args)), 1)
-                //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                .DefinePrimitive("vector-fill", (args, caller) => VectorFill(First(args), Second(args)), 2)
-                //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (args, caller) => Number.Num(Vec(First(args)).Length), 1)
-                //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (args, caller) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
-                //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (args, caller) => VectorSet(First(args), Second(args), Third(args)), 3)
-                //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(First(args) is Obj[]), 1);
-        }
-        #endregion
-
         #region Public Static Methods
+        /// <summary>
+        /// Convert an obj that should be a vector into an array of objs.
+        /// </summary>
+        /// <param name="vector">The vector.</param>
+        /// <returns>The array of objs.</returns>
+        public static Obj[] Vec(object vector)
+        {
+            if (vector is Obj[]) 
+            {
+                return (Obj[])vector;
+            }
+
+            return Vec(ErrorHandlers.Error("Expected a vector, got: " + vector));
+        }
+
         /// <summary>
         /// Creates the vector from a list of values.
         /// </summary>
         /// <param name="objs">A list of values to put in the vector.</param>
         /// <returns>A vector of the objs.</returns>
-        public static Obj[] MakeVector(object objs)
+        public static Obj[] New(object objs)
         {
             Obj[] vec = new Obj[Length(objs)];
 
@@ -77,13 +61,47 @@ namespace SimpleScheme
             return vec;
         }
 
+        #endregion
+
+        #region Define Primitives
+        /// <summary>
+        /// Define the vector primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(Environment env)
+        {
+            const int MaxInt = int.MaxValue;
+            env
+                //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
+                .DefinePrimitive("list->vector", (args, caller) => New(First(args)), 1)
+                //// <r4rs section="6.8">(make-vector <k>)</r4rs>
+                //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
+                .DefinePrimitive("make-vector", (args, caller) => New(First(args), Second(args)), 1, 2)
+                //// <r4rs section="6.8">(vector <obj>)</r4rs>
+                .DefinePrimitive("vector", (args, caller) => New(args), 0, MaxInt)
+                //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
+                .DefinePrimitive("vector->list", (args, caller) => VectorToList(First(args)), 1)
+                //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
+                .DefinePrimitive("vector-fill", (args, caller) => VectorFill(First(args), Second(args)), 2)
+                //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
+                .DefinePrimitive("vector-length", (args, caller) => Number.Num(Vec(First(args)).Length), 1)
+                //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
+                .DefinePrimitive("vector-ref", (args, caller) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
+                //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
+                .DefinePrimitive("vector-set!", (args, caller) => VectorSet(First(args), Second(args), Third(args)), 3)
+                //// <r4rs section="6.8">(vector? <obj>)</r4rs>
+                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(First(args) is Obj[]), 1);
+        }
+        #endregion
+
+        #region Internal Static Methods
         /// <summary>
         /// Create a vector from a length and an optional fill value.
         /// </summary>
         /// <param name="length">The vector length.</param>
         /// <param name="fill">The value to initialize the vector entries to.</param>
         /// <returns>A vector of the objs filled with the fill object.</returns>
-        public static Obj[] MakeVector(object length, object fill)
+        internal static Obj[] New(object length, object fill)
         {
             Obj[] vec = new object[(int)Number.Num(length)];
             if (fill == List.Empty)
@@ -106,7 +124,7 @@ namespace SimpleScheme
         /// <param name="vector2">The other vector.</param>
         /// <returns>True if they are both vectors of equal length and 
         /// all elements are equal.</returns>
-        public static bool Equal(Obj[] vector1, object[] vector2)
+        internal static bool Equal(Obj[] vector1, object[] vector2)
         {
             if (vector1.Length != vector2.Length)
             {
@@ -130,7 +148,7 @@ namespace SimpleScheme
         /// <param name="vec">The vector to convert.</param>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void AsString(Obj[] vec, bool quoted, StringBuilder buf)
+        internal static void AsString(Obj[] vec, bool quoted, StringBuilder buf)
         {
             buf.Append("#(");
             if (vec.Length > 0)
@@ -149,21 +167,6 @@ namespace SimpleScheme
         #endregion
 
         #region Private Static Methods
-        /// <summary>
-        /// Convert an obj that should be a vector into an array of objs.
-        /// </summary>
-        /// <param name="vector">The vector.</param>
-        /// <returns>The array of objs.</returns>
-        private static Obj[] Vec(object vector)
-        {
-            if (vector is Obj[]) 
-            {
-                return (Obj[])vector;
-            }
-
-            return Vec(ErrorHandlers.Error("Expected a vector, got: " + vector));
-        }
-
         /// <summary>
         /// Set a vector element.
         /// </summary>

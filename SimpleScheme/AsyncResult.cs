@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="asyncCallback">The async callback.</param>
         /// <param name="state">The state.</param>
-        public AsyncResult(AsyncCallback asyncCallback, object state)
+        internal AsyncResult(AsyncCallback asyncCallback, object state)
         {
             this.ayncCallback = asyncCallback;
             this.asyncState = state;
@@ -157,7 +157,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="taskResult">The result.</param>
         /// <param name="completedSynchronously">if set to <c>true</c> completed synchronously.</param>
-        public void SetAsCompleted(TResult taskResult, bool completedSynchronously)
+        internal void SetAsCompleted(TResult taskResult, bool completedSynchronously)
         {
             // Save the asynchronous operation's result);
             this.result = taskResult;
@@ -172,7 +172,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="e">The exception.</param>
         /// <param name="completedSynchronously">if set to <c>true</c> completed synchronously.</param>
-        public void SetAsCompleted(Exception e, bool completedSynchronously)
+        internal void SetAsCompleted(Exception e, bool completedSynchronously)
         {
             // Passing null for exception means no error occurred. 
             // This is the common case
@@ -186,7 +186,7 @@ namespace SimpleScheme
         /// Ends the invoke.
         /// </summary>
         /// <returns>The result of the operation</returns>
-        public TResult EndInvoke()
+        internal TResult EndInvoke()
         {
             // This method assumes that only 1 thread calls EndInvoke 
             // for this object

@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
-        public Pair(Obj first, Obj rest)
+        private Pair(Obj first, Obj rest)
         {
             this.FirstCell = first;
             this.RestCell = rest;
@@ -30,12 +30,26 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets the first obj of the pair.
         /// </summary>
-        public Obj FirstCell { get; set; }
+        internal Obj FirstCell { get; set; }
 
         /// <summary>
         /// Gets or sets the rest of the objs in the list.
         /// </summary>
-        public Obj RestCell { get; set; }
+        internal Obj RestCell { get; set; }
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Create a new pair.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <param name="rest">The rest of the objs in the list are 
+        /// referenced by this.</param>
+        /// <returns>The new pair.</returns>
+        public static Pair New(Obj first, Obj rest)
+        {
+            return new Pair(first, rest);
+        }
         #endregion
 
         #region Public Methods
@@ -85,7 +99,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Is the string to be quoted?</param>
         /// <param name="buf">The buffer to write the string into.</param>
-        public void AsString(bool quoted, StringBuilder buf)
+        internal void AsString(bool quoted, StringBuilder buf)
         {
             if (this.RestCell is Pair && Rest(this.RestCell) == List.Empty)
             {

@@ -24,9 +24,21 @@ namespace SimpleScheme
         /// Initializes a new instance of the OutputPort class.
         /// </summary>
         /// <param name="outp">The output port to use for writing.</param>
-        public OutputPort(TextWriter outp)
+        private OutputPort(TextWriter outp)
         {
             this.outp = outp;
+        }
+        #endregion
+
+        #region Oublic Static Methods.
+        /// <summary>
+        /// Creates a new OutputPort.
+        /// </summary>
+        /// <param name="outp">The output port to use for writing.</param>
+        /// <returns>The new OutputPort.</returns>
+        public static OutputPort New(TextWriter outp)
+        {
+            return new OutputPort(outp);
         }
         #endregion
 
@@ -35,7 +47,7 @@ namespace SimpleScheme
         /// Define the output primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
@@ -82,12 +94,12 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Write the given expression on the curent port, with quoting.
         /// </summary>
         /// <param name="expr">The expression to write.</param>
-        public void Write(Obj expr)
+        internal void Write(Obj expr)
         {
             Write(expr, this, true);
         }
@@ -95,7 +107,7 @@ namespace SimpleScheme
         /// <summary>
         /// Close the output port.
         /// </summary>
-        public void Close()
+        internal void Close()
         {
             this.outp.Close();
         }
@@ -103,7 +115,7 @@ namespace SimpleScheme
         /// <summary>
         /// Flush the output port.
         /// </summary>
-        public void Flush()
+        internal void Flush()
         {
             this.outp.Flush();
         }
@@ -112,7 +124,7 @@ namespace SimpleScheme
         /// Print the obj on the output port.
         /// </summary>
         /// <param name="expr">The obj to print.</param>
-        public void Print(Obj expr)
+        internal void Print(Obj expr)
         {
             this.outp.Write(expr);
         }
@@ -120,7 +132,7 @@ namespace SimpleScheme
         /// <summary>
         /// Print a newline to the output port.
         /// </summary>
-        public void Println()
+        internal void Println()
         {
             this.outp.WriteLine();
         }

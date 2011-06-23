@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Represents a continuation.
     /// </summary>
-    public sealed class Continuation : Procedure
+    internal sealed class Continuation : Procedure
     {
         #region Fields
         /// <summary>
@@ -22,7 +22,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Continuation class.
         /// </summary>
         /// <param name="step">The continuation to return to when applied.</param>
-        public Continuation(Stepper step)
+        private Continuation(Stepper step)
         {
             this.step = step.CallerCaller;
         }
@@ -32,10 +32,22 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the value to return as the result of executing the continuation.
         /// </summary>
-        public Obj Value { get; private set; }
+        internal Obj Value { get; private set; }
         #endregion
 
-        #region Public Methods
+        #region Static Internal Methods
+        /// <summary>
+        /// Create a new continuation.
+        /// </summary>
+        /// <param name="step">The continuation to return to when applied.</param>
+        /// <returns>The continuation.</returns>
+        internal static Continuation New(Stepper step)
+        {
+            return new Continuation(step);
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Execute the continuation.
         /// Transfers execution to the step saved when the continuation was created.
@@ -44,7 +56,7 @@ namespace SimpleScheme
         /// <param name="args">The value to return.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Stepper caller)
         {
             this.Value = First(args);
             return Stepper.TransferToStep(this.step, First(args), this.step.Env);

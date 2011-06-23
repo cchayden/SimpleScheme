@@ -9,14 +9,14 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public abstract class Stepper : ListPrimitives
+    internal abstract class Stepper : ListPrimitives
     {
         #region Fields
         /// <summary>
         /// The suspended stepper is used to indicate suspension, when stepping
         ///   needs to be delayed but is not complete.
         /// </summary>
-        public static readonly Stepper Suspended = new EvaluatorBase("suspended");
+        internal static readonly Stepper Suspended = new EvaluatorBase("suspended");
 
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
@@ -29,15 +29,15 @@ namespace SimpleScheme
         private static readonly int counterId = Counter.Create(StepperName);
 
         /// <summary>
+        /// Gets the caller that execution returns to when this is done.
+        /// </summary>
+        private readonly Stepper caller;
+
+        /// <summary>
         /// The program counter.
         /// Contains the function to execute next.
         /// </summary>
         private StepperFunction pc;
-
-        /// <summary>
-        /// Gets the caller that execution returns to when this is done.
-        /// </summary>
-        private readonly Stepper caller;
 
         /// <summary>
         /// Indicates whether a trace has been performed on this stepper instance.
@@ -68,47 +68,52 @@ namespace SimpleScheme
         /// These values are assigned to the pc.
         /// </summary>
         /// <returns>The next step to take.</returns>
-        public delegate Stepper StepperFunction();
+        internal delegate Stepper StepperFunction();
 
         #region Accessors
         /// <summary>
         /// Gets the stepper name, used for tracing and counters.
         /// Each subclass must implement.
         /// </summary>
-        public abstract string Name { get; }
+        internal abstract string Name { get; }
 
         /// <summary>
         /// Gets the expression being evaluated.  
         /// </summary>
-        public Obj Expr { get; private set; }
+        internal Obj Expr { get; private set; }
 
         /// <summary>
         /// Gets the returned expression from the last call.
         /// </summary>
-        public Obj ReturnedExpr { get; private set; }
+        internal Obj ReturnedExpr { get; private set; }
 
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
         /// </summary>
-        public Environment Env { get; private set; }
+        internal Environment Env { get; private set; }
 
         /// <summary>
         /// Gets the returned environment from the last call.
         /// </summary>
-        public Environment ReturnedEnv { get; private set; }
+        internal Environment ReturnedEnv { get; private set; }
 
         /// <summary>
         /// Gets the environment of the caller.
         /// </summary>
-        public Environment CallerEnv
+        internal Environment CallerEnv
         {
             get { return this.caller.Env; }
+        }
+
+        internal Stepper Caller
+        {
+            get { return this.caller; }
         }
 
         /// <summary>
         /// Gets the caller's caller.
         /// </summary>
-        public Stepper CallerCaller
+        internal Stepper CallerCaller
         {
             get { return this.caller.caller; }
         }
@@ -125,7 +130,7 @@ namespace SimpleScheme
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next step.  This is in the caller for return.</returns>
-        public static Stepper TransferToStep(Stepper nextStep, Obj expr, Environment env)
+        internal static Stepper TransferToStep(Stepper nextStep, Obj expr, Environment env)
         {
             nextStep.ReturnedExpr = expr;
             nextStep.ReturnedEnv = env;
@@ -138,7 +143,7 @@ namespace SimpleScheme
         /// Trace information for the step.
         /// </summary>
         /// <returns>Info to print for the trace.</returns>
-        public virtual string TraceInfo()
+        internal virtual string TraceInfo()
         {
             if (this.traced)
             {
@@ -152,8 +157,8 @@ namespace SimpleScheme
         /// <summary>
         /// Run the step represented by the PC.
         /// </summary>
-        /// <returns></returns>
-        public Stepper RunStep()
+        /// <returns>The next step to run.</returns>
+        internal Stepper RunStep()
         {
             return this.pc();
         }
@@ -163,7 +168,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The new expr value.</param>
         /// <returns>The next step, which is this stepper.</returns>
-        public Stepper ContinueStep(Obj expr)
+        internal Stepper ContinueStep(Obj expr)
         {
             this.ReturnedExpr = expr;
             return this;
@@ -173,7 +178,7 @@ namespace SimpleScheme
         /// Create a stack backtrace
         /// </summary>
         /// <returns>A backtrace of the stepper call stack.</returns>
-        public string StackBacktrace()
+        internal string StackBacktrace()
         {
             Stepper step = this.caller;    // skip backtrace itself
             StringBuilder sb = new StringBuilder();
@@ -190,7 +195,7 @@ namespace SimpleScheme
         /// Increment the given counter.
         /// </summary>
         /// <param name="counterIdent">The counter id</param>
-        public void IncrementCounter(int counterIdent)
+        internal void IncrementCounter(int counterIdent)
         {
             if (this.Env != null)
             {
@@ -204,7 +209,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">True if the string should be quoted.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        public void AsString(bool quoted, StringBuilder buf)
+        internal void AsString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
@@ -243,7 +248,7 @@ namespace SimpleScheme
         /// <param name="parent">The caller environment.</param>
         protected void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
         {
-            this.Env = new Environment(formals, vals, parent);
+            this.Env = Environment.New(formals, vals, parent);
         }
 
         /// <summary>

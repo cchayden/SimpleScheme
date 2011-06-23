@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// <summary>
     /// Handles normal synchronous CLR method calls.
     /// </summary>
-    public sealed class SynchronousClrProcedure : ClrProcedure
+    internal sealed class SynchronousClrProcedure : ClrProcedure
     {
         #region Constructor
         /// <summary>
@@ -56,7 +56,7 @@ namespace SimpleScheme
         /// Define the sync clr procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(Environment env)
+        internal static new void DefinePrimitives(Environment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -69,7 +69,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -79,7 +79,7 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to excute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        internal override Stepper Apply(object args, Stepper caller)
         {
             object target;
             object[] argArray;

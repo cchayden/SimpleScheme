@@ -12,7 +12,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    public sealed class EvaluateLetStar : Stepper
+    internal sealed class EvaluateLetStar : Stepper
     {
         #region Fields
         /// <summary>
@@ -77,20 +77,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call let* evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateLetStar(expr, caller.Env, caller);
         }
@@ -144,7 +144,7 @@ namespace SimpleScheme
                 return ContinueHere(this.ApplyLambda);
             }
 
-            Procedure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);
+            Procedure fun = Closure.New(this.formals, MakeList(First(this.inits)), this.Env);
             return fun.Apply(this.vals, ContinueHere(this.BindVarToInit));
         }
 
@@ -170,7 +170,7 @@ namespace SimpleScheme
         private Stepper ApplyLambda()
         {
             // apply the fun to the vals
-            Procedure fun = new Closure(this.formals, this.body, this.Env);
+            Procedure fun = Closure.New(this.formals, this.body, this.Env);
             return fun.Apply(this.vals, ContinueReturn());
         }
         #endregion

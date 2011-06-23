@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// If a value is #f then return it.  Otherwise return the last value.
     /// </summary>
     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-    public sealed class EvaluateAnd : Stepper
+    internal sealed class EvaluateAnd : Stepper
     {
         #region Fields
         /// <summary>
@@ -49,20 +49,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr == List.Empty)

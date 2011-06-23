@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a call-with-output-file expressions
     /// </summary>
-    public sealed class EvaluateCallWithOutputFile : Stepper
+    internal sealed class EvaluateCallWithOutputFile : Stepper
     {
         #region Fields
         /// <summary>
@@ -47,20 +47,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Create an evaluator with output file.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateCallWithOutputFile(expr, caller.Env, caller);
         }
@@ -70,11 +70,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="filename">The filename.</param>
         /// <returns>The output port, used for writing.</returns>
-        public static OutputPort OpenOutputFile(Obj filename)
+        internal static OutputPort OpenOutputFile(Obj filename)
         {
             try
             {
-                return new OutputPort(new StreamWriter(SchemeString.AsString(filename, false)));
+                return OutputPort.New(new StreamWriter(SchemeString.AsString(filename, false)));
             }
             catch (FileNotFoundException)
             {

@@ -34,7 +34,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the InputPort class.
         /// </summary>
         /// <param name="inp">A text reader</param>
-        public InputPort(TextReader inp)
+        private InputPort(TextReader inp)
         {
             this.inStream = new CharacterStream(inp);
             this.tokStream = new TokenStream();
@@ -44,9 +44,41 @@ namespace SimpleScheme
         /// Initializes a new instance of the InputPort class.
         /// </summary>
         /// <param name="inp">An input stream.</param>
-        public InputPort(Stream inp)
+        private InputPort(Stream inp)
             : this(new StreamReader(inp))
         {
+        }
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Creates a new InputPort.
+        /// </summary>
+        /// <param name="inp">A text reader</param>
+        /// <returns>A new InputPort.</returns>
+        public static InputPort New(TextReader inp)
+        {
+            return new InputPort(inp);
+        }
+
+        /// <summary>
+        /// Creates a new InputPort.
+        /// </summary>
+        /// <param name="inp">An input stream.</param>
+        /// <returns>A new InputPort.</returns>
+        public static InputPort New(Stream inp)
+        {
+            return new InputPort(inp);
+        }
+
+        /// <summary>
+        /// Tests the obj against EOF.
+        /// </summary>
+        /// <param name="x">The obj to test.</param>
+        /// <returns>True if the obj is EOF.</returns>
+        public static bool IsEof(Obj x)
+        {
+            return x as string == Eof;
         }
         #endregion
 
@@ -55,7 +87,7 @@ namespace SimpleScheme
         /// Define the input primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
@@ -91,17 +123,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Tests the obj against EOF.
-        /// </summary>
-        /// <param name="x">The obj to test.</param>
-        /// <returns>True if the obj is EOF.</returns>
-        public static bool IsEof(Obj x)
-        {
-            return x as string == Eof;
-        }
-
+        #region Internal Static Methods
         /// <summary>
         /// Convert an obj (containing an input port) into an InputPort.
         /// If the given obj is the empty list, return the interpreter's input port.
@@ -109,7 +131,7 @@ namespace SimpleScheme
         /// <param name="x">The obj containing the input port.</param>
         /// <param name="inPort">The default input port.</param>
         /// <returns>An input port.</returns>
-        public static InputPort InPort(Obj x, InputPort inPort)
+        internal static InputPort InPort(Obj x, InputPort inPort)
         {
             if (x == List.Empty)
             {
@@ -125,12 +147,12 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Close the input port.
         /// </summary>
         /// <returns>True if the port was closed.</returns>
-        public Obj Close()
+        internal Obj Close()
         {
             return this.inStream.Close();
         }
@@ -141,7 +163,7 @@ namespace SimpleScheme
         /// Warns about extra right parentheses and dots.
         /// </summary>
         /// <returns>The expression as a list.</returns>
-        public Obj Read()
+        internal Obj Read()
         {
             try
             {
@@ -309,7 +331,7 @@ namespace SimpleScheme
 
                         case '(':
                             this.inStream.PushChar('(');
-                            return Vector.MakeVector(this.Read());
+                            return Vector.New(this.Read());
 
                         case '\\':
                             ch = this.inStream.Read();
@@ -451,7 +473,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the InputPort.CharacterStream class.
             /// </summary>
             /// <param name="inp">The input port to use for reading.</param>
-            public CharacterStream(TextReader inp)
+            internal CharacterStream(TextReader inp)
             {
                 this.inp = inp;
             }
@@ -460,7 +482,7 @@ namespace SimpleScheme
             /// Read a character from the input, bypassing the pushed char.
             /// </summary>
             /// <returns>The next character in the stream.</returns>
-            public int Read()
+            internal int Read()
             {
                 if (this.isPushedChar)
                 {
@@ -476,7 +498,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="ch">The character to push.</param>
             /// <returns>The character that was pushed.</returns>
-            public int PushChar(int ch)
+            internal int PushChar(int ch)
             {
                 this.isPushedChar = true;
                 this.pushedChar = ch;
@@ -487,7 +509,7 @@ namespace SimpleScheme
             /// Get a pushed char, if present, or else read one.
             /// </summary>
             /// <returns>The next character in the stream.</returns>
-            public int ReadOrPop()
+            internal int ReadOrPop()
             {
                 return this.isPushedChar ? this.PopChar() : this.inp.Read();
             }
@@ -497,7 +519,7 @@ namespace SimpleScheme
             /// If so, return it.
             /// </summary>
             /// <returns>The pushed character, or -1 if EOF, or -2 if there is no pushed character.</returns>
-            public int GetPushedChar()
+            internal int GetPushedChar()
             {
                 if (this.isPushedChar)
                 {
@@ -518,7 +540,7 @@ namespace SimpleScheme
             /// Either read and save a character, to take a look at an already saved character.
             /// </summary>
             /// <returns>The next character (as a character).</returns>
-            public int PeekCh()
+            internal int PeekCh()
             {
                 try
                 {
@@ -535,7 +557,7 @@ namespace SimpleScheme
             /// Close the input port.
             /// </summary>
             /// <returns>True if the port was closed.</returns>
-            public Obj Close()
+            internal Obj Close()
             {
                 try
                 {
@@ -578,7 +600,7 @@ namespace SimpleScheme
             /// Push the token back on the input.
             /// </summary>
             /// <param name="token">The token to push.</param>
-            public void PushToken(object token)
+            internal void PushToken(object token)
             {
                 this.isPushedToken = true;
                 this.pushedToken = token;
@@ -589,7 +611,7 @@ namespace SimpleScheme
             /// If not, return null.
             /// </summary>
             /// <returns>The pushed token, if available, otherwise null.</returns>
-            public object GetPushedToken()
+            internal object GetPushedToken()
             {
                 return this.isPushedToken ? this.PopToken() : null;
             }

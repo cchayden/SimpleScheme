@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// <summary>
     /// Executes a function provided in the CLR.
     /// </summary>
-    public abstract class ClrProcedure : Procedure
+    internal abstract class ClrProcedure : Procedure
     {
         #region Constants
         /// <summary>
@@ -72,23 +72,6 @@ namespace SimpleScheme
         protected List<Type> ArgClasses { get; set; }
         #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the clr procedure primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(Environment env)
-        {
-            env
-                //// (class <class-name>)
-                .DefinePrimitive("class", (args, caller) => Class(First(args)), 1)
-                //// (new <class-name>)
-                .DefinePrimitive("new", (args, caller) => New(First(args)), 1)
-                //// (new-array <class-name> <length>)
-                .DefinePrimitive("new-array", (args, caller) => NewArray(First(args), Second(args)), 2);
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Display the CLR proc name as a string.  
@@ -97,6 +80,23 @@ namespace SimpleScheme
         public override string ToString()
         {
             return string.Format("ClrProcedure {0}", this.Name);
+        }
+        #endregion
+
+        #region Define Primitives
+        /// <summary>
+        /// Define the clr procedure primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(Environment env)
+        {
+            env
+                //// (class <class-name>)
+                .DefinePrimitive("class", (args, caller) => Class(First(args)), 1)
+                //// (new <class-name>)
+                .DefinePrimitive("new", (args, caller) => New(First(args)), 1)
+                //// (new-array <class-name> <length>)
+                .DefinePrimitive("new-array", (args, caller) => NewArray(First(args), Second(args)), 2);
         }
         #endregion
 

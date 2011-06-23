@@ -12,7 +12,7 @@ namespace SimpleScheme
     ///   the primitive.  It also knows the min and max number of arguments it expects.
     /// Each instance of Primitive is immutable.
     /// </summary>
-    public sealed class Primitive : Procedure
+    internal sealed class Primitive : Procedure
     {
         #region Fields
         /// <summary>
@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// <param name="operation">The code to carry out the operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
-        public Primitive(Op operation, int minArgs, int maxArgs)
+        internal Primitive(Op operation, int minArgs, int maxArgs)
         {
             this.operation = operation;
             this.minArgs = minArgs;
@@ -69,9 +69,21 @@ namespace SimpleScheme
         /// <param name="args">The primitive's arguments</param>
         /// <param name="caller">The calling stepper.</param>
         /// <returns>The primitive's result.</returns>
-        public delegate Obj Op(Obj args, Stepper caller);
+        internal delegate Obj Op(Obj args, Stepper caller);
 
         #region Public Methods
+
+        /// <summary>
+        /// The string form of a proc is its name in curly brackets.
+        /// </summary>
+        /// <returns>The name of the proc.</returns>
+        public override string ToString()
+        {
+            return "{" + this.Name + "}";
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
         /// As a convenience for primitives, they are allowed to return either
@@ -85,7 +97,7 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the primitive.</param>
         /// <param name="caller">The calling Stepper.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Stepper caller)
         {
             // First check the number of arguments
             int numArgs = Length(args);
@@ -115,15 +127,6 @@ namespace SimpleScheme
             // Operation returned a result -- just return this
             //  to the caller.
             return caller.ContinueStep(res);
-        }
-
-        /// <summary>
-        /// The string form of a proc is its name in curly brackets.
-        /// </summary>
-        /// <returns>The name of the proc.</returns>
-        public override string ToString()
-        {
-            return "{" + this.Name + "}";
         }
         #endregion
     }

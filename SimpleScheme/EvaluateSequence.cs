@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-    public sealed class EvaluateSequence : Stepper
+    internal sealed class EvaluateSequence : Stepper
     {
         #region Fields
         /// <summary>
@@ -48,13 +48,13 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateSequence(expr, env, caller);
         }
@@ -73,7 +73,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateSequence(expr, caller.Env, caller);
         }
@@ -88,8 +88,21 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalExprStep()
         {
+#if FALSE
             var nextStep = Rest(this.expressions) == List.Empty ? (StepperFunction)this.ReturnStep : this.LoopStep;
             return EvaluateExpression.Call(First(this.expressions), ContinueHere(nextStep));
+#else
+            bool last = Rest(this.expressions) == List.Empty;
+            if (last)
+            {
+                // need to return this.Caller so that we are tail recursive, but that does not work
+                return EvaluateExpression.Call(First(this.expressions), ContinueHere(this.ReturnStep));
+            }
+            else
+            {
+                return EvaluateExpression.Call(First(this.expressions), ContinueHere(this.LoopStep));
+            }
+#endif
         }
 
         /// <summary>

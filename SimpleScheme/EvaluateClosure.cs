@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a closure
     /// </summary>
-    public sealed class EvaluateClosure : Stepper
+    internal sealed class EvaluateClosure : Stepper
     {
         #region Fields
         /// <summary>
@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
@@ -69,19 +69,19 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        public static Stepper Call(Closure f, Obj expr, Stepper caller)
+        internal static Stepper Call(Closure f, Obj expr, Stepper caller)
         {
             return new EvaluateClosure(f, expr, caller.Env, caller);
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Trace information for the step.
         /// Print the closure name in addition to args
         /// </summary>
         /// <returns>Info to print for the trace.</returns>
-        public override string TraceInfo()
+        internal override string TraceInfo()
         {
             if (base.TraceInfo() == null)
             {

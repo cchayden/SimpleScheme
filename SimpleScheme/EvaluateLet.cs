@@ -13,7 +13,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    public sealed class EvaluateLet : Stepper
+    internal sealed class EvaluateLet : Stepper
     {
         #region Fields
         /// <summary>
@@ -72,20 +72,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call let evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateLet(expr, caller.Env, caller);
         }
@@ -139,7 +139,7 @@ namespace SimpleScheme
             if (this.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(new Closure(this.vars, this.body, this.Env), this.inits, ContinueReturn());
+                return EvaluateProc.Call(Closure.New(this.vars, this.body, this.Env), this.inits, this.Caller);
             }
 
             // named let -- eval the inits in the outer environment
@@ -155,7 +155,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper ApplyNamedLet()
         {
-            Closure fn = new Closure(this.vars, this.body, this.Env);
+            Closure fn = Closure.New(this.vars, this.body, this.Env);
             fn.Env.Define(this.name, fn);
             return fn.Apply(ReturnedExpr, ContinueReturn());
         }

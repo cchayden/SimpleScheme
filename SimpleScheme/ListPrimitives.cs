@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a)
         {
-            return new Pair(a, List.Empty);
+            return Pair.New(a, List.Empty);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace SimpleScheme
         /// <returns>A list whose first cell is null.</returns>
         public static Pair MakeEmptyList()
         {
-            return new Pair(List.Empty, List.Empty);
+            return Pair.New(List.Empty, List.Empty);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a, Obj b)
         {
-            return new Pair(a, new Pair(b, List.Empty));
+            return Pair.New(a, Pair.New(b, List.Empty));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a, Obj b, Obj c)
         {
-            return new Pair(a, new Pair(b, new Pair(c, List.Empty)));
+            return Pair.New(a, Pair.New(b, Pair.New(c, List.Empty)));
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a, Obj b, Obj c, Obj d)
         {
-            return new Pair(a, new Pair(b, new Pair(c, new Pair(d, List.Empty))));
+            return Pair.New(a, Pair.New(b, Pair.New(c, Pair.New(d, List.Empty))));
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace SimpleScheme
         /// <returns>The pair resulting from the construction.</returns>
         public static Pair Cons(Obj a, Obj b)
         {
-            return new Pair(a, b);
+            return Pair.New(a, b);
         }
 
         /// <summary>

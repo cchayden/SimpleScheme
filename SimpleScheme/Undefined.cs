@@ -32,7 +32,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">True if the string should be quoted.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void AsString(bool quoted, StringBuilder buf)
+        internal static void AsString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

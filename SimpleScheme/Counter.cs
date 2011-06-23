@@ -16,7 +16,7 @@ namespace SimpleScheme
     /// The counter id is used as an index into a counter array.
     /// An array is used because accessing through a dictionary is relatively slow.
     /// </summary>
-    public class Counter : ListPrimitives
+    internal class Counter : ListPrimitives
     {
         #region Fields
         /// <summary>
@@ -44,7 +44,7 @@ namespace SimpleScheme
         /// Creates a new counter for each of the counter names.
         /// Counter names should all be created before instances are created.
         /// </summary>
-        public Counter()
+        internal Counter()
         {
             this.counters = new int[MaxCounters];
         }
@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// Define the counter primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             env
                 //// (dump-counters)
@@ -69,7 +69,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Create a new counter id, given its name.
         /// If the counter already exists, return its id.
@@ -80,7 +80,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The counter name.</param>
         /// <returns>The counter id.</returns>
-        public static int Create(string name)
+        internal static int Create(string name)
         {
             lock (counterNames)
             {
@@ -101,7 +101,7 @@ namespace SimpleScheme
         /// Increment a counter, given its id.
         /// </summary>
         /// <param name="id">The counter id.</param>
-        public void Increment(int id)
+        internal void Increment(int id)
         {
             Interlocked.Increment(ref this.counters[id]);
         }

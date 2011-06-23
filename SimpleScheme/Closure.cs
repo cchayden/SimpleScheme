@@ -15,7 +15,7 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
     //// <r4rs section="4.1.4">formals: <variable></r4rs>
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-    public class Closure : Procedure
+    internal class Closure : Procedure
     {
         #region Constructor
         /// <summary>
@@ -25,7 +25,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        public Closure(Obj formalParameters, Obj body, Environment env)
+        protected Closure(Obj formalParameters, Obj body, Environment env)
         {
             this.FormalParameters = formalParameters;
             this.Env = env;
@@ -37,20 +37,33 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a list of variable names, to be matched with values later.
         /// </summary>
-        public Obj FormalParameters { get; private set; }
+        internal Obj FormalParameters { get; private set; }
 
         /// <summary>
         /// Gets the program to execute.
         /// </summary>
-        public Obj Body { get; private set; }
+        internal Obj Body { get; private set; }
 
         /// <summary>
         /// Gets the environment in which to execute.
         /// </summary>
-        public Environment Env { get; private set; }
+        internal Environment Env { get; private set; }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
+        /// <summary>
+        /// Create a new Closure
+        /// </summary>
+        /// <param name="formalParameters">A list of variable names, to be matched with 
+        ///    values given later.</param>
+        /// <param name="body">The program to execute.</param>
+        /// <param name="env">The environment in which to execute it.</param>
+        /// <returns>An instance of the Closure class.</returns>
+        internal static Closure New(Obj formalParameters, Obj body, Environment env)
+        {
+            return new Closure(formalParameters, body, env);
+        }
+
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
@@ -58,9 +71,9 @@ namespace SimpleScheme
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Stepper caller)
         {
-            return EvaluateSequence.Call(this.Body, new Environment(this.FormalParameters, args, this.Env), caller);
+            return EvaluateSequence.Call(this.Body, Environment.New(this.FormalParameters, args, this.Env), caller);
         }
 
         /// <summary>
@@ -70,7 +83,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public Stepper ApplyWithCurrentEnv(Stepper caller)
+        internal Stepper ApplyWithCurrentEnv(Stepper caller)
         {
             return EvaluateSequence.Call(this.Body, caller.Env, caller);
         }

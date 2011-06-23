@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
-    public class EvaluateProc : Stepper
+    internal class EvaluateProc : Stepper
     {
         #region Fields
         /// <summary>
@@ -48,13 +48,13 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call apply proc evaluator.
         /// </summary>
@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static Stepper Call(Procedure fn, Obj expr, Stepper caller)
+        internal static Stepper Call(Procedure fn, Obj expr, Stepper caller)
         {
             return new EvaluateProc(fn, expr, caller.Env, caller);
         }
@@ -73,7 +73,7 @@ namespace SimpleScheme
         /// Provide TraceInfo: the name and the proc to execute.
         /// </summary>
         /// <returns>Trace info.</returns>
-        public override string TraceInfo()
+        internal override string TraceInfo()
         {
             string info = base.TraceInfo();
             return info == null ? null : info + " " + this.fn;

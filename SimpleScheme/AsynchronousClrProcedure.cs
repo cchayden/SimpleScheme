@@ -63,7 +63,7 @@ namespace SimpleScheme
         /// Define the async clr procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(Environment env)
+        internal static new void DefinePrimitives(Environment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -76,7 +76,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -86,7 +86,7 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Stepper caller)
         {
             Obj target;
             Obj[] argArray;
@@ -167,7 +167,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
             /// <param name="caller">The caller stepper to resume.</param>
-            public AsyncState(object invokedObject, Stepper caller)
+            internal AsyncState(object invokedObject, Stepper caller)
             {
                 this.InvokedObject = invokedObject;
                 this.Caller = caller;
@@ -176,12 +176,12 @@ namespace SimpleScheme
             /// <summary>
             /// Gets the object to invoke the end method on.
             /// </summary>
-            public object InvokedObject { get; private set; }
+            internal object InvokedObject { get; private set; }
 
             /// <summary>
             /// Gets the caller stepper to resume.
             /// </summary>
-            public Stepper Caller { get; private set; }
+            internal Stepper Caller { get; private set; }
         }
         #endregion
     }

@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// </summary>
     //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-    public sealed class EvaluateIf : Stepper
+    internal sealed class EvaluateIf : Stepper
     {
         #region Fields
         /// <summary>
@@ -45,20 +45,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateIf(expr, caller.Env, caller);
         }
@@ -79,11 +79,11 @@ namespace SimpleScheme
         /// Evaluate and return either the second or third expression.
         /// If there is no thid, the empty list will be evaluated, which is OK.
         /// </summary>
-        /// <returns>Execution continues with the caller.</returns>
+        /// <returns>Execution continues with the return.</returns>
         private Stepper EvaluateAlternativeStep()
         {
             Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
-            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.ContinueReturn());
+            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.Caller);
         }
         #endregion
     }

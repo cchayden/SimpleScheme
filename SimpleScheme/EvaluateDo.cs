@@ -13,7 +13,7 @@ namespace SimpleScheme
     ////                           ...)
     ////                           (<test> <expression> ...)
     ////                         <command> ...)</r4rs>
-    public sealed class EvaluateDo : Stepper
+    internal sealed class EvaluateDo : Stepper
     {
         #region Fields
         /// <summary>
@@ -71,20 +71,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call let evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateDo(expr, caller.Env, caller);
         }
@@ -138,7 +138,7 @@ namespace SimpleScheme
             }
 
             // prepare test proc to execute each time through
-            this.testProc = new Closure(this.vars, MakeList(test), this.Env);
+            this.testProc = Closure.New(this.vars, MakeList(test), this.Env);
 
             // First evaluare inits.
             return EvaluateList.Call(inits, ContinueHere(this.TestStep));

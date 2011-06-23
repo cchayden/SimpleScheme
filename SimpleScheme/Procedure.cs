@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : ListPrimitives
+    internal abstract class Procedure : ListPrimitives
     {
         #region Constants
         /// <summary>
@@ -30,9 +30,10 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Fields
+        #region Accessors
         /// <summary>
         /// Gets or sets all Procedures have a name.  It can be set only by the subclass.
+        /// Can't figure out how to make this internal rather than public.
         /// </summary>
         public string Name { get; protected set; }
         #endregion
@@ -42,7 +43,7 @@ namespace SimpleScheme
         /// Define the procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -52,11 +53,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-current-continuation",
-                    (args, caller) => Proc(First(args)).Apply(MakeList(new Continuation(EvaluateContinuation.Call(First(args), caller))), caller),
+                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller))), caller),
                     1)
                 .DefinePrimitive(
                     "call/cc",
-                    (args, caller) => Proc(First(args)).Apply(MakeList(new Continuation(EvaluateContinuation.Call(First(args), caller))), caller),
+                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller))), caller),
                     1)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
@@ -70,14 +71,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Convert the given obj to a procedure.
         /// It should be one already: if not, throw an error.
         /// </summary>
         /// <param name="x">The obj to convert.</param>
         /// <returns>The obj as a procedure.</returns>
-        public static Procedure Proc(Obj x)
+        internal static Procedure Proc(Obj x)
         {
             if (x is Procedure)
             {
@@ -93,7 +94,7 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        public static Obj Force(Obj promise, Stepper caller)
+        internal static Obj Force(Obj promise, Stepper caller)
         {
             return !(promise is Procedure) ? promise : Proc(promise).Apply(null, caller);
         }
@@ -107,14 +108,14 @@ namespace SimpleScheme
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to run after the application.</returns>
-        public abstract Stepper Apply(Obj args, Stepper caller);
+        internal abstract Stepper Apply(Obj args, Stepper caller);
 
         /// <summary>
         /// Assign the procedure name.  If the name is still the default, assign it 
         ///    the name given in the argument.
         /// </summary>
         /// <param name="name">The name to assign it.</param>
-        public void SetName(string name)
+        internal void SetName(string name)
         {
             if (this.Name == AnonymousProc)
             {
@@ -129,7 +130,7 @@ namespace SimpleScheme
         /// <param name="args">The expression to evaluate.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next step toexecute.</returns>
-        public Stepper Evaluate(Obj args, Stepper caller)
+        internal Stepper Evaluate(Obj args, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
             if (this is Macro)

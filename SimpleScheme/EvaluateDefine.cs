@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a define expression.
     /// </summary>
-    public sealed class EvaluateDefine : Stepper
+    internal sealed class EvaluateDefine : Stepper
     {
         #region Fields
         /// <summary>
@@ -41,20 +41,20 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
-        public override string Name
+        internal override string Name
         {
             get { return StepperName; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Call a define evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateDefine(expr, caller.Env, caller);
         }
@@ -72,7 +72,7 @@ namespace SimpleScheme
         {
             if (First(Expr) is Pair)
             {
-                this.Env.Define(First(First(Expr)), new Closure(Rest(First(Expr)), Rest(Expr), this.Env));
+                this.Env.Define(First(First(Expr)), Closure.New(Rest(First(Expr)), Rest(Expr), this.Env));
                 return ReturnUndefined();
             }
 

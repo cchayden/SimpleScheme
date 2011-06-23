@@ -15,13 +15,23 @@ namespace SimpleScheme
     public sealed class ErrorHandlers
     {
         // Errors and Warnings
+        #region Public Static Methods
+        /// <summary>
+        /// Display a warning and return a warning string.
+        /// </summary>
+        /// <param name="message">The message to display.</param>
+        public static void Warn(string message)
+        {
+            Console.Error.WriteLine("**** WARNING: " + message);
+        }
+        #endregion
 
         #region Define Primitives
         /// <summary>
         /// Define the error primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(Environment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -30,7 +40,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Static Methods
+        #region Private Static Methods
         /// <summary>
         /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
@@ -38,7 +48,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static object Error(string message)
+        internal static object Error(string message)
         {
             Console.Error.WriteLine("**** ERROR: " + message);
             throw new SchemeException(message);
@@ -51,19 +61,10 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static Stepper EvalError(string message)
+        internal static Stepper EvalError(string message)
         {
             Console.Error.WriteLine("**** ERROR: " + message);
             throw new SchemeException(message);
-        }
-
-        /// <summary>
-        /// Display a warning and return a warning string.
-        /// </summary>
-        /// <param name="message">The message to display.</param>
-        public static void Warn(string message)
-        {
-            Console.Error.WriteLine("**** WARNING: " + message);
         }
         #endregion
 
@@ -77,7 +78,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the ErrorHandlers.SchemeException class.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            public SchemeException(string message) 
+            internal SchemeException(string message) 
                 : base(message)
             {
             }
