@@ -65,14 +65,17 @@ namespace SimpleScheme
         /// <returns>An input port.</returns>
         public static InputPort InPort(object x, Interpreter interp)
         {
-            try
+            if (x == null)
             {
-                return x == null ? interp.Input : (InputPort)x;
+                return interp.Input;
             }
-            catch (InvalidCastException)
+
+            if (x is InputPort)
             {
-                return InPort(Error("Expected an input port, got: " + x), interp);
+                return (InputPort)x;
             }
+
+            return InPort(Error("Expected an input port, got: " + x), interp);
         }
 
         /// <summary>
@@ -240,7 +243,7 @@ namespace SimpleScheme
                             Warn("EOF inside of a string.");
                         }
 
-                        return new SchemeString(buff.ToString());
+                        return new SchemeString(buff);
                     }
 
                 case '#':
@@ -256,7 +259,7 @@ namespace SimpleScheme
 
                         case '(':
                             this.inStream.PushChar('(');
-                            return Vector.ListToVector(this.Read());
+                            return new Vector(this.Read());
 
                         case '\\':
                             ch = this.inStream.Read();

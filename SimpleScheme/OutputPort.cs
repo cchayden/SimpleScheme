@@ -34,14 +34,17 @@ namespace SimpleScheme
         /// <returns>An output port.</returns>
         public static OutputPort OutPort(object x, Interpreter interp)
         {
-            try
+            if (x == null)
             {
-                return x == null ? interp.Output : (OutputPort)x;
+                return interp.Output;
             }
-            catch (InvalidCastException)
+
+            if (x is OutputPort)
             {
-                return OutPort(Error("Expected an output port, got: " + x), interp);
+                return (OutputPort)x;
             }
+
+            return OutPort(Error("Expected an output port, got: " + x), interp);
         }
 
         /// <summary>

@@ -13,8 +13,9 @@ namespace SimpleScheme
         /// Initializes a new instance of the EvaluatorBase class.
         /// This is never applied.
         /// </summary>
-        public EvaluatorBase()
-            : base(null, null, null)
+        /// <param name="name">The evaluator name.</param>
+        public EvaluatorBase(string name)
+            : base(null, name, null)
         {
         }
 

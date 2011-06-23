@@ -15,11 +15,46 @@ namespace SimpleScheme
 
         /// <summary>
         /// Initializes a new instance of the Vector class.
+        /// This is used only in unit tests.
         /// </summary>
         /// <param name="vec">An array of objects.</param>
         public Vector(object[] vec)
         {
             this.vec = vec;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Vector class.
+        /// Create a vector from a length and an optional fill value.
+        /// </summary>
+        /// <param name="length">The vector length.</param>
+        /// <param name="fill">The value to initialize the vector entries to.</param>
+        public Vector(object length, object fill)
+        {
+            this.vec = new object[(int)NumberUtils.Num(length)];
+            if (fill != null)
+            {
+                for (int i = 0; i < this.vec.Length; i++)
+                {
+                    this.vec[i] = fill;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Vector class.
+        /// Creates the vector from a list of values.
+        /// </summary>
+        /// <param name="objs">A list of values to put in the vector.</param>
+        public Vector(object objs)
+        {
+            this.vec = new object[SchemeUtils.Length(objs)];
+
+            for (int i = 0; objs is Pair; i++)
+            {
+                this.vec[i] = First(objs);
+                objs = Rest(objs);
+            }
         }
 
         /// <summary>
@@ -85,24 +120,6 @@ namespace SimpleScheme
             }
 
             return Vec(Error("Expected a vector, got: " + x));
-        }
-
-        /// <summary>
-        /// Turns a list of objects into a vector of the appropriate length.
-        /// </summary>
-        /// <param name="objs">The list to convert.</param>
-        /// <returns>The array of objects (vector).</returns>
-        public static Vector ListToVector(object objs)
-        {
-            object[] vec = new object[SchemeUtils.Length(objs)];
-
-            for (int i = 0; objs is Pair; i++)
-            {
-                vec[i] = First(objs);
-                objs = Rest(objs);
-            }
-
-            return new Vector(vec);
         }
 
         /// <summary>

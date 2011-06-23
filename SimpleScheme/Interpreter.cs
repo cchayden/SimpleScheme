@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
-        private readonly Stepper halt;
+        private readonly Stepper halted;
         
         /// <summary>
         /// Initializes a new instance of the Interpreter class.
@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         public Interpreter(bool loadStandardMacros, IEnumerable<string> files)
         {
-            this.halt = new EvaluatorBase();
+            this.halted = new EvaluatorBase("halted");
             this.Trace = false;
             this.Input = new InputPort(Console.In);
             this.Output = new OutputPort(Console.Out);
@@ -59,10 +59,11 @@ namespace SimpleScheme
         /// Initializes a new instance of the Interpreter class.
         /// Set up the most common way -- with standard macros and no files.
         /// </summary>
-        public Interpreter()
+        /// <param name="name">The evaluator name.</param>
+        public Interpreter(string name)
             : this(true, null)
         {
-            this.halt = new EvaluatorBase();
+            this.halted = new EvaluatorBase(name);
         }
 
         /// <summary>
@@ -114,7 +115,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            return this.EvalStep(Stepper.CallEvaluate(expr, env, this.halt));
+            return this.EvalStep(Stepper.CallEvaluate(expr, env, this.halted));
         }
 
         /// <summary>
@@ -133,14 +134,14 @@ namespace SimpleScheme
                 }
 
                 nextStep = nextStep.RunStep();
-                if (nextStep == Stepper.Suspend)
+                if (nextStep == Stepper.Suspended)
                 {
                     return nextStep;
                 }
 
-                if (nextStep == this.halt)
+                if (nextStep == this.halted)
                 {
-                    return this.halt.ReturnedExpr;
+                    return this.halted.ReturnedExpr;
                 }
             }
         }
@@ -182,7 +183,7 @@ namespace SimpleScheme
                     return True;
                 }
 
-                this.Eval(x);
+                object val = this.Eval(x);
             }
         }
 

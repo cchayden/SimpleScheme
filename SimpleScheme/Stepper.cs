@@ -9,10 +9,10 @@ namespace SimpleScheme
     public abstract class Stepper : SchemeUtils
     {
         /// <summary>
-        /// The suspend stepper is used to indicate suspension, when stepping
+        /// The suspended stepper is used to indicate suspension, when stepping
         ///   needs to be delayed but is not complete.
         /// </summary>
-        private static readonly Stepper suspend = new EvaluatorBase();
+        private static readonly Stepper suspended = new EvaluatorBase("suspended");
 
         /// <summary>
         /// Initializes a new instance of the Stepper class.
@@ -64,13 +64,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the singleton suspend stepper.
+        /// Gets the singleton suspended stepper.
         /// This is used when stepper needs to suspend itself.
         /// </summary>
         /// <returns>A default stepper.</returns>
-        public static Stepper Suspend
+        public static Stepper Suspended
         {
-            get { return suspend; }
+            get { return suspended; }
         }
 
         /// <summary>

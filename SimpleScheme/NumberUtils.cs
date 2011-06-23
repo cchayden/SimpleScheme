@@ -115,7 +115,7 @@ namespace SimpleScheme
             int numberBase = y is double ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
-                return new SchemeString(Convert.ToString((long) Num(x), numberBase));
+                return new SchemeString(Convert.ToString((long)Num(x), numberBase));
             }
 
             return new SchemeString(x.ToString());

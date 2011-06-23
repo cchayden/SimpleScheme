@@ -308,13 +308,13 @@ namespace Tests
         [TestMethod]
         public void ListToVectorTest()
         {
-            var actual = Vector.ListToVector(SchemeUtils.List(1, 2));
+            var actual = new Vector(SchemeUtils.List(1, 2));
             var expected = new object[] { 1, 2 };
             Assert.AreEqual(2, actual.Length);
             Assert.AreEqual(2, expected.Length);
             Assert.AreEqual(expected[0], actual[0]);
             Assert.AreEqual(expected[1], actual[1]);
-            actual = Vector.ListToVector(1);
+            actual = new Vector(1);
             Assert.AreEqual(0, actual.Length);
         }
 

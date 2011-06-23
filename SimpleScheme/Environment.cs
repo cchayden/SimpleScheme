@@ -87,12 +87,12 @@ namespace SimpleScheme
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
-        /// <param name="opCode">The opCode.</param>
+        /// <param name="operationCode">The operationCode.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefPrim(string name, Primitive.OpCode opCode, int numberOfArgs)
+        public Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int numberOfArgs)
         {
-            this.Define(name, new Primitive(opCode, numberOfArgs, numberOfArgs));
+            this.Define(name, new Primitive(operationCode, numberOfArgs, numberOfArgs));
             return this;
         }
 
@@ -102,13 +102,13 @@ namespace SimpleScheme
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
-        /// <param name="opCode">The opCode.</param>
+        /// <param name="operationCode">The operationCode.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefPrim(string name, Primitive.OpCode opCode, int minArgs, int maxArgs)
+        public Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int minArgs, int maxArgs)
         {
-            this.Define(name, new Primitive(opCode, minArgs, maxArgs));
+            this.Define(name, new Primitive(operationCode, minArgs, maxArgs));
             return this;
         }
 

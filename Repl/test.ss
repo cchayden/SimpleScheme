@@ -1,19 +1,26 @@
 ;; test async clr methods
 
-;; define WebRequest and Webresponse classes
-(define req-class "System.Net.WebRequest, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
-(define resp-class "System.Net.WebResponse, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
+;; define WebRequest and WebResponse classes
+(define WebRequest "System.Net.WebRequest, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
+(define WebResponse "System.Net.WebResponse, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
 
-;; define WebRequest.Create method
-(define req-create (method req-class "Create" "string"))
-(define req-get-response (method req-class "GetResponse"))
-(define req-async-get-response (method-async req-class "GetResponse"))
-(define resp-get-content-length (method resp-class "get_ContentLength"))
+;; define CLR method accessors
+(define WebRequest.Create (method WebRequest "Create" "string"))
+(define req.GetResponse (method-async WebRequest "GetResponse"))
+(define resp.GetContentLength (method WebResponse "get_ContentLength"))
 
-(begin 
-  (define req (req-create "http://microsoft.com"))
-  (define resp (req-async-get-response req))
-  (display "content length: " )
-  (p (resp-get-content-length resp)))
+; get content length asynchronously
+(define (get-content-length uri)
+  (let ((resp (req.GetResponse (WebRequest.Create uri))))
+    (display (string-append "Uri " uri " : " ))
+    (p (resp.GetContentLength resp))))
 
+; sequential
+;(for-each get-content-length '("http://microsoft.com" "http://live.com" "http://wintellect.com"))
+
+; parallel
+(get-content-length "http://microsoft.com")  
+(get-content-length "http://live.com")  
+(get-content-length "http://wintellect.com")
+ 
 (p "loaded")

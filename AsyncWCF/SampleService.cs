@@ -7,34 +7,41 @@ namespace AsyncWCF
     using System.Net;
     using System.ServiceModel;
 
-    // Service Contrace
-    [ServiceContract]
-    internal interface IService
-    {
-        [OperationContract(AsyncPattern = true)]
-        IAsyncResult BeginGetUriLength(string input, AsyncCallback callback, object asyncState);
-        string EndGetUriLength(IAsyncResult result);
-    }
-
-    // Service Contract Implementation
-    // This class gets instantiated so that it can receive a call.
+    /// <summary>
+    /// The service contract implementation.
+    /// This class gets instantiated so that it can receive a call.
+    /// </summary>
     [ServiceBehavior]
     internal class SampleService : IService
     {
+        /// <summary>
+        /// The web request we need to make to get the content length.
+        /// </summary>
         private WebRequest request;
 
-        public IAsyncResult BeginGetUriLength(String uri, AsyncCallback callback, Object state)
+        /// <summary>
+        /// Start the operation.  It turns around and calls another async operation.
+        /// </summary>
+        /// <param name="uri">The URI of the web page to measure.</param>
+        /// <param name="callback">Callback notified when the result is available.</param>
+        /// <param name="state">State to pass to callback.</param>
+        /// <returns>An AsyncResult, used to wait foe result.</returns>
+        public IAsyncResult BeginGetContentLength(string uri, AsyncCallback callback, object state)
         {
-            request = WebRequest.Create(uri);
-            return request.BeginGetResponse(callback, state);
+            this.request = WebRequest.Create(uri);
+            return this.request.BeginGetResponse(callback, state);
         }
 
-        public String EndGetUriLength(IAsyncResult result)
+        /// <summary>
+        /// Called by WCF when operation is ending.
+        /// </summary>
+        /// <param name="result">The async result, used to get operation result.</param>
+        /// <returns>The content length (as a string).</returns>
+        public long EndGetContentLength(IAsyncResult result)
         {
-            using (WebResponse response = request.EndGetResponse(result))
+            using (WebResponse response = this.request.EndGetResponse(result))
             {
-                return String.Format("ContentLength of {0} = {1}",
-                    request.RequestUri, response.ContentLength);
+                return response.ContentLength;
             }
         }
     }

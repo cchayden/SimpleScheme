@@ -21,10 +21,4 @@ namespace Repl
             new Interpreter(args).ReadEvalWriteLoop();
         }
     }
-
-    public class TestClass
-    {
-        public static string TestMethod1() { return "test 1"; }
-        public string TestMethod2() { return "test 2"; }
-    }
 }

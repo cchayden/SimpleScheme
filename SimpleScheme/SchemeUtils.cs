@@ -334,14 +334,12 @@ namespace SimpleScheme
         /// <returns>The corresponding string.</returns>
         public static string Sym(object x)
         {
-            try
+            if (x is string)
             {
                 return (string)x;
             }
-            catch (InvalidCastException)
-            {
-                return Sym(Error("Expected a symbol, got: " + x));
-            }
+
+            return Sym(Error("Expected a symbol, got: " + x));
         }
 
         /// <summary>

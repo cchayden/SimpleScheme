@@ -22,10 +22,30 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the SchemeString class.
         /// </summary>
-        /// <param name="str">The characters that make up the string.</param>
+        /// <param name="str">The (CLR)string that makes up the string.</param>
         public SchemeString(string str)
         {
             this.str = str;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the SchemeString class.
+        /// </summary>
+        /// <param name="length">The length of the string to make.</param>
+        /// <param name="fill">If present, the character to fill the string with.</param>
+        public SchemeString(object length, object fill)
+        {
+            char c = (fill == null) ? (char)0 : Chr(fill);
+            this.str = new string(c, (int)NumberUtils.Num(length));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the SchemeString class.
+        /// </summary>
+        /// <param name="buf">A string builder containing the string value.</param>
+        public SchemeString(StringBuilder buf)
+        {
+            this.str = buf.ToString();
         }
 
         /// <summary>
@@ -317,6 +337,11 @@ namespace SimpleScheme
                 }
 
                 buf.Append(')');
+            }
+            else if (x is Stepper)
+            {
+                Stepper s = (Stepper)x;
+                buf.Append(s.Expr);
             }
             else if (IsTrue(x))
             {

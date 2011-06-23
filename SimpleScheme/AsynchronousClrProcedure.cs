@@ -9,7 +9,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// Handles asynchronous CLR method calls.
-    /// Call returns Suspend, then on completion resumes execution.
+    /// Call returns suspended, then on completion resumes execution.
     /// </summary>
     public class AsynchronousClrProcedure : ClrProcedure
     {
@@ -18,17 +18,6 @@ namespace SimpleScheme
         /// The parent class has info for BeginXXX.
         /// </summary>
         private readonly MethodInfo endMethodInfo;
-
-        /// <summary>
-        /// The object on which the begin operation was invoked.
-        /// </summary>
-        private object invokedObj;
-
-        /// <summary>
-        /// The parent of the Apply.  This contains the interpreter used to
-        ///   resume stepping in its environment.
-        /// </summary>
-        private Stepper parent;
 
         /// <summary>
         /// Initializes a new instance of the AsynchronousClrProcedure class.
@@ -77,11 +66,11 @@ namespace SimpleScheme
         /// <returns>The result of executing the method.</returns>
         public override object Apply(Stepper parent, object args)
         {
-            this.parent = parent;
-            this.invokedObj = First(args);
-            object[] argArray = this.ToArgListBegin(Rest(args)).ToArray();
-            IAsyncResult res = (IAsyncResult)this.MethodInfo.Invoke(this.invokedObj, argArray);
-            return Stepper.Suspend;
+            object invokedObj = First(args);
+            AsyncState state = new AsyncState(invokedObj, parent);
+            object[] argArray = this.ToArgListBegin(Rest(args), state).ToArray();
+            IAsyncResult res = (IAsyncResult)this.MethodInfo.Invoke(invokedObj, argArray);
+            return Stepper.Suspended;
         }
 
         /// <summary>
@@ -108,14 +97,13 @@ namespace SimpleScheme
         ///    what is expected.
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
+        /// <param name="state">State, passed on to completion function.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private List<object> ToArgListBegin(object args)
+        private List<object> ToArgListBegin(object args, object state)
         {
             AsyncCallback cm = this.CompletionMethod;
-            object[] additionalArgs = { cm, "xxx" };
-            List<object> array = ToArgList(args, additionalArgs);
-
-            return array;
+            object[] additionalArgs = { cm, state };
+            return ToArgList(args, additionalArgs);
         }
 
         /// <summary>
@@ -126,9 +114,38 @@ namespace SimpleScheme
         private void CompletionMethod(IAsyncResult result)
         {
             object[] args = { result };
-            object res = this.endMethodInfo.Invoke(this.invokedObj, args);
-            this.parent.ReturnedExpr = res;
-            this.parent.Env.Interp.EvalStep(this.parent);
+            AsyncState state = (AsyncState)result.AsyncState;
+            Stepper parent = state.Parent;
+            object res = this.endMethodInfo.Invoke(state.InvokedObject, args);
+            parent.ReturnedExpr = res;
+            parent.Env.Interp.EvalStep(parent);
+        }
+
+        /// <summary>
+        /// Stores the async state needed to resume execution from the callback.
+        /// </summary>
+        private class AsyncState
+        {
+            /// <summary>
+            /// Initializes a new instance of the AsynchronousClrProcedure.AsyncState class.
+            /// </summary>
+            /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
+            /// <param name="parent">The parent stepper to resume.</param>
+            public AsyncState(object invokedObject, Stepper parent)
+            {
+                this.InvokedObject = invokedObject;
+                this.Parent = parent;
+            }
+
+            /// <summary>
+            /// Gets the object to invoke the end method on.
+            /// </summary>
+            public object InvokedObject { get; private set; }
+
+            /// <summary>
+            /// Gets the parent stepper to resume.
+            /// </summary>
+            public Stepper Parent { get; private set; }
         }
     }
 }
