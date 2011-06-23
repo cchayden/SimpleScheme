@@ -17,51 +17,6 @@ namespace SimpleScheme
     /// </summary>
     public abstract class Evaluator : SchemeUtils
     {
-        /// <summary>
-        /// The scheme interpreter.
-        /// </summary>
-        private readonly Scheme interp;
-
-        /// <summary>
-        /// The parent evaluator.
-        /// Return to this one when done.
-        /// </summary>
-        private readonly Evaluator parent;
-
-        /// <summary>
-        /// The expression being evaluated.  During evaluation, this is 
-        ///   replaced by the results of evaluation.  At the conclusion of evaluation
-        ///   this holds the final result.
-        /// </summary>
-        private object expr;
-
-        /// <summary>
-        /// The returned expr;
-        /// </summary>
-        private object retExpr;
-
-        /// <summary>
-        /// The evaluation environment.  If the environment is changes as a result
-        ///   of evaluation, then the new environment is here after evaluation.
-        /// </summary>
-        private Environment env;
-
-        /// <summary>
-        /// The returned environment.
-        /// </summary>
-        private Environment retEnv;
-
-        /// <summary>
-        /// A program oounter.
-        /// </summary>
-        private int pc;
-
-        /// <summary>
-        /// The function that we called.
-        /// Valid when pc > 0.
-        /// </summary>
-        private Evaluator called;
-
         protected const int PcReturn = -1;
 
         /// <summary>
@@ -73,60 +28,56 @@ namespace SimpleScheme
         /// <param name="env">The evaluator environment.</param>
         protected Evaluator(Scheme interp, Evaluator parent, object expr, Environment env)
         {
-            this.interp = interp;
-            this.parent = parent;
-            this.retExpr = this.expr = expr;
-            this.retEnv = this.env = env;
-            this.pc = 0;
-            this.called = null;
+            this.Interp = interp;
+            this.Parent = parent;
+            this.RetExpr = this.Expr = expr;
+            this.RetEnv = this.Env = env;
+            this.Pc = 0;
+            this.Called = null;
         }
 
-        protected Scheme Interp { get { return interp; } }
-        protected Evaluator Parent { get { return parent; } }
+        protected Scheme Interp { get; private set; }
+        protected Evaluator Parent { get; private set; }
 
         /// <summary>
-        /// Gets the expression being evaluated.  Aftet execution is done, this is the
-        ///     evaluation result.
+        /// Gets or sets the expression being evaluated.  
         /// </summary>
-        public object Expr
-        {
-            get { return this.expr; }
-            set { expr = value; }
-        }
-
-        public object RetExpr
-        {
-            get { return this.retExpr; }
-            set { retExpr = value; }
-        }
+        public object Expr { get; protected set; }
 
         /// <summary>
-        /// Gets the evaluation environment.  After execution, this is the new environment.
+        /// Gets or sets the returned expression.
+        /// This is valid after a call has completed, and holds the
+        ///   returned result.
         /// </summary>
-        public Environment Env
-        {
-            get { return this.env; }
-            set { env = value; }
-        }
+        public object RetExpr { get; protected set; }
 
-        public Environment RetEnv
-        {
-            get { return this.retEnv; }
-            set { retEnv = value; }
-        }
+        /// <summary>
+        /// Gets or sets the evaluation environment.  After execution, this is the new environment.
+        /// </summary>
+        public Environment Env { get; protected set; }
 
-        protected int Pc
-        {
-            get { return this.pc; }
-            set { pc = value; }
-        }
+        /// <summary>
+        /// Gets or sets the returned environment
+        /// </summary>
+        public Environment RetEnv { get; protected set; }
 
-        protected Evaluator Called 
-        { 
-            get { return called; }
-            set { called = value; }
-        }
+        /// <summary>
+        /// Gets or sets the Evaluators program counter.
+        /// Used to sequence through multiple steps.
+        /// </summary>
+        protected int Pc { get; set;  }
 
+        /// <summary>
+        /// Gets or sets the called sub-evaluator.
+        /// The evaluator that is called is stored, so that the returned value
+        ///   can be extracted after it returns.
+        /// </summary>
+        protected Evaluator Called { get; set; }
+
+        /// <summary>
+        /// Subclasses implement this to make one step in the evaluation.
+        /// </summary>
+        /// <returns></returns>
         public abstract Evaluator EvalStep();
 
         /// <summary>
@@ -137,8 +88,8 @@ namespace SimpleScheme
         /// <returns>The first step of the sub-evaluator.</returns>
         protected Evaluator SubEvalReturn(Evaluator toCall)
         {
-            this.called = toCall;
-            pc = PcReturn;
+            this.Called = toCall;
+            Pc = PcReturn;
             return toCall;
         }
 
@@ -150,7 +101,7 @@ namespace SimpleScheme
         /// <returns>The first step of the sub-evaluator.</returns>
         protected Evaluator SubEval(Evaluator toCall)
         {
-            this.called = toCall;
+            this.Called = toCall;
             return toCall;
         }
 
@@ -169,7 +120,7 @@ namespace SimpleScheme
         /// <returns></returns>
         protected Evaluator EvalContinue()
         {
-            called = null;
+            Called = null;
             return this;
         }
     }
@@ -317,7 +268,7 @@ namespace SimpleScheme
             // If we get here, it wasn't one of the special forms.  
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
-            fn = this.Interp.Eval(fn, this.Env);
+            fn = this.Interp.Eval(fn, this.Env);      // TODO
 
             // If the function is a macro, expand it and then continue.
             if (fn is Macro)
@@ -410,13 +361,14 @@ namespace SimpleScheme
                     if (First(this.Expr) is Pair)
                     {
                         Pc = 1;
-                        return SubEval(new EvaluatorMain(Interp, this, Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))), this.Env));
+                        return SubEval(new EvaluatorMain(
+                            Interp, 
+                            this, 
+                            Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))), 
+                            this.Env));
                     }
-                    else
-                    {
-                        Pc = 2;
-                        return SubEval(new EvaluatorMain(Interp, this, (Second(this.Expr)), this.Env));
-                    }
+                    Pc = 2;
+                    return SubEval(new EvaluatorMain(Interp, this, (Second(this.Expr)), this.Env));
                 case 1:
                     this.RetExpr = this.Env.Define(First(First(this.Expr)), Called.RetExpr);
                     break;
@@ -481,28 +433,6 @@ namespace SimpleScheme
         /// This was a simple while loop that has been split in the middle.
         /// </summary>
         /// <returns>The next step.</returns>
-#if OLD
-        public override Evaluator EvalStep()
-        {
-            switch (this.Pc)
-            {
-                case 0:
-                    if (Rest(this.Expr) != null)
-                    {
-                        this.Interp.Eval(First(this.Expr), this.Env);     // TODO fix
-                        this.Pc = 1;
-                        return this;
-                    }
-                    this.RetExpr = First(this.Expr);
-                    break;
-                case 1:
-                    this.Expr = Rest(this.Expr);
-                    this.Pc = 0;
-                    return this;
-            }
-            return this.Parent;
-        }
-#else
         public override Evaluator EvalStep()
         {
             switch (this.Pc)
@@ -516,13 +446,12 @@ namespace SimpleScheme
                     this.RetExpr = First(this.Expr);
                     break;
                 case 1:
-                    this.RetExpr = Rest(Called.RetExpr);
+                    this.Expr = Rest(this.Expr);
                     this.Pc = 0;
                     return this;
             }
             return this.Parent;
         }
-#endif
     }
 
     /// <summary>
@@ -533,7 +462,6 @@ namespace SimpleScheme
     public class EvaluatorList : Evaluator
     {
         private Pair result;
-        private object value;
         private Pair accum;
 
         /// <summary>
@@ -555,6 +483,7 @@ namespace SimpleScheme
             switch (this.Pc)
             {
                 case 0:
+                    // first check for degenerate cases
                     if (this.Expr == null)
                     {
                         this.RetExpr = null;
@@ -567,19 +496,26 @@ namespace SimpleScheme
                         this.RetExpr = null;
                         break;
                     }
+                    // start with an empty list
                     accum = result = List(null); // empty cell will be stripped off below
                     Pc = 1;
                     return this;
                 case 1:
                     if (this.Expr is Pair)
                     {
-                        value = this.Interp.Eval(First(this.Expr), this.Env);     // TODO fix
-                        accum = (Pair) (accum.Rest = List(value));
-                        Expr = Rest(Expr);
-                        return this;
+                        // if there is more to do, evaluate the first expression
+                        Pc = 2;
+                        return SubEval(new EvaluatorMain(Interp, this, First(this.Expr), this.Env));
                     }
+                    // if we are done, just return the result minus the dummy entry
                     this.RetExpr = result.Rest;
                     break;
+                case 2:
+                    // back from the evaluation -- save the result and keep going with the rest
+                    Pc = 1;
+                    accum = (Pair) (accum.Rest = List(Called.RetExpr));
+                    Expr = Rest(Expr);
+                    return this;
             }
             return this.Parent;
         }
@@ -636,12 +572,13 @@ namespace SimpleScheme
         private readonly object fn;
         
         /// <summary>
-        /// Initializes a new instance of the EvaluatorSet class.
+        /// Initializes a new instance of the EvaluatorApplyProc class.
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="parent">The parent.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
+        /// <param name="fn">The function to apply.</param>
         public EvaluatorApplyProc(Scheme interp, Evaluator parent, object expr, Environment env, object fn) 
             : base(interp, parent, expr, env)
         {
@@ -686,9 +623,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         public EvaluatorReduceCond(Scheme interp, Evaluator parent, object expr, Environment env) 
             : base(interp, parent, expr, env)
-        {
-            result = null;
-        }
+        { }
 
         /// <summary>
         /// Handle a cond by iterating down the list of clauses.
@@ -713,15 +648,17 @@ namespace SimpleScheme
                     Expr = Rest(Expr);
                     if (First(clause) as string == "else")
                     {
+                        result = null;
                         Pc = 2;
                     }
                     else
                     {
                         Pc = 1;
-                        result = this.Interp.Eval(First(clause), this.Env);    // TODO fix
+                        return SubEval(new EvaluatorMain(Interp, this, First(clause), this.Env));
                     }
                     return this;
                 case 1:
+                    result = Called.RetExpr;
                     Pc = Truth(result) ? 2 : 0;
                     return this;
                 case 2:
@@ -742,6 +679,5 @@ namespace SimpleScheme
             }
             return this.Parent;
         }
-        
     }
 }
