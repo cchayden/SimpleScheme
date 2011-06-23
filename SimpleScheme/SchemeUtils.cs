@@ -13,7 +13,7 @@ namespace SimpleScheme
     /// Others inhert from it only to get these static utility functions without having to 
     ///    prefix them with a class name.
     /// </summary>
-    public abstract class SchemeUtils
+    public class SchemeUtils
     {
         /// <summary>
         /// Define the true object.

@@ -3,13 +3,63 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
-    /// The part of the Scheme class that has to do with evaluation.
+    /// Template for an evaluation procedure.
     /// </summary>
-    public sealed partial class Scheme
+    /// <param name="expr"> The expression to evaluate. </param>
+    /// <param name="env"> The environment for the evaluation. </param>
+    /// <param name="res">
+    /// The intermediate or final result. </param>
+    /// <param name="resEnv">The next environment  </param>
+    /// <returns>The stepper to execute next.</returns>
+    public delegate Stepper Stepper(object expr, Environment env, out object res, out Environment resEnv);
+
+    /// <summary>
+    /// Evaluates expressions step by step.
+    /// </summary>
+    public class Evaluator : SchemeUtils
     {
         /// <summary>
-        /// Evaluate an expression in the given environment.
+        /// The scheme interpreter.
+        /// </summary>
+        private readonly Scheme interp;
+
+        /// <summary>
+        /// The parent evaluator.
+        /// Return to this one when done.
+        /// </summary>
+        private readonly Stepper parent;
+
+        private object expr;
+
+        /// <summary>
+        /// Initializes a new instance of the Evaluator class.
+        /// </summary>
+        /// <param name="interp">The scheme interpreter.</param>
+        /// <param name="parent">The parent evaluator.</param>
+        public Evaluator(Scheme interp, Stepper parent)
+        {
+            this.interp = interp;
+            this.parent = parent;
+        }
+
+        /// <summary>
+        /// This is not meant to be called, but is returned as a return signal.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to evaluate it in.</param>
+        /// <param name="res">The result of the evaluation step.</param>
+        /// <param name="resEnv">The new environment.</param>
+        /// <returns>The next step to execute..</returns>
+        public static Stepper EvalReturn(object expr, Environment env, out object res, out Environment resEnv)
+        {
+            throw new Exception("This should not be called");
+        }
+
+        /// <summary>
+        /// Evaluate an expression in the given environment, one step at a time.
         /// Besides all the special forms, the main action is to:
         ///   return strings and constants, which evaluate to themselves
         ///   treat the first arg as a procedure, evaluate the rest of the expression args, 
@@ -17,108 +67,165 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to evaluate it in.</param>
-        /// <returns>The result of the evaluation.</returns>
-        public object Eval(object expr, Environment env)
+        /// <param name="res">The result of the evaluation step.</param>
+        /// <param name="resEnv">The new environment.</param>
+        /// <returns>The next step to execute..</returns>
+        public Stepper EvalStep(object inExpr, Environment env, out object res, out Environment resEnv)
         {
-            while (true)
+            this.expr = inExpr;
+            resEnv = env;
+            if (expr is string)
             {
-                if (expr is string)
-                {
-                    // Evaluate a string by looking it up in the environment.
-                    // It should correspond to a varialbe name, for which there 
-                    //    is a corresponding value.
-                    return env.Lookup((string)expr);
-                }
-
-                if (!(expr is Pair))
-                {
-                    // If we are evaluating something that is not a pair, 
-                    //    it must be a constant.
-                    // Return the integer, real, boolean, or vector.
-                    return expr;
-                }
-
-                // We are evaluating a pair.
-                // Split out the first item for special treatment.
-                object fn = First(expr);
-                object args = Rest(expr);
-                
-                // Look for one of the special forms. 
-                switch (fn as string)
-                {
-                    case "quote":
-                        // Evaluate quoted expression by just returning the expression.
-                        return First(args);
-
-                    case "begin":
-                        // Evaluate begin by evaluating all the items in order, 
-                        //   and returning the last.
-                        expr = this.EvalSequence(args, env);
-                        continue;
-                    case "define":
-                        // Define is a shortcut for lambda.
-                        // Evaluate by splicing lambda on the front and evaluating that.
-                        if (First(args) is Pair)
-                        {
-                            return env.Define(
-                                First(First(args)),
-                                this.Eval(Cons("lambda", Cons(Rest(First(args)), Rest(args))), env));
-                        }
-
-                        return env.Define(First(args), this.Eval(Second(args), env));
-                    case "set!":
-                        // Evaluate a set! expression by evaluating the second, 
-                        //   then setting the first to it.
-                        return env.Set(First(args), this.Eval(Second(args), env));
-                    case "if":
-                        // Eval an if expression by evaluating the first clause, 
-                        //    and then returning either the second or third.
-                        expr = Truth(this.Eval(First(args), env)) ? Second(args) : Third(args);
-                        continue;
-                    case "cond":
-                        expr = this.ReduceCond(args, env);
-                        continue;
-                    case "lambda":
-                        // Evaluate a lambda by creating a closure.
-                        return new Closure(First(args), Rest(args), env);
-                    case "macro":
-                        // Evaluate a macro by creating a macro.
-                        return new Macro(First(args), Rest(args), env);
-                }
-
-                // If we get here, it wasn't one of the special forms.  
-                // So we need to evaluate the first item (the function) in preparation for
-                //    doing a procedure call.
-                fn = this.Eval(fn, env);
-
-                // If the function is a macro, expand it and then continue.
-                if (fn is Macro)
-                {
-                    Macro m = (Macro)fn;
-                    expr = m.Expand(this, (Pair)expr, args);
-                    continue;
-                }
-
-                // If the function is a closure, then create a new environment consisting of
-                //   1 the closure param list
-                //   2 arguments evaluated in the original environment
-                //   3 the closure's environment
-                // Then continue evaluating the closure body in this new environment
-                if (fn is Closure)
-                {
-                    // CLOSURE CALL -- capture the environment and continue with the body
-                    Closure f = (Closure)fn;
-                    expr = f.Body;
-                    //env = new Environment(f.Parms, this.EvalList(args, env), f.Env);
-                    continue;
-                }
-
-                // This is a procedure call.
-                // In any other case, the function is a primitive or a user-defined function.
-                // Evaluate the arguments in the environment, then apply the function 
-                //    to the arguments.
-                return Procedure.Proc(fn).Apply(this, this.EvalList(args, env));
+                // Evaluate a string by looking it up in the environment.
+                // It should correspond to a varialbe name, for which there 
+                //    is a corresponding value.
+                res = env.Lookup((string)expr);
+                return this.parent;
             }
+
+            if (!(expr is Pair))
+            {
+                // If we are evaluating something that is not a pair, 
+                //    it must be a constant.
+                // Return the integer, real, boolean, or vector.
+                res = expr;
+                return this.parent;
+            }
+
+            // We are evaluating a pair.
+            // Split out the first item for special treatment.
+            object fn = First(expr);
+            object args = Rest(expr);
+
+            // Look for one of the special forms. 
+            switch (fn as string)
+            {
+                case "quote":
+                    // Evaluate quoted expression by just returning the expression.
+                    res = First(args);
+                    return this.parent;
+
+                case "begin":
+                    // Evaluate begin by evaluating all the items in order, 
+                    //   and returning the last.
+                    return new Evaluator(this.interp, this.EvalStep).EvalSequence(args, env, out res, out resEnv);
+
+                case "define":
+                    // Define is a shortcut for lambda.
+                    // Evaluate by splicing lambda on the front and evaluating that.
+                    res = this.EvalDefine(args, env);
+                    return this.parent;
+
+                case "set!":
+                    // Evaluate a set! expression by evaluating the second, 
+                    //   then setting the first to it.
+                    return new Evaluator(this.interp, this.EvalStep).EvalSet(args, env, out res, out resEnv);
+
+                case "if":
+                    // Eval an if expression by evaluating the first clause, 
+                    //    and then returning either the second or third.
+                    return new Evaluator(this.interp, this.EvalStep).EvalIf(args, env, out res, out resEnv);
+
+                case "cond":
+                    res = this.ReduceCond(args, env);
+                    return this.EvalStep;
+
+                case "lambda":
+                    // Evaluate a lambda by creating a closure.
+                    res = new Closure(First(args), Rest(args), env);
+                    return this.parent;
+
+                case "macro":
+                    // Evaluate a macro by creating a macro.
+                    res = new Macro(First(args), Rest(args), env);
+                    return this.parent;
+            }
+
+            // If we get here, it wasn't one of the special forms.  
+            // So we need to evaluate the first item (the function) in preparation for
+            //    doing a procedure call.
+            fn = this.interp.Eval(fn, env);
+
+            // If the function is a macro, expand it and then continue.
+            if (fn is Macro)
+            {
+                Macro m = (Macro)fn;
+                res = m.Expand(this.interp, (Pair)expr, args);
+                return this.EvalStep;
+            }
+
+            // If the function is a closure, then create a new environment consisting of
+            //   1 the closure param list
+            //   2 arguments evaluated in the original environment
+            //   3 the closure's environment
+            // Then continue evaluating the closure body in this new environment
+            if (fn is Closure)
+            {
+                // CLOSURE CALL -- capture the environment and continue with the body
+                Closure f = (Closure)fn;
+                res = f.Body;
+                resEnv = new Environment(f.Parms, this.EvalList(args, env), f.Env);
+                return this.EvalStep;
+            }
+
+            // This is a procedure call.
+            // In any other case, the function is a primitive or a user-defined function.
+            // Evaluate the arguments in the environment, then apply the function 
+            //    to the arguments.
+            res = this.ApplyProc(fn, args, env);
+            return this.parent;
+        }
+
+        /// <summary>
+        /// Evaluate a define expression.
+        /// Handle the define syntax shortcut by inserting lambda.
+        /// </summary>
+        /// <param name="args">The body of the define</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <returns>The evaluated definition.</returns>
+        private object EvalDefine(object args, Environment env)
+        {
+            if (First(args) is Pair)
+            {
+                return env.Define(
+                    First(First(args)),
+                    this.interp.Eval(Cons("lambda", Cons(Rest(First(args)), Rest(args))), env));
+            }
+
+            return env.Define(First(args), this.interp.Eval(Second(args), env));
+        }
+
+        /// <summary>
+        /// Evaluate a set! expression.
+        /// </summary>
+        /// <param name="args">The arguments to set!</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <param name="res">The result of the evaluation step: the evaluated set! statement.</param>
+        /// <param name="resEnv">The new environment.</param>
+        /// <returns>The next step to execute.</returns>
+        private Stepper EvalSet(object args, Environment env, out object res, out Environment resEnv)
+        {
+            resEnv = env;
+            object temp = this.interp.Eval(Second(args), env);
+            res = env.Set(First(args), temp);
+            return this.parent;
+        }
+
+        /// <summary>
+        /// Evaluate an if expression.
+        /// </summary>
+        /// <param name="args">The body of the if.</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <param name="res">The result of the evaluation step: the evaluated body: the 
+        ///     second or third clauses (depending on the value of the first).</param>
+        /// <param name="resEnv">The new environment.</param>
+        /// <returns>The next step to execute.</returns>
+        private Stepper EvalIf(object args, Environment env, out object res, out Environment resEnv)
+        {
+            resEnv = env;
+            object temp = this.interp.Eval(First(args), env);
+            res = Truth(temp) ? Second(args) : Third(args);
+            return this.parent;
         }
 
         /// <summary>
@@ -126,16 +233,20 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of items to evaluate.</param>
         /// <param name="env">The evaluation environment.</param>
-        /// <returns>The evaluation of the last</returns>
-        private object EvalSequence(object args, Environment env)
+        /// <param name="res">The evaluation of the last expression..</param>
+        /// <param name="resEnv">The resulting environment.</param>
+        /// <returns>The next step.</returns>
+        private Stepper EvalSequence(object args, Environment env, out object res, out Environment resEnv)
         {
+            resEnv = env;
             while (Rest(args) != null)
             {
-                this.Eval(First(args), env);
+                this.interp.Eval(First(args), env);
                 args = Rest(args);
             }
 
-            return First(args);
+            res = First(args);
+            return this.parent;
         }
 
         /// <summary>
@@ -163,7 +274,7 @@ namespace SimpleScheme
             Pair accum = result;
             while (list is Pair)
             {
-                object value = this.Eval(First(list), env);
+                object value = this.interp.Eval(First(list), env);
                 accum = (Pair)(accum.Rest = List(value));
                 list = Rest(list);
             }
@@ -194,7 +305,18 @@ namespace SimpleScheme
 
                 object clause = First(clauses);
                 clauses = Rest(clauses);
-                if (First(clause) as string == "else" || Truth(result = this.Eval(First(clause), env)))
+                bool convert;
+                if (First(clause) as string == "else")
+                {
+                    convert = true;
+                }
+                else
+                {
+                    result = this.interp.Eval(First(clause), env);
+                    convert = Truth(result);
+                }
+
+                if (convert)
                 {
                     if (Rest(clause) == null)
                     {
@@ -209,6 +331,18 @@ namespace SimpleScheme
                     return Cons("begin", Rest(clause));
                 }
             }
+        }
+
+        /// <summary>
+        /// Apply the function to the args in a given environment.
+        /// </summary>
+        /// <param name="fn">The proc to apply.</param>
+        /// <param name="args">The proc args.</param>
+        /// <param name="env">End evaluation environment.</param>
+        /// <returns>The result of the application.</returns>
+        private object ApplyProc(object fn, object args, Environment env)
+        {
+            return Procedure.Proc(fn).Apply(this.interp, this.EvalList(args, env));
         }
     }
 }

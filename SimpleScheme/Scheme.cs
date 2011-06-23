@@ -87,6 +87,34 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Evaluate an expression in an environment.
+        /// Do it by executing a set of steps.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment in which to evaluate it.</param>
+        /// <returns>The result of the evaluation.</returns>
+        public object Eval(object expr, Environment env)
+        {
+            object res;
+            Stepper stop = Evaluator.EvalReturn;
+            Stepper nextStep = new Evaluator(this, stop).EvalStep;
+            while (true)
+            {
+                Environment resEnv;
+                nextStep = nextStep(expr, env, out res, out resEnv);
+                if (nextStep == stop)
+                {
+                    break;
+                }
+
+                expr = res;
+                env = resEnv;
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Load a file.  
         /// Open the file and read it.
         /// Evaluate whatever it contains.
