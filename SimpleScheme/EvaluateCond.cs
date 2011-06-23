@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Reduce a conditiona;
     /// </summary>
-    public class EvaluateCond : Stepper
+    public sealed class EvaluateCond : Stepper
     {
         /// <summary>
         /// The result to be returned.
@@ -59,12 +59,12 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (Expr == null)
                         {
-                            return ReturnFromStep(False);
+                            return ReturnFromStep(SchemeBoolean.False);
                         }
 
-                        this.clause = First(Expr);
-                        Expr = Rest(Expr);
-                        if (First(this.clause) as string == "else")
+                        this.clause = List.First(Expr);
+                        Expr = List.Rest(Expr);
+                        if (List.First(this.clause) as string == "else")
                         {
                             this.result = null;
                             Pc = PC.Step2;
@@ -72,31 +72,31 @@ namespace SimpleScheme
                         else
                         {
                             Pc = PC.Step1;
-                            return CallEval(First(clause));
+                            return CallEval(List.First(clause));
                         }
 
                         continue;
 
                     case PC.Step1:
                         this.result = ReturnedExpr;
-                        Pc = Truth(this.result) ? PC.Step2 : PC.Initial;
+                        Pc = SchemeBoolean.Truth(this.result) ? PC.Step2 : PC.Initial;
                         continue;
 
                     case PC.Step2:
-                        if (Rest(this.clause) == null)
+                        if (List.Rest(this.clause) == null)
                         {
-                            return ReturnFromStep(List("quote", this.result));
+                            return ReturnFromStep(List.MakeList("quote", this.result));
                         }
 
-                        if (Second(this.clause) as string == "=>")
+                        if (List.Second(this.clause) as string == "=>")
                         {
-                            return ReturnFromStep(List(Third(this.clause), List("quote", this.result)));
+                            return ReturnFromStep(List.MakeList(List.Third(this.clause), List.MakeList("quote", this.result)));
                         }
 
-                        return ReturnFromStep(Cons("begin", Rest(this.clause)));
+                        return ReturnFromStep(List.Cons("begin", List.Rest(this.clause)));
                 }
 
-                return EvalError("ReduceCond: program counter error");
+                return ErrorHandlers.EvalError("ReduceCond: program counter error");
             }
         }
     }

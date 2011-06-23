@@ -1,4 +1,4 @@
-﻿// <copyright file="NumberUtils.cs" company="Charles Hayden">
+﻿// <copyright file="Number.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -8,8 +8,18 @@ namespace SimpleScheme
     /// <summary>
     /// Utilities that have to do with numbers.
     /// </summary>
-    public class NumberUtils : SchemeUtils
+    public sealed class Number
     {
+        /// <summary>
+        /// Define the zero object.
+        /// </summary>
+        public static readonly double Zero = 0.0D;
+
+        /// <summary>
+        /// Define the one object.
+        /// </summary>
+        public static readonly double One = 1.0D;
+
         /// <summary>
         /// Convert an object (containing a number) into a double.
         /// </summary>
@@ -23,15 +33,15 @@ namespace SimpleScheme
             }
             catch (InvalidCastException)
             {
-                return Num(Error("Expected a number, got: " + x));
+                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
             }
             catch (FormatException)
             {
-                return Num(Error("Expected a number, got: " + x));
+                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
             }
             catch (OverflowException)
             {
-                return Num(Error("Number overflow, got: " + x));
+                return Num(ErrorHandlers.Error("Number overflow, got: " + x));
             }
         }
 
@@ -43,10 +53,11 @@ namespace SimpleScheme
         public static object Gcd(object args)
         {
             long gcd = 0;
+            // TODO convert to user foreach
             while (args is Pair)
             {
-                gcd = Gcd2(Math.Abs((long)Num(First(args))), gcd);
-                args = Rest(args);
+                gcd = Gcd2(Math.Abs((long)Num(List.First(args))), gcd);
+                args = List.Rest(args);
             }
 
             return Num(gcd);
@@ -92,12 +103,13 @@ namespace SimpleScheme
         public static object Lcm(object args)
         {
             long lcm = 1;
+            // TODO convert to user foreach
             while (args is Pair)
             {
-                long n = Math.Abs((long)Num(First(args)));
+                long n = Math.Abs((long)Num(List.First(args)));
                 long g = Gcd2(n, lcm);
                 lcm = g == 0 ? g : (n / g) * lcm;
-                args = Rest(args);
+                args = List.Rest(args);
             }
 
             return Num(lcm);
@@ -131,19 +143,20 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         public static object NumCompare(object args, char op)
         {
-            while (Rest(args) is Pair)
+            // TODO convert to user foreach
+            while (List.Rest(args) is Pair)
             {
-                double x = Num(First(args));
-                args = Rest(args);
+                double x = Num(List.First(args));
+                args = List.Rest(args);
 
-                double y = Num(First(args));
+                double y = Num(List.First(args));
 
                 switch (op)
                 {
                     case '>':
                         if (!(x > y))
                         {
-                            return False;
+                            return SchemeBoolean.False;
                         }
 
                         break;
@@ -151,7 +164,7 @@ namespace SimpleScheme
                     case '<':
                         if (!(x < y))
                         {
-                            return False;
+                            return SchemeBoolean.False;
                         }
 
                         break;
@@ -159,7 +172,7 @@ namespace SimpleScheme
                     case '=':
                         if (x != y)
                         {
-                            return False;
+                            return SchemeBoolean.False;
                         }
 
                         break;
@@ -167,7 +180,7 @@ namespace SimpleScheme
                     case 'L':
                         if (!(x <= y))
                         {
-                            return False;
+                            return SchemeBoolean.False;
                         }
 
                         break;
@@ -175,18 +188,18 @@ namespace SimpleScheme
                     case 'G':
                         if (!(x >= y))
                         {
-                            return False;
+                            return SchemeBoolean.False;
                         }
 
                         break;
 
                     default:
-                        Error("Internal error: unrecognized number compare flag: " + op);
+                        ErrorHandlers.Error("Internal error: unrecognized number compare flag: " + op);
                         break;
                 }
             }
 
-            return True;
+            return SchemeBoolean.True;
         }
 
         /// <summary>
@@ -217,10 +230,11 @@ namespace SimpleScheme
                 }
             }
 
+            // TODO convert to user foreach
             while (args is Pair)
             {
-                double x = Num(First(args));
-                args = Rest(args);
+                double x = Num(List.First(args));
+                args = List.Rest(args);
 
                 switch (op)
                 {
@@ -257,7 +271,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        Error("Internal error: unrecognized number compute flag: " + op);
+                        ErrorHandlers.Error("Internal error: unrecognized number compute flag: " + op);
                         break;
                 }
             }

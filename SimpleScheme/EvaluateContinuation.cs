@@ -7,7 +7,7 @@ namespace SimpleScheme
     /// Evaluate a continuation
     /// Capture the value to return and supply a step to resume.
     /// </summary>
-    public class EvaluateContinuation : Stepper
+    public sealed class EvaluateContinuation : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateContinuation class.

@@ -37,11 +37,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsynchronousClrProcedure.cs" />
+    <Compile Include="AsyncResult.cs" />
+    <Compile Include="SchemeBoolean.cs" />
     <Compile Include="Closure.cs" />
     <Compile Include="ClrProcedure.cs" />
     <Compile Include="Continuation.cs" />
     <Compile Include="Environment.cs" />
-    <Compile Include="ListUtils.cs" />
+    <Compile Include="List.cs" />
     <Compile Include="SchemeString.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -66,7 +68,7 @@
     <Compile Include="EvaluatorBase.cs" />
     <Compile Include="InputPort.cs" />
     <Compile Include="Macro.cs" />
-    <Compile Include="NumberUtils.cs" />
+    <Compile Include="Number.cs" />
     <Compile Include="Pair.cs" />
     <Compile Include="Primitive.cs" />
     <Compile Include="OutputPort.cs" />
@@ -74,9 +76,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Interpreter.cs" />
     <Compile Include="SchemePrimitives.cs" />
-    <Compile Include="SchemeUtils.cs" />
+    <Compile Include="ErrorHandlers.cs" />
     <Compile Include="SynchronousClrProcedure.cs" />
     <Compile Include="Vector.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

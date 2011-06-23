@@ -36,7 +36,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public override Stepper RunStep()
         {
-            return EvalError("Base: cannot run.");
+            return ErrorHandlers.EvalError("Base: cannot run.");
         }
     }
 }

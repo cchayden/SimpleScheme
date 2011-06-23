@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public abstract class Stepper : SchemeUtils
+    public abstract class Stepper
     {
         /// <summary>
         /// The suspended stepper is used to indicate suspension, when stepping

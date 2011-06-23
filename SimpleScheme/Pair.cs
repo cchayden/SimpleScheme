@@ -3,13 +3,15 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
     /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : SchemeUtils
+    public sealed class Pair : IEnumerable<object>
     {
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -26,12 +28,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets the first ofject of the pair.
         /// </summary>
-        public new object First { get; set; }
+        public object First { get; set; }
 
         /// <summary>
         /// Gets or sets the rest of the objects in the list.
         /// </summary>
-        public new object Rest { get; set; }
+        public object Rest { get; set; }
 
         /// <summary>
         /// Tests whether the given object is equal to this pair.
@@ -51,7 +53,7 @@ namespace SimpleScheme
             }
 
             Pair other = (Pair)x;
-            return Equal(this.First, other.First) && Equal(this.Rest, other.Rest);
+            return SchemeBoolean.Equal(this.First, other.First) && SchemeBoolean.Equal(this.Rest, other.Rest);
         }
 
         /// <summary>
@@ -81,7 +83,7 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to write the string into.</param>
         public void AsString(bool quoted, StringBuilder buf)
         {
-            if (this.Rest is Pair && Rest(this.Rest) == null)
+            if (this.Rest is Pair && List.Rest(this.Rest) == null)
             {
                 string special = null;
 
@@ -108,7 +110,7 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    SchemeString.AsString(Second(this), quoted, buf);
+                    SchemeString.AsString(List.Second(this), quoted, buf);
                     return;
                 }
             }
@@ -120,6 +122,7 @@ namespace SimpleScheme
             object tail = this.Rest;
 
             int len = 0;
+            // TODO convert to user foreach
             while (tail is Pair)
             {
                 buf.Append(' ');
@@ -151,6 +154,30 @@ namespace SimpleScheme
             }
 
             buf.Append(')');
+        }
+
+        /// <summary>
+        /// Enumerates elements from the list.
+        /// </summary>
+        /// <returns>The list elements.</returns>
+        public IEnumerator<object> GetEnumerator()
+        {
+            object elem = this;
+            while (elem is Pair)
+            {
+                Pair p = (Pair)elem;
+                yield return p.First;
+                elem = p.Rest;
+            }
+        }
+
+        /// <summary>
+        /// Gets the list enumerator.
+        /// </summary>
+        /// <returns>The list enumerator.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 }

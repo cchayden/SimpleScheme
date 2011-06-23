@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Each link in the chain contains a symbol table of the bindings at that level.
     /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
-    public sealed class Environment : SchemeUtils
+    public sealed partial class Environment
     {
         /// <summary>
         /// The symbol table for this enviornment.
@@ -21,12 +21,22 @@ namespace SimpleScheme
 
         /// <summary>
         /// Initializes a new instance of the Environment class.
+        /// This is used to create the primitive environment.
+        /// </summary>
+        public Environment()
+        {
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
         /// </summary>
-        /// <param name="interp">The interpreter, containing the global environment.</param>
-        public Environment(Interpreter interp)
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent environment.</param>
+        public Environment(Interpreter interp, Environment parent)
         {
             this.Interp = interp;
+            this.Parent = parent;
         }
 
         /// <summary>
@@ -39,20 +49,15 @@ namespace SimpleScheme
         /// <param name="parent">The parent environment.</param>
         public Environment(object vars, object vals, Environment parent)
         {
-            this.symbolTable.AddList(vars, vals);
             this.Parent = parent;
             this.Interp = parent.Interp;
-
             if (!NumberArgsOk(vars, vals))
             {
-                Warn("Wrong number of arguments: expected " + vars + " got " + vals);
+                ErrorHandlers.Warn("Wrong number of arguments: expected " + vars + " got " + vals);
             }
-        }
 
-        /// <summary>
-        /// Gets the parent environment.
-        /// </summary>
-        public Environment Parent { get; private set; }
+            this.symbolTable.AddList(vars, vals);
+        }
 
         /// <summary>
         /// Gets the interpreter used to hold the global context.
@@ -61,6 +66,11 @@ namespace SimpleScheme
         /// This field is written only in the constructor -- it is never modified.
         /// </summary>
         public Interpreter Interp { get; private set; }
+
+        /// <summary>
+        /// Gets the parent environment.
+        /// </summary>
+        public Environment Parent { get; private set; }
 
         /// <summary>
         /// Add a new definition into the environment.
@@ -82,37 +92,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Define a primitive, taking a fixed number of arguments.
-        /// Creates a Primitive object and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operationCode">The operationCode.</param>
-        /// <param name="numberOfArgs">The number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int numberOfArgs)
-        {
-            this.Define(name, new Primitive(operationCode, numberOfArgs, numberOfArgs));
-            return this;
-        }
-
-        /// <summary>
-        /// Define a primitive, taking a variable number of arguments.
-        /// Creates a Primitive object and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operationCode">The operationCode.</param>
-        /// <param name="minArgs">The minimum number of arguments.</param>
-        /// <param name="maxArgs">The maximum number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int minArgs, int maxArgs)
-        {
-            this.Define(name, new Primitive(operationCode, minArgs, maxArgs));
-            return this;
-        }
-
-        /// <summary>
         /// Look up a symbol in the environment.
         /// </summary>
         /// <param name="symbol">The name of the variable to look up.</param>
@@ -131,7 +110,7 @@ namespace SimpleScheme
                 return this.Parent.Lookup(symbol);
             }
 
-            return Error("Lookup: unbound variable: " + symbol);
+            return ErrorHandlers.Error("Lookup: unbound variable: " + symbol);
         }
 
         /// <summary>
@@ -148,7 +127,7 @@ namespace SimpleScheme
         {
             if (!(var is string))
             {
-                return Error("Attempt to set a non-symbol: " + SchemeString.AsString(var));
+                return ErrorHandlers.Error("Attempt to set a non-symbol: " + SchemeString.AsString(var));
             }
 
             string symbol = (string)var;
@@ -162,7 +141,7 @@ namespace SimpleScheme
                 return this.Parent.Set(symbol, val);
             }
 
-            return Error("Unbound variable: " + symbol);
+            return ErrorHandlers.Error("Unbound variable: " + symbol);
         }
 
         /// <summary>
@@ -189,9 +168,39 @@ namespace SimpleScheme
                     return false;
                 }
 
-                vars = Rest(vars);
-                vals = Rest(vals);
+                vars = List.Rest(vars);
+                vals = List.Rest(vals);
             }
+        }
+
+        /// <summary>
+        /// Define a primitive, taking a variable number of arguments.
+        /// Creates a Primitive object and puts it in the environment associated 
+        ///    with the given name.
+        /// </summary>
+        /// <param name="name">The primitive name.</param>
+        /// <param name="operationCode">The operationCode.</param>
+        /// <param name="minArgs">The minimum number of arguments.</param>
+        /// <param name="maxArgs">The maximum number of arguments.</param>
+        /// <returns>A refernce to the environment.</returns>
+        private Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int minArgs, int maxArgs)
+        {
+            this.Define(name, new Primitive(operationCode, minArgs, maxArgs));
+            return this;
+        }
+
+        /// <summary>
+        /// Define a primitive, taking a fixed number of arguments.
+        /// Creates a Primitive object and puts it in the environment associated 
+        ///    with the given name.
+        /// </summary>
+        /// <param name="name">The primitive name.</param>
+        /// <param name="operationCode">The operationCode.</param>
+        /// <param name="numberOfArgs">The number of arguments.</param>
+        /// <returns>A refernce to the environment.</returns>
+        private Environment DefinePrimitive(string name, Primitive.OpCode operationCode, int numberOfArgs)
+        {
+            return this.DefinePrimitive(name, operationCode, numberOfArgs, numberOfArgs);
         }
 
         /// <summary>
@@ -248,11 +257,11 @@ namespace SimpleScheme
                     }
                     else
                     {
-                        this.Add(First(symbols), First(vals));
+                        this.Add(List.First(symbols), List.First(vals));
                     }
 
-                    symbols = Rest(symbols);
-                    vals = Rest(vals);
+                    symbols = List.Rest(symbols);
+                    vals = List.Rest(vals);
                 }
             }
 

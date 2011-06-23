@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     /// <summary>
     /// Represents a macro definition.
+    /// It is just a closure with a different ToString.
     /// </summary>
     public sealed class Macro : Closure
     {

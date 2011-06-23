@@ -1,0 +1,360 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="SimpleScheme.AsynchronousClrProcedure" Collapsed="true">
+    <Position X="18.5" Y="19.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQBAAAAAAAAAEAABAAAAAAAAAAAAAAAAAAIA=</HashCode>
+      <FileName>AsynchronousClrProcedure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Boolean" Collapsed="true">
+    <Position X="17.75" Y="22" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAgAwAQAEAAAAAABAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>Boolean.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Closure" Collapsed="true">
+    <Position X="16.25" Y="18" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAABAAAAAEAAABAAAAAEAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Closure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.ClrProcedure" Collapsed="true">
+    <Position X="19.75" Y="18" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAgACACAAMAQAAAAAAAAAAAAAAAAAAAACAAAA=</HashCode>
+      <FileName>ClrProcedure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Continuation" Collapsed="true">
+    <Position X="25.25" Y="18" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAEAAAAAAAAAAAgAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Continuation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Environment" Collapsed="true">
+    <Position X="19.5" Y="22" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAIEAIAAAABAgAAAAAYAAAAIAAAAAAAAAAAAAABAA=</HashCode>
+      <FileName>Environment.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateAnd" Collapsed="true">
+    <Position X="15.5" Y="14" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.753" Y="10.884" />
+        <Point X="21.753" Y="13.7" />
+        <Point X="16.25" Y="13.7" />
+        <Point X="16.25" Y="14" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateAnd.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateApplyProc" Collapsed="true">
+    <Position X="15.5" Y="12.75" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.746" Y="10.884" />
+        <Point X="21.746" Y="12.358" />
+        <Point X="16.25" Y="12.358" />
+        <Point X="16.25" Y="12.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateApplyProc.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateCallWithInputFile" Collapsed="true">
+    <Position X="20" Y="14" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.736" Y="10.884" />
+        <Point X="21.736" Y="13.7" />
+        <Point X="20.75" Y="13.7" />
+        <Point X="20.75" Y="14" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAggAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateCallWithInputFile.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateCallWithOutputFile" Collapsed="true">
+    <Position X="22.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAgAAAAAAQAIAAA=</HashCode>
+      <FileName>EvaluateCallWithOutputFile.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateClosure" Collapsed="true">
+    <Position X="26.5" Y="12.75" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.75" Y="10.884" />
+        <Point X="21.75" Y="12.386" />
+        <Point X="27.25" Y="12.386" />
+        <Point X="27.25" Y="12.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAQAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateClosure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateCond" Collapsed="true">
+    <Position X="24.5" Y="14" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACCAABAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateCond.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateContinuation" Collapsed="true">
+    <Position X="17.75" Y="14" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.75" Y="10.884" />
+        <Point X="21.75" Y="13.7" />
+        <Point X="18.5" Y="13.7" />
+        <Point X="18.5" Y="14" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateContinuation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateDefine" Collapsed="true">
+    <Position X="26.5" Y="14" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.754" Y="10.884" />
+        <Point X="21.754" Y="13.7" />
+        <Point X="27.25" Y="13.7" />
+        <Point X="27.25" Y="14" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateDefine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateExpandMacro" Collapsed="true">
+    <Position X="17.75" Y="12.75" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.883" />
+        <Point X="21.756" Y="10.883" />
+        <Point X="21.756" Y="12.368" />
+        <Point X="18.5" Y="12.368" />
+        <Point X="18.5" Y="12.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateExpandMacro.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateIf" Collapsed="true">
+    <Position X="26.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateIf.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateList" Collapsed="true">
+    <Position X="24.5" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAABAAAAAAAAAAAAAAAAAAAAQABAAA=</HashCode>
+      <FileName>EvaluateList.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateMap" Collapsed="true">
+    <Position X="22.25" Y="14" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAACAABAAAAAAAAAAAAAAAAAAAAQADAAA=</HashCode>
+      <FileName>EvaluateMap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateOr" Collapsed="true">
+    <Position X="20" Y="12.75" Width="1.5" />
+    <InheritanceLine Type="SimpleScheme.Stepper" ManuallyRouted="true">
+      <Path>
+        <Point X="20.75" Y="10.509" />
+        <Point X="20.75" Y="10.884" />
+        <Point X="21.736" Y="10.884" />
+        <Point X="21.736" Y="12.358" />
+        <Point X="20.75" Y="12.358" />
+        <Point X="20.75" Y="12.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateOr.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateSequence" Collapsed="true">
+    <Position X="22.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateSequence.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateSet" Collapsed="true">
+    <Position X="24.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluateTimeCall" Collapsed="true">
+    <Position X="15.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAIAAAAAIAAAAAEAIAAAAQAAAAA=</HashCode>
+      <FileName>EvaluateTimeCall.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluatorBase" Collapsed="true">
+    <Position X="20" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluatorBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.EvaluatorMain" Collapsed="true">
+    <Position X="17.75" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQABEAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EvaluatorMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.InputPort" Collapsed="true">
+    <Position X="21.25" Y="22" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>BAIAAAFACCAAAAACAAAAAAAgBAAAAAAAAAAAAACQAAA=</HashCode>
+      <FileName>InputPort.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Interpreter" Collapsed="true">
+    <Position X="23" Y="22" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAKACAAAAAAAAIAAABEAAABBAAAAAAAAQABAA=</HashCode>
+      <FileName>Interpreter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.List" Collapsed="true">
+    <Position X="17.75" Y="23" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAABQAAAAAAAIJAACAEAQgAAAACAAgQAQA=</HashCode>
+      <FileName>List.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Macro" Collapsed="true">
+    <Position X="16.25" Y="19.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Macro.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Number" Collapsed="true">
+    <Position X="19.5" Y="23" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>IQAAAAAAAAAAAAwAAIAAAAAAAQAAIAAAAAAEAAAAAII=</HashCode>
+      <FileName>Number.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.OutputPort" Collapsed="true">
+    <Position X="21.25" Y="23" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAABAAAAAAAAAAAAAAACAAAHMAAA=</HashCode>
+      <FileName>OutputPort.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Pair" Collapsed="true">
+    <Position X="23" Y="23" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAARgEgAAAAAAAACAAAIAEAAAAAAAAAAA=</HashCode>
+      <FileName>Pair.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="SimpleScheme.Primitive" Collapsed="true">
+    <Position X="23" Y="18" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAABABAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAA=</HashCode>
+      <FileName>Primitive.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Procedure" Collapsed="true">
+    <Position X="20.75" Y="16.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABACAAAEAAAAAAQAAAAAAAAAAAIAQAAAAAA=</HashCode>
+      <FileName>Procedure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.SchemePrimitives" Collapsed="true">
+    <Position X="17.75" Y="24" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>SchemePrimitives.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.SchemeString" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.5" Y="24" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAkABABgAyAAAAARAIAAAACKEgABAAAAAAAA=</HashCode>
+      <FileName>SchemeString.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="SimpleScheme.ErrorHandlers" Collapsed="true">
+    <Position X="21.25" Y="24" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAAAAAAAgAAAEAAAAAAAAAAAA=</HashCode>
+      <FileName>ErrorHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Stepper" Collapsed="true">
+    <Position X="20" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gBchIABAEACAQAAAoIABQCAEAEAAAgAASAAAgQAoAAI=</HashCode>
+      <FileName>Stepper.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.SynchronousClrProcedure" Collapsed="true">
+    <Position X="20.75" Y="19.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SynchronousClrProcedure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimpleScheme.Vector" Collapsed="true">
+    <Position X="23" Y="24" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAIBAAiCAAAABAAAAAAAAEAAAAAgAAAAA=</HashCode>
+      <FileName>Vector.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>

@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Represents a continuation.
     /// </summary>
-    public class Continuation : Procedure
+    public sealed class Continuation : Procedure
     {
         /// <summary>
         /// The step to execute when the continuation is applied.
@@ -37,8 +37,8 @@ namespace SimpleScheme
         /// <returns>The result of applying the continuation.</returns>
         public override object Apply(Stepper parent, object args)
         {
-            this.Value = First(args);
-            return Stepper.TransferToStep(this.step, First(args), this.step.Env);
+            this.Value = List.First(args);
+            return Stepper.TransferToStep(this.step, List.First(args), this.step.Env);
         }
 
         /// <summary>

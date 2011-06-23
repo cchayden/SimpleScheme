@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Evaluate an application.
     /// This loops until the application returns a value.
     /// </summary>
-    public class EvaluateTimeCall : EvaluatorBase
+    public sealed class EvaluateTimeCall : Stepper
     {
         /// <summary>
         /// The amount of memory at the start.
@@ -68,14 +68,14 @@ namespace SimpleScheme
                 switch (Pc)
                 {
                     case PC.Initial:
-                        object y = Second(Expr);
-                        this.counter = y == null ? 1 : (int)NumberUtils.Num(y);
+                        object y = List.Second(Expr);
+                        this.counter = y == null ? 1 : (int)Number.Num(y);
                         this.i = 0;
                         Pc = PC.Step1;
                         continue;
 
                     case PC.Step1:
-                        object ans = Procedure.Proc(First(Expr)).Apply(this, null);
+                        object ans = Procedure.Proc(List.First(Expr)).Apply(this, null);
                         if (ans is Stepper)
                         {
                             return GoToStep((Stepper)ans, PC.Step2);
@@ -95,10 +95,11 @@ namespace SimpleScheme
                         this.stopwatch.Stop();
                         long time = this.stopwatch.ElapsedMilliseconds;
                         long mem = GC.GetTotalMemory(false) - this.startMem;
-                        return ReturnFromStep(Cons(ReturnedExpr, List(List(NumberUtils.Num(time), "msec"), List(NumberUtils.Num(mem), "bytes"))));
+                        return ReturnFromStep(
+                            List.Cons(ReturnedExpr, List.MakeList(List.MakeList(Number.Num(time), "msec"), List.MakeList(Number.Num(mem), "bytes"))));
                 }
 
-                return EvalError("TimeCall: program counter error");
+                return ErrorHandlers.EvalError("TimeCall: program counter error");
             }
         }
     }

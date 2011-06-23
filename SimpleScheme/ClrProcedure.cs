@@ -105,12 +105,13 @@ namespace SimpleScheme
         /// <returns>An array of Type objects corresponding to the list.</returns>
         protected List<Type> ClassList(object args)
         {
-            int n = Length(args);
+            int n = List.Length(args);
             List<Type> array = new List<Type>(n);
+            // TODO convert to use foreach
             for (int i = 0; i < n; i++)
             {
-                array.Add(ToClass(First(args)));
-                args = Rest(args);
+                array.Add(ToClass(List.First(args)));
+                args = List.Rest(args);
             }
 
             return array;
@@ -127,33 +128,34 @@ namespace SimpleScheme
         /// <returns>A (CLR) list of arguments for the method call.</returns>
         protected List<object> ToArgList(object args, object[] additionalArgs)
         {
-            int n = Length(args);
+            int n = List.Length(args);
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
             {
-                Error(Math.Abs(diff) + 
+                ErrorHandlers.Error(Math.Abs(diff) + 
                     " too " + (diff > 0 ? "many" : "few") + 
                     " args to " + Name);
             }
 
             List<object> array = new List<object>(n);
+            // TODO convert to use foreach
             for (int i = 0; i < n; i++)
             {
                 if (this.ArgClasses[i] == typeof(int))
                 {
-                    array.Add((int)NumberUtils.Num(First(args)));
+                    array.Add((int)Number.Num(List.First(args)));
                 }
                 else if (this.ArgClasses[i] == typeof(string))
                 {
-                    array.Add(SchemeString.AsString(First(args), false));
+                    array.Add(SchemeString.AsString(List.First(args), false));
                 }
                 else
                 {
-                    array.Add(First(args));
+                    array.Add(List.First(args));
                 }
 
-                args = Rest(args);
+                args = List.Rest(args);
             }
 
             for (int i = 0; i < additionalN; i++)

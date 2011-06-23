@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// Handles asynchronous CLR method calls.
     /// Call returns suspended, then on completion resumes execution.
     /// </summary>
-    public class AsynchronousClrProcedure : ClrProcedure
+    public sealed class AsynchronousClrProcedure : ClrProcedure
     {
         /// <summary>
         /// The method info for the EndXXX method.
@@ -34,7 +34,7 @@ namespace SimpleScheme
                 Type cls = ToClass(ClassName);
                 if (cls == null)
                 {
-                    Error("Bad class: can't load class " + ClassName);
+                    ErrorHandlers.Error("Bad class: can't load class " + ClassName);
                     return;    // actually Error throws an exception
                 }
 
@@ -45,11 +45,11 @@ namespace SimpleScheme
             }
             catch (TypeLoadException)
             {
-                Error("Bad class, can't get method: " + this.Name);
+                ErrorHandlers.Error("Bad class, can't get method: " + this.Name);
             }
             catch (MissingMethodException)
             {
-                Error("Can't get method: " + this.Name);
+                ErrorHandlers.Error("Can't get method: " + this.Name);
             }
         }
 
@@ -66,9 +66,9 @@ namespace SimpleScheme
         /// <returns>The result of executing the method.</returns>
         public override object Apply(Stepper parent, object args)
         {
-            object invokedObj = First(args);
+            object invokedObj = List.First(args);
             AsyncState state = new AsyncState(invokedObj, parent);
-            object[] argArray = this.ToArgListBegin(Rest(args), state).ToArray();
+            object[] argArray = this.ToArgListBegin(List.Rest(args), state).ToArray();
             IAsyncResult res = (IAsyncResult)this.MethodInfo.Invoke(invokedObj, argArray);
             return Stepper.Suspended;
         }

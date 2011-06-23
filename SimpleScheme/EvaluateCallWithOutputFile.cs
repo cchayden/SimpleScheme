@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a call-with-output-file expressions
     /// </summary>
-    public class EvaluateCallWithOutputFile : Stepper
+    public sealed class EvaluateCallWithOutputFile : Stepper
     {
         /// <summary>
         /// The output port to use during evaluation.
@@ -51,11 +51,11 @@ namespace SimpleScheme
             }
             catch (FileNotFoundException)
             {
-                return (OutputPort)Error("No such file: " + SchemeString.AsString(filename));
+                return (OutputPort)ErrorHandlers.Error("No such file: " + SchemeString.AsString(filename));
             }
             catch (IOException ex)
             {
-                return (OutputPort)Error("IOException: " + ex.Message);
+                return (OutputPort)ErrorHandlers.Error("IOException: " + ex.Message);
             }
         }
 
@@ -70,9 +70,9 @@ namespace SimpleScheme
                 switch (Pc)
                 {
                     case PC.Initial:
-                        this.port = OpenOutputFile(First(Expr));
-                        Procedure proc = Procedure.Proc(Second(Expr));
-                        object z = proc.Apply(this, List(this.port));
+                        this.port = OpenOutputFile(List.First(Expr));
+                        Procedure proc = Procedure.Proc(List.Second(Expr));
+                        object z = proc.Apply(this, List.MakeList(this.port));
                         if (z is Stepper)
                         {
                             return GoToStep((Stepper)z, PC.Step1);
@@ -91,7 +91,7 @@ namespace SimpleScheme
                         return ReturnFromStep(this.ReturnedExpr);
                 }
 
-                return EvalError("CallWithOutputFile: program counter error");
+                return ErrorHandlers.EvalError("CallWithOutputFile: program counter error");
             }
         }
     }

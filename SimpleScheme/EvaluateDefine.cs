@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a define expression.
     /// </summary>
-    public class EvaluateDefine : Stepper
+    public sealed class EvaluateDefine : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateDefine class.
@@ -41,23 +41,23 @@ namespace SimpleScheme
             switch (Pc)
             {
                 case PC.Initial:
-                    if (First(this.Expr) is Pair)
+                    if (List.First(this.Expr) is Pair)
                     {
                         Pc = PC.Step1;
-                        return CallEval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))));
+                        return CallEval(List.Cons("lambda", List.Cons(List.Rest(List.First(this.Expr)), List.Rest(this.Expr))));
                     }
 
                     Pc = PC.Step2;
-                    return CallEval(Second(this.Expr));
+                    return CallEval(List.Second(this.Expr));
 
                 case PC.Step1:
-                    return ReturnFromStep(this.Env.Define(First(First(this.Expr)), ReturnedExpr));
+                    return ReturnFromStep(this.Env.Define(List.First(List.First(this.Expr)), ReturnedExpr));
 
                 case PC.Step2:
-                    return ReturnFromStep(this.Env.Define(First(this.Expr), ReturnedExpr));
+                    return ReturnFromStep(this.Env.Define(List.First(this.Expr), ReturnedExpr));
             }
 
-            return EvalError("Define: program counter error");
+            return ErrorHandlers.EvalError("Define: program counter error");
         }
     }
 }

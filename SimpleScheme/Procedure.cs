@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : SchemeUtils
+    public abstract class Procedure
     {
         /// <summary>
         /// The default name of a procedure.
@@ -42,7 +42,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return Proc(Error("Not a procedure: " + SchemeString.AsString(x)));
+            return Proc(ErrorHandlers.Error("Not a procedure: " + SchemeString.AsString(x)));
         }
 
         /// <summary>

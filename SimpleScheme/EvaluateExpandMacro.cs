@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Expand a macro.
     /// </summary>
-    public class EvaluateExpandMacro : Stepper
+    public sealed class EvaluateExpandMacro : Stepper
     {
         /// <summary>
         /// The macro to expand.
@@ -54,13 +54,13 @@ namespace SimpleScheme
                         return GoToStep((Stepper)expanded, PC.Step1);
                     }
 
-                    return EvalError("Expand: should not get here");
+                    return ErrorHandlers.EvalError("Expand: should not get here");
 
                 case PC.Step1:
                     return ReturnFromStep(ReturnedExpr);
             }
 
-            return EvalError("Expand: program counter error");
+            return ErrorHandlers.EvalError("Expand: program counter error");
         }
     }
 }

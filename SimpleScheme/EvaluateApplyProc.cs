@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
-    public class EvaluateApplyProc : Stepper
+    public sealed class EvaluateApplyProc : Stepper
     {
         /// <summary>
         /// The proc or primitive to apply.
@@ -65,7 +65,7 @@ namespace SimpleScheme
                         return ReturnFromStep(ReturnedExpr);
                 }
 
-                return EvalError("ApplyProc: program counter error");
+                return ErrorHandlers.EvalError("ApplyProc: program counter error");
             }
         }
     }

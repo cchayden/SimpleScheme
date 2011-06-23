@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
-    public class EvaluateSequence : EvaluatorBase
+    public sealed class EvaluateSequence : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateSequence class.
@@ -43,21 +43,21 @@ namespace SimpleScheme
                 switch (this.Pc)
                 {
                     case PC.Initial:
-                        if (Rest(this.Expr) == null)
+                        if (List.Rest(this.Expr) == null)
                         {
-                            return ReturnFromStep(First(this.Expr));
+                            return ReturnFromStep(List.First(this.Expr));
                         }
 
                         this.Pc = PC.Step1;
-                        return CallEval(First(this.Expr));
+                        return CallEval(List.First(this.Expr));
 
                     case PC.Step1:
-                        this.Expr = Rest(this.Expr);
+                        this.Expr = List.Rest(this.Expr);
                         this.Pc = PC.Initial;
                         continue;
                 }
 
-                return EvalError("Sequence: program counter error");
+                return ErrorHandlers.EvalError("Sequence: program counter error");
             }
         }
     }

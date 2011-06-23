@@ -47,10 +47,7 @@ namespace SimpleScheme
         /// <summary>
         /// These are the specific operation codes.
         /// </summary>
-        [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:EnumerationItemsMustBeDocumented",
-                Justification = "These are just the op codes for the primitives, documented in the switch statement.")]
-
-        // ReSharper disable InconsistentNaming
+        /// ReSharper disable InconsistentNaming
         public enum OpCode
         {
             EQ,
@@ -215,208 +212,6 @@ namespace SimpleScheme
         // ReSharper restore InconsistentNaming
 
         /// <summary>
-        /// Sets up the primitives.
-        /// </summary>
-        /// <param name="env">The environment to install the primitives into.</param>
-        /// <returns>The environment they were installed into.</returns>
-        public static Environment InstallPrimitives(Environment env)
-        {
-            const int MaxInt = int.MaxValue;
-
-            env
-                .DefinePrimitive("=", OpCode.EQ, 2, MaxInt)
-                .DefinePrimitive("*", OpCode.TIMES, 0, MaxInt)
-                .DefinePrimitive("+", OpCode.PLUS, 0, MaxInt)
-                .DefinePrimitive("-", OpCode.MINUS, 1, MaxInt)
-                .DefinePrimitive("/", OpCode.DIVIDE, 1, MaxInt)
-                .DefinePrimitive("<", OpCode.LT, 2, MaxInt)
-                .DefinePrimitive(">", OpCode.GT, 2, MaxInt)
-                .DefinePrimitive("<=", OpCode.LE, 2, MaxInt)
-                .DefinePrimitive(">=", OpCode.GE, 2, MaxInt)
-                .DefinePrimitive("abs", OpCode.ABS, 1)
-                .DefinePrimitive("acos", OpCode.ACOS, 1)
-                .DefinePrimitive("append", OpCode.APPEND, 0, MaxInt)
-                .DefinePrimitive("apply", OpCode.APPLY, 2, MaxInt)
-                .DefinePrimitive("asin", OpCode.ASIN, 1)
-                .DefinePrimitive("assoc", OpCode.ASSOC, 2)
-                .DefinePrimitive("assq", OpCode.ASSQ, 2)
-                .DefinePrimitive("assv", OpCode.ASSV, 2)
-                .DefinePrimitive("atan", OpCode.ATAN, 1)
-                .DefinePrimitive("boolean?", OpCode.BOOLEANQ, 1)
-                .DefinePrimitive("caaaar", OpCode.CXR, 1)
-                .DefinePrimitive("caaadr", OpCode.CXR, 1)
-                .DefinePrimitive("caaar", OpCode.CXR, 1)
-                .DefinePrimitive("caadar", OpCode.CXR, 1)
-                .DefinePrimitive("caaddr", OpCode.CXR, 1)
-                .DefinePrimitive("caar", OpCode.CXR, 1)
-                .DefinePrimitive("cadaar", OpCode.CXR, 1)
-                .DefinePrimitive("cadadr", OpCode.CXR, 1)
-                .DefinePrimitive("cadar", OpCode.CXR, 1)
-                .DefinePrimitive("caddar", OpCode.CXR, 1)
-                .DefinePrimitive("cadddr", OpCode.CXR, 1)
-                .DefinePrimitive("caddr", OpCode.CXR, 1)
-                .DefinePrimitive("cadr", OpCode.CXR, 1)
-                .DefinePrimitive("call-with-current-continuation", OpCode.CALLCC, 1)
-                .DefinePrimitive("call/cc", OpCode.CALLCC, 1)
-                .DefinePrimitive("call-with-input-file", OpCode.CALLWITHINPUTFILE, 2)
-                .DefinePrimitive("call-with-output-file", OpCode.CALLWITHOUTPUTFILE, 2)
-                .DefinePrimitive("car", OpCode.CAR, 1)
-                .DefinePrimitive("first", OpCode.CAR, 1)
-                .DefinePrimitive("second", OpCode.SECOND, 1)
-                .DefinePrimitive("third", OpCode.THIRD, 1)
-                .DefinePrimitive("cdaaar,", OpCode.CXR, 1)
-                .DefinePrimitive("cdaadr", OpCode.CXR, 1)
-                .DefinePrimitive("cdaar", OpCode.CXR, 1)
-                .DefinePrimitive("cdadar", OpCode.CXR, 1)
-                .DefinePrimitive("cdaddr", OpCode.CXR, 1)
-                .DefinePrimitive("cdadr", OpCode.CXR, 1)
-                .DefinePrimitive("cdar", OpCode.CXR, 1)
-                .DefinePrimitive("cddaar", OpCode.CXR, 1)
-                .DefinePrimitive("cddadr", OpCode.CXR, 1)
-                .DefinePrimitive("cddar", OpCode.CXR, 1)
-                .DefinePrimitive("cdddar", OpCode.CXR, 1)
-                .DefinePrimitive("cddddr", OpCode.CXR, 1)
-                .DefinePrimitive("cdddr", OpCode.CXR, 1)
-                .DefinePrimitive("cddr", OpCode.CXR, 1)
-                .DefinePrimitive("cdr", OpCode.CDR, 1)
-                .DefinePrimitive("rest", OpCode.CDR, 1)
-                .DefinePrimitive("char->integer", OpCode.CHARTOINTEGER, 1)
-                .DefinePrimitive("char-alphabetic?", OpCode.CHARALPHABETICQ, 1)
-                .DefinePrimitive("char-ci<=?", OpCode.CHARCICMPLE, 2)
-                .DefinePrimitive("char-ci<?", OpCode.CHARCICMPLT, 2)
-                .DefinePrimitive("char-ci=?", OpCode.CHARCICMPEQ, 2)
-                .DefinePrimitive("char-ci>=?", OpCode.CHARCICMPGE, 2)
-                .DefinePrimitive("char-ci>?", OpCode.CHARCICMPGT, 2)
-                .DefinePrimitive("char-downcase", OpCode.CHARDOWNCASE, 1)
-                .DefinePrimitive("char-lower-case?", OpCode.CHARLOWERCASEQ, 1)
-                .DefinePrimitive("char-numeric?", OpCode.CHARNUMERICQ, 1)
-                .DefinePrimitive("char-upcase", OpCode.CHARUPCASE, 1)
-                .DefinePrimitive("char-upper-case?", OpCode.CHARUPPERCASEQ, 1)
-                .DefinePrimitive("char-whitespace?", OpCode.CHARWHITESPACEQ, 1)
-                .DefinePrimitive("char<=?", OpCode.CHARCMPLE, 2)
-                .DefinePrimitive("char<?", OpCode.CHARCMPLT, 2)
-                .DefinePrimitive("char=?", OpCode.CHARCMPEQ, 2)
-                .DefinePrimitive("char>=?", OpCode.CHARCMPGE, 2)
-                .DefinePrimitive("char>?", OpCode.CHARCMPGT, 2)
-                .DefinePrimitive("char?", OpCode.CHARQ, 1)
-                .DefinePrimitive("close-input-port", OpCode.CLOSEINPUTPORT, 1)
-                .DefinePrimitive("close-output-port", OpCode.CLOSEOUTPUTPORT, 1)
-                .DefinePrimitive("complex", OpCode.NUMBERQ, 1)
-                .DefinePrimitive("cons", OpCode.CONS, 2)
-                .DefinePrimitive("cos", OpCode.COS, 1)
-                .DefinePrimitive("current-input-port", OpCode.CURRENTINPUTPORT, 0)
-                .DefinePrimitive("current-output-port", OpCode.CURRENTOUTPUTPORT, 0)
-                .DefinePrimitive("display", OpCode.DISPLAY, 1, 2)
-                .DefinePrimitive("eof-object?", OpCode.EOFOBJECTQ, 1)
-                .DefinePrimitive("eq?", OpCode.EQQ, 2)
-                .DefinePrimitive("equal?", OpCode.EQUALQ, 2)
-                .DefinePrimitive("eqv?", OpCode.EQVQ, 2)
-                .DefinePrimitive("eval", OpCode.EVAL, 1, 2)
-                .DefinePrimitive("even?", OpCode.EVENQ, 1)
-                .DefinePrimitive("exact?", OpCode.INTEGERQ, 1)
-                .DefinePrimitive("exp", OpCode.EXP, 1)
-                .DefinePrimitive("expt", OpCode.EXPT, 2)
-                .DefinePrimitive("force", OpCode.FORCE, 1)
-                .DefinePrimitive("for-each", OpCode.FOREACH, 1, MaxInt)
-                .DefinePrimitive("gcd", OpCode.GCD, 0, MaxInt)
-                .DefinePrimitive("inexact?", OpCode.INEXACTQ, 1)
-                .DefinePrimitive("input-port?", OpCode.INPUTPORTQ, 1)
-                .DefinePrimitive("integer->char", OpCode.INTEGERTOCHAR, 1)
-                .DefinePrimitive("integer?", OpCode.INTEGERQ, 1)
-                .DefinePrimitive("lcm", OpCode.LCM, 0, MaxInt)
-                .DefinePrimitive("length", OpCode.LENGTH, 1)
-                .DefinePrimitive("list", OpCode.LIST, 0, MaxInt)
-                .DefinePrimitive("list->string", OpCode.LISTTOSTRING, 1)
-                .DefinePrimitive("list->vector", OpCode.LISTTOVECTOR, 1)
-                .DefinePrimitive("list-ref", OpCode.LISTREF, 2)
-                .DefinePrimitive("list-tail", OpCode.LISTTAIL, 2)
-                .DefinePrimitive("list?", OpCode.LISTQ, 1)
-                .DefinePrimitive("load", OpCode.LOAD, 1)
-                .DefinePrimitive("log", OpCode.LOG, 1)
-                .DefinePrimitive("make-string", OpCode.MAKESTRING, 1, 2)
-                .DefinePrimitive("make-vector", OpCode.MAKEVECTOR, 1, 2)
-                .DefinePrimitive("map", OpCode.MAP, 1, MaxInt)
-                .DefinePrimitive("max", OpCode.MAX, 1, MaxInt)
-                .DefinePrimitive("member", OpCode.MEMBER, 2)
-                .DefinePrimitive("memq", OpCode.MEMQ, 2)
-                .DefinePrimitive("memv", OpCode.MEMV, 2)
-                .DefinePrimitive("min", OpCode.MIN, 1, MaxInt)
-                .DefinePrimitive("modulo", OpCode.MODULO, 2)
-                .DefinePrimitive("negative?", OpCode.NEGATIVEQ, 1)
-                .DefinePrimitive("newline", OpCode.NEWLINE, 0, 1)
-                .DefinePrimitive("not", OpCode.NOT, 1)
-                .DefinePrimitive("null?", OpCode.NULLQ, 1)
-                .DefinePrimitive("number->string", OpCode.NUMBERTOSTRING, 1, 2)
-                .DefinePrimitive("number?", OpCode.NUMBERQ, 1)
-                .DefinePrimitive("odd?", OpCode.ODDQ, 1)
-                .DefinePrimitive("open-input-file", OpCode.OPENINPUTFILE, 1)
-                .DefinePrimitive("open-output-file", OpCode.OPENOUTPUTFILE, 1)
-                .DefinePrimitive("output-port?", OpCode.OUTPUTPORTQ, 1)
-                .DefinePrimitive("pair?", OpCode.PAIRQ, 1)
-                .DefinePrimitive("peek-char", OpCode.PEEKCHAR, 0, 1)
-                .DefinePrimitive("positive?", OpCode.POSITIVEQ, 1)
-                .DefinePrimitive("procedure?", OpCode.PROCEDUREQ, 1)
-                .DefinePrimitive("quotient", OpCode.QUOTIENT, 2)
-                .DefinePrimitive("rational?", OpCode.INTEGERQ, 1)
-                .DefinePrimitive("read", OpCode.READ, 0, 1)
-                .DefinePrimitive("read-char", OpCode.READCHAR, 0, 1)
-                .DefinePrimitive("real?", OpCode.INTEGERQ, 1)
-                .DefinePrimitive("remainder", OpCode.REMAINDER, 2)
-                .DefinePrimitive("reverse", OpCode.REVERSE, 1)
-                .DefinePrimitive("round", OpCode.ROUND, 1)
-                .DefinePrimitive("set-car!", OpCode.SETCAR, 2)
-                .DefinePrimitive("set-first!", OpCode.SETCAR, 2)
-                .DefinePrimitive("set-cdr!", OpCode.SETCDR, 2)
-                .DefinePrimitive("set-rest!", OpCode.SETCDR, 2)
-                .DefinePrimitive("sin", OpCode.SIN, 1)
-                .DefinePrimitive("sqrt", OpCode.SQRT, 1)
-                .DefinePrimitive("string", OpCode.STRING, 0, MaxInt)
-                .DefinePrimitive("string->list", OpCode.STRINGTOLIST, 1)
-                .DefinePrimitive("string->number", OpCode.STRINGTONUMBER, 1, 2)
-                .DefinePrimitive("string->symbol", OpCode.STRINGTOSYMBOL, 1)
-                .DefinePrimitive("string-append", OpCode.STRINGAPPEND, 0, MaxInt)
-                .DefinePrimitive("string-ci<=?", OpCode.STRINGCICMPLE, 2)
-                .DefinePrimitive("string-ci<?", OpCode.STRINGCICMPLT, 2)
-                .DefinePrimitive("string-ci=?", OpCode.STRINGCICMPEQ, 2)
-                .DefinePrimitive("string-ci>=?", OpCode.STRINGCICMPGE, 2)
-                .DefinePrimitive("string-ci>?", OpCode.STRINGCICMPGT, 2)
-                .DefinePrimitive("string-length", OpCode.STRINGLENGTH, 1)
-                .DefinePrimitive("string-ref", OpCode.STRINGREF, 2)
-                .DefinePrimitive("string-set!", OpCode.STRINGSET, 3)
-                .DefinePrimitive("string<=?", OpCode.STRINGCMPLE, 2)
-                .DefinePrimitive("string<?", OpCode.STRINGCMPLT, 2)
-                .DefinePrimitive("string=?", OpCode.STRINGCMPEQ, 2)
-                .DefinePrimitive("string>=?", OpCode.STRINGCMPGE, 2)
-                .DefinePrimitive("string>?", OpCode.STRINGCMPGT, 2)
-                .DefinePrimitive("string?", OpCode.STRINGQ, 1)
-                .DefinePrimitive("substring", OpCode.SUBSTRING, 3)
-                .DefinePrimitive("symbol->string", OpCode.SYMBOLTOSTRING, 1)
-                .DefinePrimitive("symbol?", OpCode.SYMBOLQ, 1)
-                .DefinePrimitive("tan", OpCode.TAN, 1)
-                .DefinePrimitive("vector", OpCode.VECTOR, 0, MaxInt)
-                .DefinePrimitive("vector->list", OpCode.VECTORTOLIST, 1)
-                .DefinePrimitive("vector-length", OpCode.VECTORLENGTH, 1)
-                .DefinePrimitive("vector-ref", OpCode.VECTORREF, 2)
-                .DefinePrimitive("vector-set!", OpCode.VECTORSET, 3)
-                .DefinePrimitive("vector?", OpCode.VECTORQ, 1)
-                .DefinePrimitive("write", OpCode.WRITE, 1, 2)
-                .DefinePrimitive("p", OpCode.P, 1, 1)
-                .DefinePrimitive("write-char", OpCode.DISPLAY, 1, 2)
-                .DefinePrimitive("zero?", OpCode.ZEROQ, 1)
-
-                // EXTENSIONS
-                .DefinePrimitive("new", OpCode.NEW, 1)
-                .DefinePrimitive("class", OpCode.CLASS, 1)
-                .DefinePrimitive("method", OpCode.METHODSYNC, 2, MaxInt)
-                .DefinePrimitive("method-async", OpCode.METHODASYNC, 2, MaxInt)
-                .DefinePrimitive("exit", OpCode.EXIT, 0, 1)
-                .DefinePrimitive("error", OpCode.ERROR, 0, MaxInt)
-                .DefinePrimitive("time-call", OpCode.TIMECALL, 1, 2);
-
-            return env;
-        }
-
-        /// <summary>
         /// Apply the primitive to the arguments, giving a result.
         /// This may return a result or a Stepper, which can be used to get a result.
         /// If parent is null, then it will not return a Stepper, so when that is not
@@ -427,340 +222,340 @@ namespace SimpleScheme
         /// <returns>The result of the application.</returns>
         public override object Apply(Stepper parent, object args)
         {
-            int numArgs = Length(args);
+            int numArgs = List.Length(args);
             if (numArgs < this.minArgs)
             {
-                return Error("Primitive: too few args, " + numArgs + ", for " +
+                return ErrorHandlers.Error("Primitive: too few args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
 
             if (numArgs > this.maxArgs)
             {
-                return Error("Primitive: too many args, " + numArgs + ", for " +
+                return ErrorHandlers.Error("Primitive: too many args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
 
-            object first = First(args);
-            object second = Second(args);
+            object first = List.First(args);
+            object second = List.Second(args);
             Interpreter interp = parent.Env.Interp;
 
             switch (this.operCode)
             {
                     // 6.1 BOOLEANS
                 case OpCode.NOT:
-                    return Truth(first is bool && (bool)first == false);
+                    return SchemeBoolean.Truth(first is bool && (bool)first == false);
 
                 case OpCode.BOOLEANQ:
-                    return Truth(first is bool);
+                    return SchemeBoolean.Truth(first is bool);
 
                 case OpCode.EQVQ:
-                    return Truth(Eqv(first, second));
+                    return SchemeBoolean.Truth(SchemeBoolean.Eqv(first, second));
 
                 case OpCode.EQQ:
                     // return Truth(x == y);
-                    return Truth(Eqv(first, second));
+                    return SchemeBoolean.Truth(SchemeBoolean.Eqv(first, second));
 
                 case OpCode.EQUALQ:
                     // return Truth(x.Equals(y));
-                    return Truth(Equal(first, second));
+                    return SchemeBoolean.Truth(SchemeBoolean.Equal(first, second));
 
                     // 6.2 EQUIVALENCE PREDICATES
                 case OpCode.PAIRQ:
-                    return Truth(first is Pair);
+                    return SchemeBoolean.Truth(first is Pair);
 
                 case OpCode.LISTQ:
-                    return Truth(ListUtils.IsList(first));
+                    return SchemeBoolean.Truth(List.IsList(first));
 
                 case OpCode.CXR:
                     for (int i = this.Name.Length - 2; i >= 1; i--)
                     {
-                        first = this.Name[i] == 'a' ? First(first) : Rest(first);
+                        first = this.Name[i] == 'a' ? List.First(first) : List.Rest(first);
                     }
 
                     return first;
 
                 case OpCode.CONS:
-                    return Cons(first, second);
+                    return List.Cons(first, second);
 
                 case OpCode.CAR:
-                    return First(first);
+                    return List.First(first);
 
                 case OpCode.CDR:
-                    return Rest(first);
+                    return List.Rest(first);
 
                 case OpCode.SETCAR:
-                    return SetFirst(first, second);
+                    return List.SetFirst(first, second);
 
                 case OpCode.SETCDR:
-                    return SetRest(first, second);
+                    return List.SetRest(first, second);
 
                 case OpCode.SECOND:
-                    return Second(first);
+                    return List.Second(first);
 
                 case OpCode.THIRD:
-                    return Third(first);
+                    return List.Third(first);
 
                 case OpCode.NULLQ:
-                    return Truth(first == null);
+                    return SchemeBoolean.Truth(first == null);
 
                 case OpCode.LIST:
                     return args;
 
                 case OpCode.LENGTH:
-                    return NumberUtils.Num(Length(first));
+                    return Number.Num(List.Length(first));
 
                 case OpCode.APPEND:
-                    return args == null ? null : ListUtils.Append(args);
+                    return args == null ? null : List.Append(args);
 
                 case OpCode.REVERSE:
-                    return Reverse(first);
+                    return List.Reverse(first);
 
                 case OpCode.LISTTAIL:
-                    for (int k = (int)NumberUtils.Num(second); k > 0; k--)
+                    for (int k = (int)Number.Num(second); k > 0; k--)
                     {
-                        first = Rest(first);
+                        first = List.Rest(first);
                     }
 
                     return first;
 
                 case OpCode.LISTREF:
-                    for (int k = (int)NumberUtils.Num(second); k > 0; k--)
+                    for (int k = (int)Number.Num(second); k > 0; k--)
                     {
-                        first = Rest(first);
+                        first = List.Rest(first);
                     }
 
-                    return First(first);
+                    return List.First(first);
 
                 case OpCode.MEMQ:
-                    return ListUtils.MemberAssoc(first, second, 'm', 'q');
+                    return List.MemberAssoc(first, second, 'm', 'q');
 
                 case OpCode.MEMV:
-                    return ListUtils.MemberAssoc(first, second, 'm', 'v');
+                    return List.MemberAssoc(first, second, 'm', 'v');
 
                 case OpCode.MEMBER:
-                    return ListUtils.MemberAssoc(first, second, 'm', ' ');
+                    return List.MemberAssoc(first, second, 'm', ' ');
 
                 case OpCode.ASSQ:
-                    return ListUtils.MemberAssoc(first, second, 'a', 'q');
+                    return List.MemberAssoc(first, second, 'a', 'q');
 
                 case OpCode.ASSV:
-                    return ListUtils.MemberAssoc(first, second, 'a', 'v');
+                    return List.MemberAssoc(first, second, 'a', 'v');
 
                 case OpCode.ASSOC:
-                    return ListUtils.MemberAssoc(first, second, 'a', ' ');
+                    return List.MemberAssoc(first, second, 'a', ' ');
 
                     // 6.4 SYMBOLS
                 case OpCode.SYMBOLQ:
-                    return Truth(first is string);
+                    return SchemeBoolean.Truth(first is string);
 
                 case OpCode.SYMBOLTOSTRING:
-                    return new SchemeString(Sym(first));
+                    return new SchemeString(SchemeString.Sym(first));
 
                 case OpCode.STRINGTOSYMBOL:
                     return string.Intern(SchemeString.Str(first).AsString());
 
                     // 6.5 NUMBERS
                 case OpCode.NUMBERQ:
-                    return Truth(first is byte || first is int || first is long || first is float || first is double);
+                    return SchemeBoolean.Truth(first is byte || first is int || first is long || first is float || first is double);
 
                 case OpCode.ODDQ:
-                    return Truth(Math.Abs(NumberUtils.Num(first)) % 2 != 0);
+                    return SchemeBoolean.Truth(Math.Abs(Number.Num(first)) % 2 != 0);
 
                 case OpCode.EVENQ:
-                    return Truth(Math.Abs(NumberUtils.Num(first)) % 2 == 0);
+                    return SchemeBoolean.Truth(Math.Abs(Number.Num(first)) % 2 == 0);
 
                 case OpCode.ZEROQ:
-                    return Truth(NumberUtils.Num(first) == 0);
+                    return SchemeBoolean.Truth(Number.Num(first) == 0);
 
                 case OpCode.POSITIVEQ:
-                    return Truth(NumberUtils.Num(first) > 0);
+                    return SchemeBoolean.Truth(Number.Num(first) > 0);
 
                 case OpCode.NEGATIVEQ:
-                    return Truth(NumberUtils.Num(first) < 0);
+                    return SchemeBoolean.Truth(Number.Num(first) < 0);
 
                 case OpCode.INTEGERQ:
-                    return Truth(NumberUtils.IsExact(first));
+                    return SchemeBoolean.Truth(Number.IsExact(first));
 
                 case OpCode.INEXACTQ:
-                    return Truth(!NumberUtils.IsExact(first));
+                    return SchemeBoolean.Truth(!Number.IsExact(first));
 
                 case OpCode.LT:
-                    return NumberUtils.NumCompare(args, '<');
+                    return Number.NumCompare(args, '<');
 
                 case OpCode.GT:
-                    return NumberUtils.NumCompare(args, '>');
+                    return Number.NumCompare(args, '>');
 
                 case OpCode.EQ:
-                    return NumberUtils.NumCompare(args, '=');
+                    return Number.NumCompare(args, '=');
 
                 case OpCode.LE:
-                    return NumberUtils.NumCompare(args, 'L');
+                    return Number.NumCompare(args, 'L');
 
                 case OpCode.GE:
-                    return NumberUtils.NumCompare(args, 'G');
+                    return Number.NumCompare(args, 'G');
 
                 case OpCode.MAX:
-                    return NumberUtils.NumCompute(args, 'X', NumberUtils.Num(first));
+                    return Number.NumCompute(args, 'X', Number.Num(first));
 
                 case OpCode.MIN:
-                    return NumberUtils.NumCompute(args, 'N', NumberUtils.Num(first));
+                    return Number.NumCompute(args, 'N', Number.Num(first));
 
                 case OpCode.PLUS:
-                    return NumberUtils.NumCompute(args, '+', 0.0);
+                    return Number.NumCompute(args, '+', 0.0);
 
                 case OpCode.MINUS:
-                    return NumberUtils.NumCompute(Rest(args), '-', NumberUtils.Num(first));
+                    return Number.NumCompute(List.Rest(args), '-', Number.Num(first));
 
                 case OpCode.TIMES:
-                    return NumberUtils.NumCompute(args, '*', 1.0);
+                    return Number.NumCompute(args, '*', 1.0);
 
                 case OpCode.DIVIDE:
-                    return NumberUtils.NumCompute(Rest(args), '/', NumberUtils.Num(first));
+                    return Number.NumCompute(List.Rest(args), '/', Number.Num(first));
 
                 case OpCode.QUOTIENT:
-                    double d = NumberUtils.Num(first) / NumberUtils.Num(second);
-                    return NumberUtils.Num(d > 0 ? Math.Floor(d) : Math.Ceiling(d));
+                    double d = Number.Num(first) / Number.Num(second);
+                    return Number.Num(d > 0 ? Math.Floor(d) : Math.Ceiling(d));
 
                 case OpCode.REMAINDER:
-                    return NumberUtils.Num((long)NumberUtils.Num(first) % (long)NumberUtils.Num(second));
+                    return Number.Num((long)Number.Num(first) % (long)Number.Num(second));
 
                 case OpCode.MODULO:
-                    long xi = (long)NumberUtils.Num(first);
-                    long yi = (long)NumberUtils.Num(second);
+                    long xi = (long)Number.Num(first);
+                    long yi = (long)Number.Num(second);
                     long m = xi % yi;
-                    return NumberUtils.Num(xi * yi > 0 || m == 0 ? m : m + yi);
+                    return Number.Num(xi * yi > 0 || m == 0 ? m : m + yi);
 
                 case OpCode.ABS:
-                    return NumberUtils.Num(Math.Abs(NumberUtils.Num(first)));
+                    return Number.Num(Math.Abs(Number.Num(first)));
 
                 case OpCode.FLOOR:
-                    return NumberUtils.Num(Math.Floor(NumberUtils.Num(first)));
+                    return Number.Num(Math.Floor(Number.Num(first)));
 
                 case OpCode.CEILING:
-                    return NumberUtils.Num(Math.Ceiling(NumberUtils.Num(first)));
+                    return Number.Num(Math.Ceiling(Number.Num(first)));
 
                 case OpCode.TRUNCATE:
-                    d = NumberUtils.Num(first);
-                    return NumberUtils.Num(d < 0.0D ? Math.Ceiling(d) : Math.Floor(d));
+                    d = Number.Num(first);
+                    return Number.Num(d < 0.0D ? Math.Ceiling(d) : Math.Floor(d));
 
                 case OpCode.ROUND:
-                    return NumberUtils.Num(Math.Round(NumberUtils.Num(first)));
+                    return Number.Num(Math.Round(Number.Num(first)));
 
                 case OpCode.EXP:
-                    return NumberUtils.Num(Math.Exp(NumberUtils.Num(first)));
+                    return Number.Num(Math.Exp(Number.Num(first)));
 
                 case OpCode.LOG:
-                    return NumberUtils.Num(Math.Log(NumberUtils.Num(first)));
+                    return Number.Num(Math.Log(Number.Num(first)));
 
                 case OpCode.SIN:
-                    return NumberUtils.Num(Math.Sin(NumberUtils.Num(first)));
+                    return Number.Num(Math.Sin(Number.Num(first)));
 
                 case OpCode.COS:
-                    return NumberUtils.Num(Math.Cos(NumberUtils.Num(first)));
+                    return Number.Num(Math.Cos(Number.Num(first)));
 
                 case OpCode.TAN:
-                    return NumberUtils.Num(Math.Tan(NumberUtils.Num(first)));
+                    return Number.Num(Math.Tan(Number.Num(first)));
 
                 case OpCode.ASIN:
-                    return NumberUtils.Num(Math.Asin(NumberUtils.Num(first)));
+                    return Number.Num(Math.Asin(Number.Num(first)));
 
                 case OpCode.ACOS:
-                    return NumberUtils.Num(Math.Acos(NumberUtils.Num(first)));
+                    return Number.Num(Math.Acos(Number.Num(first)));
 
                 case OpCode.ATAN:
-                    return NumberUtils.Num(Math.Atan(NumberUtils.Num(first)));
+                    return Number.Num(Math.Atan(Number.Num(first)));
 
                 case OpCode.SQRT:
-                    return NumberUtils.Num(Math.Sqrt(NumberUtils.Num(first)));
+                    return Number.Num(Math.Sqrt(Number.Num(first)));
 
                 case OpCode.EXPT:
-                    if (NumberUtils.Num(first) == 0.0 && NumberUtils.Num(second) < 0.0)
+                    if (Number.Num(first) == 0.0 && Number.Num(second) < 0.0)
                     {
                         // Math.Pow gives infinity for this case
-                        return NumberUtils.Num(0.0);
+                        return Number.Num(0.0);
                     }
 
-                    return NumberUtils.Num(Math.Pow(NumberUtils.Num(first), NumberUtils.Num(second)));
+                    return Number.Num(Math.Pow(Number.Num(first), Number.Num(second)));
 
                 case OpCode.NUMBERTOSTRING:
-                    return NumberUtils.NumberToString(first, second);
+                    return Number.NumberToString(first, second);
 
                 case OpCode.STRINGTONUMBER:
                     return SchemeString.StringToNumber(first, second);
 
                 case OpCode.GCD:
-                    return args == null ? Zero : NumberUtils.Gcd(args);
+                    return args == null ? Number.Zero : Number.Gcd(args);
 
                 case OpCode.LCM:
-                    return args == null ? One : NumberUtils.Lcm(args);
+                    return args == null ? Number.One : Number.Lcm(args);
 
                     // 6.6 CHARACTERS
                 case OpCode.CHARQ:
-                    return Truth(first is char);
+                    return SchemeBoolean.Truth(first is char);
 
                 case OpCode.CHARALPHABETICQ:
-                    return Truth(char.IsLetter(Chr(first)));
+                    return SchemeBoolean.Truth(char.IsLetter(SchemeString.Chr(first)));
 
                 case OpCode.CHARNUMERICQ:
-                    return Truth(char.IsDigit(Chr(first)));
+                    return SchemeBoolean.Truth(char.IsDigit(SchemeString.Chr(first)));
 
                 case OpCode.CHARWHITESPACEQ:
-                    return Truth(char.IsWhiteSpace(Chr(first)));
+                    return SchemeBoolean.Truth(char.IsWhiteSpace(SchemeString.Chr(first)));
 
                 case OpCode.CHARUPPERCASEQ:
-                    return Truth(char.IsUpper(Chr(first)));
+                    return SchemeBoolean.Truth(char.IsUpper(SchemeString.Chr(first)));
 
                 case OpCode.CHARLOWERCASEQ:
-                    return Truth(char.IsLower(Chr(first)));
+                    return SchemeBoolean.Truth(char.IsLower(SchemeString.Chr(first)));
 
                 case OpCode.CHARTOINTEGER:
-                    return (double)Chr(first);
+                    return (double)SchemeString.Chr(first);
 
                 case OpCode.INTEGERTOCHAR:
-                    return Chr((char)(int)NumberUtils.Num(first));
+                    return SchemeString.Chr((char)(int)Number.Num(first));
 
                 case OpCode.CHARUPCASE:
-                    return Chr(char.ToUpper(Chr(first)));
+                    return SchemeString.Chr(char.ToUpper(SchemeString.Chr(first)));
 
                 case OpCode.CHARDOWNCASE:
-                    return Chr(char.ToLower(Chr(first)));
+                    return SchemeString.Chr(char.ToLower(SchemeString.Chr(first)));
 
                 case OpCode.CHARCMPEQ:
-                    return Truth(CharCompare(first, second, false) == 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, false) == 0);
 
                 case OpCode.CHARCMPLT:
-                    return Truth(CharCompare(first, second, false) < 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, false) < 0);
 
                 case OpCode.CHARCMPGT:
-                    return Truth(CharCompare(first, second, false) > 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, false) > 0);
 
                 case OpCode.CHARCMPGE:
-                    return Truth(CharCompare(first, second, false) >= 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, false) >= 0);
 
                 case OpCode.CHARCMPLE:
-                    return Truth(CharCompare(first, second, false) <= 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, false) <= 0);
 
                 case OpCode.CHARCICMPEQ:
-                    return Truth(CharCompare(first, second, true) == 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, true) == 0);
 
                 case OpCode.CHARCICMPLT:
-                    return Truth(CharCompare(first, second, true) < 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, true) < 0);
 
                 case OpCode.CHARCICMPGT:
-                    return Truth(CharCompare(first, second, true) > 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, true) > 0);
 
                 case OpCode.CHARCICMPGE:
-                    return Truth(CharCompare(first, second, true) >= 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, true) >= 0);
 
                 case OpCode.CHARCICMPLE:
-                    return Truth(CharCompare(first, second, true) <= 0);
+                    return SchemeBoolean.Truth(SchemeString.ChrCompare(first, second, true) <= 0);
 
                 case OpCode.ERROR:
-                    return Error(SchemeString.AsString(args));
+                    return ErrorHandlers.Error(SchemeString.AsString(args));
 
                     // 6.7 STRINGS
                 case OpCode.STRINGQ:
-                    return Truth(first is SchemeString);
+                    return SchemeBoolean.Truth(first is SchemeString);
 
                 case OpCode.MAKESTRING:
                     return new SchemeString(first, second);
@@ -769,19 +564,19 @@ namespace SimpleScheme
                     return SchemeString.ListToString(args);
 
                 case OpCode.STRINGLENGTH:
-                    return NumberUtils.Num(SchemeString.Str(first).Length);
+                    return Number.Num(SchemeString.Str(first).Length);
 
                 case OpCode.STRINGREF:
-                    return Chr(SchemeString.Str(first)[(int)NumberUtils.Num(second)]);
+                    return SchemeString.Chr(SchemeString.Str(first)[(int)Number.Num(second)]);
 
                 case OpCode.STRINGSET:
-                    object z = Third(args);
-                    SchemeString.Str(first)[(int)NumberUtils.Num(second)] = Chr(z);
+                    object z = List.Third(args);
+                    SchemeString.Str(first)[(int)Number.Num(second)] = SchemeString.Chr(z);
                     return z;
 
                 case OpCode.SUBSTRING:
-                    int start = (int)NumberUtils.Num(second);
-                    int end = (int)NumberUtils.Num(Third(args));
+                    int start = (int)Number.Num(second);
+                    int end = (int)Number.Num(List.Third(args));
                     return SchemeString.Str(first).Substring(start, end - start);
 
                 case OpCode.STRINGAPPEND:
@@ -794,38 +589,38 @@ namespace SimpleScheme
                     return SchemeString.ListToString(first);
 
                 case OpCode.STRINGCMPEQ:
-                    return Truth(SchemeString.StringCompare(first, second, false) == 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, false) == 0);
 
                 case OpCode.STRINGCMPLT:
-                    return Truth(SchemeString.StringCompare(first, second, false) < 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, false) < 0);
 
                 case OpCode.STRINGCMPGT:
-                    return Truth(SchemeString.StringCompare(first, second, false) > 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, false) > 0);
 
                 case OpCode.STRINGCMPGE:
-                    return Truth(SchemeString.StringCompare(first, second, false) >= 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, false) >= 0);
 
                 case OpCode.STRINGCMPLE:
-                    return Truth(SchemeString.StringCompare(first, second, false) <= 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, false) <= 0);
 
                 case OpCode.STRINGCICMPEQ:
-                    return Truth(SchemeString.StringCompare(first, second, true) == 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, true) == 0);
 
                 case OpCode.STRINGCICMPLT:
-                    return Truth(SchemeString.StringCompare(first, second, true) < 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, true) < 0);
 
                 case OpCode.STRINGCICMPGT:
-                    return Truth(SchemeString.StringCompare(first, second, true) > 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, true) > 0);
 
                 case OpCode.STRINGCICMPGE:
-                    return Truth(SchemeString.StringCompare(first, second, true) >= 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, true) >= 0);
 
                 case OpCode.STRINGCICMPLE:
-                    return Truth(SchemeString.StringCompare(first, second, true) <= 0);
+                    return SchemeBoolean.Truth(SchemeString.StringCompare(first, second, true) <= 0);
 
                     // 6.8 VECTORS
                 case OpCode.VECTORQ:
-                    return Truth(first is Vector);
+                    return SchemeBoolean.Truth(first is Vector);
 
                 case OpCode.MAKEVECTOR:
                     return new Vector(first, second);
@@ -834,13 +629,13 @@ namespace SimpleScheme
                     return new Vector(args);
 
                 case OpCode.VECTORLENGTH:
-                    return NumberUtils.Num(Vector.Vec(first).Length);
+                    return Number.Num(Vector.Vec(first).Length);
 
                 case OpCode.VECTORREF:
-                    return Vector.Vec(first)[(int)NumberUtils.Num(second)];
+                    return Vector.Vec(first)[(int)Number.Num(second)];
 
                 case OpCode.VECTORSET:
-                    return Vector.Vec(first)[(int)NumberUtils.Num(second)] = Third(args);
+                    return Vector.Vec(first)[(int)Number.Num(second)] = List.Third(args);
 
                 case OpCode.VECTORTOLIST:
                     return Vector.VectorToList(first);
@@ -857,28 +652,28 @@ namespace SimpleScheme
                     return !(first is Procedure) ? first : Proc(first).Apply(parent, null);
 
                 case OpCode.PROCEDUREQ:
-                    return Truth(first is Procedure);
+                    return SchemeBoolean.Truth(first is Procedure);
 
                 case OpCode.APPLY:
-                    return Proc(first).Apply(parent, ListStar(Rest(args)));
+                    return Proc(first).Apply(parent, List.ListStar(List.Rest(args)));
 
                 case OpCode.MAP:
-                    return parent.CallMap(Rest(args), Proc(first), List(null));
+                    return parent.CallMap(List.Rest(args), Proc(first), List.MakeList(null));
 
                 case OpCode.FOREACH:
-                    return parent.CallMap(Rest(args), Proc(first), null);
+                    return parent.CallMap(List.Rest(args), Proc(first), null);
 
                 case OpCode.CALLCC:
                     return Proc(first).Apply(
                         parent,
-                        List(new Continuation(parent.CallContinuation(first))));
+                        List.MakeList(new Continuation(parent.CallContinuation(first))));
 
                     // 6.10 INPUT AND OUTPUT
                 case OpCode.EOFOBJECTQ:
-                    return Truth(InputPort.IsEOF(first));
+                    return SchemeBoolean.Truth(InputPort.IsEOF(first));
 
                 case OpCode.INPUTPORTQ:
-                    return Truth(first is InputPort);
+                    return SchemeBoolean.Truth(first is InputPort);
 
                 case OpCode.CURRENTINPUTPORT:
                     return interp.Input;
@@ -890,7 +685,7 @@ namespace SimpleScheme
                     return InputPort.InPort(first, interp).Close();
 
                 case OpCode.OUTPUTPORTQ:
-                    return Truth(first is OutputPort);
+                    return SchemeBoolean.Truth(first is OutputPort);
 
                 case OpCode.CURRENTOUTPUTPORT:
                     return interp.Output;
@@ -906,7 +701,7 @@ namespace SimpleScheme
 
                 case OpCode.CLOSEOUTPUTPORT:
                     OutputPort.OutPort(first, interp).Close();
-                    return True;
+                    return SchemeBoolean.True;
 
                 case OpCode.READCHAR:
                     return InputPort.InPort(first, interp).ReadChar();
@@ -921,7 +716,7 @@ namespace SimpleScheme
                     return InputPort.InPort(first, interp).Read();
 
                 case OpCode.EOF_OBJECT:
-                    return Truth(InputPort.IsEOF(first));
+                    return SchemeBoolean.Truth(InputPort.IsEOF(first));
 
                 case OpCode.WRITE:
                     return OutputPort.Write(first, OutputPort.OutPort(second, interp), true);
@@ -935,7 +730,7 @@ namespace SimpleScheme
                 case OpCode.NEWLINE:
                     OutputPort.OutPort(first, interp).Println();
                     OutputPort.OutPort(first, interp).Flush();
-                    return True;
+                    return SchemeBoolean.True;
 
                     // EXTENSIONS
                 case OpCode.CLASS:
@@ -947,7 +742,7 @@ namespace SimpleScheme
                     {
                     }
 
-                    return False;
+                    return SchemeBoolean.False;
 
                 case OpCode.NEW:
                     try
@@ -976,25 +771,234 @@ namespace SimpleScheme
                     {
                     }
 
-                    return False;
+                    return SchemeBoolean.False;
 
                 case OpCode.METHODSYNC:
-                    return new SynchronousClrProcedure(first, SchemeString.AsString(second, false), Rest(Rest(args)));
+                    return new SynchronousClrProcedure(first, SchemeString.AsString(second, false), List.Rest(List.Rest(args)));
 
                 case OpCode.METHODASYNC:
-                    return new AsynchronousClrProcedure(first, SchemeString.AsString(second, false), Rest(Rest(args)));
+                    return new AsynchronousClrProcedure(first, SchemeString.AsString(second, false), List.Rest(List.Rest(args)));
 
                 case OpCode.EXIT:
-                    System.Environment.Exit(first == null ? 0 : (int)NumberUtils.Num(first));
-                    return False; // required by style cop -- unnecessary
+                    System.Environment.Exit(first == null ? 0 : (int)Number.Num(first));
+                    return SchemeBoolean.False; // required by style cop -- unnecessary
 
                 case OpCode.TIMECALL:
                     return parent.CallTimeCall(args);
 
                 default:
-                    return Error("Internal error: unknown primitive: " + this +
+                    return ErrorHandlers.Error("Internal error: unknown primitive: " + this +
                                  " applied to " + args);
             }
+        }
+    }
+
+    /// <summary>
+    /// This part of the environment is here to keep the primitive stuff in one file.
+    /// </summary>
+    [SuppressMessage("Microsoft.StyleCop.CSharp.MaintainabilityRules", "SA1402:FileMayOnlyContainASingleClass",
+        Justification = "Reviewed. Suppression is OK here.")]
+    public partial class Environment
+    {
+        /// <summary>
+        /// Install primitives into the environment.
+        /// </summary>
+        /// <returns>The environment.</returns>
+        public Environment InstallPrimitives()
+        {
+            const int MaxInt = int.MaxValue;
+
+            this
+                .DefinePrimitive("=", Primitive.OpCode.EQ, 2, MaxInt)
+                .DefinePrimitive("*", Primitive.OpCode.TIMES, 0, MaxInt)
+                .DefinePrimitive("+", Primitive.OpCode.PLUS, 0, MaxInt)
+                .DefinePrimitive("-", Primitive.OpCode.MINUS, 1, MaxInt)
+                .DefinePrimitive("/", Primitive.OpCode.DIVIDE, 1, MaxInt)
+                .DefinePrimitive("<", Primitive.OpCode.LT, 2, MaxInt)
+                .DefinePrimitive(">", Primitive.OpCode.GT, 2, MaxInt)
+                .DefinePrimitive("<=", Primitive.OpCode.LE, 2, MaxInt)
+                .DefinePrimitive(">=", Primitive.OpCode.GE, 2, MaxInt)
+                .DefinePrimitive("abs", Primitive.OpCode.ABS, 1)
+                .DefinePrimitive("acos", Primitive.OpCode.ACOS, 1)
+                .DefinePrimitive("append", Primitive.OpCode.APPEND, 0, MaxInt)
+                .DefinePrimitive("apply", Primitive.OpCode.APPLY, 2, MaxInt)
+                .DefinePrimitive("asin", Primitive.OpCode.ASIN, 1)
+                .DefinePrimitive("assoc", Primitive.OpCode.ASSOC, 2)
+                .DefinePrimitive("assq", Primitive.OpCode.ASSQ, 2)
+                .DefinePrimitive("assv", Primitive.OpCode.ASSV, 2)
+                .DefinePrimitive("atan", Primitive.OpCode.ATAN, 1)
+                .DefinePrimitive("boolean?", Primitive.OpCode.BOOLEANQ, 1)
+                .DefinePrimitive("caaaar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caaadr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caaar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caadar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caaddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cadaar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cadadr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cadar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caddar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cadddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("caddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cadr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("call-with-current-continuation", Primitive.OpCode.CALLCC, 1)
+                .DefinePrimitive("call/cc", Primitive.OpCode.CALLCC, 1)
+                .DefinePrimitive("call-with-input-file", Primitive.OpCode.CALLWITHINPUTFILE, 2)
+                .DefinePrimitive("call-with-output-file", Primitive.OpCode.CALLWITHOUTPUTFILE, 2)
+                .DefinePrimitive("car", Primitive.OpCode.CAR, 1)
+                .DefinePrimitive("first", Primitive.OpCode.CAR, 1)
+                .DefinePrimitive("second", Primitive.OpCode.SECOND, 1)
+                .DefinePrimitive("third", Primitive.OpCode.THIRD, 1)
+                .DefinePrimitive("cdaaar,", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdaadr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdaar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdadar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdaddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdadr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cddaar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cddadr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cddar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdddar", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cddddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cddr", Primitive.OpCode.CXR, 1)
+                .DefinePrimitive("cdr", Primitive.OpCode.CDR, 1)
+                .DefinePrimitive("rest", Primitive.OpCode.CDR, 1)
+                .DefinePrimitive("char->integer", Primitive.OpCode.CHARTOINTEGER, 1)
+                .DefinePrimitive("char-alphabetic?", Primitive.OpCode.CHARALPHABETICQ, 1)
+                .DefinePrimitive("char-ci<=?", Primitive.OpCode.CHARCICMPLE, 2)
+                .DefinePrimitive("char-ci<?", Primitive.OpCode.CHARCICMPLT, 2)
+                .DefinePrimitive("char-ci=?", Primitive.OpCode.CHARCICMPEQ, 2)
+                .DefinePrimitive("char-ci>=?", Primitive.OpCode.CHARCICMPGE, 2)
+                .DefinePrimitive("char-ci>?", Primitive.OpCode.CHARCICMPGT, 2)
+                .DefinePrimitive("char-downcase", Primitive.OpCode.CHARDOWNCASE, 1)
+                .DefinePrimitive("char-lower-case?", Primitive.OpCode.CHARLOWERCASEQ, 1)
+                .DefinePrimitive("char-numeric?", Primitive.OpCode.CHARNUMERICQ, 1)
+                .DefinePrimitive("char-upcase", Primitive.OpCode.CHARUPCASE, 1)
+                .DefinePrimitive("char-upper-case?", Primitive.OpCode.CHARUPPERCASEQ, 1)
+                .DefinePrimitive("char-whitespace?", Primitive.OpCode.CHARWHITESPACEQ, 1)
+                .DefinePrimitive("char<=?", Primitive.OpCode.CHARCMPLE, 2)
+                .DefinePrimitive("char<?", Primitive.OpCode.CHARCMPLT, 2)
+                .DefinePrimitive("char=?", Primitive.OpCode.CHARCMPEQ, 2)
+                .DefinePrimitive("char>=?", Primitive.OpCode.CHARCMPGE, 2)
+                .DefinePrimitive("char>?", Primitive.OpCode.CHARCMPGT, 2)
+                .DefinePrimitive("char?", Primitive.OpCode.CHARQ, 1)
+                .DefinePrimitive("close-input-port", Primitive.OpCode.CLOSEINPUTPORT, 1)
+                .DefinePrimitive("close-output-port", Primitive.OpCode.CLOSEOUTPUTPORT, 1)
+                .DefinePrimitive("complex", Primitive.OpCode.NUMBERQ, 1)
+                .DefinePrimitive("cons", Primitive.OpCode.CONS, 2)
+                .DefinePrimitive("cos", Primitive.OpCode.COS, 1)
+                .DefinePrimitive("current-input-port", Primitive.OpCode.CURRENTINPUTPORT, 0)
+                .DefinePrimitive("current-output-port", Primitive.OpCode.CURRENTOUTPUTPORT, 0)
+                .DefinePrimitive("display", Primitive.OpCode.DISPLAY, 1, 2)
+                .DefinePrimitive("eof-object?", Primitive.OpCode.EOFOBJECTQ, 1)
+                .DefinePrimitive("eq?", Primitive.OpCode.EQQ, 2)
+                .DefinePrimitive("equal?", Primitive.OpCode.EQUALQ, 2)
+                .DefinePrimitive("eqv?", Primitive.OpCode.EQVQ, 2)
+                .DefinePrimitive("eval", Primitive.OpCode.EVAL, 1, 2)
+                .DefinePrimitive("even?", Primitive.OpCode.EVENQ, 1)
+                .DefinePrimitive("exact?", Primitive.OpCode.INTEGERQ, 1)
+                .DefinePrimitive("exp", Primitive.OpCode.EXP, 1)
+                .DefinePrimitive("expt", Primitive.OpCode.EXPT, 2)
+                .DefinePrimitive("force", Primitive.OpCode.FORCE, 1)
+                .DefinePrimitive("for-each", Primitive.OpCode.FOREACH, 1, MaxInt)
+                .DefinePrimitive("gcd", Primitive.OpCode.GCD, 0, MaxInt)
+                .DefinePrimitive("inexact?", Primitive.OpCode.INEXACTQ, 1)
+                .DefinePrimitive("input-port?", Primitive.OpCode.INPUTPORTQ, 1)
+                .DefinePrimitive("integer->char", Primitive.OpCode.INTEGERTOCHAR, 1)
+                .DefinePrimitive("integer?", Primitive.OpCode.INTEGERQ, 1)
+                .DefinePrimitive("lcm", Primitive.OpCode.LCM, 0, MaxInt)
+                .DefinePrimitive("length", Primitive.OpCode.LENGTH, 1)
+                .DefinePrimitive("list", Primitive.OpCode.LIST, 0, MaxInt)
+                .DefinePrimitive("list->string", Primitive.OpCode.LISTTOSTRING, 1)
+                .DefinePrimitive("list->vector", Primitive.OpCode.LISTTOVECTOR, 1)
+                .DefinePrimitive("list-ref", Primitive.OpCode.LISTREF, 2)
+                .DefinePrimitive("list-tail", Primitive.OpCode.LISTTAIL, 2)
+                .DefinePrimitive("list?", Primitive.OpCode.LISTQ, 1)
+                .DefinePrimitive("load", Primitive.OpCode.LOAD, 1)
+                .DefinePrimitive("log", Primitive.OpCode.LOG, 1)
+                .DefinePrimitive("make-string", Primitive.OpCode.MAKESTRING, 1, 2)
+                .DefinePrimitive("make-vector", Primitive.OpCode.MAKEVECTOR, 1, 2)
+                .DefinePrimitive("map", Primitive.OpCode.MAP, 1, MaxInt)
+                .DefinePrimitive("max", Primitive.OpCode.MAX, 1, MaxInt)
+                .DefinePrimitive("member", Primitive.OpCode.MEMBER, 2)
+                .DefinePrimitive("memq", Primitive.OpCode.MEMQ, 2)
+                .DefinePrimitive("memv", Primitive.OpCode.MEMV, 2)
+                .DefinePrimitive("min", Primitive.OpCode.MIN, 1, MaxInt)
+                .DefinePrimitive("modulo", Primitive.OpCode.MODULO, 2)
+                .DefinePrimitive("negative?", Primitive.OpCode.NEGATIVEQ, 1)
+                .DefinePrimitive("newline", Primitive.OpCode.NEWLINE, 0, 1)
+                .DefinePrimitive("not", Primitive.OpCode.NOT, 1)
+                .DefinePrimitive("null?", Primitive.OpCode.NULLQ, 1)
+                .DefinePrimitive("number->string", Primitive.OpCode.NUMBERTOSTRING, 1, 2)
+                .DefinePrimitive("number?", Primitive.OpCode.NUMBERQ, 1)
+                .DefinePrimitive("odd?", Primitive.OpCode.ODDQ, 1)
+                .DefinePrimitive("open-input-file", Primitive.OpCode.OPENINPUTFILE, 1)
+                .DefinePrimitive("open-output-file", Primitive.OpCode.OPENOUTPUTFILE, 1)
+                .DefinePrimitive("output-port?", Primitive.OpCode.OUTPUTPORTQ, 1)
+                .DefinePrimitive("pair?", Primitive.OpCode.PAIRQ, 1)
+                .DefinePrimitive("peek-char", Primitive.OpCode.PEEKCHAR, 0, 1)
+                .DefinePrimitive("positive?", Primitive.OpCode.POSITIVEQ, 1)
+                .DefinePrimitive("procedure?", Primitive.OpCode.PROCEDUREQ, 1)
+                .DefinePrimitive("quotient", Primitive.OpCode.QUOTIENT, 2)
+                .DefinePrimitive("rational?", Primitive.OpCode.INTEGERQ, 1)
+                .DefinePrimitive("read", Primitive.OpCode.READ, 0, 1)
+                .DefinePrimitive("read-char", Primitive.OpCode.READCHAR, 0, 1)
+                .DefinePrimitive("real?", Primitive.OpCode.INTEGERQ, 1)
+                .DefinePrimitive("remainder", Primitive.OpCode.REMAINDER, 2)
+                .DefinePrimitive("reverse", Primitive.OpCode.REVERSE, 1)
+                .DefinePrimitive("round", Primitive.OpCode.ROUND, 1)
+                .DefinePrimitive("set-car!", Primitive.OpCode.SETCAR, 2)
+                .DefinePrimitive("set-first!", Primitive.OpCode.SETCAR, 2)
+                .DefinePrimitive("set-cdr!", Primitive.OpCode.SETCDR, 2)
+                .DefinePrimitive("set-rest!", Primitive.OpCode.SETCDR, 2)
+                .DefinePrimitive("sin", Primitive.OpCode.SIN, 1)
+                .DefinePrimitive("sqrt", Primitive.OpCode.SQRT, 1)
+                .DefinePrimitive("string", Primitive.OpCode.STRING, 0, MaxInt)
+                .DefinePrimitive("string->list", Primitive.OpCode.STRINGTOLIST, 1)
+                .DefinePrimitive("string->number", Primitive.OpCode.STRINGTONUMBER, 1, 2)
+                .DefinePrimitive("string->symbol", Primitive.OpCode.STRINGTOSYMBOL, 1)
+                .DefinePrimitive("string-append", Primitive.OpCode.STRINGAPPEND, 0, MaxInt)
+                .DefinePrimitive("string-ci<=?", Primitive.OpCode.STRINGCICMPLE, 2)
+                .DefinePrimitive("string-ci<?", Primitive.OpCode.STRINGCICMPLT, 2)
+                .DefinePrimitive("string-ci=?", Primitive.OpCode.STRINGCICMPEQ, 2)
+                .DefinePrimitive("string-ci>=?", Primitive.OpCode.STRINGCICMPGE, 2)
+                .DefinePrimitive("string-ci>?", Primitive.OpCode.STRINGCICMPGT, 2)
+                .DefinePrimitive("string-length", Primitive.OpCode.STRINGLENGTH, 1)
+                .DefinePrimitive("string-ref", Primitive.OpCode.STRINGREF, 2)
+                .DefinePrimitive("string-set!", Primitive.OpCode.STRINGSET, 3)
+                .DefinePrimitive("string<=?", Primitive.OpCode.STRINGCMPLE, 2)
+                .DefinePrimitive("string<?", Primitive.OpCode.STRINGCMPLT, 2)
+                .DefinePrimitive("string=?", Primitive.OpCode.STRINGCMPEQ, 2)
+                .DefinePrimitive("string>=?", Primitive.OpCode.STRINGCMPGE, 2)
+                .DefinePrimitive("string>?", Primitive.OpCode.STRINGCMPGT, 2)
+                .DefinePrimitive("string?", Primitive.OpCode.STRINGQ, 1)
+                .DefinePrimitive("substring", Primitive.OpCode.SUBSTRING, 3)
+                .DefinePrimitive("symbol->string", Primitive.OpCode.SYMBOLTOSTRING, 1)
+                .DefinePrimitive("symbol?", Primitive.OpCode.SYMBOLQ, 1)
+                .DefinePrimitive("tan", Primitive.OpCode.TAN, 1)
+                .DefinePrimitive("vector", Primitive.OpCode.VECTOR, 0, MaxInt)
+                .DefinePrimitive("vector->list", Primitive.OpCode.VECTORTOLIST, 1)
+                .DefinePrimitive("vector-length", Primitive.OpCode.VECTORLENGTH, 1)
+                .DefinePrimitive("vector-ref", Primitive.OpCode.VECTORREF, 2)
+                .DefinePrimitive("vector-set!", Primitive.OpCode.VECTORSET, 3)
+                .DefinePrimitive("vector?", Primitive.OpCode.VECTORQ, 1)
+                .DefinePrimitive("write", Primitive.OpCode.WRITE, 1, 2)
+                .DefinePrimitive("p", Primitive.OpCode.P, 1, 1)
+                .DefinePrimitive("write-char", Primitive.OpCode.DISPLAY, 1, 2)
+                .DefinePrimitive("zero?", Primitive.OpCode.ZEROQ, 1)
+
+                // EXTENSIONS
+                .DefinePrimitive("new", Primitive.OpCode.NEW, 1)
+                .DefinePrimitive("class", Primitive.OpCode.CLASS, 1)
+                .DefinePrimitive("method", Primitive.OpCode.METHODSYNC, 2, MaxInt)
+                .DefinePrimitive("method-async", Primitive.OpCode.METHODASYNC, 2, MaxInt)
+                .DefinePrimitive("exit", Primitive.OpCode.EXIT, 0, 1)
+                .DefinePrimitive("error", Primitive.OpCode.ERROR, 0, MaxInt)
+                .DefinePrimitive("time-call", Primitive.OpCode.TIMECALL, 1, 2);
+
+            return this;
         }
     }
 }

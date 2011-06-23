@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// The main evaluator for expressions.
     /// </summary>
-    public class EvaluatorMain : EvaluatorBase
+    public sealed class EvaluatorMain : Stepper
     {
         /// <summary>
         /// A function to be evaluated (primitive, proc, macro, or closure).
@@ -75,15 +75,15 @@ namespace SimpleScheme
 
                         // We are evaluating a pair.
                         // Split out the first item for special treatment.
-                        this.fn = First(this.Expr);
-                        this.args = Rest(this.Expr);
+                        this.fn = List.First(this.Expr);
+                        this.args = List.Rest(this.Expr);
 
                         // Look for one of the special forms. 
                         switch (this.fn as string)
                         {
                             case "quote":
                                 // Evaluate quoted expression by just returning the expression.
-                                return ReturnFromStep(First(this.args));
+                                return ReturnFromStep(List.First(this.args));
 
                             case "begin":
                                 {
@@ -128,11 +128,11 @@ namespace SimpleScheme
 
                             case "lambda":
                                 // Evaluate a lambda by creating a closure.
-                                return ReturnFromStep(new Closure(First(this.args), Rest(this.args), this.Env));
+                                return ReturnFromStep(new Closure(List.First(this.args), List.Rest(this.args), this.Env));
 
                             case "macro":
                                 // Evaluate a macro by creating a macro.
-                                return ReturnFromStep(new Macro(First(this.args), Rest(this.args), this.Env));
+                                return ReturnFromStep(new Macro(List.First(this.args), List.Rest(this.args), this.Env));
                         }
 
                         // If we get here, it wasn't one of the special forms.  
@@ -180,7 +180,7 @@ namespace SimpleScheme
                         return ReturnFromStep(this.ReturnedExpr, this.ReturnedEnv);
                 }
 
-                return EvalError("EvaluatorMain: program counter error");
+                return ErrorHandlers.EvalError("EvaluatorMain: program counter error");
             }
         }
 

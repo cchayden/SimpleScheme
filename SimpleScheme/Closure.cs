@@ -6,6 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// A closure stores the environment and a program to run.
     /// It can be executed later, through Apply.
+    /// The Macro class also derives from this.
     /// </summary>
     public class Closure : Procedure
     {
@@ -20,9 +21,9 @@ namespace SimpleScheme
         {
             this.FormalParameters = formalParameters;
             this.Env = env;
-            this.Body = body is Pair && Rest(body) == null ? 
-                First(body) :            // one expression
-                Cons("begin", body);     // more than one expression --> (begin expressions)
+            this.Body = body is Pair && List.Rest(body) == null ? 
+                List.First(body) :            // one expression
+                List.Cons("begin", body);     // more than one expression --> (begin expressions)
         }
 
         /// <summary>

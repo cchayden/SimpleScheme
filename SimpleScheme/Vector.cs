@@ -3,15 +3,37 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Collections;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Represents a scheme vector.
     /// </summary>
-    public class Vector : SchemeUtils
+    public sealed class Vector : IEnumerable<object>
     {
         /// <summary>
         /// A vector is an array of objects.
         /// </summary>
         private readonly object[] vec;
+
+        /// <summary>
+        /// Initializes a new instance of the Vector class.
+        /// Creates the vector from a list of values.
+        /// </summary>
+        /// <param name="objs">A list of values to put in the vector.</param>
+        public Vector(object objs)
+        {
+            this.vec = new object[List.Length(objs)];
+
+            if (objs is Pair)
+            {
+                int i = 0;
+                foreach (object elem in (Pair)objs)
+                {
+                    this.vec[i++] = elem;
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the Vector class.
@@ -31,7 +53,7 @@ namespace SimpleScheme
         /// <param name="fill">The value to initialize the vector entries to.</param>
         public Vector(object length, object fill)
         {
-            this.vec = new object[(int)NumberUtils.Num(length)];
+            this.vec = new object[(int)Number.Num(length)];
             if (fill != null)
             {
                 for (int i = 0; i < this.vec.Length; i++)
@@ -42,25 +64,9 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vector class.
-        /// Creates the vector from a list of values.
-        /// </summary>
-        /// <param name="objs">A list of values to put in the vector.</param>
-        public Vector(object objs)
-        {
-            this.vec = new object[SchemeUtils.Length(objs)];
-
-            for (int i = 0; objs is Pair; i++)
-            {
-                this.vec[i] = First(objs);
-                objs = Rest(objs);
-            }
-        }
-
-        /// <summary>
         /// Gets the length of the vector.
         /// </summary>
-        public new int Length
+        public int Length
         {
             get { return this.vec.Length; }
         }
@@ -84,6 +90,27 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Enumerates characters from the vector.
+        /// </summary>
+        /// <returns>The vector elements.</returns>
+        public IEnumerator<object> GetEnumerator()
+        {
+            foreach (object obj in this.vec)
+            {
+                yield return obj;
+            }
+        }
+
+        /// <summary>
+        /// Gets the vector enumerator.
+        /// </summary>
+        /// <returns>The vector enumerator.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        /// <summary>
         /// Tests whether two vectors are equal.
         /// </summary>
         /// <param name="xo">One vector.</param>
@@ -98,7 +125,7 @@ namespace SimpleScheme
 
             for (int i = xo.Length - 1; i >= 0; i--)
             {
-                if (!SchemeUtils.Equal(xo.vec[i], yo.vec[i]))
+                if (!SchemeBoolean.Equal(xo.vec[i], yo.vec[i]))
                 {
                     return false;
                 }
@@ -119,7 +146,7 @@ namespace SimpleScheme
                 return (Vector)x;
             }
 
-            return Vec(Error("Expected a vector, got: " + x));
+            return Vec(ErrorHandlers.Error("Expected a vector, got: " + x));
         }
 
         /// <summary>
@@ -136,13 +163,13 @@ namespace SimpleScheme
                 Pair result = null;
                 for (int i = vec.Length - 1; i >= 0; i--)
                 {
-                    result = Cons(vec[i], result);
+                    result = List.Cons(vec[i], result);
                 }
 
                 return result;
             }
 
-            Error("VectorToList: expected a vector, got: " + x);
+            ErrorHandlers.Error("VectorToList: expected a vector, got: " + x);
             return null;
         }
     }

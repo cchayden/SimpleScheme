@@ -3,6 +3,7 @@
 // </copyright>
 namespace Repl
 {
+    using System.Collections.Generic;
     using SimpleScheme;
 
     /// <summary>
@@ -11,14 +12,37 @@ namespace Repl
     public class MainProgram
     {
         /// <summary>
-        /// Start a scheme interpreter.
-        /// Pass it some files to read.
-        /// Then go into a read/eval/print loop.
+        /// Run the REPL.
         /// </summary>
         /// <param name="args">These are files to read initially.</param>
         public static void Main(string[] args)
         {
-            new Interpreter(args).ReadEvalWriteLoop();
+            new MainProgram().Run2(args);
+        }
+
+        /// <summary>
+        /// Start a scheme interpreter.
+        /// Pass it some files to read.
+        /// Then go into a read/eval/print loop.
+        /// </summary>
+        /// <param name="args">Files to read.</param>
+        private void Run1(IEnumerable<string> args)
+        {
+            new Interpreter(args)
+                .ReadEvalWriteLoop();
+        }
+
+        /// <summary>
+        /// Start a scheme interpreter.
+        /// Demonstrate supplying primitive environment explicitly.
+        /// </summary>
+        /// <param name="args">Files to read.</param>
+        private void Run2(IEnumerable<string> args)
+        {
+            Environment primEnvironment = new Environment()
+                .InstallPrimitives();
+            new Interpreter(true, primEnvironment, args)
+                .ReadEvalWriteLoop();
         }
     }
 }

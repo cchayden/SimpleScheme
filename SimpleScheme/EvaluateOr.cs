@@ -7,7 +7,7 @@ namespace SimpleScheme
     /// Evaluate a sequence of clauses by evaluating each member.
     /// If a value is not #f then return it.  Otherwise return the last value.
     /// </summary>
-    public class EvaluateOr : EvaluatorBase
+    public sealed class EvaluateOr : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateOr class.
@@ -45,23 +45,23 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (this.Expr == null)
                         {
-                            return ReturnFromStep(False);
+                            return ReturnFromStep(SchemeBoolean.False);
                         }
 
                         this.Pc = PC.Step1;
                         continue;
 
                     case PC.Step1:
-                        this.Pc = Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
-                        return CallEval(First(this.Expr));
+                        this.Pc = List.Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
+                        return CallEval(List.First(this.Expr));
 
                     case PC.Step2:
-                        if (Truth(this.ReturnedExpr))
+                        if (SchemeBoolean.Truth(this.ReturnedExpr))
                         {
                             return ReturnFromStep(this.ReturnedExpr);
                         }
 
-                        this.Expr = Rest(this.Expr);
+                        this.Expr = List.Rest(this.Expr);
                         this.Pc = PC.Step1;
                         continue;
 
@@ -69,7 +69,7 @@ namespace SimpleScheme
                         return ReturnFromStep(this.ReturnedExpr);
                 }
 
-                return EvalError("Or: program counter error");
+                return ErrorHandlers.EvalError("Or: program counter error");
             }
         }
     }

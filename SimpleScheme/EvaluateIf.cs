@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// Evaluate the first part, then depending on its truth value, either
     ///   evaluate the second or third part.
     /// </summary>
-    public class EvaluateIf : Stepper
+    public sealed class EvaluateIf : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateIf class.
@@ -43,13 +43,13 @@ namespace SimpleScheme
             {
                 case PC.Initial:
                     Pc = PC.Step1;
-                    return CallEval(First(this.Expr));
+                    return CallEval(List.First(this.Expr));
 
                 case PC.Step1:
-                    return ReturnFromStep(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
+                    return ReturnFromStep(SchemeBoolean.Truth(ReturnedExpr) ? List.Second(this.Expr) : List.Third(this.Expr));
             }
 
-            return EvalError("If: program counter error");
+            return ErrorHandlers.EvalError("If: program counter error");
         }
     }
 }

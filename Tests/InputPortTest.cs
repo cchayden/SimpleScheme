@@ -187,20 +187,20 @@ namespace Tests
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual(1.0, SchemeUtils.First(actual));
-                Assert.AreEqual(2.0, SchemeUtils.Second(actual));
-                Assert.AreEqual(3.0, SchemeUtils.Third(actual));
+                Assert.AreEqual(1.0, List.First(actual));
+                Assert.AreEqual(2.0, List.Second(actual));
+                Assert.AreEqual(3.0, List.Third(actual));
             }
 
             using (StringReader reader = new StringReader("('a 'b 'c)"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("quote", SchemeUtils.First(SchemeUtils.First(actual)));
-                Assert.AreEqual("a", SchemeUtils.Second(SchemeUtils.First(actual)));
-                Assert.AreEqual("quote", SchemeUtils.First(SchemeUtils.Second(actual)));
-                Assert.AreEqual("b", SchemeUtils.Second(SchemeUtils.Second(actual)));
-                Assert.AreEqual("c", SchemeUtils.Second(SchemeUtils.Third(actual)));
+                Assert.AreEqual("quote", List.First(List.First(actual)));
+                Assert.AreEqual("a", List.Second(List.First(actual)));
+                Assert.AreEqual("quote", List.First(List.Second(actual)));
+                Assert.AreEqual("b", List.Second(List.Second(actual)));
+                Assert.AreEqual("c", List.Second(List.Third(actual)));
             }
 
             using (StringReader reader = new StringReader(")abc"))
@@ -221,32 +221,32 @@ namespace Tests
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("quote", SchemeUtils.First(actual));
-                Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
+                Assert.AreEqual("quote", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader("`abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("quasiquote", SchemeUtils.First(actual));
-                Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
+                Assert.AreEqual("quasiquote", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader(",abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("unquote", SchemeUtils.First(actual));
-                Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
+                Assert.AreEqual("unquote", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader(",@abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("unquote-splicing", SchemeUtils.First(actual));
-                Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
+                Assert.AreEqual("unquote-splicing", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
         }
 

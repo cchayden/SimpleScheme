@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// This is done to the args of a procedure call (except for special forms).
     /// This is an iterative, rather than a recursive one.
     /// </summary>
-    public class EvaluateList : Stepper
+    public sealed class EvaluateList : Stepper
     {
         /// <summary>
         /// The result that will be returned.
@@ -31,7 +31,7 @@ namespace SimpleScheme
         {
             // start with an empty list
             // the empty cell will be stripped off at the end
-            this.accum = this.result = List(null);
+            this.accum = this.result = List.MakeList(null);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace SimpleScheme
 
                         if (!(this.Expr is Pair))
                         {
-                            Error("Illegal arg list: " + this.Expr);
+                            ErrorHandlers.Error("Illegal arg list: " + this.Expr);
                             return ReturnFromStep(null);
                         }
 
@@ -75,13 +75,13 @@ namespace SimpleScheme
                     case PC.Step1:
                         // there is more to do --  evaluate the first expression left
                         Pc = PC.Step2;
-                        return CallEval(First(this.Expr));
+                        return CallEval(List.First(this.Expr));
 
                     case PC.Step2:
                         // back from the evaluation -- save the result and keep going with the rest
                         Pc = PC.Step1;
-                        this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
-                        Expr = Rest(Expr);
+                        this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
+                        Expr = List.Rest(Expr);
 
                         // if we are done now, return
                         if (!(Expr is Pair))
@@ -92,7 +92,7 @@ namespace SimpleScheme
                         continue;
                 }
 
-                return EvalError("List: program counter error");
+                return ErrorHandlers.EvalError("List: program counter error");
             }
         }
     }

@@ -3,7 +3,6 @@
 // </copyright>
 namespace Tests
 {
-    using System;
     using System.IO;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
@@ -49,7 +48,7 @@ namespace Tests
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
             object res = this.ReadAndEvaluate(Test);
-            Assert.AreEqual(17, SchemeUtils.Length(res), "Failed " + this.section);
+            Assert.AreEqual(17, List.Length(res), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
 

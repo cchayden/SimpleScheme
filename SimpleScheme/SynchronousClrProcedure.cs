@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// <summary>
     /// Handles normal synchronous CLR method calls.
     /// </summary>
-    public class SynchronousClrProcedure : ClrProcedure
+    public sealed class SynchronousClrProcedure : ClrProcedure
     {
         /// <summary>
         /// Initializes a new instance of the SynchronousClrProcedure class.
@@ -27,18 +27,18 @@ namespace SimpleScheme
                 Type cls = ToClass(ClassName);
                 if (cls == null)
                 {
-                    Error("Bad class: can't load class " + ClassName);
+                    ErrorHandlers.Error("Bad class: can't load class " + ClassName);
                 }
 
                 this.MethodInfo = cls.GetMethod(methodName, this.ArgClasses.ToArray());
             }
             catch (TypeLoadException)
             {
-                Error("Bad class, can't get method: " + this.Name);
+                ErrorHandlers.Error("Bad class, can't get method: " + this.Name);
             }
             catch (MissingMethodException)
             {
-                Error("Can't get method: " + this.Name);
+                ErrorHandlers.Error("Can't get method: " + this.Name);
             }
         }
 
@@ -65,8 +65,8 @@ namespace SimpleScheme
             }
             else
             {
-                target = First(args);
-                argArray = this.ToArgList(Rest(args), null).ToArray();
+                target = List.First(args);
+                argArray = this.ToArgList(List.Rest(args), null).ToArray();
             }
 
             return this.MethodInfo.Invoke(target, argArray);

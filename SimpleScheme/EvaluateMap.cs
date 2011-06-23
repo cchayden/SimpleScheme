@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// This is done to the args of a procedure call (except for special forms).
     /// This is an iterative, rather than a recursive one.
     /// </summary>
-    public class EvaluateMap : Stepper
+    public sealed class EvaluateMap : Stepper
     {
         /// <summary>
         /// The proc to apply to each element of the list.
@@ -79,7 +79,7 @@ namespace SimpleScheme
 
                         if (!(this.Expr is Pair))
                         {
-                            Error("Map: illegal arg list: " + this.Expr);
+                            ErrorHandlers.Error("Map: illegal arg list: " + this.Expr);
                             return ReturnFromStep(null);
                         }
 
@@ -87,11 +87,11 @@ namespace SimpleScheme
                         continue;
 
                     case PC.Step1:
-                        if (First(this.Expr) is Pair)
+                        if (List.First(this.Expr) is Pair)
                         {
                             // Grab the arguments to the applications (the head of each list).
                             // The the proc is applied to them.
-                            object x = this.proc.Apply(this, MapFun(First, List(Expr)));
+                            object x = this.proc.Apply(this, MapFun(List.First, List.MakeList(Expr)));
                             if (x is Stepper)
                             {
                                 return GoToStep((Stepper)x, PC.Step2);
@@ -103,23 +103,23 @@ namespace SimpleScheme
                         }
 
                         // if we are done, just return the result minus the dummy entry
-                        return ReturnFromStep(Rest(this.result));
+                        return ReturnFromStep(List.Rest(this.result));
 
                     case PC.Step2:
                         // back from the evaluation -- save the result and keep going with the rest
                         if (this.result != null)
                         {
                             // Builds a list by tacking new values onto the tail.
-                            this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
+                            this.accum = (Pair)(this.accum.Rest = List.MakeList(ReturnedExpr));
                         }
 
                         // Step down each of the lists
-                        Expr = MapFun(Rest, List(Expr));
+                        Expr = MapFun(List.Rest, List.MakeList(Expr));
                         Pc = PC.Step1;
                         continue;
                 }
 
-                return EvalError("Map: program counter error");
+                return ErrorHandlers.EvalError("Map: program counter error");
             }
         }
 
@@ -132,19 +132,20 @@ namespace SimpleScheme
         /// <returns>A list made up of the function results of each input element.</returns>
         private static Pair MapFun(Func<object, object> fun, object expr)
         {
-            Pair result = List(null);
+            Pair result = List.MakeList(null);
             Pair accum = result;
 
             // Iterate down the list, taking the function and building a list of the results.
-            expr = First(expr);
+            expr = List.First(expr);
+            // TODO convert to user foreach
             while (expr is Pair)
             {
                 // Builds a list by tacking new values onto the tail.
-                accum = (Pair)(accum.Rest = List(fun(First(expr))));
-                expr = Rest(expr);
+                accum = (Pair)(accum.Rest = List.MakeList(fun(List.First(expr))));
+                expr = List.Rest(expr);
             }
 
-            return (Pair)Rest(result);
+            return (Pair)List.Rest(result);
         }
     }
 }

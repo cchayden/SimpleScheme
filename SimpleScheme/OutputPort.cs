@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public class OutputPort : SchemeUtils
+    public sealed class OutputPort
     {
         /// <summary>
         /// The output port to write to.
@@ -44,7 +44,7 @@ namespace SimpleScheme
                 return (OutputPort)x;
             }
 
-            return OutPort(Error("Expected an output port, got: " + x), interp);
+            return OutPort(ErrorHandlers.Error("Expected an output port, got: " + x), interp);
         }
 
         /// <summary>

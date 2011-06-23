@@ -1,4 +1,5 @@
-﻿// <copyright file="Interpreter.cs" company="Charles Hayden">
+﻿#define ASYNC
+// <copyright file="Interpreter.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -11,12 +12,17 @@ namespace SimpleScheme
     /// The scheme interpreter instance.
     /// Each one of these is a complete interpreter, independent of others.
     /// </summary>
-    public sealed class Interpreter : SchemeUtils
+    public sealed class Interpreter
     {
         /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
         private readonly Stepper halted;
+
+        /// <summary>
+        /// The async result used in case the interpreter is called asynchronously.
+        /// </summary>
+        private AsyncResult<object> asyncResult;
         
         /// <summary>
         /// Initializes a new instance of the Interpreter class.
@@ -24,15 +30,21 @@ namespace SimpleScheme
         /// Then read a list of files.
         /// </summary>
         /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
+        /// <param name="primEnvironment">Environment containing the primitives (can be null).</param>
         /// <param name="files">The files to read.</param>
-        public Interpreter(bool loadStandardMacros, IEnumerable<string> files)
+        public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files)
         {
             this.halted = new EvaluatorBase("halted");
             this.Trace = false;
             this.Input = new InputPort(Console.In);
             this.Output = new OutputPort(Console.Out);
-            this.GlobalEnvironment = new Environment(this);
-            Primitive.InstallPrimitives(this.GlobalEnvironment);
+            if (primEnvironment == null)
+            {
+                primEnvironment = new Environment()
+                    .InstallPrimitives();
+            }
+
+            this.GlobalEnvironment = new Environment(this, primEnvironment);
             try
             {
                 if (loadStandardMacros)
@@ -61,7 +73,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The evaluator name.</param>
         public Interpreter(string name)
-            : this(true, null)
+            : this(true, null, null)
         {
             this.halted = new EvaluatorBase(name);
         }
@@ -72,7 +84,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="files">The files to read.</param>
         public Interpreter(IEnumerable<string> files)
-            : this(true, files)
+            : this(true, null, files)
         {
         }
 
@@ -103,8 +115,32 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object x)
         {
-            return this.Eval(x, this.GlobalEnvironment);
+            return this.Eval(x, this.GlobalEnvironment, null);
         }
+
+#if ASYNC
+        public IAsyncResult BeginEval(object x, AsyncCallback cb, object state)
+        {
+            this.asyncResult = new AsyncResult<object>(cb, state);
+            object res = this.Eval(x, this.GlobalEnvironment, this.asyncResult);
+            if (res == Stepper.Suspended)
+            {
+                return this.asyncResult;
+            }
+
+            if (!this.asyncResult.IsCompleted)
+            {
+                this.asyncResult.SetAsCompleted(res, true);
+            }
+
+            return this.asyncResult;
+        }
+
+        public object EndEval(IAsyncResult asyncResult)
+        {
+            return ((AsyncResult<object>)asyncResult).EndInvoke();
+        }
+#endif
 
         /// <summary>
         /// Evaluate an expression in an environment.
@@ -113,7 +149,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        public object Eval(object expr, Environment env)
+        public object Eval(object expr, Environment env, IAsyncResult ar)
         {
             return this.EvalStep(Stepper.CallEvaluate(expr, env, this.halted));
         }
@@ -141,6 +177,11 @@ namespace SimpleScheme
 
                 if (nextStep == this.halted)
                 {
+                    if (this.asyncResult != null)
+                    {
+                        this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
+                    }
+
                     return this.halted.ReturnedExpr;
                 }
             }
@@ -163,7 +204,7 @@ namespace SimpleScheme
             }
             catch (IOException)
             {
-                return Error("Load: can't load " + name);
+                return ErrorHandlers.Error("Load: can't load " + name);
             }
         }
 
@@ -180,7 +221,7 @@ namespace SimpleScheme
                 if (InputPort.IsEOF(x = inp.Read()))
                 {
                     inp.Close();
-                    return True;
+                    return SchemeBoolean.True;
                 }
 
                 object val = this.Eval(x);
@@ -205,9 +246,23 @@ namespace SimpleScheme
                         return;
                     }
 
-                    OutputPort.Write(this.Eval(x), this.Output, true);
+#if ASYNC
+                    this.BeginEval(
+                        x,
+                        ar =>
+                            {
+                                object val = this.EndEval(ar);
+                                OutputPort.Write(val, this.Output, true);
+                                this.Output.Println();
+                                this.Output.Flush();
+                            },
+                        null);
+#else
+                    object val = this.Eval(x);
+                    OutputPort.Write(val, this.Output, true);
                     this.Output.Println();
                     this.Output.Flush();
+#endif
                 }
                 catch (Exception ex)
                 {

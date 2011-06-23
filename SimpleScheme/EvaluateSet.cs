@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
-    public class EvaluateSet : EvaluatorBase
+    public sealed class EvaluateSet : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateSet class.
@@ -41,13 +41,13 @@ namespace SimpleScheme
             {
                 case PC.Initial:
                     Pc = PC.Step1;
-                    return CallEval(Second(this.Expr));
+                    return CallEval(List.Second(this.Expr));
 
                 case PC.Step1:
-                    return ReturnFromStep(this.Env.Set(First(this.Expr), ReturnedExpr));
+                    return ReturnFromStep(this.Env.Set(List.First(this.Expr), ReturnedExpr));
             }
 
-            return EvalError("Set: program counter error");
+            return ErrorHandlers.EvalError("Set: program counter error");
         }
     }
 }

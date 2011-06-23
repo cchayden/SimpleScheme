@@ -11,8 +11,9 @@ namespace SimpleScheme
     /// <summary>
     /// This represents scheme strings.
     /// They are represented internally as a character array.
+    /// This also contains character and symbol operations.
     /// </summary>
-    public class SchemeString : SchemeUtils, IEnumerable<char>
+    public sealed class SchemeString : IEnumerable<char>
     {
         /// <summary>
         /// The characters making up the string.
@@ -36,7 +37,7 @@ namespace SimpleScheme
         public SchemeString(object length, object fill)
         {
             char c = (fill == null) ? (char)0 : Chr(fill);
-            this.str = new string(c, (int)NumberUtils.Num(length));
+            this.str = new string(c, (int)Number.Num(length));
         }
 
         /// <summary>
@@ -51,7 +52,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the string length.
         /// </summary>
-        public new int Length
+        public int Length
         {
             get { return this.str.Length; }
         }
@@ -86,18 +87,25 @@ namespace SimpleScheme
         /// if the second is less.</returns>
         public static int Compare(SchemeString xstr, SchemeString ystr, bool ci)
         {
-            for (int i = 0; i < xstr.str.Length; i++)
+            int diff = xstr.str.Length - ystr.str.Length;
+            if (diff != 0)
             {
-                int diff = !ci
-                               ? xstr.str[i] - ystr.str[i]
-                               : char.ToLower(xstr.str[i]) - char.ToLower(ystr.str[i]);
+                return diff;
+            }
+
+            int len = xstr.str.Length;
+            for (int i = 0; i < len; i++)
+            {
+                diff = ci
+                           ? char.ToLower(xstr.str[i]) - char.ToLower(ystr.str[i])
+                           : xstr.str[i] - ystr.str[i];
                 if (diff != 0)
                 {
                     return diff;
                 }
             }
 
-            return xstr.str.Length - ystr.str.Length;
+            return 0;
         }
 
         /// <summary>
@@ -113,7 +121,8 @@ namespace SimpleScheme
                 return false;
             }
 
-            for (int i = xstr.str.Length - 1; i >= 0; i--)
+            int len = xstr.str.Length;
+            for (int i = 0; i < len; i++)
             {
                 if (xstr.str[i] != ystr.str[i])
                 {
@@ -136,7 +145,7 @@ namespace SimpleScheme
                 return (SchemeString)x;
             }
 
-            return Str(Error("Expected a string, got: " + x));
+            return Str(ErrorHandlers.Error("Expected a string, got: " + x));
         }
 
         /// <summary>
@@ -146,17 +155,16 @@ namespace SimpleScheme
         /// <returns>The caracter array made up of the chars.</returns>
         public static SchemeString ListToString(object chars)
         {
-            char[] str = new char[SchemeUtils.Length(chars)];
-
-            int i = 0;
-            while (chars is Pair)
+            StringBuilder str = new StringBuilder();
+            if (chars is Pair)
             {
-                str[i] = Chr(First(chars));
-                chars = Rest(chars);
-                i++;
+                foreach (object elem in (Pair)chars)
+                {
+                    str.Append(Chr(elem));
+                }
             }
 
-            return new SchemeString(new string(str));
+            return new SchemeString(str.ToString());
         }
 
         /// <summary>
@@ -170,7 +178,7 @@ namespace SimpleScheme
             SchemeString str = Str(s);
             for (int i = str.Length - 1; i >= 0; i--)
             {
-                result = Cons(Chr(str[i]), result);
+                result = List.Cons(Chr(str[i]), result);
             }
 
             return result;
@@ -185,10 +193,11 @@ namespace SimpleScheme
         public static SchemeString StringAppend(object args)
         {
             StringBuilder result = new StringBuilder();
+            // TODO convert to user foreach
             while (args is Pair)
             {
-                result.Append(AsString(First(args), false));
-                args = Rest(args);
+                result.Append(AsString(List.First(args), false));
+                args = List.Rest(args);
             }
 
             return new SchemeString(result.ToString());
@@ -207,10 +216,10 @@ namespace SimpleScheme
         {
             if (x is SchemeString && y is SchemeString)
             {
-                return SchemeString.Compare((SchemeString)x, (SchemeString)y, ci);
+                return Compare((SchemeString)x, (SchemeString)y, ci);
             }
 
-            Error("StringCompare: expected two strings, got: " + AsString(List(x, y)));
+            ErrorHandlers.Error("StringCompare: expected two strings, got: " + AsString(x) + " and " + AsString(y));
             return 0;
         }
 
@@ -223,20 +232,20 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         public static object StringToNumber(object x, object y)
         {
-            int numberBase = y is double ? (int)NumberUtils.Num(y) : 10;
+            int numberBase = y is double ? (int)Number.Num(y) : 10;
             try
             {
                 return numberBase == 10
                            ? double.Parse(AsString(x, false))
-                           : NumberUtils.Num(Convert.ToInt64(AsString(x, false), numberBase));
+                           : Number.Num(Convert.ToInt64(AsString(x, false), numberBase));
             }
             catch (FormatException)
             {
-                return False;
+                return SchemeBoolean.False;
             }
             catch (ArgumentException)
             {
-                return False;
+                return SchemeBoolean.False;
             }
         }
 
@@ -327,13 +336,15 @@ namespace SimpleScheme
             {
                 Vector v = (Vector)x;
                 buf.Append("#(");
-                for (int i = 0; i < v.Length; i++)
+                if (v.Length > 0)
                 {
-                    AsString(v[i], quoted, buf);
-                    if (i != v.Length - 1)
+                    foreach (object elem in v)
                     {
+                        AsString(elem, quoted, buf);
                         buf.Append(' ');
                     }
+
+                    buf.Remove(buf.Length - 1, 1);
                 }
 
                 buf.Append(')');
@@ -343,11 +354,11 @@ namespace SimpleScheme
                 Stepper s = (Stepper)x;
                 buf.Append(s.Expr);
             }
-            else if (IsTrue(x))
+            else if (SchemeBoolean.IsTrue(x))
             {
                 buf.Append("#t");
             }
-            else if (IsFalse(x))
+            else if (SchemeBoolean.IsFalse(x))
             {
                 buf.Append("#f");
             }
@@ -355,6 +366,62 @@ namespace SimpleScheme
             {
                 buf.Append(x);
             }
+        }
+
+        // Character operations
+
+        /// <summary>
+        /// Convert an object containing a character into the character.
+        /// </summary>
+        /// <param name="x">The object containing the char.</param>
+        /// <returns>The character it contains.</returns>
+        public static char Chr(object x)
+        {
+            if (!(x is char))
+            {
+                return Chr(ErrorHandlers.Error("Expected a char, got: " + x));
+            }
+
+            return (char)x;
+        }
+
+        /// <summary>
+        /// Compares two characters.
+        /// </summary>
+        /// <param name="x">The first char.</param>
+        /// <param name="y">The second char.</param>
+        /// <param name="ci">If true, make the comparison case insensitive.</param>
+        /// <returns>Negative if x is before y, positive if x is after y, 
+        /// or 0 if they are the same.</returns>
+        public static int ChrCompare(object x, object y, bool ci)
+        {
+            char xc = Chr(x);
+            char yc = Chr(y);
+            if (ci)
+            {
+                xc = char.ToLower(xc);
+                yc = char.ToLower(yc);
+            }
+
+            return xc - yc;
+        }
+
+        // Symbol operations
+
+        /// <summary>
+        /// Turn an object that is a symbol into a string.
+        /// It is stored as one already, so just verify that this is a symbol.
+        /// </summary>
+        /// <param name="x">The symbol.</param>
+        /// <returns>The corresponding string.</returns>
+        public static string Sym(object x)
+        {
+            if (x is string)
+            {
+                return (string)x;
+            }
+
+            return Sym(ErrorHandlers.Error("Expected a symbol, got: " + x));
         }
 
         /// <summary>

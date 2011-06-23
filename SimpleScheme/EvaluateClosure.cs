@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a closure
     /// </summary>
-    public class EvaluateClosure : Stepper
+    public sealed class EvaluateClosure : Stepper
     {
         /// <summary>
         /// The closure to apply.
@@ -55,7 +55,7 @@ namespace SimpleScheme
                     return ReturnFromStep(this.f.Body, new Environment(this.f.FormalParameters, ReturnedExpr, this.f.Env));
             }
 
-            return EvalError("Closure: program counter error");
+            return ErrorHandlers.EvalError("Closure: program counter error");
         }
     }
 }

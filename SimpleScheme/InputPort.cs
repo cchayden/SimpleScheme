@@ -3,14 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.IO;
     using System.Text;
 
     /// <summary>
     /// Represents an input port, a mechanism for reading input.
     /// </summary>
-    public sealed class InputPort : SchemeUtils
+    public sealed class InputPort
     {
         /// <summary>
         /// Marks the end of the input file.
@@ -75,7 +74,7 @@ namespace SimpleScheme
                 return (InputPort)x;
             }
 
-            return InPort(Error("Expected an input port, got: " + x), interp);
+            return InPort(ErrorHandlers.Error("Expected an input port, got: " + x), interp);
         }
 
         /// <summary>
@@ -90,7 +89,7 @@ namespace SimpleScheme
                 return Eof;
             }
 
-            return Chr((char)p);
+            return SchemeString.Chr((char)p);
         }
 
         /// <summary>
@@ -122,11 +121,11 @@ namespace SimpleScheme
                     return Eof;
                 }
 
-                return Chr((char)ch);
+                return SchemeString.Chr((char)ch);
             }
             catch (IOException ex)
             {
-                Warn("On input, exception: " + ex);
+                ErrorHandlers.Warn("On input, exception: " + ex);
                 return Eof;
             }
         }
@@ -148,26 +147,26 @@ namespace SimpleScheme
                     case "(": 
                         return this.ReadTail(false);
                     case ")":
-                        Warn("Extra ) ignored.");
+                        ErrorHandlers.Warn("Extra ) ignored.");
                         return this.Read();
                     case ".":
-                        Warn("Extra . ignored.");
+                        ErrorHandlers.Warn("Extra . ignored.");
                         return this.Read();
                     case "'": 
-                        return List("quote", this.Read());
+                        return List.MakeList("quote", this.Read());
                     case "`":
-                        return List("quasiquote", this.Read());
+                        return List.MakeList("quasiquote", this.Read());
                     case ",": 
-                        return List("unquote", this.Read());
+                        return List.MakeList("unquote", this.Read());
                     case ",@": 
-                        return List("unquote-splicing", this.Read());
+                        return List.MakeList("unquote-splicing", this.Read());
                     default:
                         return token;
                 }
             }
             catch (IOException ex)
             {
-                Warn("On input, exception:" + ex);
+                ErrorHandlers.Warn("On input, exception:" + ex);
                 return Eof;
             }
         }
@@ -240,7 +239,7 @@ namespace SimpleScheme
 
                         if (ch == -1)
                         {
-                            Warn("EOF inside of a string.");
+                            ErrorHandlers.Warn("EOF inside of a string.");
                         }
 
                         return new SchemeString(buff);
@@ -251,11 +250,11 @@ namespace SimpleScheme
                     {
                         case 't':
                         case 'T':
-                            return True;
+                            return SchemeBoolean.True;
 
                         case 'f':
                         case 'F':
-                            return False;
+                            return SchemeBoolean.False;
 
                         case '(':
                             this.inStream.PushChar('(');
@@ -269,25 +268,25 @@ namespace SimpleScheme
                                 token = this.NextToken();
                                 if (token is string && (token as string).Length == 1)
                                 {
-                                    return Chr((char)ch);
+                                    return SchemeString.Chr((char)ch);
                                 }
 
                                 switch (token as string)
                                 {
                                     case "space":
-                                        return Chr(' ');
+                                        return SchemeString.Chr(' ');
                                     case "newline":
-                                        return Chr('\n');
+                                        return SchemeString.Chr('\n');
                                     default:
                                         // this isn't really right
                                         // #\<char> is required to have delimiter after char
-                                        Warn("#\\<char> must be followed by delimiter");
+                                        ErrorHandlers.Warn("#\\<char> must be followed by delimiter");
                                         this.tokStream.PushToken(token);
-                                        return Chr((char)ch);
+                                        return SchemeString.Chr((char)ch);
                                 }
                             }
 
-                            return Chr((char)ch);
+                            return SchemeString.Chr((char)ch);
 
                         case 'e':
                         case 'i':
@@ -297,11 +296,11 @@ namespace SimpleScheme
                         case 'b':
                         case 'o':
                         case 'x':
-                            Warn("#" + ((char)ch) + " not implemented, ignored.");
+                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
                             return this.NextToken();
 
                         default:
-                            Warn("#" + ((char)ch) + " not implemented, ignored.");
+                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
                             return this.NextToken();
                     }
 
@@ -344,7 +343,7 @@ namespace SimpleScheme
             object token = this.NextToken();
             if (token as string == Eof)
             {
-                return Error("EOF during read.");
+                return ErrorHandlers.Error("EOF during read.");
             }
 
             if (token as string == ")")
@@ -356,7 +355,7 @@ namespace SimpleScheme
             {
                 if (! dotOk)
                 {
-                    Warn("Dot not allowed here, ignored.");
+                    ErrorHandlers.Warn("Dot not allowed here, ignored.");
                     return this.ReadTail(false);
                 }
 
@@ -364,14 +363,14 @@ namespace SimpleScheme
                 token = this.NextToken();
                 if (token as string != ")")
                 {
-                    Warn("Expecting ')' got " + token + " after dot");
+                    ErrorHandlers.Warn("Expecting ')' got " + token + " after dot");
                 }
 
                 return result;
             }
 
             this.tokStream.PushToken(token);
-            return Cons(this.Read(), this.ReadTail(true));
+            return List.Cons(this.Read(), this.ReadTail(true));
         }
 
         /// <summary>
@@ -412,7 +411,7 @@ namespace SimpleScheme
             {
                 if (this.isPushedChar)
                 {
-                    Error("Read bypassed pushed char.");
+                    ErrorHandlers.Error("Read bypassed pushed char.");
                     this.isPushedChar = false;
                 }
 
@@ -455,7 +454,7 @@ namespace SimpleScheme
                         return -1;
                     }
 
-                    return Chr((char)this.pushedChar);
+                    return SchemeString.Chr((char)this.pushedChar);
                 }
 
                 return -2;
@@ -474,7 +473,7 @@ namespace SimpleScheme
                 }
                 catch (IOException ex)
                 {
-                    Warn("On input, exception: " + ex);
+                    ErrorHandlers.Warn("On input, exception: " + ex);
                     return -1;
                 }
             }
@@ -488,11 +487,11 @@ namespace SimpleScheme
                 try
                 {
                     this.inp.Close();
-                    return True;
+                    return SchemeBoolean.True;
                 }
                 catch (IOException ex)
                 {
-                    return Error("IOException: " + ex);
+                    return ErrorHandlers.Error("IOException: " + ex);
                 }
             }
 

@@ -7,7 +7,7 @@ namespace SimpleScheme
     /// Evaluate a sequence by evaluating each member.
     /// If a value is #f then return it.  Otherwise return the last value.
     /// </summary>
-    public class EvaluateAnd : Stepper
+    public sealed class EvaluateAnd : Stepper
     {
         /// <summary>
         /// Initializes a new instance of the EvaluateAnd class.
@@ -45,23 +45,23 @@ namespace SimpleScheme
                     case PC.Initial:
                         if (this.Expr == null)
                         {
-                            return ReturnFromStep(True);
+                            return ReturnFromStep(SchemeBoolean.True);
                         }
 
                         this.Pc = PC.Step1;
                         continue;
 
                     case PC.Step1:
-                        this.Pc = Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
-                        return CallEval(First(this.Expr));
+                        this.Pc = List.Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
+                        return CallEval(List.First(this.Expr));
 
                     case PC.Step2:
-                        if (IsFalse(this.ReturnedExpr))
+                        if (SchemeBoolean.IsFalse(this.ReturnedExpr))
                         {
-                            return ReturnFromStep(False);
+                            return ReturnFromStep(SchemeBoolean.False);
                         }
 
-                        this.Expr = Rest(this.Expr);
+                        this.Expr = List.Rest(this.Expr);
                         this.Pc = PC.Step1;
                         continue;
 
@@ -69,7 +69,7 @@ namespace SimpleScheme
                         return ReturnFromStep(this.ReturnedExpr);
                 }
 
-                return EvalError("And: program counter error");
+                return ErrorHandlers.EvalError("And: program counter error");
             }
         }
     }
