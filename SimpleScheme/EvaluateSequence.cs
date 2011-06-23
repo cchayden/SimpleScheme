@@ -1,5 +1,4 @@
-﻿#define OLDX
-// <copyright file="EvaluateSequence.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateSequence.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -93,17 +92,13 @@ namespace SimpleScheme
             var nextStep = Rest(this.expressions) == List.Empty ? (StepperFunction)this.ReturnStep : this.LoopStep;
             return EvaluateExpression.Call(First(this.expressions), ContinueHere(nextStep));
 #else
-            bool last = Rest(this.expressions) == List.Empty;
-            if (last)
+            if (Rest(this.expressions) == List.Empty)
             {
-                // need to return this.Caller so that we are tail recursive, but that does not work
-                // the reason is that it uses the caller's environment, not this one
+                // On the last expr in the sequence, return directly to the caller, but use
+                //  the current env.  This is to achieve tail recursion.
                 return EvaluateExpression.Call(First(this.expressions), this.Env, this.Caller);
             }
-            else
-            {
-                return EvaluateExpression.Call(First(this.expressions), ContinueHere(this.LoopStep));
-            }
+            return EvaluateExpression.Call(First(this.expressions), ContinueHere(this.LoopStep));
 #endif
         }
 

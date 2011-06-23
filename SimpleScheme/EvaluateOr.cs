@@ -81,8 +81,13 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private Stepper EvalTestStep()
         {
-            var nextStep = Rest(this.tests) == List.Empty ? (StepperFunction)this.ReturnStep : this.LoopStep;
-            return EvaluateExpression.Call(First(this.tests), ContinueHere(nextStep));
+            if (Rest(this.tests) == List.Empty)
+            {
+                // On the last test, return directly to the caller, but use
+                //  the current env.  This is to achieve tail recursion.
+                return EvaluateExpression.Call(First(this.tests), this.Env, this.Caller);
+            }
+            return EvaluateExpression.Call(First(this.tests), ContinueHere(this.LoopStep));
         }
 
         /// <summary>
