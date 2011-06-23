@@ -42,7 +42,7 @@ namespace SimpleScheme
         {
             if (!(x is Pair))
             {
-                return false;    // TODO vectors should be tested
+                return false;
             }
 
             if (x == this)

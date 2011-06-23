@@ -20,17 +20,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Evaluate a string in the global environment, by looking it up.
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <param name="interp">The current interpreter.</param>
-        /// <returns>The value of the symbol.</returns>
-        public static object GlobalEvalString(string symbol, Scheme interp)
-        {
-            return interp.GlobalEnvironment.Lookup(symbol);
-        }
-
-        /// <summary>
         /// The main evaluator for expressions.
         /// </summary>
         private class EvaluatorMain : Stepper
@@ -152,17 +141,29 @@ namespace SimpleScheme
                                     return CallIf(this.args);
                                 }
 
+                            case "or":
+                                {
+                                    Pc = PcReturn;
+                                    return CallOr(this.args);
+                                }
+
+                            case "and":
+                                {
+                                    Pc = PcReturn;
+                                    return CallAnd(this.args);
+                                }
+
                             case "cond":
                                 Pc = PcLoop;
                                 return CallReduceCond(this.args);
 
                             case "lambda":
                                 // Evaluate a lambda by creating a closure.
-                                return SubReturn(new Closure(First(this.args), Rest(this.args), this.Env));
+                                return SubReturn((object) new Closure(First(this.args), Rest(this.args), this.Env));
 
                             case "macro":
                                 // Evaluate a macro by creating a macro.
-                                return SubReturn(new Macro(First(this.args), Rest(this.args), this.Env));
+                                return SubReturn((object) new Macro(First(this.args), Rest(this.args), this.Env));
                         }
 
                         // If we get here, it wasn't one of the special forms.  
@@ -211,8 +212,7 @@ namespace SimpleScheme
 
                     case PcReturn:
                         // Assign return value and return to caller.
-                        this.Env = this.ReturnedEnv;
-                        return SubReturn(this.ReturnedExpr);
+                        return SubReturn(this.ReturnedExpr, this.ReturnedEnv);
                 }
 
                 return EvalError("EvaluatorMain: program counter error");

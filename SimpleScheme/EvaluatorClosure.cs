@@ -44,8 +44,7 @@ namespace SimpleScheme
                         Pc = 1;
                         return CallList(Expr);
                     case 1:
-                        this.RetEnv = new Environment(this.f.Parms, ReturnedExpr, this.f.Env);
-                        return SubReturn(this.f.Body);
+                        return SubReturn(this.f.Body, new Environment(this.f.Parms, ReturnedExpr, this.f.Env));
                 }
 
                 return EvalError("Closure: program counter error");

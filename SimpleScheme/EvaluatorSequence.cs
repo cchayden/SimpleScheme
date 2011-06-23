@@ -9,7 +9,7 @@ namespace SimpleScheme
     public partial class Stepper
     {
         /// <summary>
-        /// Evaluate a sequence by evaluating each ember and returning the last value.
+        /// Evaluate a sequence by evaluating each member and returning the last value.
         /// </summary>
         private class EvaluatorSequence : Stepper
         {

@@ -52,28 +52,22 @@ namespace SimpleScheme
                         // first check for degenerate cases
                         if (this.Expr == null)
                         {
-                            return SubReturn(null);
+                            return SubReturn((object) null);
                         }
 
                         if (!(this.Expr is Pair))
                         {
                             Error("Illegal arg list: " + this.Expr);
-                            return SubReturn(null);
+                            return SubReturn((object) null);
                         }
 
                         Pc = 1;
                         return SubContinue();
 
                     case 1:
-                        if (this.Expr is Pair)
-                        {
-                            // if there is more to do, evaluate the first expression
-                            Pc = 2;
-                            return CallEval(First(this.Expr));
-                        }
-
-                        // if we are done, just return the result minus the dummy entry
-                        return this.SubReturn(this.result.Rest);
+                        // there is more to do --  evaluate the first expression
+                        Pc = 2;
+                        return CallEval(First(this.Expr));
 
                     case 2:
                         // back from the evaluation -- save the result and keep going with the rest
@@ -81,10 +75,10 @@ namespace SimpleScheme
                         this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
                         Expr = Rest(Expr);
 
-                        // optimization -- skip loop if we are done
+                        // if we are done now, return
                         if (! (Expr is Pair))
                         {
-                            return this.SubReturn(this.result.Rest);
+                            return SubReturn(this.result.Rest);
                         }
 
                         return SubContinue();

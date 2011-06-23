@@ -391,14 +391,11 @@ namespace SimpleScheme
         /// <returns>The character it contains.</returns>
         public static char Chr(object x)
         {
-            try
-            {
-                return (char)x;
-            }
-            catch (InvalidCastException)
+            if (!(x is char))
             {
                 return Chr(Error("expected a char, got: " + x));
             }
+            return (char) x;
         }
 
         /// <summary>
@@ -712,14 +709,11 @@ namespace SimpleScheme
         /// <returns>The boolean value, or else null if not a boolean.</returns>
         private static bool? AsBoolean(object value)
         {
-            try
-            {
-                return (bool)value;
-            }
-            catch (InvalidCastException)
+            if (!(value is bool))
             {
                 return null;
             }
+            return (bool) value;
         }
 
         /// <summary>

@@ -28,6 +28,8 @@ namespace SimpleScheme
         /// </summary>
         private readonly Environment globalEnvironment = new Environment();
 
+        private static Stepper halt = Stepper.Halt();
+
         /// <summary>
         /// Initializes a new instance of the Scheme class.
         /// Create an interpreter and install the primitives into the global environment.
@@ -41,7 +43,6 @@ namespace SimpleScheme
             Primitive.InstallPrimitives(this.GlobalEnvironment);
             try
             {
-                // TODO isn't there overlap between the installed primitives and the ones read in?
                 if (loadStandardMacros)
                 {
                     this.Load(SchemePrimitives.Code);
@@ -127,8 +128,7 @@ namespace SimpleScheme
         public object Eval(object expr, Environment env)
         {
             int steps = 0;
-            Stepper eval = Stepper.CallMain(this, null, expr, env);
-            Stepper nextStep = eval;
+            Stepper nextStep = Stepper.CallMain(this, halt, expr, env);
             if (Trace)
             {
                 Console.WriteLine(" --->");                
@@ -137,15 +137,14 @@ namespace SimpleScheme
             {
                 if (Trace)
                 {
-                    Console.WriteLine("Evaluating {0} {1} {2}", eval.Expr, nextStep.GetType(), eval.Pc, steps);
+                    Console.WriteLine("Evaluating {0} {1} {2}", nextStep.Expr, nextStep.GetType(), nextStep.Pc, steps);
                 }
                 nextStep = nextStep.EvalStep();
-                if (nextStep == null)
+                if (nextStep == halt)
                 {
                     break;
                 }
 
-                eval = nextStep;
                 steps++;
             }
 
@@ -153,7 +152,7 @@ namespace SimpleScheme
             {
                 Console.WriteLine(" <--- Steps: {0}", steps);
             }
-            return eval.RetExpr;
+            return halt.ReturnedExpr;
         }
 
         /// <summary>

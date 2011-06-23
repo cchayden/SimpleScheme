@@ -51,7 +51,7 @@ namespace SimpleScheme
                     case 0:
                         if (Expr == null)
                         {
-                            return SubReturn(False);
+                            return SubReturn((object) False);
                         }
 
                         this.clause = First(Expr);
@@ -77,15 +77,15 @@ namespace SimpleScheme
                     case 2:
                         if (Rest(this.clause) == null)
                         {
-                            return SubReturn(List("quote", this.result));
+                            return SubReturn((object) List("quote", this.result));
                         }
 
                         if (Second(this.clause) as string == "=>")
                         {
-                            return SubReturn(List(Third(this.clause), List("quote", this.result)));
+                            return SubReturn((object) List(Third(this.clause), List("quote", this.result)));
                         }
 
-                        return SubReturn(Cons("begin", Rest(this.clause)));
+                        return SubReturn((object) Cons("begin", Rest(this.clause)));
                 }
 
                 return EvalError("ReduceCond: program counter error");

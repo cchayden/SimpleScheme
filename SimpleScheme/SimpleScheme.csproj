@@ -41,7 +41,11 @@
     <Compile Include="Continuation.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="Eval.cs" />
+    <Compile Include="EvaluatorAnd.cs" />
+    <Compile Include="EvaluatorTimeCall.cs" />
     <Compile Include="EvaluatorApplyProc.cs" />
+    <Compile Include="EvaluatorCallWithInputFile.cs" />
+    <Compile Include="EvaluatorCallWithOutputFile.cs" />
     <Compile Include="EvaluatorClosure.cs" />
     <Compile Include="EvaluatorContinuation.cs" />
     <Compile Include="EvaluatorDefine.cs" />
@@ -50,11 +54,14 @@
     <Compile Include="EvaluatorList.cs" />
     <Compile Include="EvaluatorMain.cs" />
     <Compile Include="EvaluatorMap.cs" />
+    <Compile Include="EvaluatorOr.cs" />
     <Compile Include="EvaluatorReduceCond.cs" />
     <Compile Include="EvaluatorSequence.cs" />
     <Compile Include="EvaluatorSet.cs" />
+    <Compile Include="EvaluatorInitial.cs" />
     <Compile Include="InputPort.cs" />
     <Compile Include="Macro.cs" />
+    <Compile Include="NumberUtils.cs" />
     <Compile Include="Pair.cs" />
     <Compile Include="Primitive.cs" />
     <Compile Include="PrintWriter.cs" />
@@ -63,6 +70,7 @@
     <Compile Include="Scheme.cs" />
     <Compile Include="SchemePrimitives.cs" />
     <Compile Include="SchemeUtils.cs" />
+    <Compile Include="StringUtils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

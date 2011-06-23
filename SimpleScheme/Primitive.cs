@@ -1,14 +1,11 @@
-﻿#define OLD
-// <copyright file="Primitive.cs" company="Charles Hayden">
+﻿// <copyright file="Primitive.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics;
     using System.IO;
     using System.Reflection;
-    using System.Text;
 
     /// <summary>
     /// Primitive procedures.
@@ -425,13 +422,13 @@ namespace SimpleScheme
             int numArgs = Length(args);
             if (numArgs < this.minArgs)
             {
-                return Error("Primitive: too few args, " + numArgs + ", for " + 
+                return Error("Primitive: too few args, " + numArgs + ", for " +
                     this.Name + ": " + args);
             }
 
             if (numArgs > this.maxArgs)
             {
-                return Error("Primitive: too many args, " + numArgs + ", for " + 
+                return Error("Primitive: too many args, " + numArgs + ", for " +
                     this.Name + ": " + args);
             }
 
@@ -440,7 +437,7 @@ namespace SimpleScheme
 
             switch (this.operCode)
             {
-                    // 6.1 BOOLEANS
+                // 6.1 BOOLEANS
                 case OpCode.NOT:
                     return Truth(x is bool && (bool)x == false);
 
@@ -458,7 +455,7 @@ namespace SimpleScheme
                     // return Truth(x.Equals(y));
                     return Truth(Equal(x, y));
 
-                    // 6.2 EQUIVALENCE PREDICATES
+                // 6.2 EQUIVALENCE PREDICATES
                 case OpCode.PAIRQ:
                     return Truth(x is Pair);
 
@@ -543,7 +540,7 @@ namespace SimpleScheme
                 case OpCode.ASSOC:
                     return MemberAssoc(x, y, 'a', ' ');
 
-                    // 6.4 SYMBOLS
+                // 6.4 SYMBOLS
                 case OpCode.SYMBOLQ:
                     return Truth(x is string);
 
@@ -553,7 +550,7 @@ namespace SimpleScheme
                 case OpCode.STRINGTOSYMBOL:
                     return string.Intern(new string(Str(x)));
 
-                    // 6.5 NUMBERS
+                // 6.5 NUMBERS
                 case OpCode.NUMBERQ:
                     return Truth(x is byte || x is int || x is long || x is float || x is double);
 
@@ -573,43 +570,43 @@ namespace SimpleScheme
                     return Truth(Num(x) < 0);
 
                 case OpCode.INTEGERQ:
-                    return Truth(IsExact(x));
+                    return Truth(NumberUtils.IsExact(x));
 
                 case OpCode.INEXACTQ:
-                    return Truth(!IsExact(x));
+                    return Truth(!NumberUtils.IsExact(x));
 
                 case OpCode.LT:
-                    return NumCompare(args, '<');
+                    return NumberUtils.NumCompare(args, '<');
 
                 case OpCode.GT:
-                    return NumCompare(args, '>');
+                    return NumberUtils.NumCompare(args, '>');
 
                 case OpCode.EQ:
-                    return NumCompare(args, '=');
+                    return NumberUtils.NumCompare(args, '=');
 
                 case OpCode.LE:
-                    return NumCompare(args, 'L');
+                    return NumberUtils.NumCompare(args, 'L');
 
                 case OpCode.GE:
-                    return NumCompare(args, 'G');
+                    return NumberUtils.NumCompare(args, 'G');
 
                 case OpCode.MAX:
-                    return NumCompute(args, 'X', Num(x));
+                    return NumberUtils.NumCompute(args, 'X', Num(x));
 
                 case OpCode.MIN:
-                    return NumCompute(args, 'N', Num(x));
+                    return NumberUtils.NumCompute(args, 'N', Num(x));
 
                 case OpCode.PLUS:
-                    return NumCompute(args, '+', 0.0);
+                    return NumberUtils.NumCompute(args, '+', 0.0);
 
                 case OpCode.MINUS:
-                    return NumCompute(Rest(args), '-', Num(x));
+                    return NumberUtils.NumCompute(Rest(args), '-', Num(x));
 
                 case OpCode.TIMES:
-                    return NumCompute(args, '*', 1.0);
+                    return NumberUtils.NumCompute(args, '*', 1.0);
 
                 case OpCode.DIVIDE:
-                    return NumCompute(Rest(args), '/', Num(x));
+                    return NumberUtils.NumCompute(Rest(args), '/', Num(x));
 
                 case OpCode.QUOTIENT:
                     double d = Num(x) / Num(y);
@@ -677,18 +674,18 @@ namespace SimpleScheme
                     return Num(Math.Pow(Num(x), Num(y)));
 
                 case OpCode.NUMBERTOSTRING:
-                    return NumberToString(x, y);
+                    return NumberUtils.NumberToString(x, y);
 
                 case OpCode.STRINGTONUMBER:
-                    return StringToNumber(x, y);
+                    return StringUtils.StringToNumber(x, y);
 
                 case OpCode.GCD:
-                    return args == null ? Zero : Gcd(args);
+                    return args == null ? Zero : NumberUtils.Gcd(args);
 
                 case OpCode.LCM:
-                    return args == null ? One : Lcm(args);
+                    return args == null ? One : NumberUtils.Lcm(args);
 
-                    // 6.6 CHARACTERS
+                // 6.6 CHARACTERS
                 case OpCode.CHARQ:
                     return Truth(x is char);
 
@@ -752,7 +749,7 @@ namespace SimpleScheme
                 case OpCode.ERROR:
                     return Error(Stringify(args));
 
-                    // 6.7 STRINGS
+                // 6.7 STRINGS
                 case OpCode.STRINGQ:
                     return Truth(x is char[]);
 
@@ -789,7 +786,7 @@ namespace SimpleScheme
                     return new string(Str(x)).Substring(start, end - start).ToCharArray();
 
                 case OpCode.STRINGAPPEND:
-                    return StringAppend(args);
+                    return StringUtils.StringAppend(args);
 
                 case OpCode.STRINGTOLIST:
                     Pair result = null;
@@ -805,36 +802,36 @@ namespace SimpleScheme
                     return ListToString(x);
 
                 case OpCode.STRINGCMPEQ:
-                    return Truth(StringCompare(x, y, false) == 0);
+                    return Truth(StringUtils.StringCompare(x, y, false) == 0);
 
                 case OpCode.STRINGCMPLT:
-                    return Truth(StringCompare(x, y, false) < 0);
+                    return Truth(StringUtils.StringCompare(x, y, false) < 0);
 
                 case OpCode.STRINGCMPGT:
-                    return Truth(StringCompare(x, y, false) > 0);
+                    return Truth(StringUtils.StringCompare(x, y, false) > 0);
 
                 case OpCode.STRINGCMPGE:
-                    return Truth(StringCompare(x, y, false) >= 0);
+                    return Truth(StringUtils.StringCompare(x, y, false) >= 0);
 
                 case OpCode.STRINGCMPLE:
-                    return Truth(StringCompare(x, y, false) <= 0);
+                    return Truth(StringUtils.StringCompare(x, y, false) <= 0);
 
                 case OpCode.STRINGCICMPEQ:
-                    return Truth(StringCompare(x, y, true) == 0);
+                    return Truth(StringUtils.StringCompare(x, y, true) == 0);
 
                 case OpCode.STRINGCICMPLT:
-                    return Truth(StringCompare(x, y, true) < 0);
+                    return Truth(StringUtils.StringCompare(x, y, true) < 0);
 
                 case OpCode.STRINGCICMPGT:
-                    return Truth(StringCompare(x, y, true) > 0);
+                    return Truth(StringUtils.StringCompare(x, y, true) > 0);
 
                 case OpCode.STRINGCICMPGE:
-                    return Truth(StringCompare(x, y, true) >= 0);
+                    return Truth(StringUtils.StringCompare(x, y, true) >= 0);
 
                 case OpCode.STRINGCICMPLE:
-                    return Truth(StringCompare(x, y, true) <= 0);
+                    return Truth(StringUtils.StringCompare(x, y, true) <= 0);
 
-                    // 6.8 VECTORS
+                // 6.8 VECTORS
                 case OpCode.VECTORQ:
                     return Truth(x is object[]);
 
@@ -868,7 +865,7 @@ namespace SimpleScheme
                 case OpCode.LISTTOVECTOR:
                     return ListToVector(x);
 
-                    // 6.9 CONTROL FEATURES
+                // 6.9 CONTROL FEATURES
                 case OpCode.EVAL:
                     // Instead of returning a value, return an evaulator that can be run to get the value
                     return Stepper.CallMain(interp, parent, x, parent.Env);
@@ -889,30 +886,9 @@ namespace SimpleScheme
                     return Stepper.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), null);
 
                 case OpCode.CALLCC:
-#if OLD
-                    Exception cc = new Exception();
-                    Continuation proc = new Continuation(cc, Stepper.CallContinuation(interp, parent, x, parent.Env));
-                    try
-                    {
-                        // TODO apply must not return evaluator here, otherwise we will lose the
-                        //    context of catch
-                        return Proc(x).Apply(interp, null, List(proc));
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex == cc)
-                        {
-                            return proc.Value;
-                        }
+                    return Proc(x).Apply(interp, parent, List(new Continuation(Stepper.CallContinuation(interp, parent, x, parent.Env))));
 
-                        throw;
-                    }
-#else
-                    Continuation proc = new Continuation(Stepper.CallContinuation(interp, parent, x, parent.Env));
-                    return Proc(x).Apply(interp, parent, List(proc));
-#endif
-
-                    // 6.10 INPUT AND OUTPUT
+                // 6.10 INPUT AND OUTPUT
                 case OpCode.EOFOBJECTQ:
                     return Truth(InputPort.IsEOF(x));
 
@@ -923,7 +899,7 @@ namespace SimpleScheme
                     return interp.Input;
 
                 case OpCode.OPENINPUTFILE:
-                    return OpenInputFile(x);
+                    return Stepper.OpenInputFile(x);
 
                 case OpCode.CLOSEINPUTPORT:
                     return InPort(x, interp).Close();
@@ -935,45 +911,13 @@ namespace SimpleScheme
                     return interp.Output;
 
                 case OpCode.OPENOUTPUTFILE:
-                    return OpenOutputFile(x);
+                    return Stepper.OpenOutputFile(x);
 
                 case OpCode.CALLWITHOUTPUTFILE:
-                    PrintWriter p = null;
-                    try
-                    {
-                        p = OpenOutputFile(x);
-
-                        // TODO apply can be delayed, in which case Close needs to be delayed as well.
-                        z = Proc(y).Apply(interp, null, List(p));
-                    }
-                    finally
-                    {
-                        if (p != null)
-                        {
-                            p.Close();
-                        }
-                    }
-
-                    return z;
+                    return Stepper.CallWithOutputFile(interp, parent, args, parent.Env);
 
                 case OpCode.CALLWITHINPUTFILE:
-                    InputPort p2 = null;
-                    try
-                    {
-                        p2 = OpenInputFile(x);
-
-                        // TODO apply can be delayed, in which case Close needs to be delayed as well.
-                        z = Proc(y).Apply(interp, null, List(p2));
-                    }
-                    finally
-                    {
-                        if (p2 != null)
-                        {
-                            p2.Close();
-                        }
-                    }
-
-                    return z;
+                    return Stepper.CallWithInputFile(interp, parent, args, parent.Env);
 
                 case OpCode.CLOSEOUTPUTPORT:
                     OutPort(x, interp).Close();
@@ -1005,7 +949,7 @@ namespace SimpleScheme
                     OutPort(x, interp).Flush();
                     return True;
 
-                    // EXTENSIONS
+                // EXTENSIONS
                 case OpCode.CLASS:
                     try
                     {
@@ -1057,23 +1001,10 @@ namespace SimpleScheme
                     return ListStar(args);
 
                 case OpCode.TIMECALL:
-                    long startMem = GC.GetTotalMemory(true);
-                    Stopwatch stopwatch = Stopwatch.StartNew();
-                    object ans = False;
-                    int counter = y == null ? 1 : (int)Num(y);
-                    for (int i = 0; i < counter; i++)
-                    {
-                        // TODO if this returns Stepper, then it has not actually done anything
-                        ans = Proc(x).Apply(interp, parent, null);
-                    }
-
-                    stopwatch.Stop();
-                    long time = stopwatch.ElapsedMilliseconds;
-                    long mem = GC.GetTotalMemory(false) - startMem;
-                    return Cons(ans, List(List(Num(time), "msec"), List(Num(mem), "bytes")));
+                    return Stepper.CallTimeCall(interp, parent, args, parent.Env);
 
                 default:
-                    return Error("internal error: unknown primitive: " + this + 
+                    return Error("internal error: unknown primitive: " + this +
                         " applied to " + args);
             }
         }
@@ -1128,109 +1059,32 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Compute the greatest common divisor of a list of numbers.
-        /// </summary>
-        /// <param name="args">The list of numbers.</param>
-        /// <returns>The greatest common divisor.</returns>
-        private static object Gcd(object args)
-        {
-            long gcd = 0;
-            while (args is Pair)
-            {
-                gcd = Gcd2(Math.Abs((long)Num(First(args))), gcd);
-                args = Rest(args);
-            }
-
-            return Num(gcd);
-        }
-
-        /// <summary>
-        /// Compute the greatest common divisor of two numbers at a time.
-        /// </summary>
-        /// <param name="a">The first number.</param>
-        /// <param name="b">The second number.</param>
-        /// <returns>The GCD of the two numbers.</returns>
-        private static long Gcd2(long a, long b)
-        {
-            if (b == 0)
-            {
-                return a;
-            }
-
-            return Gcd2(b, a % b);
-        }
-
-        /// <summary>
-        /// Tests if the number is exact.
-        /// TODO why is this the correct algorithm?
-        /// </summary>
-        /// <param name="x">The number to test.</param>
-        /// <returns>True if the number is exact.</returns>
-        private static bool IsExact(object x)
-        {
-            if (!(x is double))
-            {
-                return false;
-            }
-
-            double d = Num(x);
-            return d == Math.Round(d) && Math.Abs(d) < 102962884861573423.0;
-        }
-
-        /// <summary>
-        /// Tests to see if the given ofject is a list.
-        /// TODO simplify by undoing the loop unrolling
+        /// Tests to see if the given object is a list.
         /// </summary>
         /// <param name="x">The object to test.</param>
         /// <returns>True if the object is a list.</returns>
         private static bool IsList(object x)
         {
-            object slow = x;
-            object fast = x;
             while (true)
             {
-                if (fast == null)
+                if (x == null)
                 {
                     return true;
                 }
 
-                if (slow == Rest(fast) || !(fast is Pair) || !(slow is Pair))
+                if (!(x is Pair))
                 {
                     return false;
                 }
 
-                fast = Rest(fast);
-                if (fast == null)
-                {
-                    return true;
-                }
-
-                if (!(fast is Pair))
+                object rest = Rest(x);
+                if (rest == x)
                 {
                     return false;
                 }
 
-                fast = Rest(fast);
+                x = rest;
             }
-        }
-
-        /// <summary>
-        /// Compute the least common multiple of a set of numbers.
-        /// </summary>
-        /// <param name="args">The numbers to use.</param>
-        /// <returns>The LCM of these numbers.</returns>
-        private static object Lcm(object args)
-        {
-            long lcm = 1;
-            while (args is Pair)
-            {
-                long n = Math.Abs((long)Num(First(args)));
-                long g = Gcd2(n, lcm);
-                lcm = g == 0 ? g : (n / g) * lcm;
-                args = Rest(args);
-            }
-
-            return Num(lcm);
         }
 
         /// <summary>
@@ -1276,287 +1130,6 @@ namespace SimpleScheme
             }
 
             return False;
-        }
-
-        /// <summary>
-        /// Convert a number to its string equivalent.
-        /// Optionally, use a number base different from 10.
-        /// </summary>
-        /// <param name="x">The number to convert.</param>
-        /// <param name="y">The number base.</param>
-        /// <returns>A string version of the number.</returns>
-        private static object NumberToString(object x, object y)
-        {
-            int numberBase = y is double ? (int)Num(y) : 10;
-            if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
-            {
-                return Convert.ToString((long)Num(x), numberBase).ToCharArray();
-            }
-
-            return x.ToString().ToCharArray();
-        }
-
-        /// <summary>
-        /// Compare a set of numbers using a given comparison operator.
-        /// Comparison stops when one of the results yields false.
-        /// </summary>
-        /// <param name="args">A list of numbers to compare.</param>
-        /// <param name="op">The operation to apply successively to pairs of 
-        ///     adjacent numbers.</param>
-        /// <returns>True only if all comparisons are true.</returns>
-        private static object NumCompare(object args, char op)
-        {
-            while (Rest(args) is Pair)
-            {
-                double x = Num(First(args));
-                args = Rest(args);
-
-                double y = Num(First(args));
-
-                switch (op)
-                {
-                    case '>':
-                        if (!(x > y))
-                        {
-                            return False;
-                        }
-
-                        break;
-
-                    case '<':
-                        if (!(x < y))
-                        {
-                            return False;
-                        }
-
-                        break;
-
-                    case '=':
-                        if (x != y)
-                        {
-                            return False;
-                        }
-
-                        break;
-
-                    case 'L':
-                        if (!(x <= y))
-                        {
-                            return False;
-                        }
-
-                        break;
-
-                    case 'G':
-                        if (!(x >= y))
-                        {
-                            return False;
-                        }
-
-                        break;
-
-                    default:
-                        Error("internal error: unrecognized op: " + op);
-                        break;
-                }
-            }
-
-            return True;
-        }
-
-        /// <summary>
-        /// Compute an operation on a list of numbers.
-        /// In addition to usual arithmetic operators, can also do unary - and /
-        ///   and also max and min.
-        /// </summary>
-        /// <param name="args">The list of numbers to operate on.</param>
-        /// <param name="op">The operation to apply</param>
-        /// <param name="result">The starting value.</param>
-        /// <returns>The result of applying the operation to the list, starting 
-        /// with the starting value.</returns>
-        private static object NumCompute(object args, char op, double result)
-        {
-            if (args == null)
-            {
-                // If there are no numbers, apply a unary operation on the starting value.
-                switch (op)
-                {
-                    case '-':
-                        return Num(0 - result);
-
-                    case '/':
-                        return Num(1 / result);
-
-                    default:
-                        return Num(result);
-                }
-            }
-
-            while (args is Pair)
-            {
-                double x = Num(First(args));
-                args = Rest(args);
-
-                switch (op)
-                {
-                    case 'X': // max
-                        if (x > result)
-                        {
-                            result = x;
-                        }
-
-                        break;
-
-                    case 'N': // min
-                        if (x < result)
-                        {
-                            result = x;
-                        }
-
-                        break;
-
-                    case '+':
-                        result += x;
-                        break;
-
-                    case '-':
-                        result -= x;
-                        break;
-
-                    case '*':
-                        result *= x;
-                        break;
-
-                    case '/':
-                        result /= x;
-                        break;
-
-                    default:
-                        Error("internal error: unrecognized op: " + op);
-                        break;
-                }
-            }
-
-            return Num(result);
-        }
-
-        /// <summary>
-        /// Open a file for input.
-        /// </summary>
-        /// <param name="filename">The filename of the file to open.</param>
-        /// <returns>The input port, used for reading.</returns>
-        private static InputPort OpenInputFile(object filename)
-        {
-            try
-            {
-                return new InputPort(new StreamReader(Stringify(filename, false)));
-            }
-            catch (FileNotFoundException)
-            {
-                return (InputPort)Error("No such file: " + Stringify(filename));
-            }
-            catch (IOException ex)
-            {
-                return (InputPort)Error("IOException: " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Open a file for output.
-        /// </summary>
-        /// <param name="filename">The filename.</param>
-        /// <returns>The output port, used for writing.</returns>
-        private static PrintWriter OpenOutputFile(object filename)
-        {
-            try
-            {
-                return new PrintWriter(new StreamWriter(Stringify(filename, false)));
-            }
-            catch (FileNotFoundException)
-            {
-                return (PrintWriter)Error("No such file: " + Stringify(filename));
-            }
-            catch (IOException ex)
-            {
-                return (PrintWriter)Error("IOException: " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Convert all the elements of a list to strings and append them.
-        /// </summary>
-        /// <param name="args">The list of items.</param>
-        /// <returns>A character array of all the elements, converted to strings 
-        /// and appended.</returns>
-        private static char[] StringAppend(object args)
-        {
-            StringBuilder result = new StringBuilder();
-            while (args is Pair)
-            {
-                result.Append(Stringify(First(args), false));
-                args = Rest(args);
-            }
-
-            return result.ToString().ToCharArray();
-        }
-
-        /// <summary>
-        /// Compare two strings.  Comparison may be case insensitive.
-        /// Return value indicating their relative order.
-        /// </summary>
-        /// <param name="x">The first string.</param>
-        /// <param name="y">The second string.</param>
-        /// <param name="ci">If true, make the comparison case insensitive.</param>
-        /// <returns>Negative if first string less then second, zero if they are equal, 
-        /// positive if first is greater.</returns>
-        private static int StringCompare(object x, object y, bool ci)
-        {
-            if (x is char[] && y is char[])
-            {
-                char[] xc = (char[])x;
-                char[] yc = (char[])y;
-                for (int i = 0; i < xc.Length; i++)
-                {
-                    int diff = !ci ? 
-                        xc[i] - yc[i] : 
-                        char.ToLower(xc[i]) - char.ToLower(yc[i]);
-                    if (diff != 0)
-                    {
-                        return diff;
-                    }
-                }
-
-                return xc.Length - yc.Length;
-            }
-
-            Error("expected two strings, got: " + Stringify(List(x, y)));
-            return 0;
-        }
-
-        /// <summary>
-        /// Convert a string into a number, in a given number base.
-        /// </summary>
-        /// <param name="x">The value to convert.  This is first converted to a string, 
-        ///     then parsed as a number.</param>
-        /// <param name="y">The number base.  If not a number, then base 10 is used.</param>
-        /// <returns>The number represented by the string.</returns>
-        private static object StringToNumber(object x, object y)
-        {
-            int numberBase = y is double ? (int)Num(y) : 10;
-            try
-            {
-                return numberBase == 10
-                           ? double.Parse(Stringify(x, false))
-                           : Num(Convert.ToInt64(Stringify(x, false), numberBase));
-            }
-            catch (FormatException)
-            {
-                return False;
-            }
-            catch (ArgumentException)
-            {
-                return False;
-            }
         }
     }
 }

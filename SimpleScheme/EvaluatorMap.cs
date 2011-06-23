@@ -64,13 +64,13 @@ namespace SimpleScheme
                         // first check for degenerate cases
                         if (this.Expr == null)
                         {
-                            return SubReturn(null);
+                            return SubReturn((object) null);
                         }
 
                         if (!(this.Expr is Pair))
                         {
                             Error("Illegal arg list: " + this.Expr);
-                            return SubReturn(null);
+                            return SubReturn((object) null);
                         }
 
                         Pc = 1;
@@ -89,14 +89,13 @@ namespace SimpleScheme
                                 return SubCall((Stepper)x);
                             }
 
-                            RetExpr = x;
-                            return SubCall(this);
+                            return SubContinue(x);
                         }
 
                         // if we are done, just return the result minus the dummy entry
                         if (this.result == null)
                         {
-                            return SubReturn(null);
+                            return SubReturn((object) null);
                         }
 
                         return SubReturn(this.result.Rest);

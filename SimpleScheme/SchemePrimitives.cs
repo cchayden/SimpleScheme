@@ -12,19 +12,7 @@ namespace SimpleScheme
         /// Standard scheme macros
         /// </summary>
         public const string Code =
-        @"(define or
-          (macro args
-            (if (null? args)
-            #f
-            (cons 'cond (map list args)))))
-
-        (define and
-          (macro args
-            (cond ((null? args) #t)
-              ((null? (rest args)) (first args))
-              (else (list 'if (first args) (cons 'and (rest args)) #f)))))
-
-        (define quasiquote
+        @"(define quasiquote
           (macro (x)
             (define (constant? exp)
               (if (pair? exp) (eq? (car exp) 'quote) (not (symbol? exp))))

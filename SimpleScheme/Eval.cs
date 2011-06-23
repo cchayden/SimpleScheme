@@ -19,10 +19,9 @@ namespace SimpleScheme
         {
             this.Interp = interp;
             this.Parent = parent;
-            this.RetExpr = this.Expr = expr;
-            this.RetEnv = this.Env = env;
+            this.Expr = expr;
+            this.Env = env;
             this.Pc = 0;
-            this.Called = null;
         }
 
         /// <summary>
@@ -41,11 +40,9 @@ namespace SimpleScheme
         public object Expr { get; set; }
 
         /// <summary>
-        /// Gets or sets the returned expression.
-        /// This is valid after a call has completed, and holds the
-        ///   returned result.
+        /// Gets the returned expression from the last call.
         /// </summary>
-        public object RetExpr { get; set; }
+        public object ReturnedExpr { get; set; }
 
         /// <summary>
         /// Gets or sets the evaluation environment.  After execution, this is the new environment.
@@ -53,9 +50,9 @@ namespace SimpleScheme
         public Environment Env { get; set; }
 
         /// <summary>
-        /// Gets or sets the returned environment
+        /// Gets the returned environment from the last call.
         /// </summary>
-        public Environment RetEnv { private get; set; }
+        public Environment ReturnedEnv { get; private set; }
 
         /// <summary>
         /// Gets or sets the Evaluators program counter.
@@ -63,30 +60,18 @@ namespace SimpleScheme
         /// </summary>
         public int Pc { get; set; }
 
-        /// <summary>
-        /// Gets or sets the called sub-evaluator.
-        /// The evaluator that is called is stored, so that the returned value
-        ///   can be extracted after it returns.
-        /// </summary>
-        public Stepper Called { private get; set; }
-
-        /// <summary>
-        /// Gets the returned expression from the last call.
-        /// </summary>
-        public object ReturnedExpr
-        {
-            get { return this.Called.RetExpr; }
-        }
-
-        /// <summary>
-        /// Gets the returned environment from the last call.
-        /// </summary>
-        public Environment ReturnedEnv
-        {
-            get { return this.Called.RetEnv; }
-        }
 
         // Standalone evaluators
+
+        /// <summary>
+        /// Create a halt stepper.
+        /// This is used to get Eval started.
+        /// </summary>
+        /// <returns>Adefault stepper.</returns>
+        public static Stepper Halt()
+        {
+            return new EvaluatorInitial();
+        }
 
         /// <summary>
         /// Create a main evaluator.
@@ -128,6 +113,19 @@ namespace SimpleScheme
         {
             return new EvaluatorContinuation(interp, parent, expr, env);
         }
+        // TODO document
+        public static Stepper CallWithInputFile(Scheme interp, Stepper parent, object expr, Environment env)
+        {
+            return new EvaluatorCallWithInputFile(interp, parent, expr, env);
+        }
+        public static Stepper CallWithOutputFile(Scheme interp, Stepper parent, object expr, Environment env)
+        {
+            return new EvaluatorCallWithOutputFile(interp, parent, expr, env);
+        }
+        public static Stepper CallTimeCall(Scheme interp, Stepper parent, object expr, Environment env)
+        {
+            return new EvaluatorTimeCall(interp, parent, expr, env);
+        }
 
         /// <summary>
         /// Subclasses implement this to make one step in the evaluation.
@@ -135,15 +133,15 @@ namespace SimpleScheme
         /// <returns>A step in the evaluation.</returns>
         public abstract Stepper EvalStep();
 
+        // TODO consider elimination
         /// <summary>
         /// Make a call to a sub-evaluator.
-        /// When that returns, store the result but do not return.
+        /// The caller is responsible for returning the result into ReturnedExpr and ReturnedEnv.
         /// </summary>
         /// <param name="toCall">The evaluator to call.</param>
         /// <returns>The first step of the sub-evaluator.</returns>
         protected Stepper SubCall(Stepper toCall)
         {
-            this.Called = toCall;
             return toCall;
         }
 
@@ -152,26 +150,55 @@ namespace SimpleScheme
         /// Assign the return value and return the parent task to resume.
         /// </summary>
         /// <param name="retVal">The value to save as the returned value.</param>
+        /// <param name="retEnv">The environment to save as the returned environment.</param>
+        /// <param name="returnTo">The stepper to return to.</param>
+        /// <returns>The next step, which is in the parent.</returns>
+        public static Stepper SubTransfer(object retVal, Environment retEnv, Stepper returnTo)
+        {
+            returnTo.ReturnedExpr = retVal;
+            returnTo.ReturnedEnv = retEnv;
+            return returnTo;
+        }
+
+        /// <summary>
+        /// Return fram an evaluator.
+        /// Assign the return value and return the parent task to resume.
+        /// </summary>
+        /// <param name="retVal">The value to save as the returned value.</param>
+        /// <param name="retEnv">The environment to save as the returned environment.</param>
+        /// <returns>The next step, which is in the parent.</returns>
+        protected Stepper SubReturn(object retVal, Environment retEnv)
+        {
+            return SubTransfer(retVal, retEnv, this.Parent);
+        }
+
+        /// <summary>
+        /// Return fram an evaluator, with the default environment
+        /// </summary>
+        /// <param name="retVal">The value to save as the returned value.</param>
         /// <returns>The next step, which is in the parent.</returns>
         protected Stepper SubReturn(object retVal)
         {
-            this.RetExpr = retVal;
-            return this.Parent;
-        }
-
-        public Stepper SubReturn(object retVal, Stepper returnTo)
-        {
-            this.RetExpr = retVal;
-            return returnTo;
+            return SubTransfer(retVal, this.Env, this.Parent);
         }
 
         /// <summary>
         /// Continue executing in the existing evaluator.
         /// </summary>
-        /// <returns>The next step, which is in the same evaluator.</returns>
+        /// <returns>The next step, which is in the same stepper.</returns>
         protected Stepper SubContinue()
         {
             return this.SubCall(this);
+        }
+
+        /// <summary>
+        /// Continue executing in the existing evaluator, but set the expr
+        /// </summary>
+        /// <param name="retExpr">The new expr value.</param>
+        /// <returns>The next step, which is this stepper.</returns>
+        protected Stepper SubContinue(object retExpr)
+        {
+            return SubTransfer(retExpr, Env, this);
         }
 
         // Sub Evaluators
@@ -184,16 +211,6 @@ namespace SimpleScheme
         protected Stepper CallEval(object args)
         {
             return this.SubCall(new EvaluatorMain(this.Interp, this, args, this.Env));
-        }
-
-        /// <summary>
-        /// Recursive Stepper call in the global environment.
-        /// </summary>
-        /// <param name="args">The expression to evaluate.</param>
-        /// <returns>The next evaluation step.</returns>
-        protected Stepper CallEvalGlobal(object args)
-        {
-            return this.SubCall(new EvaluatorMain(this.Interp, this, args, this.Interp.GlobalEnvironment));
         }
 
         /// <summary>
@@ -234,6 +251,26 @@ namespace SimpleScheme
         protected Stepper CallIf(object args)
         {
             return this.SubCall(new EvaluatorIf(this.Interp, this, args, this.Env));
+        }
+
+        /// <summary>
+        /// Create an or evaluator.
+        /// </summary>
+        /// <param name="args">The or clauses to evaluate.</param>
+        /// <returns>The step to execute.</returns>
+        protected Stepper CallOr(object args)
+        {
+            return this.SubCall(new EvaluatorOr(this.Interp, this, args, this.Env));
+        }
+
+        /// <summary>
+        /// Create an and evaluator.
+        /// </summary>
+        /// <param name="args">The or clauses to evaluate.</param>
+        /// <returns>The step to execute.</returns>
+        protected Stepper CallAnd(object args)
+        {
+            return this.SubCall(new EvaluatorAnd(this.Interp, this, args, this.Env));
         }
 
         /// <summary>

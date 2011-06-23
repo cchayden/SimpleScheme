@@ -38,7 +38,7 @@ namespace SimpleScheme
                 this.fn = fn;
                 Counter++;
                 instanceCounter = Counter;
-                Console.WriteLine("ApplyProc: {0} {1}", expr, instanceCounter);
+                //Console.WriteLine("ApplyProc: {0} {1}", expr, instanceCounter);
             }
 
             /// <summary>
@@ -64,8 +64,6 @@ namespace SimpleScheme
                         return SubReturn(res);
                     case 2:
                         return SubReturn(ReturnedExpr);
-                    case 3:
-                        break;
                 }
 
                 return EvalError("ApplyProc: program counter error");

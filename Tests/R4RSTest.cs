@@ -980,18 +980,6 @@ namespace Tests
             this.RunTest(@"(test '#() make-vector 0 'a) ");
         }
 
-        [TestMethod]
-        public void TempTest()
-        {
-            scheme.Trace = true;
-            object res = ReadAndEvaluate(@"(call-with-current-continuation
-                             (lambda (exit)
-	                           (for-each (lambda (x) (if (negative? x) (exit x)))
-		                            '(54 0 37 -3 245 19))
-	                           #t))");
-            Assert.AreEqual(-3.0, res);
-        }
-
         /// <summary>
         /// Test control features
         /// </summary>
@@ -1038,6 +1026,76 @@ namespace Tests
             this.RunTest(@"(test 4 list-length '(1 2 3 4))");
             this.RunTest(@"(test #f list-length '(a b . c))");
             this.RunTest(@"(test '() map cadr '())");
+        }
+
+        /// <summary>
+        /// Test call/cc
+        /// </summary>
+        [TestMethod]
+        public void CallCCTest()
+        {
+            this.LoadTest("6.9");
+            this.ReadAndEvaluate(@"
+            (define (next-leaf-generator obj eot)
+              (letrec ((return #f)
+	               (cont (lambda (x)
+		               (recur obj)
+		               (set! cont (lambda (x) (return eot)))
+		               (cont #f)))
+	               (recur (lambda (obj)
+		                  (if (pair? obj)
+			              (for-each recur obj)
+			              (call-with-current-continuation
+			               (lambda (c)
+			                 (set! cont c)
+			                 (return obj)))))))
+                (lambda () (call-with-current-continuation
+		            (lambda (ret) (set! return ret) (cont #f))))))
+            (define (leaf-eq? x y)
+              (let* ((eot (list 'eot))
+	             (xf (next-leaf-generator x eot))
+	             (yf (next-leaf-generator y eot)))
+                (letrec ((loop (lambda (x y)
+		                 (cond ((not (eq? x y)) #f)
+			               ((eq? eot x) #t)
+			               (else (loop (xf) (yf)))))))
+                  (loop (xf) (yf)))))
+            ");
+            this.RunTest("(test #t leaf-eq? '(a (b (c))) '((a) b c))");
+            this.RunTest("(test #f leaf-eq? '(a (b (c))) '((a) b c d))");
+        }
+
+        /// <summary>
+        /// Test force and delay
+        /// </summary>
+        [TestMethod]
+        public void ForceDelayTest()
+        {
+            this.LoadTest("6.9");
+            this.RunTest(@"(test 3 'delay (force (delay (+ 1 2))))");
+            this.RunTest(@"(test '(3 3) 'delay (let ((p (delay (+ 1 2))))
+			   (list (force p) (force p))))");
+            this.RunTest(@"(test 2 'delay (letrec ((a-stream
+			       (letrec ((next (lambda (n)
+					        (cons n (delay (next (+ n 1)))))))
+			         (next 0)))
+			      (head car)
+			      (tail (lambda (stream) (force (cdr stream)))))
+		        (head (tail (tail a-stream)))))");
+            this.RunTest(@"
+                (letrec ((count 0)
+	               (p (delay (begin (set! count (+ count 1))
+			                (if (> count x)
+				            count
+				            (force p)))))
+	               (x 5))
+                (test 6 force p)
+                (set! x 10)
+                (test 6 force p))");
+            this.RunTest(@"(test 3 'force
+	            (letrec ((p (delay (if c 3 (begin (set! c #t) (+ (force p) 1)))))
+		             (c #f))
+	              (force p)))");
         }
 
         /// <summary>

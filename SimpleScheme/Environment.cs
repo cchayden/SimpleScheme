@@ -10,6 +10,7 @@ namespace SimpleScheme
     {
         /// <summary>
         /// Initializes a new instance of the Environment class.
+        /// This is used to create the global environment.
         /// </summary>
         public Environment()
         {

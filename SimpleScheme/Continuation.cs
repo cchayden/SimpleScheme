@@ -16,7 +16,6 @@ namespace SimpleScheme
         /// <summary>
         /// The exception to throw.
         /// </summary>
-        private readonly Exception cc;
         private readonly Stepper step;
 
         /// <summary>
@@ -24,13 +23,6 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="cc">The exception to throw.</param>
         /// <param name="step">The continuation to return to when applied.</param>
-        public Continuation(Exception cc, Stepper step)
-        {
-            this.cc = cc;
-            this.step = step;
-        }
-
-
         public Continuation(Stepper step)
         {
             this.step = step;
@@ -51,11 +43,7 @@ namespace SimpleScheme
         public override object Apply(Scheme interpreter, Stepper parent, object args)
         {
             this.Value = First(args);
-#if OLD
-            throw this.cc;
-#else
-            return this.step.SubReturn(First(args), this.step.Parent);
-#endif
+            return Stepper.SubTransfer(First(args), this.step.Env, this.step.Parent.Parent);
         }
     }
 }
