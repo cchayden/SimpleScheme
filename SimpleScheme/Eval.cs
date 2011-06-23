@@ -1,4 +1,4 @@
-﻿#define OLDIF
+﻿#define OLDIFxx
 // <copyright file="Eval.cs" company="Charles Hayden">
 // Copyright © 2008 by Charles Hayden.
 // </copyright>
@@ -141,12 +141,14 @@ namespace SimpleScheme
             if (this.pc == 101)
             {
                 this.expr = this.called.Expr;
+                this.env = this.called.Env;
                 return this.parent;
             }
 
             if (this.pc == 1)
             {
                 this.expr = this.called.Expr;
+                this.env = this.called.Env;
                 this.pc = 0;
             }
 
@@ -185,17 +187,16 @@ namespace SimpleScheme
                         // Evaluate begin by evaluating all the items in order, 
                         //   and returning the last.
                         this.called = new EvaluatorSequence(this.interp, this.EvalStep, args, this.env);
-                        var next = this.called.EvalStep();
-                        // pc = 101;
-                        this.expr = this.called.Expr;    //////////////////
-                        return next;
+                        pc = 1;
+                        return this.called.EvalStep();
                     }
 
                 case "define":
                     {
                         // Define is a shortcut for lambda.
                         // Evaluate by splicing lambda on the front and evaluating that.
-                        this.called = new EvaluatorDefine(this.interp, this.parent, args, this.env);
+                        this.called = new EvaluatorDefine(this.interp, this.EvalStep, args, this.env);
+                        pc = 101;
                         return this.called.EvalStep;
                     }
 
@@ -204,7 +205,7 @@ namespace SimpleScheme
                         // Evaluate a set! expression by evaluating the second, 
                         //   then setting the first to it.
                         this.called = new EvaluatorSet(this.interp, this.EvalStep, args, this.env);
-                        this.pc = 101;
+                        this.pc = 101;       // returns to this class, stores result, then returns
                         return this.called.EvalStep;
                     }
 
@@ -214,29 +215,35 @@ namespace SimpleScheme
                         //    and then returning either the second or third.
 #if OLDIF
                         this.called = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
-                        var next = this.called.EvalStep();
-                        this.pc = 1;
-                        return next;
+                        this.pc = 1;       // continues after the if, with the returned expr
+                        this.called.EvalStep();
+                        return this.EvalStep;
 #else
-                        this.called1 = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
-                        pc = 101;
-                        return called1.EvalStep;
+                        this.called = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
+                        pc = 1;
+                        return called.EvalStep;
 #endif
                     }
 
                 case "cond":
                     this.expr = this.ReduceCond(args);
+                    called = this;
+                    pc = 1;
                     return this.EvalStep;
 
                 case "lambda":
                     // Evaluate a lambda by creating a closure.
                     this.expr = new Closure(First(args), Rest(args), this.env);
-                    return this.parent;
+                    called = this;
+                    pc = 101;
+                    return this.EvalStep;
 
                 case "macro":
                     // Evaluate a macro by creating a macro.
                     this.expr = new Macro(First(args), Rest(args), this.env);
-                    return this.parent;
+                    called = this;
+                    pc = 101;
+                    return this.EvalStep;
             }
 
             // If we get here, it wasn't one of the special forms.  
@@ -248,7 +255,9 @@ namespace SimpleScheme
             if (fn is Macro)
             {
                 Macro m = (Macro)fn;
-                this.expr = m.Expand(this.interp, (Pair)this.expr, args);
+                this.expr = m.Expand(this.interp, (Pair) this.expr, args);
+                called = this;
+                pc = 1;
                 return this.EvalStep;
             }
 
@@ -263,6 +272,8 @@ namespace SimpleScheme
                 Closure f = (Closure)fn;
                 this.expr = f.Body;
                 this.env = new Environment(f.Parms, this.EvalList(args), f.Env);
+                called = this;
+                pc = 1;
                 return this.EvalStep;
             }
 
@@ -271,7 +282,9 @@ namespace SimpleScheme
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
             this.expr = this.ApplyProc(fn, args);
-            return this.parent;
+            called = this;
+            pc = 101;
+            return this.EvalStep;
         }
 
         /// <summary>
