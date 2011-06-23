@@ -26,17 +26,17 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (parent, args) => Truth(First(args) is bool), 1)
+                .DefinePrimitive("boolean?", (caller, args) => Truth(First(args) is bool), 1)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (parent, args) => Truth(Eqv(First(args), Second(args))), 2)
+                .DefinePrimitive("eq?", (caller, args) => Truth(Eqv(First(args), Second(args))), 2)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (parent, args) => Truth(Equal(First(args), Second(args))), 2)
+                .DefinePrimitive("equal?", (caller, args) => Truth(Equal(First(args), Second(args))), 2)
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (parent, args) => Truth(Eqv(First(args), Second(args))), 2)
+                .DefinePrimitive("eqv?", (caller, args) => Truth(Eqv(First(args), Second(args))), 2)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (parent, args) => Truth(First(args) is bool && (bool)First(args) == false), 1)
+                .DefinePrimitive("not", (caller, args) => Truth(First(args) is bool && (bool)First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (parent, args) => Truth(First(args) == null), 1);
+                .DefinePrimitive("null?", (caller, args) => Truth(First(args) == null), 1);
         }
 
         /// <summary>

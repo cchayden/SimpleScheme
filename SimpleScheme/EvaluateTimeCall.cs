@@ -12,7 +12,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "time-call";
+        private const string StepperName = "evaluate-time-call";
 
         /// <summary>
         /// The counter id.

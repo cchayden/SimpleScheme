@@ -14,7 +14,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "eval";
+        private const string StepperName = "evaluate-expression";
 
         /// <summary>
         /// The counter id.
@@ -45,6 +45,11 @@ namespace SimpleScheme
         private EvaluateExpression(Stepper caller, object expr, Environment env)
             : base(caller, expr, env)
         {
+            // We are evaluating a pair.
+            // Split out the first item for special treatment.
+            this.fn = First(Expr);
+            this.args = Rest(Expr);
+
             ContinueHere(this.InitialStep);
             this.trace = false;
             IncrementCounter(counter);
@@ -56,6 +61,69 @@ namespace SimpleScheme
         public override string Name
         {
             get { return StepperName; }
+        }
+
+        /// <summary>
+        /// Define the list primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(Environment env)
+        {
+            const int MaxInt = int.MaxValue;
+            env
+                //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
+                .DefinePrimitive("and", (caller, args) => new EvaluateExpression(caller, Cons("and", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
+                //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
+                .DefinePrimitive("begin", (caller, args) => new EvaluateExpression(caller, Cons("begin", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
+                //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
+                //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
+                .DefinePrimitive("case", (caller, args) => new EvaluateExpression(caller, Cons("case", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
+                //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
+                //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
+                //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
+                .DefinePrimitive("cond", (caller, args) => new EvaluateExpression(caller, Cons("cond", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
+                //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
+                //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
+                .DefinePrimitive("define", (caller, args) => new EvaluateExpression(caller, Cons("define", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
+                ////                           ...)
+                ////                           (<test> <expression> ...)
+                ////                         <command> ...)</r4rs>
+                .DefinePrimitive("do", (caller, args) => new EvaluateExpression(caller, Cons("do", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
+                //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
+                .DefinePrimitive("if", (caller, args) => new EvaluateExpression(caller, Cons("if", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
+                //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
+                //// <r4rs section="4.1.4">formals: <variable></r4rs>
+                //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
+                .DefinePrimitive("lambda", (caller, args) => Call(caller, Cons("lambda", args), caller.Env), 0, MaxInt)
+                    //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
+                    //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
+                    //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
+                    //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
+                .DefinePrimitive("let", (caller, args) => new EvaluateExpression(caller, Cons("let", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
+                //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
+                //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
+                .DefinePrimitive("let*", (caller, args) => new EvaluateExpression(caller, Cons("let*", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
+                //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
+                //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
+                .DefinePrimitive("letrec", (caller, args) => new EvaluateExpression(caller, Cons("letrec", args), caller.Env), 0, MaxInt)
+                .DefinePrimitive("macro", (caller, args) => Call(caller, Cons("macro", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
+                .DefinePrimitive("or", (caller, args) => new EvaluateExpression(caller, Cons("or", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
+                .DefinePrimitive("quote", (caller, args) => Call(caller, Cons("quote", args), caller.Env), 0, MaxInt)
+                //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
+                .DefinePrimitive("set!", (caller, args) => new EvaluateExpression(caller, Cons("set!", args), caller.Env), 0, MaxInt)
+                //// time
+                .DefinePrimitive("time", (caller, args) => new EvaluateExpression(caller, Cons("time", args), caller.Env), 0, MaxInt);
         }
 
         /// <summary>
@@ -144,11 +212,6 @@ namespace SimpleScheme
         /// <returns>The next thing to do.</returns>
         private Stepper InitialStep()
         {
-            // We are evaluating a pair.
-            // Split out the first item for special treatment.
-            this.fn = First(Expr);
-            this.args = Rest(Expr);
-
             if (this.trace)
             {
                 Console.Out.WriteLine("{0} {1}", this.fn, this.args);
@@ -165,6 +228,7 @@ namespace SimpleScheme
                     // Evaluate begin by evaluating all the items in order, 
                     //   and returning the last.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
+                    //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                     return EvaluateSequence.Call(ContinueReturn(), this.args);
 
                 case "define":
@@ -173,13 +237,12 @@ namespace SimpleScheme
                     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                    //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                     return EvaluateDefine.Call(ContinueReturn(), this.args);
 
                 case "set!":
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
-                    //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
+                    //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
                     return EvaluateSet.Call(ContinueHere(this.ReturnStep), this.args);
 
                 case "if":
@@ -204,7 +267,6 @@ namespace SimpleScheme
                     return EvaluateAnd.Call(ContinueReturn(), this.args);
 
                 case "cond":
-                    //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)<r4rs>
                     //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>

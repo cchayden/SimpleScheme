@@ -34,7 +34,7 @@ namespace SimpleScheme
             : base(caller, expr, env)
         {
             this.fn = fn;
-            ContinueHere(this.InitialStep);
+            ContinueHere(this.EvalArgsStep);
             IncrementCounter(counter);
         }
 
@@ -59,6 +59,21 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Provide TraceInfo that includes the proc to execute in addition to the name.
+        /// </summary>
+        /// <returns>Trace info.</returns>
+        public override string TraceInfo()
+        {
+            string name = base.TraceInfo();
+            if (name == null)
+            {
+                return null;
+            }
+
+            return name + " " + this.fn;
+        }
+
+        /// <summary>
         /// Back here after args have been evaluated.  
         /// Apply the proc to the evaluated args.  
         /// </summary>
@@ -72,7 +87,7 @@ namespace SimpleScheme
         /// Begin by evaluating all the arguments.
         /// </summary>
         /// <returns>Next action to evaluate the args.</returns>
-        private Stepper InitialStep()
+        private Stepper EvalArgsStep()
         {
             return EvaluateList.Call(ContinueHere(this.ApplyStep), Expr);
         }

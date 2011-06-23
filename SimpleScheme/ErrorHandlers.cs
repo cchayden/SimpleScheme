@@ -24,7 +24,7 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                .DefinePrimitive("error", (parent, args) => Error(SchemeString.AsString(args)), 0, MaxInt);
+                .DefinePrimitive("error", (caller, args) => Error(SchemeString.AsString(args)), 0, MaxInt);
         }
 
         /// <summary>

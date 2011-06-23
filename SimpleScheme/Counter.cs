@@ -52,10 +52,10 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             env
-                .DefinePrimitive("dump-counters", (parent, args) => parent.Env.Interp.Counters.DumpCounters(), 0)
-                .DefinePrimitive("get-counters", (parent, args) => parent.Env.Interp.Counters.GetCounters(), 0)
-                .DefinePrimitive("get-counter", (parent, args) => parent.Env.Interp.Counters.GetCounter(First(args)), 1)
-                .DefinePrimitive("reset-counters", (parent, args) => parent.Env.Interp.Counters.ResetCounters(), 0);
+                .DefinePrimitive("dump-counters", (caller, args) => caller.Env.Interp.Counters.DumpCounters(), 0)
+                .DefinePrimitive("get-counters", (caller, args) => caller.Env.Interp.Counters.GetCounters(), 0)
+                .DefinePrimitive("get-counter", (caller, args) => caller.Env.Interp.Counters.GetCounter(First(args)), 1)
+                .DefinePrimitive("reset-counters", (caller, args) => caller.Env.Interp.Counters.ResetCounters(), 0);
         }
 
         /// <summary>

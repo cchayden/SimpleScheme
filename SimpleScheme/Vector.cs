@@ -3,15 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public sealed class Vector : ListPrimitives, IEnumerable<object>
+    public sealed class Vector : ListPrimitives
     {
         /// <summary>
         /// A vector is an array of objects.
@@ -105,21 +103,21 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (parent, args) => new Vector(First(args), Second(args)), 1, 2)
+                .DefinePrimitive("make-vector", (caller, args) => new Vector(First(args), Second(args)), 1, 2)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
-                .DefinePrimitive("vector", (parent, args) => new Vector(args), 0, MaxInt)
+                .DefinePrimitive("vector", (caller, args) => new Vector(args), 0, MaxInt)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (parent, args) => VectorToList(First(args)), 1)
+                .DefinePrimitive("vector->list", (caller, args) => VectorToList(First(args)), 1)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                .DefinePrimitive("vector-fill", (parent, args) => VectorFill(First(args), Second(args)), 2)
+                .DefinePrimitive("vector-fill", (caller, args) => VectorFill(First(args), Second(args)), 2)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (parent, args) => Number.Num(Vec(First(args)).VectorLength), 1)
+                .DefinePrimitive("vector-length", (caller, args) => Number.Num(Vec(First(args)).VectorLength), 1)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (parent, args) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
+                .DefinePrimitive("vector-ref", (caller, args) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (parent, args) => Vec(First(args))[(int)Number.Num(Second(args))] = Third(args), 3)
+                .DefinePrimitive("vector-set!", (caller, args) => Vec(First(args))[(int)Number.Num(Second(args))] = Third(args), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (parent, args) => SchemeBoolean.Truth(First(args) is Vector), 1);
+                .DefinePrimitive("vector?", (caller, args) => SchemeBoolean.Truth(First(args) is Vector), 1);
         }
 
         /// <summary>
@@ -157,9 +155,9 @@ namespace SimpleScheme
             buf.Append("#(");
             if (this.VectorLength > 0)
             {
-                foreach (object elem in this)
+                for (int i = 0; i < this.vec.Length; i++)
                 {
-                    SchemeString.AsString(elem, quoted, buf);
+                    SchemeString.AsString(this.vec[i], quoted, buf);
                     buf.Append(' ');
                 }
 
@@ -178,27 +176,6 @@ namespace SimpleScheme
             StringBuilder sb = new StringBuilder();
             this.AsString(false, sb);
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// Enumerates characters from the vector.
-        /// </summary>
-        /// <returns>The vector elements.</returns>
-        public IEnumerator<object> GetEnumerator()
-        {
-            foreach (object obj in this.vec)
-            {
-                yield return obj;
-            }
-        }
-
-        /// <summary>
-        /// Gets the vector enumerator.
-        /// </summary>
-        /// <returns>The vector enumerator.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
         }
 
         /// <summary>

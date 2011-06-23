@@ -5,10 +5,11 @@ namespace AsyncWCF
 {
     using System;
     using System.ServiceModel;
-    using System.ServiceModel.Channels;
     
     /// <summary>
     /// Test the async WCF calls.
+    /// This places an async WCF service call, which itself makes an async call.
+    /// So the async resurn from WCF is really async, and is made when underlying async call returns.,
     /// </summary>
     public class AsyncTest
     {
@@ -20,19 +21,9 @@ namespace AsyncWCF
         // have to enable: netsh http add urlacl url=http://+:8000/IService user=chayden
 
         /// <summary>
-        /// The service binding.
-        /// </summary>
-        private readonly Binding binding = new BasicHttpBinding();
-
-        /// <summary>
         /// The service host.
         /// </summary>
         private readonly ServiceHost host;
-
-        /// <summary>
-        /// The service client.
-        /// </summary>
-        private SampleClient client;
 
         /// <summary>
         /// Initializes a new instance of the AsyncTest class.
@@ -41,7 +32,7 @@ namespace AsyncWCF
         {
             // Set up the service
             this.host = new ServiceHost(typeof(SampleService), new Uri(ServiceAddress));
-            this.host.AddServiceEndpoint(typeof(IService), this.binding, ServiceAddress);
+            this.host.AddServiceEndpoint(typeof(IService), new BasicHttpBinding(), ServiceAddress);
             this.host.Open();
 
             Console.WriteLine("Service is listening.");
@@ -54,12 +45,8 @@ namespace AsyncWCF
         public AsyncTest Run()
         {
             // Make a client request
-            EndpointAddress endpoint = new EndpointAddress(ServiceAddress);
-            ChannelFactory<IService> factory = new ChannelFactory<IService>(this.binding, endpoint);
-            IService proxy = factory.CreateChannel();
-            this.client = new SampleClient(proxy);
-
-            this.RunTest();
+            SampleClient client = new SampleClient(ServiceAddress);
+            RunTest(client);
 
            // Have to delay here to let async operations finish.
            Console.ReadLine();
@@ -80,13 +67,14 @@ namespace AsyncWCF
         /// <summary>
         /// Run the test.
         /// </summary>
-        private void RunTest()
+        /// <param name="client"> The WCF client to use.</param>
+        private static void RunTest(SampleClient client)
         {
             string[] websitesToTest = { "http://microsoft.com/", "http://Wintellect.com", "http://live.com" };
             foreach (var ws in websitesToTest)
             {
                 Console.WriteLine("Requesting: {0}", ws);
-                this.client.GetContentLength(ws);
+                client.GetContentLength(ws);
             }
         }
     }

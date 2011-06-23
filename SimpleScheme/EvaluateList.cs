@@ -14,7 +14,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "list";
+        private const string StepperName = "evaluate-list";
 
         /// <summary>
         /// The counter id.

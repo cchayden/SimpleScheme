@@ -52,7 +52,7 @@ namespace SimpleScheme
             env
                 .DefinePrimitive(
                    "class", 
-                   (parent, args) =>
+                   (caller, args) =>
                         {
                             try
                             {
@@ -67,7 +67,7 @@ namespace SimpleScheme
                      1)
                 .DefinePrimitive(
                     "new",
-                    (parent, args) =>
+                    (caller, args) =>
                         {
                             try
                             {

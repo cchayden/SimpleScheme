@@ -34,89 +34,35 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.3">(append <list> ...)</r4rs>
-                .DefinePrimitive("append", (parent, args) => args == null ? null : Append(args), 0, MaxInt)
+                .DefinePrimitive("append", (caller, args) => args == null ? null : Append(args), 0, MaxInt)
                 //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
-                .DefinePrimitive("assoc", (parent, args) => MemberAssoc(First(args), Second(args), 'a', ' '), 2)
+                .DefinePrimitive("assoc", (caller, args) => MemberAssoc(First(args), Second(args), 'a', ' '), 2)
                 //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
-                .DefinePrimitive("assq", (parent, args) => MemberAssoc(First(args), Second(args), 'a', 'q'), 2)
+                .DefinePrimitive("assq", (caller, args) => MemberAssoc(First(args), Second(args), 'a', 'q'), 2)
                 //// <r4rs section="6.3">(assv <obj> <alist>)</r4rs>
-                .DefinePrimitive("assv", (parent, args) => MemberAssoc(First(args), Second(args), 'a', 'v'), 2)
-                //// <r4rs section="6.3">(caaaar <pair>)</r4rs>
-                .DefinePrimitive("caaaar", (parent, args) => Cxr("caaaar", args), 1)
-                //// <r4rs section="6.3">(caaadr <pair>)</r4rs>
-                .DefinePrimitive("caaadr", (parent, args) => Cxr("caaadr", args), 1)
-                //// <r4rs section="6.3">(caaar <pair>)</r4rs>
-                .DefinePrimitive("caaar", (parent, args) => Cxr("caaar", args), 1)
-                //// <r4rs section="6.3">(caadar <pair>)</r4rs>
-                .DefinePrimitive("caadar", (parent, args) => Cxr("caadar", args), 1)
-                //// <r4rs section="6.3">(caaddr <pair>)</r4rs>
-                .DefinePrimitive("caaddr", (parent, args) => Cxr("caaddr", args), 1)
-                //// <r4rs section="6.3">(caar <pair>)</r4rs>
-                .DefinePrimitive("caar", (parent, args) => Cxr("caar", args), 1)
-                //// <r4rs section="6.3">(cadaar <pair>)</r4rs>
-                .DefinePrimitive("cadaar", (parent, args) => Cxr("cadaar", args), 1)
-                //// <r4rs section="6.3">(cadadr <pair>)</r4rs>
-                .DefinePrimitive("cadadr", (parent, args) => Cxr("cadadr", args), 1)
-                //// <r4rs section="6.3">(cadar <pair>)</r4rs>
-                .DefinePrimitive("cadar", (parent, args) => Cxr("cadar", args), 1)
-                //// <r4rs section="6.3">(caddar <pair>)</r4rs>
-                .DefinePrimitive("caddar", (parent, args) => Cxr("caddar", args), 1)
-                //// <r4rs section="6.3">(cadddr <pair>)</r4rs>
-                .DefinePrimitive("cadddr", (parent, args) => Cxr("cadddr", args), 1)
-                //// <r4rs section="6.3">(caddr <pair>)</r4rs>
-                .DefinePrimitive("caddr", (parent, args) => Cxr("caddr", args), 1)
-                //// <r4rs section="6.3">(cadr <pair>)</r4rs>
-                .DefinePrimitive("cadr", (parent, args) => Cxr("cadr", args), 1)
+                .DefinePrimitive("assv", (caller, args) => MemberAssoc(First(args), Second(args), 'a', 'v'), 2)
                 //// <r4rs section="6.3">(car <pair>)</r4rs>
-                .DefinePrimitive("car", (parent, args) => First(First(args)), 1)
-                .DefinePrimitive("first", (parent, args) => First(First(args)), 1)
-                .DefinePrimitive("second", (parent, args) => Second(First(args)), 1)
-                .DefinePrimitive("third", (parent, args) => Third(First(args)), 1)
-                //// <r4rs section="6.3">(cdaaar <pair>)</r4rs>
-                .DefinePrimitive("cdaaar,", (parent, args) => Cxr("cdaaar", args), 1)
-                //// <r4rs section="6.3">(cdaadr <pair>)</r4rs>
-                .DefinePrimitive("cdaadr", (parent, args) => Cxr("cdaadr", args), 1)
-                //// <r4rs section="6.3">(cdaar <pair>)</r4rs>
-                .DefinePrimitive("cdaar", (parent, args) => Cxr("cdaar", args), 1)
-                //// <r4rs section="6.3">(cdadar <pair>)</r4rs>
-                .DefinePrimitive("cdadar", (parent, args) => Cxr("cdadar", args), 1)
-                //// <r4rs section="6.3">(cdaddr <pair>)</r4rs>
-                .DefinePrimitive("cdaddr", (parent, args) => Cxr("cdaddr", args), 1)
-                //// <r4rs section="6.3">(cdadar <pair>)</r4rs>
-                .DefinePrimitive("cdadr", (parent, args) => Cxr("cdadr", args), 1)
-                //// <r4rs section="6.3">(cdar <pair>)</r4rs>
-                .DefinePrimitive("cdar", (parent, args) => Cxr("cdar", args), 1)
-                //// <r4rs section="6.3">(cddaar <pair>)</r4rs>
-                .DefinePrimitive("cddaar", (parent, args) => Cxr("cddaar", args), 1)
-                //// <r4rs section="6.3">(cddadr <pair>)</r4rs>
-                .DefinePrimitive("cddadr", (parent, args) => Cxr("cddadr", args), 1)
-                //// <r4rs section="6.3">(cddar <pair>)</r4rs>
-                .DefinePrimitive("cddar", (parent, args) => Cxr("cddar", args), 1)
-                //// <r4rs section="6.3">(cdddar <pair>)</r4rs>
-                .DefinePrimitive("cdddar", (parent, args) => Cxr("cdddar", args), 1)
-                //// <r4rs section="6.3">(cdddr <pair>)</r4rs>
-                .DefinePrimitive("cddddr", (parent, args) => Cxr("cddddr", args), 1)
-                //// <r4rs section="6.3">(cdddr <pair>)</r4rs>
-                .DefinePrimitive("cdddr", (parent, args) => Cxr("cdddr", args), 1)
-                //// <r4rs section="6.3">(cddr <pair>)</r4rs>
-                .DefinePrimitive("cddr", (parent, args) => Cxr("cddr", args), 1)
+                .DefinePrimitive("car", (caller, args) => First(First(args)), 1)
+                .DefinePrimitive("first", (caller, args) => First(First(args)), 1)
+                .DefinePrimitive("second", (caller, args) => Second(First(args)), 1)
+                .DefinePrimitive("third", (caller, args) => Third(First(args)), 1)
                 //// <r4rs section="6.3">(cdr <pair>)</r4rs>
-                .DefinePrimitive("cdr", (parent, args) => Rest(First(args)), 1)
-                .DefinePrimitive("rest", (parent, args) => Rest(First(args)), 1)
+                .DefinePrimitive("cdr", (caller, args) => Rest(First(args)), 1)
+                .DefinePrimitive("rest", (caller, args) => Rest(First(args)), 1)
                 //// <r4rs section="6.3">(cons <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("cons", (parent, args) => Cons(First(args), Second(args)), 2)
+                .DefinePrimitive("cons", (caller, args) => Cons(First(args), Second(args)), 2)
                 //// <r4rs section="6.3">(length <list> ...)</r4rs>
-                .DefinePrimitive("length", (parent, args) => Number.Num(Length(First(args))), 1)
+                .DefinePrimitive("length", (caller, args) => Number.Num(Length(First(args))), 1)
                 //// <r4rs section="6.3">(list <obj> ...)</r4rs>
-                .DefinePrimitive("list", (parent, args) => args, 0, MaxInt)
+                .DefinePrimitive("list", (caller, args) => args, 0, MaxInt)
                 //// <r4rs section="6.7">(list->string <chars>)</r4rs>
-                .DefinePrimitive("list->string", (parent, args) => SchemeString.ListToString(First(args)), 1)
+                .DefinePrimitive("list->string", (caller, args) => SchemeString.ListToString(First(args)), 1)
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (parent, args) => new Vector(First(args)), 1)
+                .DefinePrimitive("list->vector", (caller, args) => new Vector(First(args)), 1)
                 //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
                 .DefinePrimitive(
                    "list-ref",
-                   (parent, args) =>
+                   (caller, args) =>
                    {
                        object first = First(args);
                        object second = Second(args);
@@ -131,7 +77,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(list-tail <list> <k>)</r4rs>
                 .DefinePrimitive(
                    "list-tail",
-                   (parent, args) =>
+                   (caller, args) =>
                    {
                        object first = First(args);
                        object second = Second(args);
@@ -144,23 +90,46 @@ namespace SimpleScheme
                    },
                     2)
                 //// <r4rs section="6.3">(list? <obj>)</r4rs>
-                .DefinePrimitive("list?", (parent, args) => SchemeBoolean.Truth(IsList(First(args))), 1)
+                .DefinePrimitive("list?", (caller, args) => SchemeBoolean.Truth(IsList(First(args))), 1)
                 //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
-                .DefinePrimitive("member", (parent, args) => MemberAssoc(First(args), Second(args), 'm', ' '), 2)
+                .DefinePrimitive("member", (caller, args) => MemberAssoc(First(args), Second(args), 'm', ' '), 2)
                 //// <r4rs section="6.3">(memq <obj> <list>)</r4rs>
-                .DefinePrimitive("memq", (parent, args) => MemberAssoc(First(args), Second(args), 'm', 'q'), 2)
+                .DefinePrimitive("memq", (caller, args) => MemberAssoc(First(args), Second(args), 'm', 'q'), 2)
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
-                .DefinePrimitive("memv", (parent, args) => MemberAssoc(First(args), Second(args), 'm', 'v'), 2)
+                .DefinePrimitive("memv", (caller, args) => MemberAssoc(First(args), Second(args), 'm', 'v'), 2)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (parent, args) => SchemeBoolean.Truth(First(args) is Pair), 1)
+                .DefinePrimitive("pair?", (caller, args) => SchemeBoolean.Truth(First(args) is Pair), 1)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
-                .DefinePrimitive("reverse", (parent, args) => Reverse(First(args)), 1)
+                .DefinePrimitive("reverse", (caller, args) => Reverse(First(args)), 1)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
-                .DefinePrimitive("set-car!", (parent, args) => SetFirst(First(args), Second(args)), 2)
-                .DefinePrimitive("set-first!", (parent, args) => SetFirst(First(args), Second(args)), 2)
+                .DefinePrimitive("set-car!", (caller, args) => SetFirst(First(args), Second(args)), 2)
+                .DefinePrimitive("set-first!", (caller, args) => SetFirst(First(args), Second(args)), 2)
                 //// <r4rs section="6.3">(set-cdr! <pair> <obj>)</r4rs>
-                .DefinePrimitive("set-cdr!", (parent, args) => SetRest(First(args), Second(args)), 2)
-                .DefinePrimitive("set-rest!", (parent, args) => SetRest(First(args), Second(args)), 2);
+                .DefinePrimitive("set-cdr!", (caller, args) => SetRest(First(args), Second(args)), 2)
+                .DefinePrimitive("set-rest!", (caller, args) => SetRest(First(args), Second(args)), 2);
+
+            DefineAccessPrimitives(env, "aa");
+            DefineAccessPrimitives(env, "ad");
+            DefineAccessPrimitives(env, "da");
+            DefineAccessPrimitives(env, "dd");
+        }
+
+        /// <summary>
+        /// Define all the combinations of c[ad]+r functions up to four levels.
+        /// </summary>
+        /// <param name="env">The environment to define the functions in.</param>
+        /// <param name="access">The access string so far.</param>
+        private static void DefineAccessPrimitives(Environment env, string access)
+        {
+            string prim = "c" + access + "r";
+            env.DefinePrimitive(prim, (caller, args) => Cxr(prim, args), 1);
+            if (access.Length >= 4)
+            {
+                return;
+            }
+
+            DefineAccessPrimitives(env, access + "a");
+            DefineAccessPrimitives(env, access + "d");
         }
 
         // Destructive list operations

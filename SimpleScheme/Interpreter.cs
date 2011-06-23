@@ -131,15 +131,15 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             env
-                .DefinePrimitive("trace-on", (parent, args) => parent.Env.Interp.Trace = true, 0)
-                .DefinePrimitive("trace-off", (parent, args) => parent.Env.Interp.Trace = false, 0)
-                .DefinePrimitive("counters-on", (parent, args) => parent.Env.Interp.Count = true, 0)
-                .DefinePrimitive("counters-off", (parent, args) => parent.Env.Interp.Count = false, 0)
+                .DefinePrimitive("trace-on", (caller, args) => caller.Env.Interp.Trace = true, 0)
+                .DefinePrimitive("trace-off", (caller, args) => caller.Env.Interp.Trace = false, 0)
+                .DefinePrimitive("counters-on", (caller, args) => caller.Env.Interp.Count = true, 0)
+                .DefinePrimitive("counters-off", (caller, args) => caller.Env.Interp.Count = false, 0)
                 .DefinePrimitive(
                     "backtrace",
-                    (parent, args) =>
+                    (caller, args) =>
                         {
-                            Console.Out.WriteLine(parent.StackBacktrace());
+                            Console.Out.WriteLine(caller.StackBacktrace());
                             return null;
                         },
                     0);
@@ -201,6 +201,11 @@ namespace SimpleScheme
             return this.EvalStep(EvaluateExpression.Call(this.halted, expr, env));
         }
 
+        // TODO instead of calling Name in the step, call TraceStep.
+        // TODO TraceStep should show name and any relevant operands
+        // TODO evaluate-proc should show the proc name
+        // TODO It should do it only once per stepper
+
         /// <summary>
         /// Perform steps until evaluation is complete or suspended.
         /// After suspension, return to this entry point.
@@ -229,7 +234,11 @@ namespace SimpleScheme
 
                 if (this.Trace && lastStep != step)
                 {
-                    Console.Out.WriteLine("{0}: {1}", step.Name, step.Expr);
+                    string info = step.TraceInfo();
+                    if (info != null)
+                    {
+                        Console.Out.WriteLine("{0}: {1}", info, step.Expr);
+                    }
                 }
 
                 if (step == null)

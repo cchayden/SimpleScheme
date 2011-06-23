@@ -27,6 +27,11 @@ namespace SimpleScheme
         private static readonly int counterId = Counter.Create(StepperName);
 
         /// <summary>
+        /// Indicates whether a trace has been performed on this stepper instance.
+        /// </summary>
+        private bool traced;
+
+        /// <summary>
         /// Initializes a new instance of the Stepper class.
         /// </summary>
         /// <param name="caller">The caller evaluator.</param>
@@ -37,6 +42,7 @@ namespace SimpleScheme
             this.Caller = caller;
             this.Expr = expr;
             this.Env = env;
+            this.traced = false;
 
             this.IncrementCounter(counterId);
         }
@@ -110,6 +116,21 @@ namespace SimpleScheme
             nextStep.ReturnedExpr = expr;
             nextStep.ReturnedEnv = env;
             return nextStep;
+        }
+
+        /// <summary>
+        /// Trace information for the step.
+        /// </summary>
+        /// <returns>Info to print for the trace.</returns>
+        public virtual string TraceInfo()
+        {
+            if (this.traced)
+            {
+                return null;
+            }
+
+            this.traced = true;
+            return this.Name;
         }
 
         /// <summary>

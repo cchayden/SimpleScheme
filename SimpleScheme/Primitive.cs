@@ -103,5 +103,14 @@ namespace SimpleScheme
             //  to the caller.
             return caller.ContinueStep(res);
         }
+
+        /// <summary>
+        /// The string form of a proc is its name in curly brackets.
+        /// </summary>
+        /// <returns>The name of the proc.</returns>
+        public override string ToString()
+        {
+            return "{" + this.Name + "}";
+        }
     }
 }

@@ -1,0 +1,14 @@
+Async notes
+
+client returns synchronously -- get result and keep going
+client returns asynchronbously -- return stepper and get result later
+
+server returns synchronously
+server returns asynchronously
+
+server calls client async, return all the way back;
+  eventually return when client is done
+
+fibonacci -- returns a different value each call
+primes -- returns the nth prime
+

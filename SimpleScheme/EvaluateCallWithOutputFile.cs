@@ -13,7 +13,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "call-with-output-file";
+        private const string StepperName = "evaluate-call-with-output-file";
 
         /// <summary>
         /// The counter id.

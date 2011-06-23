@@ -60,35 +60,35 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-output-file",
-                    (parent, args) => EvaluateCallWithOutputFile.Call(parent, args), 
+                    (caller, args) => EvaluateCallWithOutputFile.Call(caller, args), 
                     2)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
                 .DefinePrimitive(
                     "close-output-port",
-                    (parent, args) =>
+                    (caller, args) =>
                         {
-                            OutPort(First(args), parent.Env.Interp).Close();
+                            OutPort(First(args), caller.Env.Interp).Close();
                             return SchemeBoolean.True;
                         },
                     1)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
-                .DefinePrimitive("current-output-port", (parent, args) => parent.Env.Interp.Output, 0)
+                .DefinePrimitive("current-output-port", (caller, args) => caller.Env.Interp.Output, 0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
                 .DefinePrimitive(
                     "display",
-                    (parent, args) => Write(First(args), OutPort(Second(args), parent.Env.Interp), false),
+                    (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp), false),
                     1, 
                     2)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
                 .DefinePrimitive(
                     "newline",
-                    (parent, args) =>
+                    (caller, args) =>
                         {
                             object first = First(args);
-                            OutPort(first, parent.Env.Interp).Println();
-                            OutPort(first, parent.Env.Interp).Flush();
+                            OutPort(first, caller.Env.Interp).Println();
+                            OutPort(first, caller.Env.Interp).Flush();
                             return SchemeBoolean.True;
                         },
                     0,
@@ -96,30 +96,30 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
                 .DefinePrimitive(
                     "open-output-file",
-                    (parent, args) => EvaluateCallWithOutputFile.OpenOutputFile(First(args)), 
+                    (caller, args) => EvaluateCallWithOutputFile.OpenOutputFile(First(args)), 
                     1)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (parent, args) => SchemeBoolean.Truth(First(args) is OutputPort), 1)
+                .DefinePrimitive("output-port?", (caller, args) => SchemeBoolean.Truth(First(args) is OutputPort), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
                 .DefinePrimitive(
                    "write",
-                   (parent, args) => Write(First(args), OutPort(Second(args), parent.Env.Interp), true), 
+                   (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp), true), 
                    1,
                    2)
-                .DefinePrimitive("p", (parent, args) => P(First(args)), 1, 1)
+                .DefinePrimitive("p", (caller, args) => P(First(args)), 1, 1)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
                 .DefinePrimitive(
                     "write-char",
-                    (parent, args) => Write(First(args), OutPort(Second(args), parent.Env.Interp), false),
+                    (caller, args) => Write(First(args), OutPort(Second(args), caller.Env.Interp), false),
                     1,
                     2)
                 .DefinePrimitive(
                     "dump-env",
-                    (parent, args) =>
+                    (caller, args) =>
                         {
-                            parent.Env.DumpEnv();
+                            caller.Env.DumpEnv();
                             return null;
                         },
                     0);

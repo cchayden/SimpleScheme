@@ -13,7 +13,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "or";
+        private const string StepperName = "evaluate-or";
 
         /// <summary>
         /// The counter id.

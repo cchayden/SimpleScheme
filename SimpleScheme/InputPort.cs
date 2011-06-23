@@ -60,29 +60,29 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
-                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
+                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
-                .DefinePrimitive("call-with-input-file", (parent, args) => EvaluateCallWithInputFile.Call(parent, args), 2)
+                .DefinePrimitive("call-with-input-file", (caller, args) => EvaluateCallWithInputFile.Call(caller, args), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (parent, args) => InPort(First(args), parent.Env.Interp).Close(), 1)
+                .DefinePrimitive("close-input-port", (caller, args) => InPort(First(args), caller.Env.Interp).Close(), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
-                .DefinePrimitive("current-input-port", (parent, args) => parent.Env.Interp.Input, 0)
-                .DefinePrimitive("eof-object?", (parent, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
+                .DefinePrimitive("current-input-port", (caller, args) => caller.Env.Interp.Input, 0)
+                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEOF(First(args))), 1)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (parent, args) => SchemeBoolean.Truth(First(args) is InputPort), 1)
+                .DefinePrimitive("input-port?", (caller, args) => SchemeBoolean.Truth(First(args) is InputPort), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (parent, args) => parent.Env.Interp.LoadFile(First(args)), 1)
+                .DefinePrimitive("load", (caller, args) => caller.Env.Interp.LoadFile(First(args)), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
-                .DefinePrimitive("open-input-file", (parent, args) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
+                .DefinePrimitive("open-input-file", (caller, args) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (parent, args) => InPort(First(args), parent.Env.Interp).PeekChar(), 0, 1)
+                .DefinePrimitive("peek-char", (caller, args) => InPort(First(args), caller.Env.Interp).PeekChar(), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (parent, args) => InPort(First(args), parent.Env.Interp).Read(), 0, 1)
+                .DefinePrimitive("read", (caller, args) => InPort(First(args), caller.Env.Interp).Read(), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (parent, args) => InPort(First(args), parent.Env.Interp).ReadChar(), 0, 1);
+                .DefinePrimitive("read-char", (caller, args) => InPort(First(args), caller.Env.Interp).ReadChar(), 0, 1);
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "closure";
+        private const string StepperName = "evaluate-closure";
 
         /// <summary>
         /// The counter id.

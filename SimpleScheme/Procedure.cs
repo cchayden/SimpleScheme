@@ -39,38 +39,38 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (parent, args) => Proc(First(args)).Apply(parent, ListStar(Rest(args))), 2, MaxInt)
+                .DefinePrimitive("apply", (caller, args) => Proc(First(args)).Apply(caller, ListStar(Rest(args))), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-current-continuation",
-                    (parent, args) => Proc(First(args)).Apply(
-                        parent,
-                        MakeList(new Continuation(EvaluateContinuation.Call(parent, First(args))))),
+                    (caller, args) => Proc(First(args)).Apply(
+                        caller,
+                        MakeList(new Continuation(EvaluateContinuation.Call(caller, First(args))))),
                     1)
                 .DefinePrimitive(
                     "call/cc",
-                    (parent, args) => Proc(First(args)).Apply(
-                        parent,
-                        MakeList(new Continuation(EvaluateContinuation.Call(parent, First(args))))),
+                    (caller, args) => Proc(First(args)).Apply(
+                        caller,
+                        MakeList(new Continuation(EvaluateContinuation.Call(caller, First(args))))),
                     1)
 
                  // Instead of returning a value, return an evaulator that can be run to get the value
-                .DefinePrimitive("eval", (parent, args) => EvaluateExpression.Call(parent, First(args), parent.Env), 1, 2)
+                .DefinePrimitive("eval", (caller, args) => EvaluateExpression.Call(caller, First(args), caller.Env), 1, 2)
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
                    "force",
-                   (parent, args) =>
+                   (caller, args) =>
                    {
                        object first = First(args);
-                       return !(first is Procedure) ? first : Proc(first).Apply(parent, null);
+                       return !(first is Procedure) ? first : Proc(first).Apply(caller, null);
                    },
                    1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (parent, args) => EvaluateMap.Call(parent, Rest(args), Proc(First(args)), null), 1, MaxInt)
+                .DefinePrimitive("for-each", (caller, args) => EvaluateMap.Call(caller, Rest(args), Proc(First(args)), null), 1, MaxInt)
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (parent, args) => EvaluateMap.Call(parent, Rest(args), Proc(First(args)), MakeList(null)), 1, MaxInt)
+                .DefinePrimitive("map", (caller, args) => EvaluateMap.Call(caller, Rest(args), Proc(First(args)), MakeList(null)), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (parent, args) => SchemeBoolean.Truth(First(args) is Procedure), 1);
+                .DefinePrimitive("procedure?", (caller, args) => SchemeBoolean.Truth(First(args) is Procedure), 1);
         }
 
         /// <summary>
@@ -100,15 +100,6 @@ namespace SimpleScheme
             {
                 this.Name = name;
             }
-        }
-
-        /// <summary>
-        /// The string form of a proc is its name in curly brackets.
-        /// </summary>
-        /// <returns>The name of the proc.</returns>
-        public override string ToString()
-        {
-            return "{" + this.Name + "}";
         }
 
         /// <summary>

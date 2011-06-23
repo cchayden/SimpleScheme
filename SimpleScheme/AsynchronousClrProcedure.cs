@@ -63,7 +63,7 @@ namespace SimpleScheme
             env
                 .DefinePrimitive(
                    "method-async",
-                   (parent, args) => new AsynchronousClrProcedure(First(args), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
+                   (caller, args) => new AsynchronousClrProcedure(First(args), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
                    2,
                    MaxInt);
         }
@@ -124,8 +124,7 @@ namespace SimpleScheme
         /// <returns>An array of arguments for the method call.</returns>
         private List<object> ToArgListBegin(object args, object state)
         {
-            AsyncCallback cm = this.CompletionMethod;
-            object[] additionalArgs = { cm, state };
+            object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
             return ToArgList(args, additionalArgs);
         }
 
@@ -142,7 +141,7 @@ namespace SimpleScheme
             object res = this.endMethodInfo.Invoke(state.InvokedObject, args);
             caller.ContinueStep(res);
 
-            // Continue executing steps.  In effect, this thread takes over stepping
+            // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
             caller.Env.Interp.EvalStep(caller);
         }

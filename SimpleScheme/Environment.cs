@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <summary>
         /// The symbol table for this enviornment.
         /// </summary>
-        private readonly SymbolTable symbolTable = new SymbolTable();
+        private readonly SymbolTable symbolTable;
 
         /// <summary>
         /// The counter id.
@@ -32,11 +32,14 @@ namespace SimpleScheme
         /// </summary>
         public Environment()
         {
+            this.symbolTable = new SymbolTable(0);
         }
         
         /// <summary>
         /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
+        /// When we refer to "parent" we mean the enclosing lexical environment.
+        /// When we refer to "caller" it means the procedure that is invoking a step.
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="parent">The parent environment.</param>
@@ -44,6 +47,7 @@ namespace SimpleScheme
         {
             this.Interp = interp;
             this.Parent = parent;
+            this.symbolTable = new SymbolTable(0);
             interp.IncrementCounter(counter);
         }
 
@@ -59,11 +63,13 @@ namespace SimpleScheme
         {
             this.Parent = parent;
             this.Interp = parent.Interp;
-            if (!NumberArgsOk(formals, vals))
+            int count;
+            if (!NumberArgsOk(formals, vals, out count))
             {
                 ErrorHandlers.Warn("Wrong number of arguments: expected " + formals + " got " + vals);
             }
 
+            this.symbolTable = new SymbolTable(count);
             this.symbolTable.AddList(formals, vals);
         }
 
@@ -86,6 +92,7 @@ namespace SimpleScheme
         /// <returns>The environment.</returns>
         public Environment InstallPrimitives()
         {
+            EvaluateExpression.DefinePrimitives(this);
             Number.DefinePrimitives(this);
             Procedure.DefinePrimitives(this);
             List.DefinePrimitives(this);
@@ -104,14 +111,14 @@ namespace SimpleScheme
             this
                 .DefinePrimitive(
                    "exit", 
-                   (parent, args) =>
+                   (caller, args) =>
                        {
                             System.Environment.Exit(First(args) == null ? 0 : (int)Number.Num(First(args)));
                             return null;
                         },
                    0, 
                    1)
-                .DefinePrimitive("time-call", (parent, args) => EvaluateTimeCall.Call(parent, args), 1, 2);
+                .DefinePrimitive("time-call", (caller, args) => EvaluateTimeCall.Call(caller, args), 1, 2);
 
             return this;
         }
@@ -279,10 +286,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="vars">The variable list</param>
         /// <param name="vals">The value list</param>
+        /// <param name="count">The number of variables in the list</param>
         /// <returns>True if the lists are both null, if the variable list is just a string, 
         /// or if they are both lists of the same length.</returns>
-        private static bool NumberArgsOk(object vars, object vals)
+        private static bool NumberArgsOk(object vars, object vals, out int count)
         {
+            count = 0;
             while (true)
             {
                 if ((vars == null && vals == null) || (vars is string))
@@ -297,6 +306,7 @@ namespace SimpleScheme
 
                 vars = Rest(vars);
                 vals = Rest(vals);
+                count++;
             }
         }
 
@@ -308,7 +318,12 @@ namespace SimpleScheme
             /// <summary>
             /// Stores symbols and their values.
             /// </summary>
-            private readonly Dictionary<object, object> symbolTable = new Dictionary<object, object>();
+            private readonly Dictionary<object, object> symbolTable;
+
+            public SymbolTable(int count)
+            {
+                symbolTable = new Dictionary<object, object>(count);
+            }
 
             /// <summary>
             /// Look up a symbol given its name.

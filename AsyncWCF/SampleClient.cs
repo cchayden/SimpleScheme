@@ -4,6 +4,8 @@
 namespace AsyncWCF
 {
     using System;
+    using System.ServiceModel;
+    using System.ServiceModel.Channels;
 
     /// <summary>
     /// Sample client asks server to get content length of a uri.
@@ -16,18 +18,14 @@ namespace AsyncWCF
         private readonly IService proxy;
 
         /// <summary>
-        /// The URI of the website to measure.
-        /// </summary>
-        private string uri;
-
-        /// <summary>
         /// Initializes a new instance of the SampleClient class.
         /// </summary>
-        /// <param name="proxy">The proxy to use.</param>
-        public SampleClient(IService proxy)
+        /// <param name="serviceAddress">The service address to use.</param>
+        public SampleClient(string serviceAddress)
         {
-            this.proxy = proxy;
-            this.ResultAvailable = false;
+            EndpointAddress endpoint = new EndpointAddress(serviceAddress);
+            ChannelFactory<IService> factory = new ChannelFactory<IService>(new BasicHttpBinding(), endpoint);
+            this.proxy = factory.CreateChannel();
         }
 
         /// <summary>
@@ -48,8 +46,7 @@ namespace AsyncWCF
         {
             // Call server, receive async callback when finished.
             AsyncCallback ac = this.Callback;
-            this.uri = websiteToTest;
-            this.proxy.BeginGetContentLength(websiteToTest, ac, null);
+            this.proxy.BeginGetContentLength(websiteToTest, ac, websiteToTest);
         }
 
         /// <summary>
@@ -60,7 +57,7 @@ namespace AsyncWCF
         {
             this.ContentLength = this.proxy.EndGetContentLength(ar);
             this.ResultAvailable = true;
-            Console.WriteLine("Content length of {0}: {1}", this.uri, this.ContentLength);
+            Console.WriteLine("Content length of {0}: {1}", ar.AsyncState, this.ContentLength);
         }
     }
 }

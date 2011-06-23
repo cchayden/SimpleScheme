@@ -86,7 +86,8 @@ namespace SimpleScheme
         protected string ToString(string tag)
         {
             string formals = this.FormalParameters == null ? "()" : this.FormalParameters.ToString();
-            return string.Format("({0} {1} {2})", tag, formals, this.Body);
+            string body = this.Body == null ? "()" : this.Body.ToString();
+            return string.Format("({0} {1} {2})", tag, formals, body);
         }
     }
 }

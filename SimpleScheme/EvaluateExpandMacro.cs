@@ -11,7 +11,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "expand-macro";
+        private const string StepperName = "evaluate-expand-macro";
 
         /// <summary>
         /// The macro to expand.
