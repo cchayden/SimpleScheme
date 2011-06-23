@@ -106,7 +106,20 @@ namespace SimpleScheme
         public abstract Stepper EvalStep();
     }
 
-    public class EvaluatorMain : Evaluator
+    public class EvaluatorReturn : Evaluator
+    {
+        public EvaluatorReturn()
+            : base(null, null, null, null)
+        {
+        }
+
+        public override Stepper EvalStep()
+        {
+            throw new Exception("Do not call RvaluatorReturn::EvalStep");
+        }
+    }
+
+        public class EvaluatorMain : Evaluator
     {
         public EvaluatorMain(Scheme interp, Stepper parent, object expr, Environment env) 
                 : base(interp, parent, expr, env)
@@ -125,15 +138,16 @@ namespace SimpleScheme
         public override Stepper EvalStep()
         {
 
-            if (this.pc == 1)
+            if (this.pc == 101)
             {
                 this.expr = this.called.Expr;
                 return this.parent;
             }
 
-            if (this.pc == 101)
+            if (this.pc == 1)
             {
                 this.expr = this.called.Expr;
+                this.pc = 0;
             }
 
             if (this.expr is string)
@@ -172,7 +186,7 @@ namespace SimpleScheme
                         //   and returning the last.
                         this.called = new EvaluatorSequence(this.interp, this.EvalStep, args, this.env);
                         var next = this.called.EvalStep();
-                        // pc = 1;
+                        // pc = 101;
                         this.expr = this.called.Expr;    //////////////////
                         return next;
                     }
@@ -201,7 +215,7 @@ namespace SimpleScheme
 #if OLDIF
                         this.called = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
                         var next = this.called.EvalStep();
-                        this.expr = this.called.Expr;     /////////////////////////////
+                        this.pc = 1;
                         return next;
 #else
                         this.called1 = new EvaluatorIf(this.interp, this.EvalStep, args, this.env);
@@ -257,57 +271,6 @@ namespace SimpleScheme
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
             this.expr = this.ApplyProc(fn, args);
-            return this.parent;
-        }
-
-
-#if OLDIF
-        private Stepper EvalIf()
-        {
-            object value = this.interp.Eval(First(this.expr), this.env);
- Console.WriteLine("EvalIf {0} {1}", this.expr, value);
-            this.expr = Truth(value) ? Second(this.expr) : Third(this.expr);
-Console.WriteLine("EvalIf result: {0}", this.expr);
-            return this.parent;
-        }
-#else
-        private object value;
-        /// <summary>
-        /// Evaluate an if expression.
-        /// </summary>
-        /// <returns>The next step to execute.</returns>
-        private Stepper EvalIf()
-        {
-            switch (this.pc)
-            {
-                case 0:
-                    this.value = this.interp.Eval(First(this.expr), this.env);
- Console.WriteLine("EvalIf 1 {0} {1}", expr, value);
-                    this.pc = 1;
-                    return this.EvalIf;
-                case 1:
- Console.WriteLine("EvalIf 2 {0} {1}", this.expr, this.value);
-                    expr = Truth(this.value) ? Second(this.expr) : Third(this.expr);
-Console.WriteLine("EvalIf result: {0}", expr);
-                    break;
-            }
-            return this.parent;
-        }
-#endif
-
-        /// <summary>
-        /// Evaluate a sequence of objects, returning the last.
-        /// </summary>
-        /// <returns>The next step.</returns>
-        private Stepper EvalSequence()
-        {
-            while (Rest(this.expr) != null)
-            {
-                this.interp.Eval(First(this.expr), this.env);
-                this.expr = Rest(this.expr);
-            }
-
-            this.expr = First(this.expr);
             return this.parent;
         }
 
@@ -480,8 +443,6 @@ Console.WriteLine("EvalIf result: {0}", expr);
 #if OLDIF
     public class EvaluatorIf : Evaluator
     {
-        private object temp;
-
         public EvaluatorIf(Scheme interp, Stepper parent, object expr, Environment env) 
             : base(interp, parent, expr, env) { }
 
