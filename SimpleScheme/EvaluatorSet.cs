@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         private class EvaluatorSet : Evaluator
@@ -32,10 +34,9 @@ namespace SimpleScheme
                         first = First(this.Expr);
                         return CallEval(Second(this.Expr));
                     case 1:
-                        this.RetExpr = this.Env.Set(first, ReturnedExpr);
-                        break;
+                        return SubReturn(this.Env.Set(first, ReturnedExpr));
                 }
-                return EvalReturn();
+                throw new Exception("program counter error");
             }
 
         }

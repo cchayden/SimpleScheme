@@ -252,9 +252,13 @@ namespace SimpleScheme
                 .DefPrim("caddr", OpCode.CXR, 1)
                 .DefPrim("cadr", OpCode.CXR, 1)
                 .DefPrim("call-with-current-continuation", OpCode.CALLCC, 1)
+                .DefPrim("call/cc", OpCode.CALLCC, 1)
                 .DefPrim("call-with-input-file", OpCode.CALLWITHINPUTFILE, 2)
                 .DefPrim("call-with-output-file", OpCode.CALLWITHOUTPUTFILE, 2)
                 .DefPrim("car", OpCode.CAR, 1)
+                .DefPrim("first", OpCode.CAR, 1)
+                .DefPrim("second", OpCode.SECOND, 1)
+                .DefPrim("third", OpCode.THIRD, 1)
                 .DefPrim("cdaaar,", OpCode.CXR, 1)
                 .DefPrim("cdaadr", OpCode.CXR, 1)
                 .DefPrim("cdaar", OpCode.CXR, 1)
@@ -270,6 +274,7 @@ namespace SimpleScheme
                 .DefPrim("cdddr", OpCode.CXR, 1)
                 .DefPrim("cddr", OpCode.CXR, 1)
                 .DefPrim("cdr", OpCode.CDR, 1)
+                .DefPrim("rest", OpCode.CDR, 1)
                 .DefPrim("char->integer", OpCode.CHARTOINTEGER, 1)
                 .DefPrim("char-alphabetic?", OpCode.CHARALPHABETICQ, 1)
                 .DefPrim("char-ci<=?", OpCode.CHARCICMPLE, 2)
@@ -356,7 +361,9 @@ namespace SimpleScheme
                 .DefPrim("reverse", OpCode.REVERSE, 1)
                 .DefPrim("round", OpCode.ROUND, 1)
                 .DefPrim("set-car!", OpCode.SETCAR, 2)
+                .DefPrim("set-first!", OpCode.SETCAR, 2)
                 .DefPrim("set-cdr!", OpCode.SETCDR, 2)
+                .DefPrim("set-rest!", OpCode.SETCDR, 2)
                 .DefPrim("sin", OpCode.SIN, 1)
                 .DefPrim("sqrt", OpCode.SQRT, 1)
                 .DefPrim("string", OpCode.STRING, 0, MaxInt)
@@ -410,7 +417,7 @@ namespace SimpleScheme
         /// <param name="interp">The interpreter context.</param>
         /// <param name="args">The arguments to the primitive.</param>
         /// <returns>The result of the application.</returns>
-        public override object Apply(Scheme interp, object args)
+        public override object Apply(Scheme interp, Evaluator parent, object args)
         {
             int numArgs = Length(args);
             if (numArgs < this.minArgs)
@@ -860,32 +867,33 @@ namespace SimpleScheme
 
                     // 6.9 CONTROL FEATURES
                 case OpCode.EVAL:
-                    return interp.Eval(x);
+                    // Instead of returning a value, return an evaulator that can be run to get the value
+                    return Evaluator.CallMain(interp, parent, x, interp.GlobalEnvironment);
 
                 case OpCode.FORCE:
-                    return !(x is Procedure) ? x : Proc(x).Apply(interp, null);
+                    return !(x is Procedure) ? x : Proc(x).Apply(interp, parent, null);
 
                 case OpCode.MACROEXPAND:
-                    return Macro.MacroExpand(interp, x);
+                    return Macro.MacroExpand(interp, parent, x);
 
                 case OpCode.PROCEDUREQ:
                     return Truth(x is Procedure);
 
                 case OpCode.APPLY:
-                    return Proc(x).Apply(interp, ListStar(Rest(args)));
+                    return Proc(x).Apply(interp, parent, ListStar(Rest(args)));
 
                 case OpCode.MAP:
-                    return Map(Proc(x), Rest(args), interp, List(null));
+                    return Map(Proc(x), Rest(args), interp, parent, List(null));
 
                 case OpCode.FOREACH:
-                    return Map(Proc(x), Rest(args), interp, null);
+                    return Map(Proc(x), Rest(args), interp, parent, null);
 
                 case OpCode.CALLCC:
                     Exception cc = new Exception();
                     Continuation proc = new Continuation(cc);
                     try
                     {
-                        return Proc(x).Apply(interp, List(proc));
+                        return Proc(x).Apply(interp, parent, List(proc));
                     }
                     catch (Exception ex)
                     {
@@ -927,7 +935,7 @@ namespace SimpleScheme
                     try
                     {
                         p = OpenOutputFile(x);
-                        z = Proc(y).Apply(interp, List(p));
+                        z = Proc(y).Apply(interp, parent, List(p));
                     }
                     finally
                     {
@@ -944,7 +952,7 @@ namespace SimpleScheme
                     try
                     {
                         p2 = OpenInputFile(x);
-                        z = Proc(y).Apply(interp, List(p2));
+                        z = Proc(y).Apply(interp, parent, List(p2));
                     }
                     finally
                     {
@@ -1044,7 +1052,7 @@ namespace SimpleScheme
                     int counter = y == null ? 1 : (int)Num(y);
                     for (int i = 0; i < counter; i++)
                     {
-                        ans = Proc(x).Apply(interp, null);
+                        ans = Proc(x).Apply(interp, parent, null);
                     }
 
                     stopwatch.Stop();
@@ -1226,7 +1234,7 @@ namespace SimpleScheme
         /// <param name="result">The result so far.  Starts as the empty list.</param>
         /// <returns>A list made up of the proc applied to corresponding elements of 
         ///     each of the elements of args.</returns>
-        private static Pair Map(Procedure proc, object args, Scheme interp, Pair result)
+        private static Pair Map(Procedure proc, object args, Scheme interp, Evaluator parent, Pair result)
         {
             Pair accum = result;
             if (Rest(args) == null)
@@ -1236,7 +1244,7 @@ namespace SimpleScheme
                 args = First(args);
                 while (args is Pair)
                 {
-                    object x = proc.Apply(interp, List(First(args)));
+                    object x = proc.Apply(interp, null, List(First(args)));
                     if (accum != null)
                     {
                         // Builds a list by tacking new values onto the tail.
@@ -1248,13 +1256,13 @@ namespace SimpleScheme
             }
             else
             {
-                Procedure car = Proc(interp.Eval("car"));
-                Procedure cdr = Proc(interp.Eval("cdr"));
+                Procedure car = (Procedure)Evaluator.GlobalEvalString("car", interp);
+                Procedure cdr = (Procedure)Evaluator.GlobalEvalString("cdr", interp);
                 while (First(args) is Pair)
                 {
                     // Inner Map prepares a list of the first element of each list.
                     // The the proc is applied to it.
-                    object x = proc.Apply(interp, Map(car, List(args), interp, List(null)));
+                    object x = proc.Apply(interp, null, Map(car, List(args), interp, parent, List(null)));
                     if (accum != null)
                     {
                         // Builds a list by tacking new values onto the tail.
@@ -1262,7 +1270,7 @@ namespace SimpleScheme
                     }
 
                     // Make a list that has the rest of each of the given lists.
-                    args = Map(cdr, List(args), interp, List(null));
+                    args = Map(cdr, List(args), interp, parent, List(null));
                 }
             }
 
@@ -1593,6 +1601,11 @@ namespace SimpleScheme
             {
                 return False;
             }
+        }
+
+        public override Evaluator ApplyStep()
+        {
+            return null;
         }
     }
 }

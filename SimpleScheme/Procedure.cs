@@ -74,6 +74,8 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the procedure, which have 
         ///    been evaluated.</param>
         /// <returns>The result of applying the procedure to the arguments.</returns>
-        public abstract object Apply(Scheme interpreter, object args);
+        public abstract object Apply(Scheme interpreter, Evaluator parent, object args);
+
+        public abstract Evaluator ApplyStep();
     }
 }

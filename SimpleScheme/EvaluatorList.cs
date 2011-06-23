@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         /// <summary>
@@ -37,20 +39,18 @@ namespace SimpleScheme
                         // first check for degenerate cases
                         if (this.Expr == null)
                         {
-                            this.RetExpr = null;
-                            break;
+                            return SubReturn(null);
                         }
 
                         if (!(this.Expr is Pair))
                         {
                             Error("Illegal arg list: " + this.Expr);
-                            this.RetExpr = null;
-                            break;
+                            return SubReturn(null);
                         }
                         // start with an empty list
                         accum = result = List(null); // empty cell will be stripped off below
                         Pc = 1;
-                        return EvalContinue();
+                        return SubContinue();
                     case 1:
                         if (this.Expr is Pair)
                         {
@@ -59,16 +59,15 @@ namespace SimpleScheme
                             return CallEval(First(this.Expr));
                         }
                         // if we are done, just return the result minus the dummy entry
-                        this.RetExpr = result.Rest;
-                        break;
+                        return SubReturn(result.Rest);
                     case 2:
                         // back from the evaluation -- save the result and keep going with the rest
                         Pc = 1;
                         accum = (Pair)(accum.Rest = List(ReturnedExpr));
                         Expr = Rest(Expr);
-                        return EvalContinue();
+                        return SubContinue();
                 }
-                return EvalReturn();
+                throw new Exception("program counter error");
             }
         }
     }

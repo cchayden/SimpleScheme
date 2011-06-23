@@ -47,9 +47,14 @@ namespace SimpleScheme
         /// <param name="interpreter">The interpreter, which has the global environment.</param>
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <returns>The results of executing the program.</returns>
-        public override object Apply(Scheme interpreter, object args)
+        public override object Apply(Scheme interpreter, Evaluator parent, object args)
         {
             return interpreter.Eval(this.Body, new Environment(this.Parms, args, this.Env));
+        }
+
+        public override Evaluator ApplyStep()
+        {
+            return null;
         }
     }
 }

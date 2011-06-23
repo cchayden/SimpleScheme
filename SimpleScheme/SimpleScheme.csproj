@@ -49,7 +49,6 @@
     <Compile Include="EvaluatorList.cs" />
     <Compile Include="EvaluatorMain.cs" />
     <Compile Include="EvaluatorReduceCond.cs" />
-    <Compile Include="EvaluatorReturn.cs" />
     <Compile Include="EvaluatorSequence.cs" />
     <Compile Include="EvaluatorSet.cs" />
     <Compile Include="InputPort.cs" />

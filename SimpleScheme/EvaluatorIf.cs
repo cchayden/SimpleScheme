@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         /// <summary>
@@ -34,10 +36,9 @@ namespace SimpleScheme
                         Pc = 1;
                         return CallEval(First(this.Expr));
                     case 1:
-                        this.RetExpr = Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr);
-                        break;
+                        return SubReturn(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
                 }
-                return EvalReturn();
+                throw new Exception("program counter error");
             }
         }
     }

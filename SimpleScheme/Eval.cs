@@ -9,12 +9,6 @@ namespace SimpleScheme
     public abstract partial class Evaluator : SchemeUtils
     {
         /// <summary>
-        /// This Pc value is used to handle the return.
-        /// It iassigns the returned enxp and env and then returns to the parent.
-        /// </summary>
-        protected const int PcReturn = -1;
-
-        /// <summary>
         /// This holds the "state" of the evaluator, what would normally go in the
         ///   execution stack.
         /// </summary>
@@ -128,30 +122,21 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="toCall">The evaluator to call.</param>
         /// <returns>The first step of the sub-evaluator.</returns>
-        protected Evaluator SubEval(Evaluator toCall)
+        protected Evaluator SubCall(Evaluator toCall)
         {
             frame.Called = toCall;
             return toCall;
         }
 
         /// <summary>
-        /// Make a call to a sub-evaluator.
-        /// When that returns, store the result and return.
+        /// Return fram an evaluator.
+        /// Assign the return value and return the parent task to resume.
         /// </summary>
-        /// <param name="toCall">The evaluator to call.</param>
-        /// <returns>The first step of the sub-evaluator.</returns>
-        protected Evaluator SubEvalReturn(Evaluator toCall)
+        /// <param name="retVal"></param>
+        /// <returns></returns>
+        protected Evaluator SubReturn(object retVal)
         {
-            frame.Pc = PcReturn;
-            return SubEval(toCall);
-        }
-
-        /// <summary>
-        /// Return immediately.
-        /// </summary>
-        /// <returns>The parent evaluator..</returns>
-        protected Evaluator EvalReturn()
-        {
+            frame.RetExpr = retVal;
             return frame.Parent;
         }
 
@@ -159,7 +144,7 @@ namespace SimpleScheme
         /// Continue executing in the existing evaluator.
         /// </summary>
         /// <returns></returns>
-        protected Evaluator EvalContinue()
+        protected Evaluator SubContinue()
         {
             frame.Called = null;
             return this;
@@ -185,7 +170,7 @@ namespace SimpleScheme
         /// <returns>The next evaluation step.</returns>
         protected Evaluator CallEval(object args)
         {
-            return SubEval(new EvaluatorMain(this.Interp, this, args, this.Env));
+            return SubCall(new EvaluatorMain(this.Interp, this, args, this.Env));
         }
 
         /// <summary>
@@ -195,7 +180,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallSequence(object args)
         {
-            return SubEval(new EvaluatorSequence(this.Interp, this, args, this.Env));
+            return SubCall(new EvaluatorSequence(this.Interp, this, args, this.Env));
         }
 
         /// <summary>
@@ -205,7 +190,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallDefine(object args)
         {
-            return SubEvalReturn(new EvaluatorDefine(this.Interp, this, args, this.Env));
+            return SubCall(new EvaluatorDefine(this.Interp, this, args, this.Env));
         }
 
         /// <summary>
@@ -215,7 +200,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallSet(object args)
         {
-            return SubEvalReturn(new EvaluatorSet(this.Interp, this, args, this.Env));
+            return SubCall(new EvaluatorSet(this.Interp, this, args, this.Env));
         }
 
         /// <summary>
@@ -225,7 +210,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallIf(object args)
         {
-            return SubEval(new EvaluatorIf(this.Interp, this, args, this.Env));
+            return SubCall(new EvaluatorIf(this.Interp, this, args, this.Env));
         }
 
         /// <summary>
@@ -235,7 +220,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallReduceCond(object args)
         {
-            return SubEval(new EvaluatorReduceCond(this.Interp, this, args, this.Env));
+            return SubCall(new EvaluatorReduceCond(this.Interp, this, args, this.Env));
         }
 
         /// <summary>
@@ -246,7 +231,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallClosure(object args, Closure f)
         {
-            return SubEval(new EvaluatorClosure(Interp, this, args, Env, f));
+            return SubCall(new EvaluatorClosure(Interp, this, args, Env, f));
         }
 
         /// <summary>
@@ -257,7 +242,7 @@ namespace SimpleScheme
 
         protected Evaluator CallList(object args)
         {
-            return SubEval(new EvaluatorList(Interp, this, args, Env));
+            return SubCall(new EvaluatorList(Interp, this, args, Env));
         }
 
         /// <summary>
@@ -268,7 +253,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Evaluator CallApplyProc(object args, object fn)
         {
-            return SubEvalReturn(new EvaluatorApplyProc(Interp, this, args, Env, fn));
+            return SubCall(new EvaluatorApplyProc(Interp, this, args, Env, fn));
         }
     }
 }

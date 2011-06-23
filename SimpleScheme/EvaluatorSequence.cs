@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         private class EvaluatorSequence : Evaluator
@@ -32,14 +34,13 @@ namespace SimpleScheme
                             this.Pc = 1;
                             return CallEval(First(this.Expr));
                         }
-                        this.RetExpr = First(this.Expr);
-                        break;
+                        return SubReturn(First(this.Expr));
                     case 1:
                         this.Expr = Rest(this.Expr);
                         this.Pc = 0;
-                        return EvalContinue();
+                        return SubContinue();
                 }
-                return EvalReturn();
+                throw new Exception("program counter error");
             }
         }
     }

@@ -4,6 +4,8 @@
 
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         /// <summary>
@@ -39,10 +41,17 @@ namespace SimpleScheme
                         Pc = 1;
                         return CallList(Expr);
                     case 1:
-                        this.RetExpr = Procedure.Proc(fn).Apply(this.Interp, ReturnedExpr);
-                        break;
+                        object res = Procedure.Proc(fn).Apply(this.Interp, this, ReturnedExpr);
+                        if (res is Evaluator)
+                        {
+                            Pc = 2;
+                            return SubCall((Evaluator) res);
+                        }
+                        return SubReturn(res);
+                    case 2:
+                        return SubReturn(ReturnedExpr);
                 }
-                return EvalReturn();
+                throw new Exception("Program counter error");
             }
         }
     }

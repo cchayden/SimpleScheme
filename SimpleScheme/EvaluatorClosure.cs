@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         /// <summary>
@@ -38,11 +40,10 @@ namespace SimpleScheme
                         Pc = 1;
                         return CallList(Expr);
                     case 1:
-                        this.RetExpr = f.Body;
                         this.RetEnv = new Environment(f.Parms, ReturnedExpr, f.Env);
-                        break;
+                        return SubReturn(f.Body);
                 }
-                return EvalReturn();
+                throw new Exception("program counter error");
             }
         }
     }

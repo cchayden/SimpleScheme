@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     public partial class Evaluator
     {
         /// <summary>
@@ -40,8 +42,7 @@ namespace SimpleScheme
                     case 0:
                         if (Expr == null)
                         {
-                            RetExpr = False;
-                            return EvalReturn();
+                            return SubReturn(False);
                         }
                         clause = First(Expr);
                         Expr = Rest(Expr);
@@ -55,28 +56,25 @@ namespace SimpleScheme
                             Pc = 1;
                             return CallEval(First(clause));
                         }
-                        return EvalContinue();
+                        return SubContinue();
                     case 1:
                         result = ReturnedExpr;
                         Pc = Truth(result) ? 2 : 0;
-                        return EvalContinue();
+                        return SubContinue();
                     case 2:
                         if (Rest(clause) == null)
                         {
-                            RetExpr = List("quote", result);
-                            break;
+                            return SubReturn(List("quote", result));
                         }
 
                         if (Second(clause) as string == "=>")
                         {
-                            RetExpr = List(Third(clause), List("quote", result));
-                            break;
+                            return SubReturn(List(Third(clause), List("quote", result)));
                         }
 
-                        RetExpr = Cons("begin", Rest(clause));
-                        break;
+                        return SubReturn(Cons("begin", Rest(clause)));
                 }
-                return EvalReturn();
+                throw new Exception("program counter error");
             }
         }
     }

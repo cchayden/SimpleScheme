@@ -78,7 +78,7 @@ namespace SimpleScheme
         /// <param name="interpreter">The interpreter supplies the global environment.</param>
         /// <param name="args">Arguments to pass to the method.</param>
         /// <returns>The result of executing the method.</returns>
-        public override object Apply(Scheme interpreter, object args)
+        public override object Apply(Scheme interpreter, Evaluator parent, object args)
         {
             return this.isStatic ? 
                 this.method.Invoke(null, this.ToArray(args)) : 
@@ -173,6 +173,11 @@ namespace SimpleScheme
             }
 
             return array;
+        }
+
+        public override Evaluator ApplyStep()
+        {
+            return null;
         }
     }
 }

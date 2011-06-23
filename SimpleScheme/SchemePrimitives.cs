@@ -9,146 +9,139 @@ namespace SimpleScheme
     public sealed class SchemePrimitives
     {
         /// <summary>
-        /// The primitives.
+        /// Standard scheme macros
         /// </summary>
         public const string Code =
-"(define call/cc    call-with-current-continuation)\n" +
-"(define first      car)\n" +
-"(define second     cadr)\n" +
-"(define third      caddr)\n" +
-"(define rest       cdr)\n" +
-"(define set-first! set-car!)\n" +
-"(define set-rest!  set-cdr!)\n" +
+        @"(define or
+          (macro args
+            (if (null? args)
+            #f
+            (cons 'cond (map list args)))))
 
-// ;;;;;;;;;;;;;;;; Standard Scheme Macros
-"(define or\n" +
-  "(macro args\n" +
-    "(if (null? args)\n" +
-    "#f\n" +
-    "(cons 'cond (map list args)))))\n" +
+        (define and
+          (macro args
+            (cond ((null? args) #t)
+              ((null? (rest args)) (first args))
+              (else (list 'if (first args) (cons 'and (rest args)) #f)))))
 
-"(define and\n" +
-  "(macro args\n" +
-    "(cond ((null? args) #t)\n" +
-      "((null? (rest args)) (first args))\n" +
-      "(else (list 'if (first args) (cons 'and (rest args)) #f)))))\n" +
+        (define quasiquote
+          (macro (x)
+            (define (constant? exp)
+              (if (pair? exp) (eq? (car exp) 'quote) (not (symbol? exp))))
+            (define (combine-skeletons left right exp)
+              (cond
+               ((and (constant? left) (constant? right))
+            (if (and (eqv? (eval left) (car exp))
+                 (eqv? (eval right) (cdr exp)))
+                (list 'quote exp)
+                (list 'quote (cons (eval left) (eval right)))))
+               ((null? right) (list 'list left))
+               ((and (pair? right) (eq? (car right) 'list))
+            (cons 'list (cons left (cdr right))))
+               (else (list 'cons left right))))
+            (define (expand-quasiquote exp nesting)
+              (cond
+               ((vector? exp)
+            (list 'apply 'vector (expand-quasiquote (vector->list exp) nesting)))
+               ((not (pair? exp))
+            (if (constant? exp) exp (list 'quote exp)))
+               ((and (eq? (car exp) 'unquote) (= (length exp) 2))
+            (if (= nesting 0)
+                (second exp)
+                (combine-skeletons ''unquote
+                           (expand-quasiquote (cdr exp) (- nesting 1))
+                           exp)))
+               ((and (eq? (car exp) 'quasiquote) (= (length exp) 2))
+            (combine-skeletons ''quasiquote
+                       (expand-quasiquote (cdr exp) (+ nesting 1))
+                       exp))
+               ((and (pair? (car exp))
+                 (eq? (caar exp) 'unquote-splicing)
+                 (= (length (car exp)) 2))
+            (if (= nesting 0)
+                (list 'append (second (first exp))
+                  (expand-quasiquote (cdr exp) nesting))
+                (combine-skeletons (expand-quasiquote (car exp) (- nesting 1))
+                           (expand-quasiquote (cdr exp) nesting)
+                           exp)))
+               (else (combine-skeletons (expand-quasiquote (car exp) nesting)
+                        (expand-quasiquote (cdr exp) nesting)
+                        exp))))
+            (expand-quasiquote x 0)))
 
-"(define quasiquote\n" +
-  "(macro (x)\n" +
-    "(define (constant? exp)\n" +
-      "(if (pair? exp) (eq? (car exp) 'quote) (not (symbol? exp))))\n" +
-    "(define (combine-skeletons left right exp)\n" +
-      "(cond\n" +
-       "((and (constant? left) (constant? right))\n" +
-    "(if (and (eqv? (eval left) (car exp))\n" +
-         "(eqv? (eval right) (cdr exp)))\n" +
-        "(list 'quote exp)\n" +
-        "(list 'quote (cons (eval left) (eval right)))))\n" +
-       "((null? right) (list 'list left))\n" +
-       "((and (pair? right) (eq? (car right) 'list))\n" +
-    "(cons 'list (cons left (cdr right))))\n" +
-       "(else (list 'cons left right))))\n" +
-    "(define (expand-quasiquote exp nesting)\n" +
-      "(cond\n" +
-       "((vector? exp)\n" +
-    "(list 'apply 'vector (expand-quasiquote (vector->list exp) nesting)))\n" +
-       "((not (pair? exp))\n" +
-    "(if (constant? exp) exp (list 'quote exp)))\n" +
-       "((and (eq? (car exp) 'unquote) (= (length exp) 2))\n" +
-    "(if (= nesting 0)\n" +
-        "(second exp)\n" +
-        "(combine-skeletons ''unquote\n" +
-                   "(expand-quasiquote (cdr exp) (- nesting 1))\n" +
-                   "exp)))\n" +
-       "((and (eq? (car exp) 'quasiquote) (= (length exp) 2))\n" +
-    "(combine-skeletons ''quasiquote\n" +
-               "(expand-quasiquote (cdr exp) (+ nesting 1))\n" +
-               "exp))\n" +
-       "((and (pair? (car exp))\n" +
-         "(eq? (caar exp) 'unquote-splicing)\n" +
-         "(= (length (car exp)) 2))\n" +
-    "(if (= nesting 0)\n" +
-        "(list 'append (second (first exp))\n" +
-          "(expand-quasiquote (cdr exp) nesting))\n" +
-        "(combine-skeletons (expand-quasiquote (car exp) (- nesting 1))\n" +
-                   "(expand-quasiquote (cdr exp) nesting)\n" +
-                   "exp)))\n" +
-       "(else (combine-skeletons (expand-quasiquote (car exp) nesting)\n" +
-                "(expand-quasiquote (cdr exp) nesting)\n" +
-                "exp))))\n" +
-    "(expand-quasiquote x 0)))\n" +
+        (define let
+          (macro (bindings . body)
+            (define (named-let name bindings body)
+              `(let ((,name #f))
+             (set! ,name (lambda ,(map first bindings) . ,body))
+             (,name . ,(map second bindings))))
+            (if (symbol? bindings)
+            (named-let bindings (first body) (rest body))
+            `((lambda ,(map first bindings) . ,body) . ,(map second bindings)))))
 
-"\n" +
-"(define let\n" +
-  "(macro (bindings . body)\n" +
-    "(define (named-let name bindings body)\n" +
-      "`(let ((,name #f))\n" +
-     "(set! ,name (lambda ,(map first bindings) . ,body))\n" +
-     "(,name . ,(map second bindings))))\n" +
-    "(if (symbol? bindings)\n" +
-    "(named-let bindings (first body) (rest body))\n" +
-    "`((lambda ,(map first bindings) . ,body) . ,(map second bindings)))))\n" +
+        (define let*
+          (macro (bindings . body)
+            (if (null? bindings) `((lambda () . ,body))
+            `(let (,(first bindings))
+               (let* ,(rest bindings) . ,body)))))
 
-"(define let*\n" +
-  "(macro (bindings . body)\n" +
-    "(if (null? bindings) `((lambda () . ,body))\n" +
-    "`(let (,(first bindings))\n" +
-       "(let* ,(rest bindings) . ,body)))))\n" +
+        (define letrec
+          (macro (bindings . body)
+            (let ((vars (map first bindings))
+              (vals (map second bindings)))
+            `(let ,(map (lambda (var) `(,var #f)) vars)
+               ,@(map (lambda (var val) `(set! ,var ,val)) vars vals)
+               . ,body))))
 
-"(define letrec\n" +
-  "(macro (bindings . body)\n" +
-    "(let ((vars (map first bindings))\n" +
-      "(vals (map second bindings)))\n" +
-    "`(let ,(map (lambda (var) `(,var #f)) vars)\n" +
-       ",@(map (lambda (var val) `(set! ,var ,val)) vars vals)\n" +
-       ". ,body))))\n" +
+        (define case
+          (macro (exp . cases)
+            (define (do-case case)
+              (cond ((not (pair? case)) (error \bad syntax in case\ case))
+                ((eq? (first case) 'else) case)
+                (else `((member __exp__ ',(first case)) . ,(rest case)))))
+            `(let ((__exp__ ,exp)) (cond . ,(map do-case cases)))))
 
-"(define case\n" +
-  "(macro (exp . cases)\n" +
-    "(define (do-case case)\n" +
-      "(cond ((not (pair? case)) (error \"bad syntax in case\" case))\n" +
-        "((eq? (first case) 'else) case)\n" +
-        "(else `((member __exp__ ',(first case)) . ,(rest case)))))\n" +
-    "`(let ((__exp__ ,exp)) (cond . ,(map do-case cases)))))\n" +
+        (define do
+          (macro (bindings test-and-result . body)
+            (let ((variables (map first bindings))
+              (inits (map second bindings))
+              (steps (map (lambda (clause)
+                    (if (null? (cddr clause))
+                        (first clause)
+                        (third clause)))
+                      bindings))
+              (test (first test-and-result))
+              (result (rest test-and-result)))
+              `(letrec ((__loop__
+                 (lambda ,variables
+                   (if ,test
+                       (begin . ,result)
+                       (begin
+                     ,@body
+                     (__loop__ . ,steps))))))
+             (__loop__ . ,inits)))))
 
-"(define do\n" +
-  "(macro (bindings test-and-result . body)\n" +
-    "(let ((variables (map first bindings))\n" +
-      "(inits (map second bindings))\n" +
-      "(steps (map (lambda (clause)\n" +
-            "(if (null? (cddr clause))\n" +
-                "(first clause)\n" +
-                "(third clause)))\n" +
-              "bindings))\n" +
-      "(test (first test-and-result))\n" +
-      "(result (rest test-and-result)))\n" +
-      "`(letrec ((__loop__\n" +
-         "(lambda ,variables\n" +
-           "(if ,test\n" +
-               "(begin . ,result)\n" +
-               "(begin\n" +
-             ",@body\n" +
-             "(__loop__ . ,steps))))))\n" +
-     "(__loop__ . ,inits)))))\n" +
+        (define delay
+          (macro (exp)
+            (define (make-promise proc)
+              (let ((result-ready? #f)
+                (result #f))
+            (lambda ()
+              (if result-ready?
+                  result
+                  (let ((x (proc)))
+                (if result-ready?
+                    result
+                    (begin (set! result-ready? #t)
+                       (set! result x)
+                       result)))))))
+            `(,make-promise (lambda () ,exp))))";
 
-"(define delay\n" +
-  "(macro (exp)\n" +
-    "(define (make-promise proc)\n" +
-      "(let ((result-ready? #f)\n" +
-        "(result #f))\n" +
-    "(lambda ()\n" +
-      "(if result-ready?\n" +
-          "result\n" +
-          "(let ((x (proc)))\n" +
-        "(if result-ready?\n" +
-            "result\n" +
-            "(begin (set! result-ready? #t)\n" +
-               "(set! result x)\n" +
-               "result)))))))\n" +
-    "`(,make-promise (lambda () ,exp))))\n" +
-
-// ;;;;;;;;;;;;;;;; Extensions
-"(define time\n" +
-  "(macro (exp . rest) `(time-call (lambda () ,exp) . ,rest)))\n";
+        /// <summary>
+        /// Extensions
+        /// </summary>
+        public static string Extensions =
+         @"(define time
+              (macro (exp . rest) `(time-call (lambda () ,exp) . ,rest)))";
     }
 }

@@ -37,10 +37,15 @@ namespace SimpleScheme
         /// <param name="interpreter">The interpreter to execute in.</param>
         /// <param name="args">The value to return.</param>
         /// <returns>The result of applying the continuation.</returns>
-        public override object Apply(Scheme interpreter, object args)
+        public override object Apply(Scheme interpreter, Evaluator parent, object args)
         {
             this.Value = First(args);
             throw this.cc;
+        }
+
+        public override Evaluator ApplyStep()
+        {
+            return null;
         }
     }
 }

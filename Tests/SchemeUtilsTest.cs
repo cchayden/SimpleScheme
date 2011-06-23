@@ -168,7 +168,7 @@ namespace Tests
         public void InPortTest()
         {
             var files = new string[0];
-            var accessor = new Scheme_Accessor(files);
+            var accessor = new Scheme_Accessor(false, files);
             Scheme scheme = accessor.Target as Scheme;
             Assert.AreEqual(accessor.Input, SchemeUtils.InPort(null, scheme));
             using (StringReader reader = new StringReader("abc"))
@@ -188,7 +188,7 @@ namespace Tests
         public void OutPortTest()
         {
             var files = new string[0];
-            var accessor = new Scheme_Accessor(files);
+            var accessor = new Scheme_Accessor(false, files);
             Scheme scheme = accessor.Target as Scheme;
             Assert.AreEqual(accessor.Output, SchemeUtils.OutPort(null, scheme));
             using (StringWriter writer = new StringWriter())

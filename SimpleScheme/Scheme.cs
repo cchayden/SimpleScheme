@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// The scheme interpreter instance.
     /// Each one of these is a complete interpreter, independent of others.
     /// </summary>
-    public sealed partial class Scheme : SchemeUtils
+    public sealed class Scheme : SchemeUtils
     {
         /// <summary>
         /// The input port for the interpreter.
@@ -33,14 +33,20 @@ namespace SimpleScheme
         /// Create an interpreter and install the primitives into the global environment.
         /// Then read a list of files.
         /// </summary>
+        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
         /// <param name="files">The files to read.</param>
-        public Scheme(IEnumerable<string> files)
+        public Scheme(bool loadStandardMacros, IEnumerable<string> files)
         {
             Primitive.InstallPrimitives(this.GlobalEnvironment);
             try
             {
                 // TODO isn't there overlap between the installed primitives and the ones read in?
-                this.Load(SchemePrimitives.Code);
+                if (loadStandardMacros)
+                {
+                    this.Load(SchemePrimitives.Code);
+                    this.Load(SchemePrimitives.Extensions);
+                }
+
                 foreach (string file in files)
                 {
                     this.Load(file);
@@ -50,6 +56,25 @@ namespace SimpleScheme
             {
                 Console.WriteLine("Caught exception {0}", ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Scheme class.
+        /// Set up the most common way -- with standard macros and no files.
+        /// </summary>
+        public Scheme()
+            : this(true, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Scheme class.
+        /// Read a set of files initially.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
+        public Scheme(IEnumerable<string> files)
+            : this(true, files)
+        {
         }
 
         /// <summary>
@@ -95,14 +120,13 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public object Eval(object expr, Environment env)
         {
-            Evaluator stop = new EvaluatorReturn();
-            Evaluator eval = Evaluator.CallMain(this, stop, expr, env);
+            Evaluator eval = Evaluator.CallMain(this, null, expr, env);
             Evaluator nextStep = eval;
             while (true)
             {
 //Console.WriteLine("Evaluating {0} {1} {2}", eval.Expr, eval.Pc, eval.GetType());
                 nextStep = nextStep.EvalStep();
-                if (nextStep == stop)
+                if (nextStep == null)
                 {
                     break;
                 }

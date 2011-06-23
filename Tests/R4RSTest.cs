@@ -37,7 +37,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.scheme = new Scheme(null);
+            this.scheme = new Scheme();
         }
 
         /// <summary>
