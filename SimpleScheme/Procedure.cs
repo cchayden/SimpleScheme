@@ -71,9 +71,10 @@ namespace SimpleScheme
         /// All subclasses have to be able to apply the procedure to arguments.
         /// </summary>
         /// <param name="interpreter">The interpreter supplies the context.</param>
+        /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">The arguments to the procedure, which have 
         ///    been evaluated.</param>
         /// <returns>The result of applying the procedure to the arguments.</returns>
-        public abstract object Apply(Scheme interpreter, Evaluator parent, object args);
+        public abstract object Apply(Scheme interpreter, Stepper parent, object args);
     }
 }

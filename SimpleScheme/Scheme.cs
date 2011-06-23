@@ -121,16 +121,17 @@ namespace SimpleScheme
         public object Eval(object expr, Environment env)
         {
             int steps = 0;
-            Evaluator eval = Evaluator.CallMain(this, null, expr, env);
-            Evaluator nextStep = eval;
+            Stepper eval = Stepper.CallMain(this, null, expr, env);
+            Stepper nextStep = eval;
             while (true)
             {
-//Console.WriteLine("Evaluating {0} {1}", eval.Expr, eval.Pc);
+                // Console.WriteLine("Evaluating {0} {1}", eval.Expr, eval.Pc);
                 nextStep = nextStep.EvalStep();
                 if (nextStep == null)
                 {
                     break;
                 }
+
                 eval = nextStep;
                 steps++;
             }

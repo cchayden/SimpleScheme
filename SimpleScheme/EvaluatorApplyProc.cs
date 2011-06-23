@@ -5,14 +5,14 @@
 namespace SimpleScheme
 {
     /// <summary>
-    /// Evaluator contains all the individual evaluators
+    /// Stepper contains all the individual evaluators
     /// </summary>
-    public partial class Evaluator
+    public partial class Stepper
     {
         /// <summary>
         /// Evaluate args and apply a proc to it.
         /// </summary>
-        private class EvaluatorApplyProc : Evaluator
+        private class EvaluatorApplyProc : Stepper
         {
             /// <summary>
             /// The proc or primitive to apply.
@@ -20,14 +20,14 @@ namespace SimpleScheme
             private readonly object fn;
 
             /// <summary>
-            /// Initializes a new instance of the EvaluatorApplyProc class.
+            /// Initializes a new instance of the Stepper.EvaluatorApplyProc class.
             /// </summary>
             /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
             /// <param name="fn">The function to apply.</param>
-            public EvaluatorApplyProc(Scheme interp, Evaluator parent, object expr, Environment env, object fn)
+            public EvaluatorApplyProc(Scheme interp, Stepper parent, object expr, Environment env, object fn)
                 : base(interp, parent, expr, env)
             {
                 this.fn = fn;
@@ -37,7 +37,7 @@ namespace SimpleScheme
             /// Evaluate a proc application.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Evaluator EvalStep()
+            public override Stepper EvalStep()
             {
                 switch (this.Pc)
                 {
@@ -46,10 +46,10 @@ namespace SimpleScheme
                         return CallList(Expr);
                     case 1:
                         object res = Procedure.Proc(this.fn).Apply(this.Interp, this, ReturnedExpr);
-                        if (res is Evaluator)
+                        if (res is Stepper)
                         {
                             Pc = 2;
-                            return this.SubCall((Evaluator)res);
+                            return this.SubCall((Stepper)res);
                         }
 
                         return SubReturn(res);

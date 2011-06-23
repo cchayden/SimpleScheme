@@ -48,14 +48,14 @@ namespace SimpleScheme
         /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <returns>The results of executing the program.</returns>
-        public override object Apply(Scheme interpreter, Evaluator parent, object args)
+        public override object Apply(Scheme interpreter, Stepper parent, object args)
         {
             if (parent == null)
             {
                 return interpreter.Eval(this.Body, new Environment(this.Parms, args, this.Env));
             }
 
-            return Evaluator.CallMain(interpreter, parent, this.Body, new Environment(this.Parms, args, this.Env));
+            return Stepper.CallMain(interpreter, parent, this.Body, new Environment(this.Parms, args, this.Env));
         }
     }
 }

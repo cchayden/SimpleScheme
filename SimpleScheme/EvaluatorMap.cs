@@ -6,16 +6,16 @@ namespace SimpleScheme
     using System;
 
     /// <summary>
-    /// Evaluator contains all the individual evaluators
+    /// Stepper contains all the individual evaluators
     /// </summary>
-    public partial class Evaluator
+    public partial class Stepper
     {
         /// <summary>
         /// Evaluate the items in a list, given the environment.
         /// This is done to the args of a procedure call (except for special forms).
         /// This is an iterative, rather than a recursive one.
         /// </summary>
-        private class EvaluatorMap : Evaluator
+        private class EvaluatorMap : Stepper
         {
             /// <summary>
             /// The proc to apply to each element of the list.
@@ -36,7 +36,7 @@ namespace SimpleScheme
             private Pair accum;
 
             /// <summary>
-            /// Initializes a new instance of the EvaluatorMap class.
+            /// Initializes a new instance of the Stepper.EvaluatorMap class.
             /// </summary>
             /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
@@ -44,7 +44,7 @@ namespace SimpleScheme
             /// <param name="env">The evaluation environment</param>
             /// <param name="proc">The proc to apply to each element of the list.</param>
             /// <param name="result">The result is appended to this list.</param>
-            public EvaluatorMap(Scheme interp, Evaluator parent, object expr, Environment env, Procedure proc, Pair result)
+            public EvaluatorMap(Scheme interp, Stepper parent, object expr, Environment env, Procedure proc, Pair result)
                 : base(interp, parent, expr, env)
             {
                 this.proc = proc;
@@ -56,7 +56,7 @@ namespace SimpleScheme
             /// Evaluate a list of expressions.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Evaluator EvalStep()
+            public override Stepper EvalStep()
             {
                 switch (this.Pc)
                 {
@@ -84,9 +84,9 @@ namespace SimpleScheme
                             // Grab the arguments to the applications (the head of each list).
                             // The the proc is applied to them.
                             object x = this.proc.Apply(Interp, this, MapFun(First, List(Expr)));
-                            if (x is Evaluator)
+                            if (x is Stepper)
                             {
-                                return SubCall((Evaluator)x);
+                                return SubCall((Stepper)x);
                             }
 
                             RetExpr = x;

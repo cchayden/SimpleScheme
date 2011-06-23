@@ -145,7 +145,14 @@ namespace SimpleScheme
             throw new SchemeException(message);
         }
 
-        public static Evaluator EvalError(string message)
+        /// <summary>
+        /// Handle an error in an evaluator by printing a message on the console 
+        ///    and throwing an exception.
+        /// </summary>
+        /// <param name="message">The message to display and to put 
+        ///    into the exception.</param>
+        /// <returns>Actually, does not return.</returns>
+        public static Stepper EvalError(string message)
         {
             Console.Error.WriteLine("**** ERROR: " + message);
             throw new SchemeException(message);

@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objects int he list are 
-        ///     referenced by this.</param>
+        /// referenced by this.</param>
         public Pair(object first, object rest)
         {
             this.First = first;

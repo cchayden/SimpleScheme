@@ -6,14 +6,14 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluator contains all the individual evaluators
     /// </summary>
-    public partial class Evaluator
+    public partial class Stepper
     {
         /// <summary>
         /// Evaluate the items in a list, given the environment.
         /// This is done to the args of a procedure call (except for special forms).
         /// This is an iterative, rather than a recursive one.
         /// </summary>
-        private class EvaluatorList : Evaluator
+        private class EvaluatorList : Stepper
         {
             /// <summary>
             /// The result that will be returned.
@@ -26,13 +26,13 @@ namespace SimpleScheme
             private Pair accum;
 
             /// <summary>
-            /// Initializes a new instance of the EvaluatorList class.
+            /// Initializes a new instance of the Stepper.EvaluatorList class.
             /// </summary>
             /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
-            public EvaluatorList(Scheme interp, Evaluator parent, object expr, Environment env)
+            public EvaluatorList(Scheme interp, Stepper parent, object expr, Environment env)
                 : base(interp, parent, expr, env)
             {
                 // start with an empty list
@@ -44,7 +44,7 @@ namespace SimpleScheme
             /// Evaluate a list of expressions.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Evaluator EvalStep()
+            public override Stepper EvalStep()
             {
                 switch (this.Pc)
                 {

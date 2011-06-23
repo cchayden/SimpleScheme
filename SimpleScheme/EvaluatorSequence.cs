@@ -4,28 +4,33 @@
 namespace SimpleScheme
 {
     /// <summary>
-    /// Evaluator contains all the individual evaluators
+    /// Stepper contains all the individual evaluators
     /// </summary>
-    public partial class Evaluator
+    public partial class Stepper
     {
-        private class EvaluatorSequence : Evaluator
+        /// <summary>
+        /// Evaluate a sequence by evaluating each ember and returning the last value.
+        /// </summary>
+        private class EvaluatorSequence : Stepper
         {
             /// <summary>
-            /// Initializes a new instance of the EvaluatorSequence class.
+            /// Initializes a new instance of the Stepper.EvaluatorSequence class.
             /// </summary>
             /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
             /// <param name="expr">The expression to evaluate.</param>
             /// <param name="env">The evaluation environment</param>
-            public EvaluatorSequence(Scheme interp, Evaluator parent, object expr, Environment env)
-                : base(interp, parent, expr, env) { }
+            public EvaluatorSequence(Scheme interp, Stepper parent, object expr, Environment env)
+                : base(interp, parent, expr, env)
+            {
+            }
 
             /// <summary>
             /// Evaluate a sequence of objects, returning the last.
             /// This was a simple while loop that has been split in the middle.
             /// </summary>
             /// <returns>The next step.</returns>
-            public override Evaluator EvalStep()
+            public override Stepper EvalStep()
             {
                 switch (this.Pc)
                 {
@@ -43,6 +48,7 @@ namespace SimpleScheme
                         this.Pc = 0;
                         return SubContinue();
                 }
+
                 return EvalError("Sequence: program counter error");
             }
         }

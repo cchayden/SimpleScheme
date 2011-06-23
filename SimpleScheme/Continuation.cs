@@ -51,7 +51,7 @@ namespace SimpleScheme
         /// <param name="parent">The calling evaluator.</param>
         /// <param name="args">The value to return.</param>
         /// <returns>The result of applying the continuation.</returns>
-        public override object Apply(Scheme interpreter, Evaluator parent, object args)
+        public override object Apply(Scheme interpreter, Stepper parent, object args)
         {
             this.Value = First(args);
 #if OLD

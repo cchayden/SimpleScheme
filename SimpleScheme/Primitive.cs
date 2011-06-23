@@ -411,26 +411,26 @@ namespace SimpleScheme
 
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
-        /// This may return a result or an Evaluator, which can be used to get a result.
-        /// If parent is null, then it will not return an Evaluator, so when that is not
+        /// This may return a result or a Stepper, which can be used to get a result.
+        /// If parent is null, then it will not return a Stepper, so when that is not
         ///   acceptable, pass null for parent.
         /// </summary>
         /// <param name="interp">The interpreter context.</param>
-        /// <param name="parent">The calling Evaluator.</param>
+        /// <param name="parent">The calling Stepper.</param>
         /// <param name="args">The arguments to the primitive.</param>
         /// <returns>The result of the application.</returns>
-        public override object Apply(Scheme interp, Evaluator parent, object args)
+        public override object Apply(Scheme interp, Stepper parent, object args)
         {
             int numArgs = Length(args);
             if (numArgs < this.minArgs)
             {
-                return Error("too few args, " + numArgs + ", for " + 
+                return Error("Primitive: too few args, " + numArgs + ", for " + 
                     this.Name + ": " + args);
             }
 
             if (numArgs > this.maxArgs)
             {
-                return Error("too many args, " + numArgs + ", for " + 
+                return Error("Primitive: too many args, " + numArgs + ", for " + 
                     this.Name + ": " + args);
             }
 
@@ -870,7 +870,7 @@ namespace SimpleScheme
                     // 6.9 CONTROL FEATURES
                 case OpCode.EVAL:
                     // Instead of returning a value, return an evaulator that can be run to get the value
-                    return Evaluator.CallMain(interp, parent, x, parent.Env);
+                    return Stepper.CallMain(interp, parent, x, parent.Env);
 
                 case OpCode.FORCE:
                     return !(x is Procedure) ? x : Proc(x).Apply(interp, parent, null);
@@ -882,10 +882,10 @@ namespace SimpleScheme
                     return Proc(x).Apply(interp, parent, ListStar(Rest(args)));
 
                 case OpCode.MAP:
-                    return Evaluator.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), List(null));
+                    return Stepper.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), List(null));
 
                 case OpCode.FOREACH:
-                    return Evaluator.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), null);
+                    return Stepper.CallMap(interp, parent, Rest(args), parent.Env, Proc(x), null);
 
                 case OpCode.CALLCC:
                     Exception cc = new Exception();
@@ -936,6 +936,7 @@ namespace SimpleScheme
                     try
                     {
                         p = OpenOutputFile(x);
+
                         // TODO apply can be delayed, in which case Close needs to be delayed as well.
                         z = Proc(y).Apply(interp, null, List(p));
                     }
@@ -954,6 +955,7 @@ namespace SimpleScheme
                     try
                     {
                         p2 = OpenInputFile(x);
+
                         // TODO apply can be delayed, in which case Close needs to be delayed as well.
                         z = Proc(y).Apply(interp, null, List(p2));
                     }
@@ -1055,7 +1057,7 @@ namespace SimpleScheme
                     int counter = y == null ? 1 : (int)Num(y);
                     for (int i = 0; i < counter; i++)
                     {
-                        // TODO if this returns Evaluator, then it has not actually done anything
+                        // TODO if this returns Stepper, then it has not actually done anything
                         ans = Proc(x).Apply(interp, parent, null);
                     }
 
