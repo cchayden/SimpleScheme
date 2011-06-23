@@ -309,9 +309,9 @@ namespace SimpleScheme
             {
                 ((SchemeString)x).AsString(quoted, buf);
             }
-            else if (x is Vector)
+            else if (x is object[])
             {
-                ((Vector)x).AsString(quoted, buf);
+                Vector.AsString((object[])x, quoted, buf);
             }
             else if (x is Stepper)
             {

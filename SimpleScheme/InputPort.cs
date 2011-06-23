@@ -298,7 +298,7 @@ namespace SimpleScheme
 
                         case '(':
                             this.inStream.PushChar('(');
-                            return new Vector(this.Read());
+                            return Vector.MakeVector(this.Read());
 
                         case '\\':
                             ch = this.inStream.Read();

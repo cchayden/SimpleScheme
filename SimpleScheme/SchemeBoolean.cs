@@ -70,14 +70,14 @@ namespace SimpleScheme
             }
 
             // test vectors
-            if (obj1 is Vector)
+            if (obj1 is object[])
             {
-                if (!(obj2 is Vector))
+                if (!(obj2 is object[]))
                 {
                     return false;
                 }
 
-                return Vector.Equal((Vector)obj1, (Vector)obj2);
+                return Vector.Equal((object[])obj1, (object[])obj2);
             }
 
             // delegate to first member, use C# equality

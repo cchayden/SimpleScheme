@@ -1,7 +1,4 @@
-(define test1 (lambda () 
-  (define x 34)
-                   (let ((x 3)) 
-                      (define x 5) x)))
+(null? #())
 ; (trace-on)
 ;(test1)
 ;(trace-off)

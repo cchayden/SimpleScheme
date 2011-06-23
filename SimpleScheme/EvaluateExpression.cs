@@ -29,12 +29,12 @@ namespace SimpleScheme
         /// <summary>
         /// A function to be evaluated (primitive, proc, macro, or closure).
         /// </summary>
-        private object fn;
+        private readonly object fn;
 
         /// <summary>
         /// The arguments to the function.
         /// </summary>
-        private object args;
+        private readonly object args;
 
         /// <summary>
         /// Initializes a new instance of the EvaluateExpression class.

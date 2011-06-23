@@ -58,7 +58,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(list->string <chars>)</r4rs>
                 .DefinePrimitive("list->string", (caller, args) => SchemeString.ListToString(First(args)), 1)
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (caller, args) => new Vector(First(args)), 1)
+                .DefinePrimitive("list->vector", (caller, args) => Vector.MakeVector(First(args)), 1)
                 //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
                 .DefinePrimitive(
                    "list-ref",

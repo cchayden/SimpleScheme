@@ -139,7 +139,7 @@ namespace Tests
             TestNextToken("#\\stop", "s");
             TestNextToken("#\\nop", "n");
             TestNextToken("#\\quit", "q");
-            var expected = new Vector(new object[] { "a", "b", "c" });
+            var expected = new object[] { "a", "b", "c" };
             TestNextToken("#( a b c)", expected);
         }
 
@@ -187,20 +187,20 @@ namespace Tests
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual(1.0, List.First(actual));
-                Assert.AreEqual(2.0, List.Second(actual));
-                Assert.AreEqual(3.0, List.Third(actual));
+                Assert.AreEqual(1.0, ListPrimitives.First(actual));
+                Assert.AreEqual(2.0, ListPrimitives.Second(actual));
+                Assert.AreEqual(3.0, ListPrimitives.Third(actual));
             }
 
             using (StringReader reader = new StringReader("('a 'b 'c)"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("quote", List.First(List.First(actual)));
-                Assert.AreEqual("a", List.Second(List.First(actual)));
-                Assert.AreEqual("quote", List.First(List.Second(actual)));
-                Assert.AreEqual("b", List.Second(List.Second(actual)));
-                Assert.AreEqual("c", List.Second(List.Third(actual)));
+                Assert.AreEqual("quote", ListPrimitives.First(ListPrimitives.First(actual)));
+                Assert.AreEqual("a", ListPrimitives.Second(ListPrimitives.First(actual)));
+                Assert.AreEqual("quote", ListPrimitives.First(ListPrimitives.Second(actual)));
+                Assert.AreEqual("b", ListPrimitives.Second(ListPrimitives.Second(actual)));
+                Assert.AreEqual("c", ListPrimitives.Second(ListPrimitives.Third(actual)));
             }
 
             using (StringReader reader = new StringReader(")abc"))
@@ -221,32 +221,32 @@ namespace Tests
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("quote", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("quote", ListPrimitives.First(actual));
+                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader("`abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("quasiquote", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("quasiquote", ListPrimitives.First(actual));
+                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader(",abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("unquote", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("unquote", ListPrimitives.First(actual));
+                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives .Rest(actual)));
             }
 
             using (StringReader reader = new StringReader(",@abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
-                Assert.AreEqual("unquote-splicing", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("unquote-splicing", ListPrimitives.First(actual));
+                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives.Rest(actual)));
             }
         }
 
@@ -300,15 +300,15 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
-        private static void TestNextToken(string input, Vector expected)
+        private static void TestNextToken(string input, object[] expected)
         {
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                var actual = accessor.NextToken() as Vector;
+                var actual = accessor.NextToken() as object[];
                 Assert.IsNotNull(actual);
-                Assert.AreEqual(expected.VectorLength, actual.VectorLength);
-                for (int i = 0; i < expected.VectorLength; i++)
+                Assert.AreEqual(expected.Length, actual.Length);
+                for (int i = 0; i < expected.Length; i++)
                 {
                     Assert.AreEqual(expected[i], actual[i]);
                 }
