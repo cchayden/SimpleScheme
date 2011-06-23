@@ -1,6 +1,6 @@
 ;; test async clr methods
 
-;; define assembly names
+;; define types
 (define WebRequest "System.Net.WebRequest, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
 (define WebResponse "System.Net.WebResponse, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
 (define Stream "System.IO.Stream")

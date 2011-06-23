@@ -4,12 +4,14 @@
 namespace SimpleScheme
 {
     using System;
+    using Obj = System.Object;
 
     /// <summary>
     /// Evaluate a closure
     /// </summary>
     public sealed class EvaluateClosure : Stepper
     {
+        #region Fields
         /// <summary>
         /// The closure to apply.
         /// </summary>
@@ -29,7 +31,9 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateClosure class.
         /// </summary>
@@ -37,15 +41,17 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateClosure(Closure f, object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateClosure(Closure f, Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             this.f = f;
             ContinueHere(this.EvaluateArgsStep);
             this.trace = false;
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Fields
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -53,7 +59,9 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Calls a closure evaluator
         /// </summary>
@@ -61,11 +69,13 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        public static Stepper Call(Closure f, object expr, Stepper caller)
+        public static Stepper Call(Closure f, Obj expr, Stepper caller)
         {
             return new EvaluateClosure(f, expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Trace information for the step.
         /// Print the closure name in addition to args
@@ -80,7 +90,9 @@ namespace SimpleScheme
 
             return this.Name + " {" + this.f.Name + "}";
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Evaluate a closure, in other words execute the function that it defines in the 
         /// appropriate environment.  Start by evaluating the list of expressions.
@@ -88,7 +100,7 @@ namespace SimpleScheme
         /// <returns>The result of evaluating the argument list.</returns>
         private Stepper EvaluateArgsStep()
         {
-            return EvaluateList.Call(ContinueHere(this.EvalBodyInEnvironmentStep), Expr);
+            return EvaluateList.Call(Expr, ContinueHere(this.EvalBodyInEnvironmentStep));
         }
 
         /// <summary>
@@ -107,5 +119,6 @@ namespace SimpleScheme
             this.ReplaceEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);
             return this.f.ApplyWithCurrentEnv(ContinueHere(this.ReturnStep));
         }
+        #endregion
     }
 }

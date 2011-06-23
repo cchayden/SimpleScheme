@@ -1,0 +1,42 @@
+<stylecopresultscache>
+  <version>11</version>
+  <sourcecode name="AssemblyInfo.cs" parser="StyleCop.CSharp.CsParser">
+    <settings>
+      <timestamp>03/09/2011 18:52:10</timestamp>
+      <milliseconds>0</milliseconds>
+    </settings>
+    <timestamp>04/23/2011 20:37:01</timestamp>
+    <milliseconds>22</milliseconds>
+    <violations />
+  </sourcecode>
+  <sourcecode name="InputPortTest.cs" parser="StyleCop.CSharp.CsParser">
+    <settings>
+      <timestamp>03/09/2011 18:52:10</timestamp>
+      <milliseconds>0</milliseconds>
+    </settings>
+    <timestamp>04/23/2011 20:28:17</timestamp>
+    <milliseconds>388</milliseconds>
+    <violations />
+  </sourcecode>
+  <sourcecode name="SchemeUtilsTest.cs" parser="StyleCop.CSharp.CsParser">
+    <settings>
+      <timestamp>03/09/2011 18:52:10</timestamp>
+      <milliseconds>0</milliseconds>
+    </settings>
+    <timestamp>04/23/2011 20:28:17</timestamp>
+    <milliseconds>372</milliseconds>
+    <violations />
+  </sourcecode>
+  <sourcecode name="R4RSTest.cs" parser="StyleCop.CSharp.CsParser">
+    <settings>
+      <timestamp>03/09/2011 18:52:10</timestamp>
+      <milliseconds>0</milliseconds>
+    </settings>
+    <timestamp>04/23/2011 20:28:17</timestamp>
+    <milliseconds>344</milliseconds>
+    <violations />
+  </sourcecode>
+  <project key="741528083">
+    <configuration>DEBUG;TRACE</configuration>
+  </project>
+</stylecopresultscache>

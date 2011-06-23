@@ -14,6 +14,7 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Primitive : Procedure
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -45,7 +46,9 @@ namespace SimpleScheme
         /// The maximum number of args expected.
         /// </summary>
         private readonly int maxArgs;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the Primitive class.
         /// </summary>
@@ -58,15 +61,17 @@ namespace SimpleScheme
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
         }
+        #endregion
 
         /// <summary>
         /// The signature for primitives.
         /// </summary>
-        /// <param name="caller">The calling stepper.</param>
         /// <param name="args">The primitive's arguments</param>
+        /// <param name="caller">The calling stepper.</param>
         /// <returns>The primitive's result.</returns>
-        public delegate Obj Op(Stepper caller, Obj args);
+        public delegate Obj Op(Obj args, Stepper caller);
 
+        #region Public Methods
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
         /// As a convenience for primitives, they are allowed to return either
@@ -80,7 +85,7 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the primitive.</param>
         /// <param name="caller">The calling Stepper.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
             // First check the number of arguments
             int numArgs = Length(args);
@@ -99,7 +104,7 @@ namespace SimpleScheme
             caller.Env.Interp.IncrementCounter(counter);
 
             // Execute the operation
-            object res = this.operation(caller, args);
+            Obj res = this.operation(args, caller);
 
             // See if the operation returns a result or another step
             if (res is Stepper)
@@ -120,5 +125,6 @@ namespace SimpleScheme
         {
             return "{" + this.Name + "}";
         }
+        #endregion
     }
 }

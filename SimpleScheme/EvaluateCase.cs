@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a case expression.
     /// First evaluate the key.
@@ -17,6 +19,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
     public sealed class EvaluateCase : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -30,31 +33,35 @@ namespace SimpleScheme
         /// <summary>
         /// The list of clauses to test.
         /// </summary>
-        private object clauses;
+        private Obj clauses;
 
         /// <summary>
         /// The evaluated key.
         /// </summary>
-        private object keyVal;
+        private Obj keyVal;
 
         /// <summary>
         /// The list of expressions in a matched clause
         /// </summary>
-        private object exprList;
+        private Obj exprList;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateCase class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCase(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateCase(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.EvaluateKeyStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -62,18 +69,22 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Creates a case evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The case evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateCase(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
@@ -105,13 +116,13 @@ namespace SimpleScheme
         {
             while (this.clauses != List.Empty)
             {
-                object clause = First(this.clauses);
+                Obj clause = First(this.clauses);
                 if (!(clause is Pair))
                 {
-                    return ErrorHandlers.EvalError("Case: bad syntax in case");
+                    return ErrorHandlers.EvalError("Case: bad syntax in case: " + clause);
                 }
 
-                object data = First(clause);
+                Obj data = First(clause);
                 this.exprList = Rest(clause);
 
                 // look for else datum
@@ -136,7 +147,7 @@ namespace SimpleScheme
             }
 
             // no clauses matched -- unspecified
-            return ReturnFromStep(Undefined.Instance);
+            return ReturnUndefined();
         }
 
         /// <summary>
@@ -152,7 +163,8 @@ namespace SimpleScheme
             }
 
             // eval and return last expr
-            return EvaluateSequence.Call(this.exprList, this.Caller);
+            return EvaluateSequence.Call(this.exprList, this.ContinueReturn());
         }
+        #endregion
     }
 }

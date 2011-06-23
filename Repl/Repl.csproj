@@ -11,7 +11,8 @@
     <RootNamespace>Repl</RootNamespace>
     <AssemblyName>Repl</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -59,13 +60,19 @@
     <Compile Include="TestClass.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CouchLib\CouchLib.csproj">
+      <Project>{D4199E94-C919-4360-8E27-1CFD5CA04895}</Project>
+      <Name>CouchLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SimpleScheme\SimpleScheme.csproj">
       <Project>{0BE1BA31-6648-4A16-834C-C29AF39239F5}</Project>
       <Name>SimpleScheme</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="async.ss" />
+    <None Include="couch.ss" />
     <None Include="do.ss" />
     <None Include="factor.ss" />
     <None Include="fib.ss" />

@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -11,6 +13,7 @@ namespace SimpleScheme
     //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
     public sealed class EvaluateMap : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -49,8 +52,10 @@ namespace SimpleScheme
         /// <summary>
         /// The lists to map.
         /// </summary>
-        private object lists;
+        private Obj lists;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateMap class.
         /// </summary>
@@ -59,8 +64,8 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="returnResult">Return the map map result if this is true.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateMap(Procedure proc, object expr, Environment env, bool returnResult, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateMap(Procedure proc, Obj expr, Environment env, bool returnResult, Stepper caller)
+            : base(expr, env, caller)
         {
             this.proc = proc;
             this.lists = expr;
@@ -73,7 +78,9 @@ namespace SimpleScheme
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -81,7 +88,9 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call the map evaluator
         /// </summary>
@@ -90,11 +99,13 @@ namespace SimpleScheme
         /// <param name="returnResult">If true, return the result of the map.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The step to execute.</returns>
-        public static Stepper Call(Procedure proc, object expr, bool returnResult, Stepper caller)
+        public static Stepper Call(Procedure proc, Obj expr, bool returnResult, Stepper caller)
         {
             return new EvaluateMap(proc, expr, caller.Env, returnResult, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Start the map evaluation.
         /// Begin with some error checking then go to nex step.
@@ -105,13 +116,13 @@ namespace SimpleScheme
             // first check for degenerate cases
             if (this.lists == List.Empty)
             {
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             if (!(this.lists is Pair))
             {
                 ErrorHandlers.Error("Map: illegal arg list: " + this.lists);
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             return ContinueHere(this.ApplyFunStep);
@@ -152,5 +163,6 @@ namespace SimpleScheme
             this.lists = MapFun(Rest, MakeList(this.lists));
             return ContinueHere(this.ApplyFunStep);
         }
+        #endregion
     }
 }

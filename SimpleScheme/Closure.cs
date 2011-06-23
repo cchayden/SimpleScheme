@@ -17,6 +17,7 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
     public class Closure : Procedure
     {
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the Closure class.
         /// </summary>
@@ -30,7 +31,9 @@ namespace SimpleScheme
             this.Env = env;
             this.Body = body;
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets a list of variable names, to be matched with values later.
         /// </summary>
@@ -45,7 +48,9 @@ namespace SimpleScheme
         /// Gets the environment in which to execute.
         /// </summary>
         public Environment Env { get; private set; }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
@@ -91,5 +96,6 @@ namespace SimpleScheme
             string body = this.Body == List.Empty ? "()" : this.Body.ToString();
             return string.Format("({0} {1} {2})", tag, formals, body);
         }
+        #endregion
     }
 }

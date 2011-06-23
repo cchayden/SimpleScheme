@@ -7,6 +7,7 @@ namespace Tests
     using System.IO;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
+    using Obj = System.Object;
 
     /// <summary>
     /// This tests basic functionality.
@@ -60,7 +61,7 @@ namespace Tests
             this.Run("'()", "cond", "((lambda (fun)(fun 0)) cond)");
 
             this.Run("True", "define", "(procedure? define)");
-            this.Run("0", "define", "((lambda (fun)(fun 0)) define)");
+            this.Run("SimpleScheme.Undefined", "define", "((lambda (fun)(fun 'a)) define)");
 
             this.Run("True", "do", "(procedure? do)");
             this.Run("SimpleScheme.Undefined", "do", "((lambda (fun)(fun 0)) do)");
@@ -101,7 +102,7 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void Run(string expected, string label, string expr)
         {
-            object res = this.ReadAndEvaluate(expr);
+            Obj res = this.ReadAndEvaluate(expr);
             string actual = res != List.Empty ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
@@ -112,15 +113,15 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private object ReadAndEvaluate(string str) 
+        private Obj ReadAndEvaluate(string str) 
         {
             using (StringReader reader = new StringReader(str))
             {
                 InputPort inp = new InputPort(reader);
-                object last = null;
+                Obj last = List.Empty;
                 while (true)
                 {
-                    object x;
+                    Obj x;
                     if (InputPort.IsEof(x = inp.Read()))
                     {
                         return last;

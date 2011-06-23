@@ -3,12 +3,15 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
     public sealed class EvaluateSequence : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -22,22 +25,26 @@ namespace SimpleScheme
         /// <summary>
         /// The list of expressions.
         /// </summary>
-        private object expressions;
+        private Obj expressions;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateSequence class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSequence(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateSequence(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             this.expressions = expr;
             ContinueHere(this.EvalExprStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -45,7 +52,9 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
@@ -53,7 +62,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(object expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateSequence(expr, env, caller);
         }
@@ -64,11 +73,13 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateSequence(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Initial step: to see if we are done.
         /// If not, evaluate the next expression.
@@ -90,5 +101,6 @@ namespace SimpleScheme
             this.expressions = Rest(this.expressions);
             return ContinueHere(this.EvalExprStep);
         }
+        #endregion
     }
 }

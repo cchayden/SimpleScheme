@@ -3,12 +3,15 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
     //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
     public sealed class EvaluateSet : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -18,20 +21,24 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Initializes a new instance of the EvaluateSet class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSet(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateSet(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -39,18 +46,22 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Calls a set evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateSet(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Evaluate the second expression (rhs).
         /// </summary>
@@ -68,7 +79,8 @@ namespace SimpleScheme
         private Stepper SetStep()
         {
             this.Env.Set(First(Expr), ReturnedExpr);
-            return ReturnFromStep(Undefined.Instance);
+            return ReturnUndefined();
         }
+        #endregion
     }
 }

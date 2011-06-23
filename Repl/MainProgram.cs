@@ -3,8 +3,11 @@
 // </copyright>
 namespace Repl
 {
+    using System;
     using System.Collections.Generic;
     using SimpleScheme;
+    using Environment = SimpleScheme.Environment;
+    using Obj = System.Object;
 
     // TODO checklist
     // TODO check code coverage -- fill gaps
@@ -24,7 +27,7 @@ namespace Repl
         /// <param name="args">These are files to read initially.</param>
         public static void Main(string[] args)
         {
-            new MainProgram().Run2(args);
+            new MainProgram().Run3(args);
         }
 
         /// <summary>
@@ -36,7 +39,7 @@ namespace Repl
         private void Run1(IEnumerable<string> args)
         {
             new Interpreter(args)
-                .ReadEvalWriteLoop();
+                .ReadEvalPrintLoop();
         }
 
         /// <summary>
@@ -46,10 +49,17 @@ namespace Repl
         /// <param name="args">Files to read.</param>
         private void Run2(IEnumerable<string> args)
         {
-            Environment primEnvironment = new Environment()
-                .InstallPrimitives();
-            new Interpreter(true, primEnvironment, args)
-                .ReadEvalWriteLoop();
+            Environment primEnvironment = new Environment();
+            Environment.InstallPrimitives(primEnvironment);
+            new Interpreter(true, primEnvironment, args, Console.In, Console.Out)
+                .ReadEvalPrintLoop();
+        }
+
+        private void Run3(IEnumerable<string> args)
+        {
+            var interp = new Interpreter(args);
+            Obj res = interp.ReadEvalPrintLoop();
+            Console.WriteLine(res);
         }
     }
 }

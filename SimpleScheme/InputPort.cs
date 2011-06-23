@@ -5,12 +5,14 @@ namespace SimpleScheme
 {
     using System.IO;
     using System.Text;
+    using Obj = System.Object;
 
     /// <summary>
     /// Represents an input port, a mechanism for reading input.
     /// </summary>
     public sealed class InputPort : ListPrimitives
     {
+        #region Fields
         /// <summary>
         /// Marks the end of the input file.
         /// </summary>
@@ -25,7 +27,9 @@ namespace SimpleScheme
         /// The token stream to read from.
         /// </summary>
         private readonly TokenStream tokStream;
+        #endregion
 
+        #region Construcors
         /// <summary>
         /// Initializes a new instance of the InputPort class.
         /// </summary>
@@ -44,7 +48,9 @@ namespace SimpleScheme
             : this(new StreamReader(inp))
         {
         }
+        #endregion
 
+        #region Define Primitives
         /// <summary>
         /// Define the input primitives.
         /// </summary>
@@ -60,49 +66,50 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
-                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEof(First(args))), 1)
+                .DefinePrimitive("eof-object?", (args, caller) => SchemeBoolean.Truth(IsEof(First(args))), 1)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
-                .DefinePrimitive("call-with-input-file", (caller, args) => EvaluateCallWithInputFile.Call(args, caller), 2)
+                .DefinePrimitive("call-with-input-file", (args, caller) => EvaluateCallWithInputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (caller, args) => InPort(First(args), caller.Env.Interp.Input).Close(), 1)
+                .DefinePrimitive("close-input-port", (args, caller) => InPort(First(args), caller.Env.Interp.Input).Close(), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
-                .DefinePrimitive("current-input-port", (caller, args) => caller.Env.Interp.Input, 0)
-                .DefinePrimitive("eof-object?", (caller, args) => SchemeBoolean.Truth(IsEof(First(args))), 1)
+                .DefinePrimitive("current-input-port", (args, caller) => caller.Env.Interp.Input, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (caller, args) => SchemeBoolean.Truth(First(args) is InputPort), 1)
+                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(First(args) is InputPort), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (caller, args) => caller.Env.Interp.LoadFile(First(args)), 1)
+                .DefinePrimitive("load", (args, caller) => caller.Env.Interp.LoadFile(First(args)), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
-                .DefinePrimitive("open-input-file", (caller, args) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
+                .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (caller, args) => InPort(First(args), caller.Env.Interp.Input).PeekChar(), 0, 1)
+                .DefinePrimitive("peek-char", (args, caller) => InPort(First(args), caller.Env.Interp.Input).PeekChar(), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (caller, args) => InPort(First(args), caller.Env.Interp.Input).Read(), 0, 1)
+                .DefinePrimitive("read", (args, caller) => InPort(First(args), caller.Env.Interp.Input).Read(), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (caller, args) => InPort(First(args), caller.Env.Interp.Input).ReadChar(), 0, 1);
+                .DefinePrimitive("read-char", (args, caller) => InPort(First(args), caller.Env.Interp.Input).ReadChar(), 0, 1);
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
-        /// Tests the object against EOF.
+        /// Tests the obj against EOF.
         /// </summary>
-        /// <param name="x">The object to test.</param>
-        /// <returns>True if the object is EOF.</returns>
-        public static bool IsEof(object x)
+        /// <param name="x">The obj to test.</param>
+        /// <returns>True if the obj is EOF.</returns>
+        public static bool IsEof(Obj x)
         {
             return x as string == Eof;
         }
 
         /// <summary>
-        /// Convert an object (containing an input port) into an InputPort.
-        /// If the given object is the empty list, return the interpreter's input port.
+        /// Convert an obj (containing an input port) into an InputPort.
+        /// If the given obj is the empty list, return the interpreter's input port.
         /// </summary>
-        /// <param name="x">The object containing the input port.</param>
+        /// <param name="x">The obj containing the input port.</param>
         /// <param name="inPort">The default input port.</param>
         /// <returns>An input port.</returns>
-        public static InputPort InPort(object x, InputPort inPort)
+        public static InputPort InPort(Obj x, InputPort inPort)
         {
             if (x == List.Empty)
             {
@@ -116,12 +123,14 @@ namespace SimpleScheme
 
             return InPort(ErrorHandlers.Error("Expected an input port, got: " + x), null);
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Close the input port.
         /// </summary>
         /// <returns>True if the port was closed.</returns>
-        public object Close()
+        public Obj Close()
         {
             return this.inStream.Close();
         }
@@ -132,7 +141,7 @@ namespace SimpleScheme
         /// Warns about extra right parentheses and dots.
         /// </summary>
         /// <returns>The expression as a list.</returns>
-        public object Read()
+        public Obj Read()
         {
             try
             {
@@ -166,7 +175,9 @@ namespace SimpleScheme
                 return Eof;
             }
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Take a peek at the next character, without consuming it.
         /// </summary>
@@ -378,7 +389,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="dotOk">True if a dot is OK at this point.</param>
         /// <returns>A list of the tokens read.</returns>
-        private object ReadTail(bool dotOk)
+        private Obj ReadTail(bool dotOk)
         {
             object token = this.NextToken();
             if (token as string == Eof)
@@ -412,7 +423,9 @@ namespace SimpleScheme
             this.tokStream.PushToken(token);
             return Cons(this.Read(), this.ReadTail(true));
         }
+#endregion
 
+        #region Private Classes
         /// <summary>
         /// Manages a character stream where it is possible to peek ahead one
         ///   character, or to push back a character that was already read.
@@ -522,7 +535,7 @@ namespace SimpleScheme
             /// Close the input port.
             /// </summary>
             /// <returns>True if the port was closed.</returns>
-            public object Close()
+            public Obj Close()
             {
                 try
                 {
@@ -591,5 +604,6 @@ namespace SimpleScheme
                 return this.pushedToken;
             }
         }
+        #endregion
     }
 }

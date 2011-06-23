@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.Text;
+    using Obj = System.Object;
 
     /// <summary>
     /// A pair consists of two cells, named FirstCell and RestCell.
@@ -11,34 +12,39 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Pair : ListPrimitives
     {
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the Pair class.
         /// </summary>
         /// <param name="first">The first object.</param>
-        /// <param name="rest">The rest of the objects int he list are 
+        /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
-        public Pair(object first, object rest)
+        public Pair(Obj first, Obj rest)
         {
             this.FirstCell = first;
             this.RestCell = rest;
         }
+        #endregion
+
+        #region Accessors
+        /// <summary>
+        /// Gets or sets the first obj of the pair.
+        /// </summary>
+        public Obj FirstCell { get; set; }
 
         /// <summary>
-        /// Gets or sets the first object of the pair.
+        /// Gets or sets the rest of the objs in the list.
         /// </summary>
-        public object FirstCell { get; set; }
+        public Obj RestCell { get; set; }
+        #endregion
 
+        #region Public Methods
         /// <summary>
-        /// Gets or sets the rest of the objects in the list.
+        /// Tests whether the given obj is equal to this pair.
         /// </summary>
-        public object RestCell { get; set; }
-
-        /// <summary>
-        /// Tests whether the given object is equal to this pair.
-        /// </summary>
-        /// <param name="x">The object to test.</param>
-        /// <returns>True if the given object is equal to this pair.</returns>
-        public override bool Equals(object x)
+        /// <param name="x">The obj to test.</param>
+        /// <returns>True if the given obj is equal to this pair.</returns>
+        public override bool Equals(Obj x)
         {
             if (!(x is Pair))
             {
@@ -117,14 +123,14 @@ namespace SimpleScheme
             buf.Append('(');
             SchemeString.AsString(this.FirstCell, quoted, buf);
 
-            object tail = this.RestCell;
+            Obj tail = this.RestCell;
 
             int len = 0;
             while (tail is Pair)
             {
                 buf.Append(' ');
                 SchemeString.AsString(First(tail), quoted, buf);
-                object oldTail = tail;
+                Obj oldTail = tail;
                 tail = Rest(tail);
                 len++;
                 if (tail == oldTail)
@@ -152,5 +158,6 @@ namespace SimpleScheme
 
             buf.Append(')');
         }
+        #endregion
     }
 }

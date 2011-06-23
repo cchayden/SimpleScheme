@@ -17,6 +17,7 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Environment : ListPrimitives
     {
+        #region Fields
         /// <summary>
         /// Represents the end of the environment chain.
         /// </summary>
@@ -31,7 +32,9 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("environment");
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Initializes a new instance of the Environment class.
         /// This is used to create the primitive environment.
@@ -40,12 +43,11 @@ namespace SimpleScheme
         {
             this.symbolTable = new SymbolTable(0);
         }
-        
+
         /// <summary>
         /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
         /// When we refer to "parent" we mean the enclosing lexical environment.
-        /// When we refer to "caller" it means the procedure that is invoking a step.
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="parent">The parent environment.</param>
@@ -78,7 +80,9 @@ namespace SimpleScheme
             this.symbolTable = new SymbolTable(count);
             this.symbolTable.AddList(formals, vals);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the interpreter used to hold the global context.
         /// The bottom environment holds the interpreter, but each one copies from its
@@ -91,46 +95,48 @@ namespace SimpleScheme
         /// Gets the parent environment.
         /// </summary>
         public Environment Parent { get; private set; }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Install primitives into the environment.
         /// </summary>
         /// <returns>The environment.</returns>
-        public Environment InstallPrimitives()
+        public static void InstallPrimitives(Environment env)
         {
-            EvaluateExpression.DefinePrimitives(this);
-            Number.DefinePrimitives(this);
-            Procedure.DefinePrimitives(this);
-            List.DefinePrimitives(this);
-            InputPort.DefinePrimitives(this);
-            OutputPort.DefinePrimitives(this);
-            Vector.DefinePrimitives(this);
-            SchemeBoolean.DefinePrimitives(this);
-            SchemeString.DefinePrimitives(this);
-            Character.DefinePrimitives(this);
-            Symbol.DefinePrimitives(this);
-            ClrProcedure.DefinePrimitives(this);
-            SynchronousClrProcedure.DefinePrimitives(this);
-            AsynchronousClrProcedure.DefinePrimitives(this);
-            Counter.DefinePrimitives(this);
-            Interpreter.DefinePrimitives(this);
-            ErrorHandlers.DefinePrimitives(this);
+            EvaluateExpression.DefinePrimitives(env);
+            Number.DefinePrimitives(env);
+            Procedure.DefinePrimitives(env);
+            List.DefinePrimitives(env);
+            InputPort.DefinePrimitives(env);
+            OutputPort.DefinePrimitives(env);
+            Vector.DefinePrimitives(env);
+            SchemeBoolean.DefinePrimitives(env);
+            SchemeString.DefinePrimitives(env);
+            Character.DefinePrimitives(env);
+            Symbol.DefinePrimitives(env);
+            ClrProcedure.DefinePrimitives(env);
+            SynchronousClrProcedure.DefinePrimitives(env);
+            AsynchronousClrProcedure.DefinePrimitives(env);
+            Counter.DefinePrimitives(env);
+            Interpreter.DefinePrimitives(env);
+            ErrorHandlers.DefinePrimitives(env);
 
-            this
+            env
                 .DefinePrimitive(
                    "exit", 
-                   (caller, args) =>
+                   (args, caller) =>
                        {
                             System.Environment.Exit(First(args) == List.Empty ? 0 : (int)Number.Num(First(args)));
                             return Undefined.Instance;
                         },
                    0, 
                    1)
-                .DefinePrimitive("time-call", (caller, args) => EvaluateTimeCall.Call(args, caller), 1, 2);
-
-            return this;
+                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller), 1, 2);
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Add a new definition into the environment.
         /// If a procedure is being added, set its name.
@@ -140,14 +146,19 @@ namespace SimpleScheme
         /// <returns>The variable added to the environment.</returns>
         public Obj Define(Obj var, Obj val)
         {
-            this.symbolTable.Add(var, val);
-
-            if (val is Procedure)
+            if (var is string)
             {
-                ((Procedure)val).SetName(var.ToString());
+                this.symbolTable.Add((string)var, val);
+
+                if (val is Procedure)
+                {
+                    ((Procedure)val).SetName(var.ToString());
+                }
+
+                return var;
             }
-            
-            return var;
+
+            return ErrorHandlers.Error("Define: bad variable: " + var);
         }
 
         /// <summary>
@@ -222,7 +233,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Define a primitive, taking a fixed number of arguments.
-        /// Creates a Primitive object and puts it in the environment associated 
+        /// Creates a Primitive and puts it in the environment associated 
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
@@ -285,7 +296,9 @@ namespace SimpleScheme
         {
             return "Environment \n" + this.Dump();
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Check that the variable and value lists have the same length.
         /// Iterate down the lists together.
@@ -297,7 +310,7 @@ namespace SimpleScheme
         /// <param name="count">The number of variables in the list</param>
         /// <returns>True if the lists are both empty lists, if the variable list is just a string, 
         /// or if they are both lists of the same length.</returns>
-        private static bool NumberArgsOk(object vars, object vals, out int count)
+        private static bool NumberArgsOk(Obj vars, Obj vals, out int count)
         {
             count = 0;
             while (true)
@@ -317,7 +330,9 @@ namespace SimpleScheme
                 count++;
             }
         }
+        #endregion
 
+        #region Private Class
         /// <summary>
         /// The symbol table for the environment.
         /// This is the single most expensive part of the code.
@@ -330,7 +345,7 @@ namespace SimpleScheme
             /// <summary>
             /// Stores symbols and their values.
             /// </summary>
-            private readonly Dictionary<object, object> symbolTable;
+            private readonly Dictionary<string, Obj> symbolTable;
 
             /// <summary>
             /// Initializes a new instance of the Environment.SymbolTable class.
@@ -338,7 +353,7 @@ namespace SimpleScheme
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
             public SymbolTable(int count)
             {
-                this.symbolTable = new Dictionary<object, object>(count);
+                this.symbolTable = new Dictionary<string, Obj>(count);
             }
 
             /// <summary>
@@ -347,7 +362,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to look up.</param>
             /// <param name="val">Its returned value.</param>
             /// <returns>True if found in the symbol table, false if not found.</returns>
-            public bool Lookup(object symbol, out object val)
+            public bool Lookup(string symbol, out Obj val)
             {
                 if (this.symbolTable.TryGetValue(symbol, out val))
                 {
@@ -363,7 +378,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            public void Add(object symbol, object val)
+            public void Add(string symbol, Obj val)
             {
                 this.symbolTable[symbol] = val;
             }
@@ -374,17 +389,23 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public void AddList(object symbols, object vals)
+            public void AddList(Obj symbols, Obj vals)
             {
                 while (symbols != List.Empty)
                 {
                     if (symbols is string)
                     {
-                        this.Add(symbols, vals);
+                        this.Add((string)symbols, vals);
                     }
                     else
                     {
-                        this.Add(First(symbols), First(vals));
+                        Obj symbol = First(symbols);
+                        if (!(symbol is string))
+                        {
+                            ErrorHandlers.Error("AddList: bad formal parameters: " + symbol);
+                        }
+
+                        this.Add((string)symbol, First(vals));
                     }
 
                     symbols = Rest(symbols);
@@ -398,7 +419,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
             /// <returns>True if the value was found and stored, false if not found.</returns>
-            public bool Update(object symbol, object val)
+            public bool Update(string symbol, Obj val)
             {
                 if (this.symbolTable.ContainsKey(symbol))
                 {
@@ -407,11 +428,6 @@ namespace SimpleScheme
                 }
 
                 return false;
-            }
-
-            public void Clear()
-            {
-                this.symbolTable.Clear();
             }
 
             /// <summary>
@@ -428,5 +444,6 @@ namespace SimpleScheme
                 }
             }
         }
+        #endregion
     }
 }

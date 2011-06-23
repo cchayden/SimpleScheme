@@ -6,6 +6,7 @@ namespace Tests
     using System.IO;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
+    using Obj = System.Object;
 
     /// <summary>
     /// This is a test class for InputPortTest and is intended
@@ -139,7 +140,7 @@ namespace Tests
             TestNextToken("#\\stop", "s");
             TestNextToken("#\\nop", "n");
             TestNextToken("#\\quit", "q");
-            var expected = new object[] { "a", "b", "c" };
+            var expected = new Obj[] { "a", "b", "c" };
             TestNextToken("#( a b c)", expected);
         }
 
@@ -260,7 +261,7 @@ namespace Tests
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                object actual = accessor.NextToken();
+                var actual = accessor.NextToken();
                 if (actual is string)
                 {
                     Assert.AreEqual(expected, actual);
@@ -303,7 +304,7 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
-        private static void TestNextToken(string input, object[] expected)
+        private static void TestNextToken(string input, Obj[] expected)
         {
             using (StringReader reader = new StringReader(input))
             {

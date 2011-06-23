@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// The initial evaluator.  
     /// Eval creates one of these to be the parent of its initial step.
@@ -10,13 +12,14 @@ namespace SimpleScheme
     /// </summary>
     public class EvaluatorBase : Stepper
     {
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluatorBase class.
         /// This is never applied.
         /// </summary>
         /// <param name="name">The evaluator name.</param>
         public EvaluatorBase(string name)
-            : base(null, name, null)
+            : base(name, null, null)
         {
         }
 
@@ -26,11 +29,13 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluatorBase(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        protected EvaluatorBase(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -38,5 +43,6 @@ namespace SimpleScheme
         {
             get { return "base"; }
         }
+        #endregion
     }
 }

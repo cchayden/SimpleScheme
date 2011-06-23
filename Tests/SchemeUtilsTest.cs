@@ -8,6 +8,7 @@ namespace Tests
     using System.Text;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
+    using Obj = System.Object;
 
     /// <summary>
     /// This is a test class for SchemeUtilsTest and is intended
@@ -101,10 +102,10 @@ namespace Tests
             Assert.IsTrue(SchemeBoolean.Equal("abc", "abc"));
             Assert.IsFalse(SchemeBoolean.Equal("abc", "ab"));
             Assert.IsFalse(SchemeBoolean.Equal("abc", 1));
-            var vec1 = new object[] { 1, 2, 3 };
-            var vec2 = new object[] { 1, 2, 3 };
-            var vec3 = new object[] { 1, 2 };
-            var vec4 = new object[] { 1, 2, 4 };
+            var vec1 = new Obj[] { 1, 2, 3 };
+            var vec2 = new Obj[] { 1, 2, 3 };
+            var vec3 = new Obj[] { 1, 2 };
+            var vec4 = new Obj[] { 1, 2, 4 };
             Assert.IsTrue(SchemeBoolean.Equal(vec1, vec1));
             Assert.IsTrue(SchemeBoolean.Equal(vec1, vec2));
             Assert.IsFalse(SchemeBoolean.Equal(vec1, vec3));
@@ -130,10 +131,10 @@ namespace Tests
             Assert.IsTrue(SchemeBoolean.Eqv("abc", "abc"));
             Assert.IsFalse(SchemeBoolean.Eqv("abc", "ab"));
             Assert.IsFalse(SchemeBoolean.Eqv("abc", 1));
-            object[] vec1 = { 1, 2, 3 };
-            object[] vec2 = { 1, 2, 3 };
-            object[] vec3 = { 1, 2 };
-            object[] vec4 = { 1, 2, 4 };
+            Obj[] vec1 = { 1, 2, 3 };
+            Obj[] vec2 = { 1, 2, 3 };
+            Obj[] vec3 = { 1, 2 };
+            Obj[] vec4 = { 1, 2, 4 };
             Assert.IsTrue(SchemeBoolean.Eqv(vec1, vec1));
             Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec2));
             Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec3));
@@ -180,14 +181,14 @@ namespace Tests
             var accessor = new Interpreter_Accessor(false, null, files);
             Interpreter interpreter = accessor.Target as Interpreter;
             Assert.IsNotNull(interpreter);
-            Assert.AreEqual(accessor.Output, OutputPort.OutPort(List.Empty, interpreter.Output));
+            Assert.AreEqual(accessor.Output, OutputPort_Accessor.OutPort(List.Empty, interpreter.Output));
             using (StringWriter writer = new StringWriter())
             {
                 OutputPort output = new OutputPort(writer);
-                Assert.AreEqual(output, OutputPort.OutPort(output, interpreter.Output));
+                Assert.AreEqual(output, OutputPort_Accessor.OutPort(output, interpreter.Output));
             }
 
-            AssertEx.Throws(() => OutputPort.OutPort(1, interpreter.Output));
+            AssertEx.Throws(() => OutputPort_Accessor.OutPort(1, interpreter.Output));
         }
 
         /// <summary>
@@ -304,7 +305,7 @@ namespace Tests
         public void ListToVectorTest()
         {
             var actual = Vector.MakeVector(ListPrimitives.MakeList(1, 2));
-            var expected = new object[] { 1, 2 };
+            var expected = new Obj[] { 1, 2 };
             Assert.AreEqual(2, actual.Length);
             Assert.AreEqual(2, expected.Length);
             Assert.AreEqual(expected[0], actual[0]);
@@ -371,7 +372,7 @@ namespace Tests
             Assert.AreEqual(@"abc", SchemeString.AsString("abc"));
             char[] empty = new char[0];
             Assert.AreEqual(@"""""", SchemeString.AsString(empty));
-            var test = new object[] { 1, 2 };
+            var test = new Obj[] { 1, 2 };
             Assert.AreEqual("#(1 2)", SchemeString.AsString(test));
             Assert.AreEqual("#t", SchemeString.AsString(true));
             Assert.AreEqual("#f", SchemeString.AsString(false));
@@ -392,7 +393,7 @@ namespace Tests
             Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2), false));
             Assert.AreEqual("abc", SchemeString.AsString("abc", false));
             Assert.AreEqual(@"""", SchemeString.AsString(@"""", false));
-            var test = new object[] { 1, 2 };
+            var test = new Obj[] { 1, 2 };
             Assert.AreEqual("#(1 2)", SchemeString.AsString(test, false));
             Assert.AreEqual("#t", SchemeString.AsString(true, false));
             Assert.AreEqual("#f", SchemeString.AsString(false, false));
@@ -439,7 +440,7 @@ namespace Tests
         [TestMethod]
         public void VecTest()
         {
-            var test = new object[] { 1, 2 };
+            var test = new Obj[] { 1, 2 };
             Assert.AreEqual(2, Vector_Accessor.Vec(test).Length);
             Assert.AreEqual(1, Vector_Accessor.Vec(test)[0]);
             Assert.AreEqual(2, Vector_Accessor.Vec(test)[1]);
@@ -452,7 +453,7 @@ namespace Tests
         [TestMethod]
         public void VectorToListTest()
         {
-            var test = new object[] { 1, 2, 3 };
+            var test = new Obj[] { 1, 2, 3 };
             var actual = Vector_Accessor.VectorToList(test);
             Assert.AreEqual(3, ListPrimitives.Length(actual));
             Assert.AreEqual(1, ListPrimitives.First(actual));
@@ -466,7 +467,7 @@ namespace Tests
         [TestMethod]
         public void WarnTest()
         {
-            Assert.AreEqual("<warn>", ErrorHandlers.Warn("message"));
+            ErrorHandlers.Warn("message");
         }
 
         /// <summary>
@@ -478,7 +479,7 @@ namespace Tests
             using (StringWriter writer = new StringWriter())
             {
                 OutputPort w = new OutputPort(writer);
-                var actual = OutputPort.Write("abc", w, false);
+                var actual = OutputPort_Accessor.Write("abc", w, false);
                 Assert.AreEqual(Undefined.Instance, actual);
                 Assert.AreEqual("abc", writer.ToString());
             }

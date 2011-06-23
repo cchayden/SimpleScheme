@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a let expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -13,6 +15,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
     public sealed class EvaluateLet : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -26,42 +29,46 @@ namespace SimpleScheme
         /// <summary>
         /// Name, for named let.
         /// </summary>
-        private object name;
+        private string name;
 
         /// <summary>
         /// The variable bindings established by the let expression.
         /// </summary>
-        private object bindings;
+        private Obj bindings;
 
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private object body;
+        private Obj body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private object vars;
+        private Obj vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private object inits;
+        private Obj inits;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateLet class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLet(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateLet(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
-            this.name = Undefined.Instance;
+            this.name = null;
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -69,18 +76,22 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call let evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateLet(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Start by checking the number of arguments.
         /// Then test for named let.  
@@ -95,19 +106,19 @@ namespace SimpleScheme
             if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Let: wrong number of arguments");
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Let: illegal arg list: " + Expr);
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             if (First(Expr) is string)
             {
                 // named let
-                this.name = First(Expr);
+                this.name = Symbol.Sym(First(Expr));
                 this.bindings = Second(Expr);
                 this.body = Rest(Rest(Expr));
             }
@@ -119,20 +130,20 @@ namespace SimpleScheme
 
             if (this.body == List.Empty)
             {
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             this.vars = MapFun(First, MakeList(this.bindings));
             this.inits = MapFun(Second, MakeList(this.bindings));
 
-            if (this.name == Undefined.Instance)
+            if (this.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
                 return EvaluateProc.Call(new Closure(this.vars, this.body, this.Env), this.inits, ContinueReturn());
             }
 
             // named let -- eval the inits in the outer environment
-            return EvaluateList.Call(ContinueHere(this.ApplyNamedLet), this.inits);
+            return EvaluateList.Call(this.inits, ContinueHere(this.ApplyNamedLet));
         }
 
         /// <summary>
@@ -148,5 +159,6 @@ namespace SimpleScheme
             fn.Env.Define(this.name, fn);
             return fn.Apply(ReturnedExpr, ContinueReturn());
         }
+        #endregion
     }
 }

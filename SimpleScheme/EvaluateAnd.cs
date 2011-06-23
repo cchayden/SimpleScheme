@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a sequence by evaluating each member.
     /// If a value is #f then return it.  Otherwise return the last value.
@@ -10,6 +12,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
     public sealed class EvaluateAnd : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -23,22 +26,26 @@ namespace SimpleScheme
         /// <summary>
         /// The list of expressions.
         /// </summary>
-        private object tests;
+        private Obj tests;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateAnd class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateAnd(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateAnd(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             this.tests = expr;
             ContinueHere(this.EvalTestStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -46,14 +53,16 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr == List.Empty)
@@ -63,7 +72,9 @@ namespace SimpleScheme
 
             return new EvaluateAnd(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
@@ -89,5 +100,6 @@ namespace SimpleScheme
             this.tests = Rest(this.tests);
             return ContinueHere(this.EvalTestStep);
         }
+        #endregion
     }
 }

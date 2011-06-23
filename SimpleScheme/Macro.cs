@@ -3,23 +3,28 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Represents a macro definition.
     /// It is just a closure with a different ToString.
     /// </summary>
     public sealed class Macro : Closure
     {
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the Macro class.
         /// </summary>
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        public Macro(object parms, object body, Environment env)
+        public Macro(Obj parms, Obj body, Environment env)
             : base(parms, body, env)
         {
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Display the macro as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
@@ -29,5 +34,6 @@ namespace SimpleScheme
         {
             return this.ToString("macro");
         }
+        #endregion
     }
 }

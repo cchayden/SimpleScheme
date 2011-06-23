@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Reduce a conditiona;
     /// </summary>
@@ -12,6 +14,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
     public sealed class EvaluateCond : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -25,32 +28,36 @@ namespace SimpleScheme
         /// <summary>
         /// The value of the test expr
         /// </summary>
-        private object test;
+        private Obj test;
 
         /// <summary>
         /// The list of clauses in the cond
         /// </summary>
-        private object clauses;
+        private Obj clauses;
 
         /// <summary>
         /// The cond clause that is being processed.
         /// </summary>
-        private object clause;
+        private Obj clause;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateCond class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCond(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateCond(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             this.clauses = expr;
             ContinueHere(this.EvalClauseStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -58,14 +65,16 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Calls a cond evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr == List.Empty)
@@ -75,7 +84,9 @@ namespace SimpleScheme
 
             return new EvaluateCond(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Evaluates a clause.  This step starts by checking for special conditions
         ///   such as else or the end of the list.
@@ -112,7 +123,7 @@ namespace SimpleScheme
             this.clauses = Rest(this.clauses);
             if (this.clauses == List.Empty)
             {
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             return ContinueHere(this.EvalClauseStep);
@@ -139,7 +150,7 @@ namespace SimpleScheme
             }
 
             // evaluate and return the sequence of expressions
-            return EvaluateSequence.Call(Rest(this.clause), this.Caller);
+            return EvaluateSequence.Call(Rest(this.clause), this.ContinueReturn());
         }
 
         /// <summary>
@@ -148,7 +159,8 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper ApplyRecipientStep()
         {
-            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Caller);
+            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.ContinueReturn());
         }
+        #endregion
     }
 }

@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -11,6 +13,7 @@ namespace SimpleScheme
     //// <r4rs section="6.3">(list <obj> ...)</r4rs>
     public sealed class EvaluateList : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -27,23 +30,25 @@ namespace SimpleScheme
         private readonly Pair result;
 
         /// <summary>
-        /// Objects to make into a list.
+        /// Objs to make into a list.
         /// </summary>
-        private object objs;
+        private Obj objs;
 
         /// <summary>
         /// The end of the list we are constructing for return.
         /// </summary>
         private Pair accum;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateList class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateList(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateList(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             this.objs = expr;
 
@@ -53,7 +58,9 @@ namespace SimpleScheme
             ContinueHere(this.EvalExprStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -61,14 +68,16 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Create a list evaluator.
         /// </summary>
-        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        public static Stepper Call(Stepper caller, object expr)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             // first check for degenerate cases
             if (expr == List.Empty)
@@ -84,7 +93,9 @@ namespace SimpleScheme
 
             return new EvaluateList(expr, caller.Env, caller);
         }
-        
+        #endregion
+
+        #region Private Methods
         /// <summary>
         /// Create the list by evaluating the expression.
         /// </summary>
@@ -115,5 +126,6 @@ namespace SimpleScheme
             // We are done now, return
             return ReturnFromStep(this.result.RestCell);
         }
+        #endregion
     }
 }

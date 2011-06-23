@@ -8,6 +8,7 @@ namespace SimpleScheme
     /// </summary>
     public sealed class SchemePrimitives
     {
+        #region Constants
         /// <summary>
         /// Standard scheme macros
         /// </summary>
@@ -70,5 +71,6 @@ namespace SimpleScheme
                              (set! result x)
                              result)))))))
             `(,make-promise (lambda () ,exp))))";
-    }
+        }
+        #endregion
 }

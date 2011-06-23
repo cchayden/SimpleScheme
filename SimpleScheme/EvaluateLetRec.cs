@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a letrec expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -12,6 +14,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
     public sealed class EvaluateLetRec : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -25,42 +28,46 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private object body;
+        private Obj body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private object vars;
+        private Obj vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private object inits;
+        private Obj inits;
 
         /// <summary>
         /// The list of formal parameters to pass to the final closure.
         /// This is variable1, variable2, ...
         /// </summary>
-        private object formals;
+        private Obj formals;
 
         /// <summary>
         /// Accumulate the list of init vals here for later assignment.
         /// </summary>
-        private System.Collections.Generic.List<object> vals;
+        private System.Collections.Generic.List<Obj> vals;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateLetRec class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLetRec(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateLetRec(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -68,18 +75,22 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call letrec evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateLetRec(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Start by checking the number of arguments.
         /// Grab bindings, body, vars, and inits.
@@ -92,36 +103,36 @@ namespace SimpleScheme
             if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Letrec: wrong number of arguments");
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Letrec: illegal arg list: " + Expr);
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
-            object bindings = First(Expr);
+            Obj bindings = First(Expr);
             this.body = Rest(Expr);
 
             if (this.body == List.Empty)
             {
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             this.vars = MapFun(First, MakeList(bindings));
             this.inits = MapFun(Second, MakeList(bindings));
             this.formals = this.vars;
-            object initVals = List.Empty;
+            Obj initVals = List.Empty;
             int n = Length(this.vars);
             for (int i = 0; i < n; i++)
             {
                 initVals = Cons(Undefined.Instance, initVals);
             }
 
-            this.vals = new System.Collections.Generic.List<object>(n);
+            this.vals = new System.Collections.Generic.List<Obj>(n);
 
-            this.ReplaceEnvironment(this.formals, initVals, this.Caller.Env);
+            this.ReplaceEnvironment(this.formals, initVals, this.CallerEnv);
             return ContinueHere(this.EvalInit);
         }
 
@@ -161,7 +172,7 @@ namespace SimpleScheme
         private Stepper ApplyProc()
         {
             // assign the inits into the env
-            object var = this.formals;
+            Obj var = this.formals;
             int n = Length(this.formals);
             for (int i = 0; i < n; i++)
             {
@@ -173,5 +184,6 @@ namespace SimpleScheme
             Closure fun = new Closure(this.formals, this.body, this.Env);
             return fun.ApplyWithCurrentEnv(ContinueReturn());
         }
+        #endregion
     }
 }

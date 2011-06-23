@@ -4,12 +4,14 @@
 namespace SimpleScheme
 {
     using System.IO;
+    using Obj = System.Object;
 
     /// <summary>
     /// Evaluate a call-with-output-file expressions
     /// </summary>
     public sealed class EvaluateCallWithOutputFile : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -24,20 +26,24 @@ namespace SimpleScheme
         /// The output port to use during evaluation.
         /// </summary>
         private OutputPort port;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateCallWithOutputFile class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCallWithOutputFile(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateCallWithOutputFile(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -45,14 +51,16 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Create an evaluator with output file.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateCallWithOutputFile(expr, caller.Env, caller);
         }
@@ -62,7 +70,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="filename">The filename.</param>
         /// <returns>The output port, used for writing.</returns>
-        public static OutputPort OpenOutputFile(object filename)
+        public static OutputPort OpenOutputFile(Obj filename)
         {
             try
             {
@@ -77,7 +85,9 @@ namespace SimpleScheme
                 return (OutputPort)ErrorHandlers.Error("IOException: " + ex.Message);
             }
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Open the output file and apply the proc.
         /// </summary>
@@ -102,5 +112,6 @@ namespace SimpleScheme
 
             return ReturnFromStep(this.ReturnedExpr);
         }
+        #endregion
     }
 }

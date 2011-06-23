@@ -16,6 +16,7 @@ namespace SimpleScheme
     {
         // Errors and Warnings
 
+        #region Define Primitives
         /// <summary>
         /// Define the error primitives.
         /// </summary>
@@ -24,9 +25,12 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                .DefinePrimitive("error", (caller, args) => Error(SchemeString.AsString(args)), 0, MaxInt);
+                //// (error <message> ...)
+                .DefinePrimitive("error", (args, caller) => Error(SchemeString.AsString(args)), 0, MaxInt);
         }
+        #endregion
 
+        #region Static Methods
         /// <summary>
         /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
@@ -57,12 +61,11 @@ namespace SimpleScheme
         /// Display a warning and return a warning string.
         /// </summary>
         /// <param name="message">The message to display.</param>
-        /// <returns>A string warning, which does not contain the message.</returns>
-        public static object Warn(string message)
+        public static void Warn(string message)
         {
             Console.Error.WriteLine("**** WARNING: " + message);
-            return "<warn>";
         }
+        #endregion
 
         /// <summary>
         /// All exceptions thrown by the interpreter are of this class.

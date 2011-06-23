@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a do expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -13,6 +15,7 @@ namespace SimpleScheme
     ////                         <command> ...)</r4rs>
     public sealed class EvaluateDo : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -26,41 +29,45 @@ namespace SimpleScheme
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private object vars;
+        private Obj vars;
 
         /// <summary>
         /// This list of step expressions.
         /// </summary>
-        private object steps;
+        private Obj steps;
 
         /// <summary>
         /// The expression list following the test
         /// </summary>
-        private object exprs;
+        private Obj exprs;
 
         /// <summary>
         /// The commands to execute each time through.
         /// </summary>
-        private object commands;
+        private Obj commands;
 
         /// <summary>
         /// The test proc to execute each time around.
         /// </summary>
         private Closure testProc;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateDo class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateDo(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateDo(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -68,27 +75,31 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call let evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateDo(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Extract the steps (third element in list).
         /// If it is missing, then use the first instead.
         /// </summary>
         /// <param name="x">The list to start with.</param>
         /// <returns>The third, if it exists, otherwise the first.</returns>
-        private static object ThirdOrFirst(object x)
+        private static Obj ThirdOrFirst(object x)
         {
-            object res = Third(x);
+            Obj res = Third(x);
             return res == List.Empty ? First(x) : res;
         }
 
@@ -103,34 +114,34 @@ namespace SimpleScheme
             if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Do: wrong number of arguments");
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Do: illegal arg list: " + Expr);
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
-            object bindings = First(Expr);
+            Obj bindings = First(Expr);
             this.vars = MapFun(First, MakeList(bindings));
-            object inits = MapFun(Second, MakeList(bindings));
+            Obj inits = MapFun(Second, MakeList(bindings));
             this.steps = MapFun(ThirdOrFirst, MakeList(bindings));
 
-            object test = First(Second(Expr));
+            Obj test = First(Second(Expr));
             this.exprs = Rest(Second(Expr));
             this.commands = Rest(Rest(Expr));
 
             if (test == List.Empty)
             {
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             // prepare test proc to execute each time through
             this.testProc = new Closure(this.vars, MakeList(test), this.Env);
 
             // First evaluare inits.
-            return EvaluateList.Call(ContinueHere(this.TestStep), inits);
+            return EvaluateList.Call(inits, ContinueHere(this.TestStep));
         }
 
         /// <summary>
@@ -140,7 +151,7 @@ namespace SimpleScheme
         /// <returns>The next step, which tests the result.</returns>
         private Stepper TestStep()
         {
-            this.ReplaceEnvironment(this.vars, ReturnedExpr, this.Caller.Env);
+            this.ReplaceEnvironment(this.vars, ReturnedExpr, this.CallerEnv);
             return this.testProc.ApplyWithCurrentEnv(ContinueHere(this.IterateStep));
         }
 
@@ -159,7 +170,7 @@ namespace SimpleScheme
                 // If no exprs, unspecified.
                 if (this.exprs == List.Empty)
                 {
-                    return ReturnFromStep(Undefined.Instance);
+                    return ReturnUndefined();
                 }
 
                 return EvaluateSequence.Call(this.exprs, ContinueReturn());
@@ -168,7 +179,7 @@ namespace SimpleScheme
             // test is false
             // evaluate the steps in the environment of the vars
             // bind to fresh copies of the vars
-            return EvaluateList.Call(ContinueHere(this.LoopStep), this.commands);
+            return EvaluateList.Call(this.commands, ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -177,7 +188,8 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper LoopStep()
         {
-            return EvaluateList.Call(ContinueHere(this.TestStep), this.steps);
+            return EvaluateList.Call(this.steps, ContinueHere(this.TestStep));
         }
+        #endregion
     }
 }

@@ -4,12 +4,15 @@
 namespace SimpleScheme
 {
     using System.Text;
+    using Obj = System.Object;
 
     /// <summary>
-    /// Represents a scheme symbol.
+    /// Handles scheme symbols.
+    /// Smybols are represented by .NET strings.
     /// </summary>
     public class Symbol : ListPrimitives
     {
+        #region Define Primitives
         /// <summary>
         /// Define the symbol primitives.
         /// </summary>
@@ -18,11 +21,13 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
-                .DefinePrimitive("symbol->string", (caller, args) => SchemeString.MakeString(Sym(First(args))), 1)
+                .DefinePrimitive("symbol->string", (args, caller) => SchemeString.MakeString(Sym(First(args))), 1)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (caller, args) => SchemeBoolean.Truth(First(args) is string), 1);
+                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(First(args) is string), 1);
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Convert symbol into string.
         /// </summary>
@@ -35,13 +40,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Turn an object that is a symbol into a string.
+        /// Turn an obj that is a symbol into a string.
         /// Symbols are represented by .NET strings.
         /// It is stored as one already, so just verify that this is a symbol.
         /// </summary>
         /// <param name="x">The symbol.</param>
         /// <returns>The corresponding string.</returns>
-        public static string Sym(object x)
+        public static string Sym(Obj x)
         {
             if (x is string)
             {
@@ -50,5 +55,6 @@ namespace SimpleScheme
 
             return Sym(ErrorHandlers.Error("Expected a symbol, got: " + x));
         }
+        #endregion
     }
 }

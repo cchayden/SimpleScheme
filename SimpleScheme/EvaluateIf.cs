@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate an if expression.
     /// Evaluate the first part, then depending on its truth value, either
@@ -12,6 +14,7 @@ namespace SimpleScheme
     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
     public sealed class EvaluateIf : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -21,20 +24,24 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateIf class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateIf(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateIf(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.EvaluateTestStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -42,18 +49,22 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateIf(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
@@ -71,8 +82,9 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private Stepper EvaluateAlternativeStep()
         {
-            object toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
-            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.Caller);
+            Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
+            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.ContinueReturn());
         }
+        #endregion
     }
 }

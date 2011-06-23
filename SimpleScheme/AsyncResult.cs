@@ -12,6 +12,7 @@ namespace SimpleScheme
     /// <typeparam name="TResult">The result of the evaluation.</typeparam>
     public class AsyncResult<TResult> : IAsyncResult
     {
+        #region Constants
         /// <summary>
         /// The evaluation is still taking place.
         /// </summary>
@@ -26,7 +27,9 @@ namespace SimpleScheme
         /// The evaluation completed, but blocked before doing it.
         /// </summary>
         private const int StateCompletedAsynchronously = 2;
+        #endregion
 
+        #region Fields
         /// <summary>
         /// The callback function that was passed in BeginEval.
         /// </summary>
@@ -57,7 +60,9 @@ namespace SimpleScheme
         /// If evaluation caused an exception, it is stored here.
         /// </summary>
         private Exception exception;
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Initializes a new instance of the AsyncResult class.
         /// </summary>
@@ -68,9 +73,11 @@ namespace SimpleScheme
             this.ayncCallback = asyncCallback;
             this.asyncState = state;
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
-        /// Gets the AsyncState object.
+        /// Gets the AsyncState.
         /// </summary>
         /// <value>The AsyncState obect.</value>
         public object AsyncState
@@ -142,7 +149,9 @@ namespace SimpleScheme
                 return Thread.VolatileRead(ref this.completedState) != StatePending;
             }
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Sets AsyncResult as completed.
         /// </summary>
@@ -197,7 +206,9 @@ namespace SimpleScheme
 
             return this.result;
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Sets the AsyncResult as completed. 
         /// </summary>
@@ -225,5 +236,6 @@ namespace SimpleScheme
                 this.ayncCallback(this);
             }
         }
+        #endregion
     }
 }

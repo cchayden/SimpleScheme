@@ -7,6 +7,7 @@ namespace Tests
     using System.IO;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
+    using Obj = System.Object;
 
     /// <summary>
     /// This is a test class for R4RSTest and is intended
@@ -48,7 +49,7 @@ namespace Tests
         {
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
-            object res = this.ReadAndEvaluate(Test);
+            Obj res = this.ReadAndEvaluate(Test);
             Assert.AreEqual(17, ListPrimitives.Length(res), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
@@ -73,7 +74,7 @@ namespace Tests
                     for (int j = 0; j < examples1.Length; j++)
                     {
                         string test = string.Format("({0} {1})", predicates[i], ex[j]);
-                        object res = this.ReadAndEvaluate(test);
+                        Obj res = this.ReadAndEvaluate(test);
                         Assert.AreEqual(i == j, res, "Failed " + this.section + " " + test);
                     }
                 }
@@ -1321,7 +1322,7 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void Run(string expected, string label, string expr)
         {
-            object res = this.ReadAndEvaluate(expr);
+            Obj res = this.ReadAndEvaluate(expr);
             string actual = SchemeString.AsString(res, true);
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
@@ -1337,10 +1338,10 @@ namespace Tests
             using (StringReader reader = new StringReader(str))
             {
                 InputPort inp = new InputPort(reader);
-                object last = null;
+                Obj last = List.Empty;
                 while (true)
                 {
-                    object x;
+                    Obj x;
                     if (InputPort.IsEof(x = inp.Read()))
                     {
                         return last;

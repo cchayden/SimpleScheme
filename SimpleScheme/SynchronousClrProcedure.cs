@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using Obj = System.Object;
 
     // TODO write unit tests for static and non-static cases
 
@@ -12,14 +13,15 @@ namespace SimpleScheme
     /// </summary>
     public sealed class SynchronousClrProcedure : ClrProcedure
     {
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the SynchronousClrProcedure class.
         /// </summary>
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="methodName">The method to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        private SynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
-            : base(methodName, targetClassName)
+        private SynchronousClrProcedure(Obj targetClassName, Obj methodName, object argClassNames)
+            : base(targetClassName, methodName)
         {
             try
             {
@@ -31,7 +33,11 @@ namespace SimpleScheme
                 }
                 else
                 {
-                    this.MethodInfo = cls.GetMethod(methodName, this.ArgClasses.ToArray());
+                    this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
+                    if (this.MethodInfo == null)
+                    {
+                        ErrorHandlers.Error("Cant get method: " + this.MethodName);
+                    }
                 }
             }
             catch (TypeLoadException)
@@ -43,7 +49,9 @@ namespace SimpleScheme
                 ErrorHandlers.Error("Can't get method: " + this.Name);
             }
         }
+        #endregion
 
+        #region Define Primitives
         /// <summary>
         /// Define the sync clr procedure primitives.
         /// </summary>
@@ -52,13 +60,16 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
+                //// (methodasync <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method",
-                   (caller, args) => new SynchronousClrProcedure(First(args), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
+                   (args, caller) => new SynchronousClrProcedure(SchemeString.AsString(First(args), false), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
                     2,
                     MaxInt);
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -85,5 +96,6 @@ namespace SimpleScheme
 
             return caller.ContinueStep(this.MethodInfo.Invoke(target, argArray));
         }
+        #endregion
     }
 }

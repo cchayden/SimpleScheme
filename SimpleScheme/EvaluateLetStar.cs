@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a let* expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -12,6 +14,7 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
     public sealed class EvaluateLetStar : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -25,48 +28,52 @@ namespace SimpleScheme
         /// <summary>
         /// The variable bindings established by the let expression.
         /// </summary>
-        private object bindings;
+        private Obj bindings;
 
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private object body;
+        private Obj body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private object vars;
+        private Obj vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private object inits;
+        private Obj inits;
 
         /// <summary>
         /// Evaluated values of inits.
         /// </summary>
-        private object vals;
+        private Obj vals;
 
         /// <summary>
         /// The list of formal parameters to pass to the final closure.
         /// This is built up from variable1, variable2, ...
         /// It is in the reverse order from the given list.
         /// </summary>
-        private object formals;
+        private Obj formals;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateLetStar class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLetStar(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateLetStar(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -74,18 +81,22 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call let* evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateLetStar(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Start by checking the number of arguments.
         /// Then test for named let.  
@@ -97,13 +108,13 @@ namespace SimpleScheme
             if (Expr == List.Empty)
             {
                 ErrorHandlers.Error("Let*: wrong number of arguments");
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
                 ErrorHandlers.Error("Let*: illegal arg list: " + Expr);
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             this.bindings = First(Expr);
@@ -111,7 +122,7 @@ namespace SimpleScheme
 
             if (this.body == List.Empty)
             {
-                return ReturnFromStep(Undefined.Instance);
+                return ReturnUndefined();
             }
 
             this.vars = MapFun(First, MakeList(this.bindings));
@@ -133,8 +144,8 @@ namespace SimpleScheme
                 return ContinueHere(this.ApplyLambda);
             }
 
-            object fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);
-            return Procedure.Proc(fun).Apply(this.vals, ContinueHere(this.BindVarToInit));
+            Procedure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);
+            return fun.Apply(this.vals, ContinueHere(this.BindVarToInit));
         }
 
         /// <summary>
@@ -159,8 +170,9 @@ namespace SimpleScheme
         private Stepper ApplyLambda()
         {
             // apply the fun to the vals
-            object fun = new Closure(this.formals, this.body, this.Env);
-            return Procedure.Proc(fun).Apply(this.vals, ContinueReturn());
+            Procedure fun = new Closure(this.formals, this.body, this.Env);
+            return fun.Apply(this.vals, ContinueReturn());
         }
+        #endregion
     }
 }

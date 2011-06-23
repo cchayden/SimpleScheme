@@ -10,25 +10,32 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Continuation : Procedure
     {
+        #region Fields
         /// <summary>
         /// The step to execute when the continuation is applied.
         /// </summary>
         private readonly Stepper step;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the Continuation class.
         /// </summary>
         /// <param name="step">The continuation to return to when applied.</param>
         public Continuation(Stepper step)
         {
-            this.step = step.Caller.Caller;
+            this.step = step.CallerCaller;
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the value to return as the result of executing the continuation.
         /// </summary>
         public Obj Value { get; private set; }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Execute the continuation.
         /// Transfers execution to the step saved when the continuation was created.
@@ -52,5 +59,6 @@ namespace SimpleScheme
         {
             return string.Format("call-with-current-continuation {0}", this.step.Expr);
         }
+        #endregion
     }
 }

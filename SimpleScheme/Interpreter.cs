@@ -6,6 +6,7 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using Obj = System.Object;
 
     /// <summary>
     /// The scheme interpreter instance.
@@ -13,6 +14,7 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Interpreter
     {
+        #region Fields
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -27,7 +29,9 @@ namespace SimpleScheme
         /// The async result used in case the interpreter is called asynchronously.
         /// </summary>
         private AsyncResult<object> asyncResult;
-        
+        #endregion
+
+        #region Constructors
         /// <summary>
         /// Initializes a new instance of the Interpreter class.
         /// Create an interpreter and install the primitives into the global environment.
@@ -36,17 +40,19 @@ namespace SimpleScheme
         /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
         /// <param name="primEnvironment">Environment containing the primitives (can be null).</param>
         /// <param name="files">The files to read.</param>
-        public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files)
+        /// <param name="reader">The input reader.</param>
+        /// <param name="writer">The output writer.</param>
+        public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
             this.halted = new EvaluatorBase("halted");
             this.Trace = false;
             this.Count = false;
-            this.Input = new InputPort(Console.In);
-            this.Output = new OutputPort(Console.Out);
+            this.Input = new InputPort(reader);
+            this.Output = new OutputPort(writer);
             if (primEnvironment == null)
             {
-                primEnvironment = new Environment()
-                    .InstallPrimitives();
+                primEnvironment = new Environment();
+                Environment.InstallPrimitives(primEnvironment);
             }
 
             this.Counters = new Counter();
@@ -75,7 +81,21 @@ namespace SimpleScheme
 
         /// <summary>
         /// Initializes a new instance of the Interpreter class.
-        /// Set up the most common way -- with standard macros and no files.
+        /// Create an interpreter and install the primitives into the global environment.
+        /// Then read a list of files.
+        /// Finally, accept console input.
+        /// </summary>
+        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
+        /// <param name="primEnvironment">Environment containing the primitives (can be null).</param>
+        /// <param name="files">The files to read.</param>
+        public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files)
+            : this(loadStandardMacros, primEnvironment, files, Console.In, Console.Out)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Set up for tests, with standard macros and no files.
         /// </summary>
         /// <param name="name">The evaluator name.</param>
         public Interpreter(string name)
@@ -86,14 +106,31 @@ namespace SimpleScheme
 
         /// <summary>
         /// Initializes a new instance of the Interpreter class.
-        /// Read a set of files initially.
+        /// Read a set of files initially, then do interactive input.
         /// </summary>
         /// <param name="files">The files to read.</param>
         public Interpreter(IEnumerable<string> files)
-            : this(true, null, files)
+            : this(true, null, files, Console.In, Console.Out)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Read a set of files initially.
+        /// Use the supplied reader and writer.
+        /// To skip interactive reading, use TextReader.Null.
+        /// Or do not call ReadEvalPrint or ReadEvalPrintLoop.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
+        /// <param name="reader">The input reader.</param>
+        /// <param name="writer">The output writer.</param>
+        public Interpreter(IEnumerable<string> files, TextReader reader, TextWriter writer)
+            : this(true, null, files, reader, writer)
+        {
+        }
+        #endregion
+
+        #region Accessors
         /// <summary>
         /// Gets the counters collection.
         /// </summary>
@@ -123,7 +160,9 @@ namespace SimpleScheme
         /// Gets or setsthe global environment for the interpreter.
         /// </summary>
         private Environment GlobalEnvironment { get; set; }
+        #endregion
 
+        #region Define Primitives
         /// <summary>
         /// Define the counter primitives.
         /// </summary>
@@ -131,26 +170,26 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             env
-                .DefinePrimitive("trace-on", (caller, args) => caller.Env.Interp.Trace = true, 0)
-                .DefinePrimitive("trace-off", (caller, args) => caller.Env.Interp.Trace = false, 0)
-                .DefinePrimitive("counters-on", (caller, args) => caller.Env.Interp.Count = true, 0)
-                .DefinePrimitive("counters-off", (caller, args) => caller.Env.Interp.Count = false, 0)
-                .DefinePrimitive(
-                    "backtrace",
-                    (caller, args) =>
-                        {
-                            Console.Out.WriteLine(caller.StackBacktrace());
-                            return Undefined.Instance;
-                        },
-                    0);
+                //// (trace-on)
+                .DefinePrimitive("trace-on", (args, caller) => caller.Env.Interp.Trace = true, 0)
+                //// (trace-off)
+                .DefinePrimitive("trace-off", (args, caller) => caller.Env.Interp.Trace = false, 0)
+                //// (counters-on)
+                .DefinePrimitive("counters-on", (args, caller) => caller.Env.Interp.Count = true, 0)
+                //// (counters-off)
+                .DefinePrimitive("counters-off", (args, caller) => caller.Env.Interp.Count = false, 0)
+                //// (backtrace)
+                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
         /// </summary>
         /// <param name="x">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public object Eval(object x)
+        public Obj Eval(Obj x)
         {
             return this.Eval(x, this.GlobalEnvironment);
         }
@@ -158,14 +197,14 @@ namespace SimpleScheme
         /// <summary>
         /// Begin an asynchronous evaluation
         /// </summary>
-        /// <param name="x">The expression to evaluate.</param>
+        /// <param name="expr">The expression to evaluate.</param>
         /// <param name="cb">Call this when evaluation is complete.</param>
         /// <param name="state">Pass this through for the callback function.</param>
         /// <returns>Async result, used to monitor progress.</returns>
-        public IAsyncResult BeginEval(object x, AsyncCallback cb, object state)
+        public IAsyncResult BeginEval(Obj expr, AsyncCallback cb, object state)
         {
             this.asyncResult = new AsyncResult<object>(cb, state);
-            object res = this.Eval(x, this.GlobalEnvironment);
+            Obj res = this.Eval(expr, this.GlobalEnvironment);
             if (res == Stepper.Suspended)
             {
                 return this.asyncResult;
@@ -196,7 +235,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        public object Eval(object expr, Environment env)
+        public Obj Eval(Obj expr, Environment env)
         {
             return this.EvalStep(EvaluateExpression.Call(expr, env, this.halted));
         }
@@ -212,7 +251,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended stepper.</returns>
-        public object EvalStep(Stepper step)
+        public Obj EvalStep(Stepper step)
         {
             while (true)
             {
@@ -231,22 +270,14 @@ namespace SimpleScheme
                     return this.halted.ReturnedExpr;
                 }
 
-                if (this.Trace)
-                {
-                    string info = step.TraceInfo();
-                    if (info != null)
-                    {
-                        Console.Out.WriteLine("{0}: {1}", info, step.Expr);
-                    }
-                }
-
                 if (step == null)
                 {
                     return ErrorHandlers.EvalError("PC bad value");
                 }
 
+                this.TraceStep(step);
                 step.IncrementCounter(counter);
-                step = step.Pc();
+                step = step.RunStep();
             }
         }
 
@@ -257,7 +288,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fileName">The filename.</param>
         /// <returns>Undefined value.</returns>
-        public object LoadFile(object fileName)
+        public Obj LoadFile(object fileName)
         {
             string name = SchemeString.AsString(fileName, false);
             try
@@ -274,14 +305,16 @@ namespace SimpleScheme
         /// <summary>
         /// Read from the input port and evaluate whatever is there.
         /// Done for the side effect, not the result.
+        /// Since the result is never tested, asynchronous suspensions do not prevent the rest
+        /// of the file from being loaded.
         /// </summary>
         /// <param name="inp">The input port.</param>
-        /// <returns>Undefined object.</returns>
-        public object Load(InputPort inp)
+        /// <returns>Undefined instance.</returns>
+        public Obj Load(InputPort inp)
         {
             while (true)
             {
-                object input;
+                Obj input;
                 if (InputPort.IsEof(input = inp.Read()))
                 {
                     inp.Close();
@@ -293,51 +326,94 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Read an expression, evaluate it, and print the results.
+        /// </summary>
+        /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
+        public Obj ReadEvalPrint()
+        {
+            try
+            {
+                Obj expr;
+                this.Output.Print("> ");
+                this.Output.Flush();
+                if (InputPort.IsEof(expr = this.Input.Read()))
+                {
+                    return InputPort.Eof;
+                }
+
+                Obj val = this.Eval(expr);
+                if (val != Undefined.Instance)
+                {
+                    this.Output.Write(val);
+                    this.Output.Println();
+                    this.Output.Flush();
+                }
+
+                return val;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
+        }
+
+        /// <summary>
+        /// Read an expression, evaluate it, and print the results.
+        /// </summary>
+        /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
+        public Obj ReadEvalPrintAsync()
+        {
+            try
+            {
+                Obj expr;
+                this.Output.Print("> ");
+                this.Output.Flush();
+                if (InputPort.IsEof(expr = this.Input.Read()))
+                {
+                    return InputPort.Eof;
+                }
+
+                return this.BeginEval(
+                    expr,
+                    ar =>
+                        {
+                            object val = this.EndEval(ar);
+                            if (val != Undefined.Instance)
+                            {
+                                this.Output.Write(val);
+                                this.Output.Println();
+                                this.Output.Flush();
+                            }
+                        },
+                    null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
+        }
+
+        /// <summary>
         /// Read from an input port, evaluate in the global environment, and print the result.
         /// If value is undefined, do not print anything.
         /// If the result is suspended, then don't print anything either.
         /// Catch and discard exceptions.
         /// </summary>
-        /// <returns>The interpreter.</returns>
-        public Interpreter ReadEvalWriteLoop()
+        /// <returns>The result of the last evaluation.</returns>
+        public Obj ReadEvalPrintLoop()
         {
+            Obj prevExpr = null;
             while (true)
             {
-                try
+                Obj expr = this.ReadEvalPrint();
+                if (ReferenceEquals(expr, InputPort.Eof))
                 {
-                    object x;
-                    this.Output.Print("> ");
-                    this.Output.Flush();
-                    if (InputPort.IsEof(x = this.Input.Read()))
-                    {
-                        return this;
-                    }
+                    return prevExpr;
+                }
 
-#if ASYNC
-                    this.BeginEval(
-                        x,
-                        ar =>
-                            {
-                                object val = this.EndEval(ar);
-                                OutputPort.Write(val, this.Output, true);
-                                this.Output.Println();
-                                this.Output.Flush();
-                            },
-                        null);
-#else
-                    object val = this.Eval(x);
-                    if (val != Undefined.Instance)
-                    {
-                        OutputPort.Write(val, this.Output, true);
-                        this.Output.Println();
-                        this.Output.Flush();
-                    }
-#endif
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Caught exception {0}", ex.Message);
-                }
+                prevExpr = expr;
             }
         }
 
@@ -353,7 +429,22 @@ namespace SimpleScheme
                 this.Counters.Increment(counterId);
             }
         }
+        #endregion
 
+        #region Private Static Methods
+        /// <summary>
+        /// Display a stack backtrace.
+        /// </summary>
+        /// <param name="caller">The caller.</param>
+        /// <returns>Undefined result.</returns>
+        private static Obj Backtrace(Stepper caller)
+        {
+            Console.Out.WriteLine(caller.StackBacktrace());
+            return Undefined.Instance;
+        }
+        #endregion
+
+        #region Private Methods
         /// <summary>
         /// Read from a string and evaluate.
         /// This is done for the side effects, not the value.
@@ -366,5 +457,22 @@ namespace SimpleScheme
                 this.Load(new InputPort(reader));
             }
         }
+
+        /// <summary>
+        /// Write trace info if trace enabled.
+        /// </summary>
+        /// <param name="step">The step to trace.</param>
+        private void TraceStep(Stepper step)
+        {
+            if (this.Trace)
+            {
+                string info = step.TraceInfo();
+                if (info != null)
+                {
+                    Console.Out.WriteLine("{0}: {1}", info, step.Expr);
+                }
+            }
+        }
+        #endregion
     }
 }

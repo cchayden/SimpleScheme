@@ -5,6 +5,8 @@ namespace SimpleScheme
 {
     using System;
     using System.Diagnostics;
+    using Obj = System.Object;
+
 
     /// <summary>
     /// Base class for EvaluateTime and EvaluateTimeCall.
@@ -13,6 +15,7 @@ namespace SimpleScheme
     /// </summary>
     public abstract class EvaluateTimeBase : Stepper
     {
+        #region Fields
         /// <summary>
         /// The amount of memory at the start.
         /// </summary>
@@ -32,28 +35,32 @@ namespace SimpleScheme
         /// How far we are into the repeated evaluation.
         /// </summary>
         private int i;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateTimeBase class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluateTimeBase(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        protected EvaluateTimeBase(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
             ContinueHere(this.InitialStep);
         }
+        #endregion
 
+        #region Protected Methods
         /// <summary>
         /// Start by setting up timers and counter.
         /// </summary>
         /// <returns>Continue to next step.</returns>
         protected Stepper InitialStep()
         {
-            object y = Second(Expr);
+            Obj y = Second(Expr);
             this.counter = y == List.Empty ? 1 : (int)Number.Num(y);
             this.i = 0;
             return ContinueHere(this.Step1);
@@ -90,5 +97,6 @@ namespace SimpleScheme
                         ReturnedExpr, 
                         MakeList(MakeList(Number.Num(time), "msec"), MakeList(Number.Num(mem), "bytes"))));
         }
+        #endregion
     }
 }

@@ -6,27 +6,31 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using Obj = System.Object;
 
     /// <summary>
     /// Handles asynchronous CLR method calls.
     /// Call returns suspended, then on completion resumes execution.
     /// </summary>
-    public sealed class AsynchronousClrProcedure : ClrProcedure
+    internal sealed class AsynchronousClrProcedure : ClrProcedure
     {
+        #region Fields
         /// <summary>
         /// The method info for the EndXXX method.
         /// The caller class has info for BeginXXX.
         /// </summary>
         private readonly MethodInfo endMethodInfo;
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Initializes a new instance of the AsynchronousClrProcedure class.
         /// </summary>
         /// <param name="targetClassName">The class name of the CLR function.</param>
         /// <param name="methodName">The method name of the CLR function.</param>
         /// <param name="argClassNames">The types of all method arguments.</param>
-        private AsynchronousClrProcedure(object targetClassName, string methodName, object argClassNames)
-            : base(methodName, targetClassName)
+        private AsynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
+            : base(targetClassName, methodName)
         {
             try
             {
@@ -38,10 +42,10 @@ namespace SimpleScheme
                     return;    // actually Error throws an exception
                 }
 
-                this.MethodInfo = cls.GetMethod("Begin" + methodName, this.ArgClasses.ToArray());
+                this.MethodInfo = cls.GetMethod("Begin" + this.MethodName, this.ArgClasses.ToArray());
 
                 Type[] endClasses = { typeof(IAsyncResult) };
-                this.endMethodInfo = cls.GetMethod("End" + methodName, endClasses);
+                this.endMethodInfo = cls.GetMethod("End" + this.MethodName, endClasses);
             }
             catch (TypeLoadException)
             {
@@ -52,7 +56,9 @@ namespace SimpleScheme
                 ErrorHandlers.Error("Can't get method: " + this.Name);
             }
         }
+        #endregion
 
+        #region Define Primitives
         /// <summary>
         /// Define the async clr procedure primitives.
         /// </summary>
@@ -61,13 +67,16 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
+                //// (method-async <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method-async",
-                   (caller, args) => new AsynchronousClrProcedure(First(args), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
+                   (args, caller) => new AsynchronousClrProcedure(First(args), Second(args), Rest(Rest(args))),
                    2,
                    MaxInt);
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -77,13 +86,13 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
-            object target;
-            object[] argArray;
+            Obj target;
+            Obj[] argArray;
             if (this.MethodInfo.IsStatic)
             {
-                target = null;
+                target = Undefined.Instance;
                 argArray = this.ToArgListBegin(args, new AsyncState(target, caller));
             }
             else
@@ -95,15 +104,17 @@ namespace SimpleScheme
             this.MethodInfo.Invoke(target, argArray);
             return Stepper.Suspended;
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Take a list of Type or type name elements and create a corresponding 
         ///   array of Type.
         /// Add the extra async arguments for a Begin method.
         /// </summary>
         /// <param name="args">A list of Type or type name elements.</param>
-        /// <returns>An array of Type objects corresponding to the list.</returns>
-        private List<Type> ClassListBegin(object args)
+        /// <returns>An array of Types corresponding to the list.</returns>
+        private List<Type> ClassListBegin(Obj args)
         {
             List<Type> array = ClassList(args);
             array.Add(ToClass("System.AsyncCallback"));
@@ -138,7 +149,7 @@ namespace SimpleScheme
             object[] args = { result };
             AsyncState state = (AsyncState)result.AsyncState;
             Stepper caller = state.Caller;
-            object res = this.endMethodInfo.Invoke(state.InvokedObject, args);
+            Obj res = this.endMethodInfo.Invoke(state.InvokedObject, args);
             caller.ContinueStep(res);
 
             // Continue executing steps.  This thread takes over stepping
@@ -172,5 +183,6 @@ namespace SimpleScheme
             /// </summary>
             public Stepper Caller { get; private set; }
         }
+        #endregion
     }
 }

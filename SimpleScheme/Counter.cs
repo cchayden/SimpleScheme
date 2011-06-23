@@ -18,6 +18,7 @@ namespace SimpleScheme
     /// </summary>
     public class Counter : ListPrimitives
     {
+        #region Fields
         /// <summary>
         /// The counterNames are stored here.
         /// </summary>
@@ -35,7 +36,9 @@ namespace SimpleScheme
         /// The actual counters.
         /// </summary>
         private readonly int[] counters;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the Counter class.
         /// Creates a new counter for each of the counter names.
@@ -45,7 +48,9 @@ namespace SimpleScheme
         {
             this.counters = new int[MaxCounters];
         }
+        #endregion
 
+        #region Define Primitives
         /// <summary>
         /// Define the counter primitives.
         /// </summary>
@@ -53,12 +58,18 @@ namespace SimpleScheme
         public static void DefinePrimitives(Environment env)
         {
             env
-                .DefinePrimitive("dump-counters", (caller, args) => caller.Env.Interp.Counters.DumpCounters(), 0)
-                .DefinePrimitive("get-counters", (caller, args) => caller.Env.Interp.Counters.GetCounters(), 0)
-                .DefinePrimitive("get-counter", (caller, args) => caller.Env.Interp.Counters.GetCounter(First(args)), 1)
-                .DefinePrimitive("reset-counters", (caller, args) => caller.Env.Interp.Counters.ResetCounters(), 0);
+                //// (dump-counters)
+                .DefinePrimitive("dump-counters", (args, caller) => caller.Env.Interp.Counters.DumpCounters(), 0)
+                //// (get-counters)
+                .DefinePrimitive("get-counters", (args, caller) => caller.Env.Interp.Counters.GetCounters(), 0)
+                //// (get-counter <name>)
+                .DefinePrimitive("get-counter", (args, caller) => caller.Env.Interp.Counters.GetCounter(First(args)), 1)
+                //// (reset-counters)
+                .DefinePrimitive("reset-counters", (args, caller) => caller.Env.Interp.Counters.ResetCounters(), 0);
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Create a new counter id, given its name.
         /// If the counter already exists, return its id.
@@ -83,7 +94,9 @@ namespace SimpleScheme
                 return num;
             }
         }
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Increment a counter, given its id.
         /// </summary>
@@ -92,7 +105,9 @@ namespace SimpleScheme
         {
             Interlocked.Increment(ref this.counters[id]);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Dump the counters on the console.
         /// </summary>
@@ -111,7 +126,7 @@ namespace SimpleScheme
         /// <returns>The list of counterName/count pairs.</returns>
         private Obj GetCounters()
         {
-            object res = List.Empty;
+            Obj res = List.Empty;
             foreach (var kvp in counterNames)
             {
                 int count = this.counters[kvp.Value];
@@ -129,7 +144,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The counter name.</param>
         /// <returns>The counter value.</returns>
-        private Obj GetCounter(object name)
+        private Obj GetCounter(Obj name)
         {
             string counterName = name.ToString();
             if (counterNames.ContainsKey(counterName))
@@ -171,5 +186,6 @@ namespace SimpleScheme
 
             return Undefined.Instance;
         }
+        #endregion
     }
 }

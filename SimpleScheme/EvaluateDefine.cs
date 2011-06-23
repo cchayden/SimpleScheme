@@ -3,11 +3,14 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using Obj = System.Object;
+
     /// <summary>
     /// Evaluate a define expression.
     /// </summary>
     public sealed class EvaluateDefine : Stepper
     {
+        #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -17,20 +20,24 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateDefine class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateDefine(object expr, Environment env, Stepper caller)
-            : base(caller, expr, env)
+        private EvaluateDefine(Obj expr, Environment env, Stepper caller)
+            : base(expr, env, caller)
         {
             ContinueHere(this.InitialStep);
             IncrementCounter(counter);
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the name of the stepper.
         /// </summary>
@@ -38,21 +45,26 @@ namespace SimpleScheme
         {
             get { return StepperName; }
         }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Call a define evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static Stepper Call(object expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateDefine(expr, caller.Env, caller);
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Handle the two forms of define.
-        /// In the first case, just rewrite as a lambda and evaluate that.
+        /// In the first case, just save the closure and return.
+        /// This is what would result if we prepend "lambda" and call EvaluateExpression.
         /// In the second case (defun) start by evaluating the body.
         /// </summary>
         /// <returns>Continue by evaluating the body of the definition.</returns>
@@ -60,29 +72,22 @@ namespace SimpleScheme
         {
             if (First(Expr) is Pair)
             {
-                // TODO rewrite
-                return EvaluateExpression.Call(Cons("lambda", Cons(Rest(First(Expr)), Rest(Expr))), ContinueHere(this.StoreStep1));
+                this.Env.Define(First(First(Expr)), new Closure(Rest(First(Expr)), Rest(Expr), this.Env));
+                return ReturnUndefined();
             }
 
-            return EvaluateExpression.Call(Second(Expr), ContinueHere(this.StoreStep2));
+            return EvaluateExpression.Call(Second(Expr), ContinueHere(this.StoreDefine));
         }
 
         /// <summary>
-        /// Back from evaluating the lambda.  Store the result in the environment
+        /// Back from defun.  Store the body as the value of the symbol
         /// </summary>
         /// <returns>Execution continues in the caller.</returns>
-        private Stepper StoreStep1()
+        private Stepper StoreDefine()
         {
-            return ReturnFromStep(this.Env.Define(First(First(Expr)), ReturnedExpr));
+            this.Env.Define(First(Expr), ReturnedExpr);
+            return ReturnUndefined();
         }
-
-        /// <summary>
-        /// Back from defun.  Define the name to be the evaluated expression.
-        /// </summary>
-        /// <returns>Execution continues in the caller.</returns>
-        private Stepper StoreStep2()
-        {
-            return ReturnFromStep(this.Env.Define(First(Expr), ReturnedExpr));
-        }
+        #endregion
     }
 }
