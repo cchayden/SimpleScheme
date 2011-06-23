@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorIf.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -31,14 +31,15 @@ namespace SimpleScheme
             /// Evaluate an if expression.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
                 switch (Pc)
                 {
-                    case 0:
-                        Pc = 1;
+                    case PC.Initial:
+                        Pc = PC.Step1;
                         return CallEval(First(this.Expr));
-                    case 1:
+
+                    case PC.Step1:
                         return SubReturn(Truth(ReturnedExpr) ? Second(this.Expr) : Third(this.Expr));
                 }
 

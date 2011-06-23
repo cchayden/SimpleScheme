@@ -1,5 +1,5 @@
-﻿// <copyright file="PrintWriter.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+﻿// <copyright file="OutputPort.cs" company="Charles Hayden">
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public class PrintWriter
+    public class OutputPort
     {
         /// <summary>
         /// The output port to write to.
@@ -16,10 +16,10 @@ namespace SimpleScheme
         private readonly TextWriter outp;
 
         /// <summary>
-        /// Initializes a new instance of the PrintWriter class.
+        /// Initializes a new instance of the OutputPort class.
         /// </summary>
         /// <param name="outp">The output port to use for writing.</param>
-        public PrintWriter(TextWriter outp)
+        public OutputPort(TextWriter outp)
         {
             this.outp = outp;
         }

@@ -1,9 +1,8 @@
 ﻿// <copyright file="InputPortTest.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace Tests
 {
-    using System;
     using System.IO;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
@@ -20,36 +19,6 @@ namespace Tests
         /// information about and functionality for the current test run.
         /// </summary>
         public TestContext TestContext { get; set; }
-
-        #region Additional test attributes
-        // 
-        //You can use the following additional attributes as you write your tests:
-        //
-        //Use ClassInitialize to run code before running the first test in the class
-        //[ClassInitialize()]
-        //public static void MyClassInitialize(TestContext testContext)
-        //{
-        //}
-        //
-        //Use ClassCleanup to run code after all tests in a class have run
-        //[ClassCleanup()]
-        //public static void MyClassCleanup()
-        //{
-        //}
-        //
-        //Use TestInitialize to run code before running each test
-        //[TestInitialize()]
-        //public void MyTestInitialize()
-        //{
-        //}
-        //
-        //Use TestCleanup to run code after each test has run
-        //[TestCleanup()]
-        //public void MyTestCleanup()
-        //{
-        //}
-        //
-        #endregion
 
         /// <summary>
         /// A test for IsEOF
@@ -85,7 +54,7 @@ namespace Tests
             using (StringReader reader = new StringReader("a"))
             {
                 InputPort port = new InputPort(reader);
-                Assert.AreEqual('a', port.PeekCh());
+                Assert.AreEqual('a', port.PeekChar());
                 Assert.AreEqual('a', port.ReadChar());
                 Assert.AreEqual(InputPort.Eof, port.ReadChar());
             }
@@ -100,9 +69,9 @@ namespace Tests
             using (StringReader reader = new StringReader("a"))
             {
                 InputPort port = new InputPort(reader);
-                Assert.AreEqual('a', port.PeekCh());
+                Assert.AreEqual('a', port.PeekChar());
                 Assert.AreEqual('a', port.ReadChar());
-                port.PeekCh();
+                port.PeekChar();
                 Assert.AreEqual(InputPort.Eof, port.ReadChar());
             }
         }
@@ -117,7 +86,7 @@ namespace Tests
             TestNextToken("   abc", "abc");
             TestNextToken("abc   ", "abc");
             TestNextToken("abc def", "abc");
-            TestNextToken(String.Empty, InputPort.Eof);
+            TestNextToken(string.Empty, InputPort.Eof);
             TestNextToken("abc(", "abc");
             TestNextToken("abc)", "abc");
             TestNextToken("abc'", "abc");
@@ -197,21 +166,23 @@ namespace Tests
         }
 
         /// <summary>
-        ///A test for Read
-        ///</summary>
+        /// A test for Read
+        /// </summary>
         [TestMethod]
         public void ReadTest()
         {
-            using (StringReader reader = new StringReader(""))
+            using (StringReader reader = new StringReader(string.Empty))
             {
                 InputPort port = new InputPort(reader);
                 Assert.AreEqual(InputPort.Eof, port.Read());
             }
+
             using (StringReader reader = new StringReader("abc"))
             {
                 InputPort port = new InputPort(reader);
                 Assert.AreEqual("abc", port.Read());
             }
+
             using (StringReader reader = new StringReader("(1 2 3)"))
             {
                 InputPort port = new InputPort(reader);
@@ -220,6 +191,7 @@ namespace Tests
                 Assert.AreEqual(2.0, SchemeUtils.Second(actual));
                 Assert.AreEqual(3.0, SchemeUtils.Third(actual));
             }
+
             using (StringReader reader = new StringReader("('a 'b 'c)"))
             {
                 InputPort port = new InputPort(reader);
@@ -230,18 +202,21 @@ namespace Tests
                 Assert.AreEqual("b", SchemeUtils.Second(SchemeUtils.Second(actual)));
                 Assert.AreEqual("c", SchemeUtils.Second(SchemeUtils.Third(actual)));
             }
+
             using (StringReader reader = new StringReader(")abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
                 Assert.AreEqual("abc", actual);
             }
+
             using (StringReader reader = new StringReader(". abc"))
             {
                 InputPort port = new InputPort(reader);
                 var actual = port.Read();
                 Assert.AreEqual("abc", actual);
             }
+
             using (StringReader reader = new StringReader("'abc"))
             {
                 InputPort port = new InputPort(reader);
@@ -249,6 +224,7 @@ namespace Tests
                 Assert.AreEqual("quote", SchemeUtils.First(actual));
                 Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
             }
+
             using (StringReader reader = new StringReader("`abc"))
             {
                 InputPort port = new InputPort(reader);
@@ -256,6 +232,7 @@ namespace Tests
                 Assert.AreEqual("quasiquote", SchemeUtils.First(actual));
                 Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
             }
+
             using (StringReader reader = new StringReader(",abc"))
             {
                 InputPort port = new InputPort(reader);
@@ -263,6 +240,7 @@ namespace Tests
                 Assert.AreEqual("unquote", SchemeUtils.First(actual));
                 Assert.AreEqual("abc", SchemeUtils.First(SchemeUtils.Rest(actual)));
             }
+
             using (StringReader reader = new StringReader(",@abc"))
             {
                 InputPort port = new InputPort(reader);

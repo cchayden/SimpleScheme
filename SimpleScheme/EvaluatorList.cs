@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorList.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -44,47 +44,50 @@ namespace SimpleScheme
             /// Evaluate a list of expressions.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case 0:
-                        // first check for degenerate cases
-                        if (this.Expr == null)
-                        {
-                            return SubReturn((object) null);
-                        }
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            // first check for degenerate cases
+                            if (this.Expr == null)
+                            {
+                                return SubReturn(null);
+                            }
 
-                        if (!(this.Expr is Pair))
-                        {
-                            Error("Illegal arg list: " + this.Expr);
-                            return SubReturn((object) null);
-                        }
+                            if (!(this.Expr is Pair))
+                            {
+                                Error("Illegal arg list: " + this.Expr);
+                                return SubReturn(null);
+                            }
 
-                        Pc = 1;
-                        return SubContinue();
+                            Pc = PC.Step1;
+                            continue;
 
-                    case 1:
-                        // there is more to do --  evaluate the first expression
-                        Pc = 2;
-                        return CallEval(First(this.Expr));
+                        case PC.Step1:
+                            // there is more to do --  evaluate the first expression left
+                            Pc = PC.Step2;
+                            return CallEval(First(this.Expr));
 
-                    case 2:
-                        // back from the evaluation -- save the result and keep going with the rest
-                        Pc = 1;
-                        this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
-                        Expr = Rest(Expr);
+                        case PC.Step2:
+                            // back from the evaluation -- save the result and keep going with the rest
+                            Pc = PC.Step1;
+                            this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
+                            Expr = Rest(Expr);
 
-                        // if we are done now, return
-                        if (! (Expr is Pair))
-                        {
-                            return SubReturn(this.result.Rest);
-                        }
+                            // if we are done now, return
+                            if (!(Expr is Pair))
+                            {
+                                return SubReturn(this.result.Rest);
+                            }
 
-                        return SubContinue();
+                            continue;
+                    }
+
+                    return EvalError("List: program counter error");
                 }
-
-                return EvalError("List: program counter error");
             }
         }
     }

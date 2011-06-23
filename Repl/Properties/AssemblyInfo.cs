@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿// <copyright file="AssemblyInfo.cs" company="Charles Hayden">
+// Copyright © 2011 by Charles Hayden.
+// </copyright>
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

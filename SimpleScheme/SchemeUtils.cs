@@ -1,10 +1,9 @@
 ﻿// <copyright file="SchemeUtils.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System;
-    using System.Text;
 
     /// <summary>
     /// Utilities for manipulating lists and vectors, input and output, and converting 
@@ -169,31 +168,6 @@ namespace SimpleScheme
             return "<warn>";
         }
 
-        /// <summary>
-        /// Convert an object (containing a number) into a double.
-        /// </summary>
-        /// <param name="x">The object to convert.</param>
-        /// <returns>The double contained in the object.</returns>
-        public static double Num(object x)
-        {
-            try
-            {
-                return Convert.ToDouble(x);
-            }
-            catch (InvalidCastException)
-            {
-                return Num(Error("Expected a number, got: " + x));
-            }
-            catch (FormatException)
-            {
-                return Num(Error("Expected a number, got: " + x));
-            }
-            catch (OverflowException)
-            {
-                return Num(Error("Number overflow, got: " + x));
-            }
-        }
-
         // List Utils
 
         /// <summary>
@@ -301,7 +275,7 @@ namespace SimpleScheme
         {
             return x is Pair ? 
                 ((Pair)x).First = y : 
-                Error("Attempt to set-car of a non-Pair: " + Stringify(x));
+                Error("Attempt to set-car of a non-Pair: " + StringUtils.AsString(x));
         }
 
         /// <summary>
@@ -312,7 +286,7 @@ namespace SimpleScheme
         /// <returns>The object that has just been modified.</returns>
         public static object SetRest(object x, object y)
         {
-            return x is Pair ? ((Pair)x).Rest = y : Error("Attempt to set-cdr of a non-Pair: " + Stringify(x));
+            return x is Pair ? ((Pair)x).Rest = y : Error("Attempt to set-cdr of a non-Pair: " + StringUtils.AsString(x));
         }
 
         /// <summary>
@@ -325,44 +299,6 @@ namespace SimpleScheme
             return Rest(args) == null ? 
                 First(args) : 
                 Cons(First(args), ListStar(Rest(args)));
-        }
-
-        /// <summary>
-        /// Convert a list of chars into a string.
-        /// </summary>
-        /// <param name="chars">The object that is a list of chars.</param>
-        /// <returns>The caracter array made up of the chars.</returns>
-        public static char[] ListToString(object chars)
-        {
-            char[] str = new char[Length(chars)];
-
-            int i = 0;
-            while (chars is Pair)
-            {
-                str[i] = Chr(First(chars));
-                chars = Rest(chars);
-                i++;
-            }
-
-            return str;
-        }
-
-        /// <summary>
-        /// Turns a list of objects into a vector of the appropriate length.
-        /// </summary>
-        /// <param name="objs">The list to convert.</param>
-        /// <returns>The array of objects (vector).</returns>
-        public static object[] ListToVector(object objs)
-        {
-            object[] vec = new object[Length(objs)];
-
-            for (int i = 0; objs is Pair; i++)
-            {
-                vec[i] = First(objs);
-                objs = Rest(objs);
-            }
-
-            return vec;
         }
 
         /// <summary>
@@ -395,136 +331,8 @@ namespace SimpleScheme
             {
                 return Chr(Error("expected a char, got: " + x));
             }
-            return (char) x;
-        }
 
-        /// <summary>
-        /// Turn an object (storing a string) into an array of characters.
-        /// </summary>
-        /// <param name="x">The string object.</param>
-        /// <returns>The character array.</returns>
-        public static char[] Str(object x)
-        {
-            try
-            {
-                return (char[])x;
-            }
-            catch (InvalidCastException)
-            {
-                return Str(Error("expected a string, got: " + x));
-            }
-        }
-
-        /// <summary>
-        /// Convert an object into a string representation.
-        /// </summary>
-        /// <param name="x">The object to convert.</param>
-        /// <returns>The string representing the object.</returns>
-        public static string Stringify(object x)
-        {
-            return Stringify(x, true);
-        }
-
-        /// <summary>
-        /// Convert an object into a string representation.
-        /// </summary>
-        /// <param name="x">The object to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <returns>The string representing the object.</returns>
-        public static string Stringify(object x, bool quoted)
-        {
-            StringBuilder buf = new StringBuilder();
-            Stringify(x, quoted, buf);
-            return buf.ToString();
-        }
-
-        /// <summary>
-        /// Convert an object into a string representation.
-        /// </summary>
-        /// <param name="x">The object to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void Stringify(object x, bool quoted, StringBuilder buf)
-        {
-            if (x == null)
-            {
-                buf.Append("()");
-            }
-            else if (x is double)
-            {
-                double d = (double)x;
-                if (Math.Round(d) == d)
-                {
-                    buf.Append((long)d);
-                }
-                else
-                {
-                    buf.Append(d);
-                }
-            }
-            else if (x is char)
-            {
-                if (quoted)
-                {
-                    buf.Append("#\\");
-                }
-
-                buf.Append(x);
-            }
-            else if (x is Pair)
-            {
-                ((Pair)x).StringifyPair(quoted, buf);
-            }
-            else if (x is char[])
-            {
-                char[] chars = (char[])x;
-                if (quoted)
-                {
-                    buf.Append('"');
-                }
-
-                foreach (char c in chars)
-                {
-                    if (quoted && c == '"')
-                    {
-                        buf.Append('\\');
-                    }
-
-                    buf.Append(c);
-                }
-
-                if (quoted)
-                {
-                    buf.Append('"');
-                }
-            }
-            else if (x is object[])
-            {
-                object[] v = (object[])x;
-                buf.Append("#(");
-                for (int i = 0; i < v.Length; i++)
-                {
-                    Stringify(v[i], quoted, buf);
-                    if (i != v.Length - 1)
-                    {
-                        buf.Append(' ');
-                    }
-                }
-
-                buf.Append(')');
-            }
-            else if (IsTrue(x))
-            {
-                buf.Append("#t");
-            }
-            else if (IsFalse(x))
-            {
-                buf.Append("#f");
-            }
-            else
-            {
-                buf.Append(x);
-            }
+            return (char)x;
         }
 
         /// <summary>
@@ -580,128 +388,6 @@ namespace SimpleScheme
             return !IsFalse(x);
         }
 
-        // Vector Utils
-
-        /// <summary>
-        /// Convert an object that should be a vector into an array of objects.
-        /// </summary>
-        /// <param name="x">The vector.</param>
-        /// <returns>The array of objects.</returns>
-        public static object[] Vec(object x)
-        {
-            try
-            {
-                return (object[])x;
-            }
-            catch (InvalidCastException)
-            {
-                return Vec(Error("expected a vector, got: " + x));
-            }
-        }
-
-        /// <summary>
-        /// Convert a vector into a list of objects.
-        /// If the pbject is not a vector, return null.
-        /// </summary>
-        /// <param name="x">The vector.</param>
-        /// <returns>The list, or null.</returns>
-        public static Pair VectorToList(object x)
-        {
-            if (x is object[])
-            {
-                object[] vec = (object[])x;
-                Pair result = null;
-                for (int i = vec.Length - 1; i >= 0; i--)
-                {
-                    result = Cons(vec[i], result);
-                }
-
-                return result;
-            }
-
-            Error("expected a vector, got: " + x);
-            return null;
-        }
-
-        // Input Utils
-
-        /// <summary>
-        /// Convert an object (containing an input port) into an InputPort.
-        /// If the given object is null, return the interpreter's input port.
-        /// </summary>
-        /// <param name="x">The object containing the input port.</param>
-        /// <param name="interp">The interpreter with the default input port.</param>
-        /// <returns>An input port.</returns>
-        public static InputPort InPort(object x, Scheme interp)
-        {
-            try
-            {
-                return x == null ? interp.Input : (InputPort)x;
-            }
-            catch (InvalidCastException)
-            {
-                return InPort(Error("expected an input port, got: " + x), interp);
-            }
-        }
-
-        // Printing and output Utils.
-
-        /// <summary>
-        /// Convert an object into an output port.
-        /// If the object is null, then return the interpreter's outpot port.
-        /// </summary>
-        /// <param name="x">The object (should be an output port).</param>
-        /// <param name="interp">The interpreter to use if the port is null.</param>
-        /// <returns>An output port.</returns>
-        public static PrintWriter OutPort(object x, Scheme interp)
-        {
-            try
-            {
-                return x == null ? interp.Output : (PrintWriter)x;
-            }
-            catch (InvalidCastException)
-            {
-                return OutPort(Error("expected an output port, got: " + x), interp);
-            }
-        }
-
-        /// <summary>
-        /// Write an object into an output port.
-        /// </summary>
-        /// <param name="x">The object to write.</param>
-        /// <param name="port">The output port.</param>
-        /// <param name="quoted">Whether to quote strings and chars.</param>
-        /// <returns>The object that was output.</returns>
-        public static object Write(object x, PrintWriter port, bool quoted)
-        {
-            port.Print(Stringify(x, quoted));
-            port.Flush();
-            return x;
-        }
-
-        /// <summary>
-        /// Print the object on the console.
-        /// </summary>
-        /// <param name="x">The object to print.</param>
-        /// <returns>The object printed.</returns>
-        protected static object P(object x)
-        {
-            Console.Out.WriteLine(Stringify(x));
-            return x;
-        }
-
-        /// <summary>
-        /// Print the object on the console along with a message.
-        /// </summary>
-        /// <param name="msg">The message.</param>
-        /// <param name="x">The object to print.</param>
-        /// <returns>The object printed.</returns>
-        protected static object P(string msg, object x)
-        {
-            Console.Out.WriteLine(msg + ": " + Stringify(x));
-            return x;
-        }
-
         /// <summary>
         /// Turn an object that is a boolean into a bool.
         /// </summary>
@@ -713,7 +399,8 @@ namespace SimpleScheme
             {
                 return null;
             }
-            return (bool) value;
+
+            return (bool)value;
         }
 
         /// <summary>

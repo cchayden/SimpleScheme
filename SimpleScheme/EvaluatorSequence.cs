@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorSequence.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -30,26 +30,29 @@ namespace SimpleScheme
             /// This was a simple while loop that has been split in the middle.
             /// </summary>
             /// <returns>The next step.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case 0:
-                        if (Rest(this.Expr) != null)
-                        {
-                            this.Pc = 1;
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            if (Rest(this.Expr) == null)
+                            {
+                                return SubReturn(First(this.Expr));
+                            }
+
+                            this.Pc = PC.Step1;
                             return CallEval(First(this.Expr));
-                        }
 
-                        return SubReturn(First(this.Expr));
+                        case PC.Step1:
+                            this.Expr = Rest(this.Expr);
+                            this.Pc = PC.Initial;
+                            continue;
+                    }
 
-                    case 1:
-                        this.Expr = Rest(this.Expr);
-                        this.Pc = 0;
-                        return SubContinue();
+                    return EvalError("Sequence: program counter error");
                 }
-
-                return EvalError("Sequence: program counter error");
             }
         }
     }

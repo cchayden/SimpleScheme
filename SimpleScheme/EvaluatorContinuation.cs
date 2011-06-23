@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorContinuation.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -30,7 +30,7 @@ namespace SimpleScheme
             /// Evaluate acontinuation
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
                 return SubReturn(this.Expr);
             }

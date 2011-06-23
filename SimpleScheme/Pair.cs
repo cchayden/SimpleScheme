@@ -1,5 +1,5 @@
 ﻿// <copyright file="Pair.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -66,12 +66,12 @@ namespace SimpleScheme
 
         /// <summary>
         /// Turn the pair into a string for printing and such.
-        /// Ultimately calls StringifyPair.
+        /// Ultimately calls AsString.
         /// </summary>
         /// <returns>A string representing the pair.</returns>
         public override string ToString()
         {
-            return Stringify(this, true);
+            return StringUtils.AsString(this, true);
         }
 
         /// <summary>
@@ -79,13 +79,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Is the string to be quoted?</param>
         /// <param name="buf">The buffer to write the string into.</param>
-        public void StringifyPair(bool quoted, StringBuilder buf)
+        public void AsString(bool quoted, StringBuilder buf)
         {
-            string special = null;
-
             if (this.Rest is Pair && SchemeUtils.Rest(this.Rest) == null)
             {
-                // These is just one more thing in the pair, and the first thing 
+                string special = null;
+
+                // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
                 switch (this.First as string)
                 {
@@ -102,33 +102,36 @@ namespace SimpleScheme
                         special = ",@";
                         break;
                 }
-            }
 
-            if (special != null)
-            {
-                // There was a special form, and one more thing.
-                // Append a special symbol and the remaining thing.
-                buf.Append(special);
-                Stringify(Second(this), quoted, buf);
-                return;
+                if (special != null)
+                {
+                    // There was a special form, and one more thing.
+                    // Append a special symbol and the remaining thing.
+                    buf.Append(special);
+                    StringUtils.AsString(Second(this), quoted, buf);
+                    return;
+                }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            Stringify(this.First, quoted, buf);
+            StringUtils.AsString(this.First, quoted, buf);
 
             object tail = this.Rest;
+
+            // TODO this can get into an infinite loop.
+            // TODO PairListTest constructs a pair with a loop.  If you try to print it, it loops.
             while (tail is Pair)
             {
                 buf.Append(' ');
-                Stringify(((Pair)tail).First, quoted, buf);
+               StringUtils.AsString(((Pair)tail).First, quoted, buf);
                 tail = ((Pair)tail).Rest;
             }
 
             if (tail != null)
             {
                 buf.Append(" . ");
-                Stringify(tail, quoted, buf);
+                StringUtils.AsString(tail, quoted, buf);
             }
 
             buf.Append(')');

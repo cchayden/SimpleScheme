@@ -1,5 +1,5 @@
 ﻿// <copyright file="Procedure.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -42,7 +42,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return Proc(Error("Not a procedure: " + Stringify(x)));
+            return Proc(Error("Not a procedure: " + StringUtils.AsString(x)));
         }
 
         /// <summary>

@@ -1,5 +1,5 @@
-﻿// <copyright file="Eval.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+﻿// <copyright file="Stepper.cs" company="Charles Hayden">
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -21,7 +21,42 @@ namespace SimpleScheme
             this.Parent = parent;
             this.Expr = expr;
             this.Env = env;
-            this.Pc = 0;
+            this.Pc = PC.Initial;
+        }
+
+        /// <summary>
+        /// The program counter values.
+        /// No stepper has more then three steps.
+        /// If necessary, more could be added.
+        /// </summary>
+        public enum PC
+        {
+            /// <summary>
+            /// The program counter starts out here.
+            /// </summary>
+            Initial,
+
+            /// <summary>
+            /// Step 1
+            /// </summary>
+            Step1,
+
+            /// <summary>
+            /// Step 2
+            /// </summary>
+            Step2,
+
+            /// <summary>
+            /// Step 3
+            /// </summary>
+            Step3,
+
+            /// <summary>
+            /// Final step.  On return, the program counter is set to this
+            ///   value.  If the step is ever executed again, it will fall through the case
+            ///   and trigger an error.
+            /// </summary>
+            Final
         }
 
         /// <summary>
@@ -40,7 +75,7 @@ namespace SimpleScheme
         public object Expr { get; set; }
 
         /// <summary>
-        /// Gets the returned expression from the last call.
+        /// Gets or sets the returned expression from the last call.
         /// </summary>
         public object ReturnedExpr { get; set; }
 
@@ -58,8 +93,7 @@ namespace SimpleScheme
         /// Gets or sets the Evaluators program counter.
         /// Used to sequence through multiple steps.
         /// </summary>
-        public int Pc { get; set; }
-
+        public PC Pc { get; set; }
 
         // Standalone evaluators
 
@@ -81,7 +115,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment.</param>
         /// <returns>The step to run next.</returns>
-        public static Stepper CallMain(Scheme interp, Stepper parent, object expr, Environment env)
+        public static Stepper CallEvaluate(Scheme interp, Stepper parent, object expr, Environment env)
         {
             return new EvaluatorMain(interp, parent, expr, env);
         }
@@ -102,7 +136,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create the continuation evaluator
+        /// Create the continuation stepper
         /// </summary>
         /// <param name="interp">The interpreter to use.</param>
         /// <param name="parent">The caller, to return to after the continuation proc is applied.</param>
@@ -113,95 +147,122 @@ namespace SimpleScheme
         {
             return new EvaluatorContinuation(interp, parent, expr, env);
         }
-        // TODO document
+
+        /// <summary>
+        /// Create a stepper for call-with-input-file
+        /// </summary>
+        /// <param name="interp">The interpreter to use.</param>
+        /// <param name="parent">The caller, to return to after the operation is complete.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <returns>The step to execute.</returns>
         public static Stepper CallWithInputFile(Scheme interp, Stepper parent, object expr, Environment env)
         {
             return new EvaluatorCallWithInputFile(interp, parent, expr, env);
         }
+
+        /// <summary>
+        /// Create a stepper for call-with-output-file
+        /// </summary>
+        /// <param name="interp">The interpreter to use.</param>
+        /// <param name="parent">The caller, to return to after the operation is complete.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <returns>The step to execute.</returns>
         public static Stepper CallWithOutputFile(Scheme interp, Stepper parent, object expr, Environment env)
         {
             return new EvaluatorCallWithOutputFile(interp, parent, expr, env);
         }
+
+        /// <summary>
+        /// Create a stepper for time-call
+        /// </summary>
+        /// <param name="interp">The interpreter to use.</param>
+        /// <param name="parent">The caller, to return to after the operation is complete.</param>
+        /// <param name="expr">The expression to evaluate and the number of times to execute it.</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <returns>The step to execute.</returns>
         public static Stepper CallTimeCall(Scheme interp, Stepper parent, object expr, Environment env)
         {
             return new EvaluatorTimeCall(interp, parent, expr, env);
         }
 
         /// <summary>
-        /// Subclasses implement this to make one step in the evaluation.
+        /// Transfer to a given stepper.  
+        /// This can be used to return fram an evaluator.
+        /// Assign the return value and return the parent task to resume.
+        /// The Call/CC handler uses this to transfer to a saved continuation, otherwise
+        ///     is is used only for returns.
+        /// </summary>
+        /// <param name="expr">The value to save as the returned value.</param>
+        /// <param name="env">The environment to save as the returned environment.</param>
+        /// <param name="nextStep">The stepper to transfer to.</param>
+        /// <returns>The next step.  This is in the parent for return.</returns>
+        public static Stepper TransferToStep(object expr, Environment env, Stepper nextStep)
+        {
+            nextStep.ReturnedExpr = expr;
+            nextStep.ReturnedEnv = env;
+            return nextStep;
+        }
+
+        /// <summary>
+        /// Subclasses implement this to make one step.
         /// </summary>
         /// <returns>A step in the evaluation.</returns>
-        public abstract Stepper EvalStep();
+        public abstract Stepper RunStep();
 
-        // TODO consider elimination
         /// <summary>
-        /// Make a call to a sub-evaluator.
-        /// The caller is responsible for returning the result into ReturnedExpr and ReturnedEnv.
+        /// Goes to the given step.
+        /// Can be used to make a call to a sub-evaluator.
+        /// The caller typically creates an evaluator and passes into this method.
+        /// The called stepper is responsible for returning the result into ReturnedExpr and ReturnedEnv.
         /// </summary>
-        /// <param name="toCall">The evaluator to call.</param>
-        /// <returns>The first step of the sub-evaluator.</returns>
-        protected Stepper SubCall(Stepper toCall)
+        /// <param name="pc">The next program counter value for this stepper.</param>
+        /// <param name="nextStep">The evaluator to go to.</param>
+        /// <returns>The next step to execute.</returns>
+        protected Stepper GoToStep(PC pc, Stepper nextStep)
         {
-            return toCall;
+            this.Pc = pc;
+            return nextStep;
         }
 
         /// <summary>
         /// Return fram an evaluator.
         /// Assign the return value and return the parent task to resume.
+        /// Store the final PC value to protect against steps after return.
         /// </summary>
-        /// <param name="retVal">The value to save as the returned value.</param>
-        /// <param name="retEnv">The environment to save as the returned environment.</param>
-        /// <param name="returnTo">The stepper to return to.</param>
+        /// <param name="expr">The value to save as the returned value.</param>
+        /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next step, which is in the parent.</returns>
-        public static Stepper SubTransfer(object retVal, Environment retEnv, Stepper returnTo)
+        protected Stepper SubReturn(object expr, Environment env)
         {
-            returnTo.ReturnedExpr = retVal;
-            returnTo.ReturnedEnv = retEnv;
-            return returnTo;
-        }
-
-        /// <summary>
-        /// Return fram an evaluator.
-        /// Assign the return value and return the parent task to resume.
-        /// </summary>
-        /// <param name="retVal">The value to save as the returned value.</param>
-        /// <param name="retEnv">The environment to save as the returned environment.</param>
-        /// <returns>The next step, which is in the parent.</returns>
-        protected Stepper SubReturn(object retVal, Environment retEnv)
-        {
-            return SubTransfer(retVal, retEnv, this.Parent);
+            this.Pc = PC.Final;
+            return TransferToStep(expr, env, this.Parent);
         }
 
         /// <summary>
         /// Return fram an evaluator, with the default environment
+        /// Store the final PC value to protect against steps after return.
         /// </summary>
-        /// <param name="retVal">The value to save as the returned value.</param>
+        /// <param name="expr">The value to save as the returned value.</param>
         /// <returns>The next step, which is in the parent.</returns>
-        protected Stepper SubReturn(object retVal)
+        protected Stepper SubReturn(object expr)
         {
-            return SubTransfer(retVal, this.Env, this.Parent);
-        }
-
-        /// <summary>
-        /// Continue executing in the existing evaluator.
-        /// </summary>
-        /// <returns>The next step, which is in the same stepper.</returns>
-        protected Stepper SubContinue()
-        {
-            return this.SubCall(this);
+            this.Pc = PC.Final;
+            return TransferToStep(expr, this.Env, this.Parent);
         }
 
         /// <summary>
         /// Continue executing in the existing evaluator, but set the expr
         /// </summary>
-        /// <param name="retExpr">The new expr value.</param>
+        /// <param name="expr">The new expr value.</param>
         /// <returns>The next step, which is this stepper.</returns>
-        protected Stepper SubContinue(object retExpr)
+        protected Stepper SubContinue(object expr)
         {
-            return SubTransfer(retExpr, Env, this);
+            return TransferToStep(expr, this.Env, this);
         }
 
-        // Sub Evaluators
+        // Create Sub Evaluators
 
         /// <summary>
         /// Recursive Stepper call.
@@ -210,7 +271,7 @@ namespace SimpleScheme
         /// <returns>The next evaluation step.</returns>
         protected Stepper CallEval(object args)
         {
-            return this.SubCall(new EvaluatorMain(this.Interp, this, args, this.Env));
+            return new EvaluatorMain(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -220,7 +281,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallSequence(object args)
         {
-            return this.SubCall(new EvaluatorSequence(this.Interp, this, args, this.Env));
+            return new EvaluatorSequence(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -230,7 +291,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallDefine(object args)
         {
-            return this.SubCall(new EvaluatorDefine(this.Interp, this, args, this.Env));
+            return new EvaluatorDefine(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -240,7 +301,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallSet(object args)
         {
-            return this.SubCall(new EvaluatorSet(this.Interp, this, args, this.Env));
+            return new EvaluatorSet(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -250,7 +311,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallIf(object args)
         {
-            return this.SubCall(new EvaluatorIf(this.Interp, this, args, this.Env));
+            return new EvaluatorIf(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -260,7 +321,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallOr(object args)
         {
-            return this.SubCall(new EvaluatorOr(this.Interp, this, args, this.Env));
+            return new EvaluatorOr(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -270,7 +331,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallAnd(object args)
         {
-            return this.SubCall(new EvaluatorAnd(this.Interp, this, args, this.Env));
+            return new EvaluatorAnd(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -280,7 +341,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallReduceCond(object args)
         {
-            return this.SubCall(new EvaluatorReduceCond(this.Interp, this, args, this.Env));
+            return new EvaluatorReduceCond(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -290,7 +351,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallList(object args)
         {
-            return this.SubCall(new EvaluatorList(this.Interp, this, args, this.Env));
+            return new EvaluatorList(this.Interp, this, args, this.Env);
         }
 
         /// <summary>
@@ -301,7 +362,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallApplyProc(object args, object fn)
         {
-            return this.SubCall(new EvaluatorApplyProc(this.Interp, this, args, this.Env, fn));
+            return new EvaluatorApplyProc(this.Interp, this, args, this.Env, fn);
         }
 
         /// <summary>
@@ -312,7 +373,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallClosure(object args, Closure f)
         {
-            return this.SubCall(new EvaluatorClosure(this.Interp, this, args, this.Env, f));
+            return new EvaluatorClosure(this.Interp, this, args, this.Env, f);
         }
 
         /// <summary>
@@ -323,7 +384,7 @@ namespace SimpleScheme
         /// <returns>The step to execute.</returns>
         protected Stepper CallExpand(object args, Macro fn)
         {
-            return this.SubCall(new EvaluatorExpand(this.Interp, this, args, this.Env, fn));
+            return new EvaluatorExpand(this.Interp, this, args, this.Env, fn);
         }
     }
 }

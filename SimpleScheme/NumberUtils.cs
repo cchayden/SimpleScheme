@@ -1,12 +1,40 @@
 ﻿// <copyright file="NumberUtils.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
-using System;
-
 namespace SimpleScheme
 {
-    class NumberUtils : SchemeUtils
+    using System;
+
+    /// <summary>
+    /// Utilities that have to do with numbers.
+    /// </summary>
+    public class NumberUtils : SchemeUtils
     {
+        /// <summary>
+        /// Convert an object (containing a number) into a double.
+        /// </summary>
+        /// <param name="x">The object to convert.</param>
+        /// <returns>The double contained in the object.</returns>
+        public static double Num(object x)
+        {
+            try
+            {
+                return Convert.ToDouble(x);
+            }
+            catch (InvalidCastException)
+            {
+                return Num(Error("Expected a number, got: " + x));
+            }
+            catch (FormatException)
+            {
+                return Num(Error("Expected a number, got: " + x));
+            }
+            catch (OverflowException)
+            {
+                return Num(Error("Number overflow, got: " + x));
+            }
+        }
+
         /// <summary>
         /// Compute the greatest common divisor of a list of numbers.
         /// </summary>

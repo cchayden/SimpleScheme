@@ -1,5 +1,5 @@
 ﻿// <copyright file="Scheme.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -21,14 +21,18 @@ namespace SimpleScheme
         /// <summary>
         /// The output port for the interpreter.
         /// </summary>
-        private readonly PrintWriter output = new PrintWriter(Console.Out);
+        private readonly OutputPort output = new OutputPort(Console.Out);
 
         /// <summary>
         /// The interpreter global environment.
         /// </summary>
         private readonly Environment globalEnvironment = new Environment();
 
-        private static Stepper halt = Stepper.Halt();
+        /// <summary>
+        /// The stepper that is used to start an evaluation.
+        /// Its steps are never executed, but it is used to received returned values.
+        /// </summary>
+        private static readonly Stepper Halt = Stepper.Halt();
 
         /// <summary>
         /// Initializes a new instance of the Scheme class.
@@ -39,7 +43,7 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         public Scheme(bool loadStandardMacros, IEnumerable<string> files)
         {
-            Trace = false;
+            this.Trace = false;
             Primitive.InstallPrimitives(this.GlobalEnvironment);
             try
             {
@@ -72,8 +76,6 @@ namespace SimpleScheme
         {
         }
 
-        public bool Trace { get; set; }
-
         /// <summary>
         /// Initializes a new instance of the Scheme class.
         /// Read a set of files initially.
@@ -83,6 +85,11 @@ namespace SimpleScheme
             : this(true, files)
         {
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to trace.
+        /// </summary>
+        public bool Trace { get; set; }
 
         /// <summary>
         /// Gets the input port.
@@ -95,7 +102,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal PrintWriter Output
+        internal OutputPort Output
         {
             get { return this.output; }
         }
@@ -128,31 +135,22 @@ namespace SimpleScheme
         public object Eval(object expr, Environment env)
         {
             int steps = 0;
-            Stepper nextStep = Stepper.CallMain(this, halt, expr, env);
-            if (Trace)
-            {
-                Console.WriteLine(" --->");                
-            }
+            Stepper nextStep = Stepper.CallEvaluate(this, Halt, expr, env);
             while (true)
             {
-                if (Trace)
+                if (this.Trace)
                 {
-                    Console.WriteLine("Evaluating {0} {1} {2}", nextStep.Expr, nextStep.GetType(), nextStep.Pc, steps);
+                    Console.WriteLine("{3} Evaluating {0} {1} {2}", nextStep.Expr, nextStep.GetType(), nextStep.Pc, steps++);
                 }
-                nextStep = nextStep.EvalStep();
-                if (nextStep == halt)
+
+                nextStep = nextStep.RunStep();
+                if (nextStep == Halt)
                 {
                     break;
                 }
-
-                steps++;
             }
 
-            if (Trace)
-            {
-                Console.WriteLine(" <--- Steps: {0}", steps);
-            }
-            return halt.ReturnedExpr;
+            return Halt.ReturnedExpr;
         }
 
         /// <summary>
@@ -164,7 +162,7 @@ namespace SimpleScheme
         /// <returns>The result of evaluating the file contents.</returns>
         public object Load(object fileName)
         {
-            string name = Stringify(fileName, false);
+            string name = StringUtils.AsString(fileName, false);
             try
             {
                 return this.Load(
@@ -227,7 +225,7 @@ namespace SimpleScheme
                         return;
                     }
 
-                    Write(this.Eval(x), this.Output, true);
+                    FileUtils.Write(this.Eval(x), this.Output, true);
                     this.Output.Println();
                     this.Output.Flush();
                 }

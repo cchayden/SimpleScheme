@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorMap.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -56,65 +56,63 @@ namespace SimpleScheme
             /// Evaluate a list of expressions.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case 0:
-                        // first check for degenerate cases
-                        if (this.Expr == null)
-                        {
-                            return SubReturn((object) null);
-                        }
-
-                        if (!(this.Expr is Pair))
-                        {
-                            Error("Illegal arg list: " + this.Expr);
-                            return SubReturn((object) null);
-                        }
-
-                        Pc = 1;
-                        return SubContinue();
-
-                    case 1:
-                        if (First(this.Expr) is Pair)
-                        {
-                            Pc = 2;
-
-                            // Grab the arguments to the applications (the head of each list).
-                            // The the proc is applied to them.
-                            object x = this.proc.Apply(Interp, this, MapFun(First, List(Expr)));
-                            if (x is Stepper)
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            // first check for degenerate cases
+                            if (this.Expr == null)
                             {
-                                return SubCall((Stepper)x);
+                                return SubReturn(null);
                             }
 
-                            return SubContinue(x);
-                        }
+                            if (!(this.Expr is Pair))
+                            {
+                                Error("Illegal arg list: " + this.Expr);
+                                return SubReturn(null);
+                            }
 
-                        // if we are done, just return the result minus the dummy entry
-                        if (this.result == null)
-                        {
-                            return SubReturn((object) null);
-                        }
+                            Pc = PC.Step1;
+                            continue;
 
-                        return SubReturn(this.result.Rest);
+                        case PC.Step1:
+                            if (First(this.Expr) is Pair)
+                            {
+                                // Grab the arguments to the applications (the head of each list).
+                                // The the proc is applied to them.
+                                object x = this.proc.Apply(Interp, this, MapFun(First, List(Expr)));
+                                if (x is Stepper)
+                                {
+                                    return GoToStep(PC.Step2, (Stepper)x);
+                                }
 
-                    case 2:
-                        // back from the evaluation -- save the result and keep going with the rest
-                        Pc = 1;
-                        if (this.result != null)
-                        {
-                            // Builds a list by tacking new values onto the tail.
-                            this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
-                        }
+                                Pc = PC.Step2;
+                                ReturnedExpr = x;
+                                continue;
+                            }
 
-                        // Step down each of the lists
-                        Expr = MapFun(Rest, List(Expr));
-                        return SubContinue();
+                            // if we are done, just return the result minus the dummy entry
+                            return SubReturn(Rest(this.result));
+
+                        case PC.Step2:
+                            // back from the evaluation -- save the result and keep going with the rest
+                            if (this.result != null)
+                            {
+                                // Builds a list by tacking new values onto the tail.
+                                this.accum = (Pair)(this.accum.Rest = List(ReturnedExpr));
+                            }
+
+                            // Step down each of the lists
+                            Expr = MapFun(Rest, List(Expr));
+                            Pc = PC.Step1;
+                            continue;
+                    }
+
+                    return EvalError("Map: program counter error");
                 }
-
-                return EvalError("Map: program counter error");
             }
 
             /// <summary>

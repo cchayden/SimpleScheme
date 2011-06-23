@@ -1,13 +1,20 @@
 ﻿// <copyright file="Environment.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// Represents the interpreter environment.
     /// </summary>
     public sealed class Environment : SchemeUtils
     {
+        /// <summary>
+        /// The symbol table for this enviornment.
+        /// </summary>
+        private readonly SymbolTable symbolTable = new SymbolTable();
+
         /// <summary>
         /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
@@ -27,28 +34,14 @@ namespace SimpleScheme
         /// <param name="parent">The parent environment.</param>
         public Environment(object vars, object vals, Environment parent)
         {
-            this.Vars = vars;
-            this.Vals = vals;
+            this.symbolTable.AddList(vars, vals);
             this.Parent = parent;
 
             if (!NumberArgsOk(vars, vals))
             {
-                Warn("wrong number of arguments: expected " + vars + " got " + vals);
+                Warn("Wrong number of arguments: expected " + vars + " got " + vals);
             }
         }
-
-        /// <summary>
-        /// Gets a list of the variables in the environment.
-        /// This list and the Vals list must have the same number of members.
-        /// They match up, so a variable in one list corresponds to a value at the same place 
-        ///    in the other.
-        /// </summary>
-        public object Vars { get; private set; }
-
-        /// <summary>
-        /// Gets a list of the variable values in the environment.
-        /// </summary>
-        public object Vals { get; private set; }
 
         /// <summary>
         /// Gets the parent environment.
@@ -64,8 +57,7 @@ namespace SimpleScheme
         /// <returns>The variable added to the environment.</returns>
         public object Define(object var, object val)
         {
-            this.Vars = Cons(var, this.Vars);
-            this.Vals = Cons(val, this.Vals);
+            this.symbolTable.Add(var, val);
 
             if (val is Procedure)
             {
@@ -82,11 +74,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The primitive name.</param>
         /// <param name="opCode">The opCode.</param>
-        /// <param name="nArgs">The number of arguments.</param>
+        /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefPrim(string name, Primitive.OpCode opCode, int nArgs)
+        public Environment DefPrim(string name, Primitive.OpCode opCode, int numberOfArgs)
         {
-            this.Define(name, new Primitive(opCode, nArgs, nArgs));
+            this.Define(name, new Primitive(opCode, numberOfArgs, numberOfArgs));
             return this;
         }
 
@@ -100,11 +92,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefPrim(
-            string name, 
-            Primitive.OpCode opCode, 
-            int minArgs, 
-            int maxArgs)
+        public Environment DefPrim(string name, Primitive.OpCode opCode, int minArgs, int maxArgs)
         {
             this.Define(name, new Primitive(opCode, minArgs, maxArgs));
             return this;
@@ -117,27 +105,10 @@ namespace SimpleScheme
         /// <returns>The value bound to the variable.</returns>
         public object Lookup(string symbol)
         {
-            object varlist = this.Vars;
-            object vallist = this.Vals;
-
-            // iterate down through the lists
-            while (varlist != null)
+            object val;
+            if (this.symbolTable.Lookup(symbol, out val))
             {
-                // if the variable name matches, return the corresponding value
-                if (First(varlist) as string == symbol)
-                {
-                    return First(vallist);
-                }
-
-                // if the list is just a string and it matches, return the value
-                if (varlist as string == symbol)
-                {
-                    return vallist;
-                }
-
-                // iterate on both lists
-                varlist = Rest(varlist);
-                vallist = Rest(vallist);
+                return val;
             }
 
             // if we get here, we have not found anything, so look in the parent
@@ -152,7 +123,8 @@ namespace SimpleScheme
         /// <summary>
         /// Set the value of a variable in the environment to a new value.
         /// Var must be a string, the variable name.
-        /// Search down the list, and into the parentif necessary, to find the variable.
+        /// Searches the symbol table first.
+        /// If not found, then searches the parent to find the value.
         /// Then set it to the new value.
         /// </summary>
         /// <param name="var">The variable name.</param>
@@ -162,27 +134,13 @@ namespace SimpleScheme
         {
             if (!(var is string))
             {
-                return Error("Attempt to set a non-symbol: " + Stringify(var));
+                return Error("Attempt to set a non-symbol: " + StringUtils.AsString(var));
             }
 
             string symbol = (string)var;
-            object varList = this.Vars;
-            object valList = this.Vals;
-
-            while (varList != null)
+            if (this.symbolTable.Update(symbol, val))
             {
-                if (First(varList) as string == symbol)
-                {
-                    return SetFirst(valList, val);
-                }
-
-                if (Rest(varList) as string == symbol)
-                {
-                    return SetRest(valList, val);
-                }
-
-                varList = Rest(varList);
-                valList = Rest(valList);
+                return val;
             }
 
             if (this.Parent != null)
@@ -219,6 +177,86 @@ namespace SimpleScheme
 
                 vars = Rest(vars);
                 vals = Rest(vals);
+            }
+        }
+
+        /// <summary>
+        /// The symbol table for the environment.
+        /// </summary>
+        private class SymbolTable
+        {
+            /// <summary>
+            /// Stores symbols and their values.
+            /// </summary>
+            private readonly Dictionary<object, object> symbolTable = new Dictionary<object, object>();
+
+            /// <summary>
+            /// Look up a symbol given its name.
+            /// </summary>
+            /// <param name="symbol">The symbol to look up.</param>
+            /// <param name="val">Its returned value.</param>
+            /// <returns>True if found in the symbol table, false if not found.</returns>
+            public bool Lookup(object symbol, out object val)
+            {
+                if (this.symbolTable.ContainsKey(symbol))
+                {
+                    val = this.symbolTable[symbol];
+                    return true;
+                }
+
+                val = null;
+                return false;
+            }
+
+            /// <summary>
+            /// Add a symbol and its value to the environment.
+            /// </summary>
+            /// <param name="symbol">The symbol name.</param>
+            /// <param name="val">The value.</param>
+            public void Add(object symbol, object val)
+            {
+                this.symbolTable[symbol] = val;
+            }
+
+            /// <summary>
+            /// Add a list of symbols and values.
+            /// The list of symbols and their values must be the same length.
+            /// </summary>
+            /// <param name="symbols">The list of symbols.</param>
+            /// <param name="vals">The list of values.</param>
+            public void AddList(object symbols, object vals)
+            {
+                while (symbols != null)
+                {
+                    if (symbols is string)
+                    {
+                        this.Add(symbols, vals);
+                    }
+                    else
+                    {
+                        this.Add(First(symbols), First(vals));
+                    }
+
+                    symbols = Rest(symbols);
+                    vals = Rest(vals);
+                }
+            }
+
+            /// <summary>
+            /// Update a value in the symbol table.
+            /// </summary>
+            /// <param name="symbol">The symbol to update.</param>
+            /// <param name="val">The new value.</param>
+            /// <returns>True if the value was found and stored, false if not found.</returns>
+            public bool Update(object symbol, object val)
+            {
+                if (this.symbolTable.ContainsKey(symbol))
+                {
+                    this.symbolTable[symbol] = val;
+                    return true;
+                }
+
+                return false;
             }
         }
     }

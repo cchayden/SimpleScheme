@@ -1,5 +1,5 @@
 ﻿// <copyright file="ClrMethod.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -100,7 +100,7 @@ namespace SimpleScheme
                 return (Type)arg;
             }
 
-            var typeName = Stringify(arg, false);
+            var typeName = StringUtils.AsString(arg, false);
             switch (typeName)
             {
                 case "void": return typeof(void);
@@ -159,11 +159,11 @@ namespace SimpleScheme
             {
                 if (this.argClasses[i] == typeof(int))
                 {
-                    array[i] = (int)Num(First(args));
+                    array[i] = (int)NumberUtils.Num(First(args));
                 }
                 else if (this.argClasses[i] == typeof(string))
                 {
-                    array[i] = Stringify(First(args), false);
+                    array[i] = StringUtils.AsString(First(args), false);
                 }
                 else
                 {

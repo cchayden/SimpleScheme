@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorCallWithOutputFile.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 
 namespace SimpleScheme
@@ -12,11 +12,35 @@ namespace SimpleScheme
     public partial class Stepper
     {
         /// <summary>
+        /// Open a file for output.
+        /// </summary>
+        /// <param name="filename">The filename.</param>
+        /// <returns>The output port, used for writing.</returns>
+        public static OutputPort OpenOutputFile(object filename)
+        {
+            try
+            {
+                return new OutputPort(new StreamWriter(StringUtils.AsString(filename, false)));
+            }
+            catch (FileNotFoundException)
+            {
+                return (OutputPort)Error("No such file: " + StringUtils.AsString(filename));
+            }
+            catch (IOException ex)
+            {
+                return (OutputPort)Error("IOException: " + ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Evaluate a call-with-output-file expressions
         /// </summary>
         private class EvaluatorCallWithOutputFile : Stepper
         {
-            private PrintWriter p;
+            /// <summary>
+            /// The output port to use during evaluation.
+            /// </summary>
+            private OutputPort port;
 
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorCallWithOutputFile class.
@@ -34,54 +58,36 @@ namespace SimpleScheme
             /// Evaluate an if expression.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (Pc)
+                while (true)
                 {
-                    case 0:
-                        Pc = 1;
-                        p = OpenOutputFile(First(Expr));
-                        Procedure proc = Procedure.Proc(Second(Expr));
-                        object z = proc.Apply(Interp, this, List(p));
-                        if (z is Stepper)
-                        {
-                            return SubCall((Stepper)z);
-                        }
+                    switch (Pc)
+                    {
+                        case PC.Initial:
+                            this.port = OpenOutputFile(First(Expr));
+                            Procedure proc = Procedure.Proc(Second(Expr));
+                            object z = proc.Apply(Interp, this, List(this.port));
+                            if (z is Stepper)
+                            {
+                                return GoToStep(PC.Step1, (Stepper)z);
+                            }
 
-                        return SubContinue(z);
+                            Pc = PC.Step1;
+                            ReturnedExpr = z;
+                            continue;
 
-                    case 1:
-                        if (p != null)
-                        {
-                            p.Close();
-                        }
+                        case PC.Step1:
+                            if (this.port != null)
+                            {
+                                this.port.Close();
+                            }
 
-                        return SubReturn(this.ReturnedExpr);
+                            return SubReturn(this.ReturnedExpr);
+                    }
+
+                    return EvalError("CallWithOutputFile: program counter error");
                 }
-
-                return EvalError("CallWithOutputFile: program counter error");
-            }
-
-        }
-
-        /// <summary>
-        /// Open a file for output.
-        /// </summary>
-        /// <param name="filename">The filename.</param>
-        /// <returns>The output port, used for writing.</returns>
-        public static PrintWriter OpenOutputFile(object filename)
-        {
-            try
-            {
-                return new PrintWriter(new StreamWriter(Stringify(filename, false)));
-            }
-            catch (FileNotFoundException)
-            {
-                return (PrintWriter)Error("No such file: " + Stringify(filename));
-            }
-            catch (IOException ex)
-            {
-                return (PrintWriter)Error("IOException: " + ex.Message);
             }
         }
     }

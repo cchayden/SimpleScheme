@@ -1,5 +1,5 @@
 ﻿// <copyright file="Closure.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -12,13 +12,13 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the Closure class.
         /// </summary>
-        /// <param name="parms">A list of variable names, to be matched with 
-        ///    values later.</param>
+        /// <param name="formalParameters">A list of variable names, to be matched with 
+        ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        public Closure(object parms, object body, Environment env)
+        public Closure(object formalParameters, object body, Environment env)
         {
-            this.Parms = parms;
+            this.FormalParameters = formalParameters;
             this.Env = env;
             this.Body = body is Pair && Rest(body) == null ? 
                 First(body) :            // one expression
@@ -28,7 +28,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a list of variable names, to be matched with values later.
         /// </summary>
-        public object Parms { get; private set; }
+        public object FormalParameters { get; private set; }
 
         /// <summary>
         /// Gets the program to execute.
@@ -50,12 +50,11 @@ namespace SimpleScheme
         /// <returns>The results of executing the program.</returns>
         public override object Apply(Scheme interpreter, Stepper parent, object args)
         {
-            if (parent == null)
-            {
-                return interpreter.Eval(this.Body, new Environment(this.Parms, args, this.Env));
-            }
-
-            return Stepper.CallMain(interpreter, parent, this.Body, new Environment(this.Parms, args, this.Env));
+            return Stepper.CallEvaluate(
+                interpreter, 
+                parent, 
+                this.Body, 
+                new Environment(this.FormalParameters, args, this.Env));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿// <copyright file="R4RSTest.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace Tests
 {
@@ -72,7 +72,7 @@ namespace Tests
                 {
                     for (int j = 0; j < examples1.Length; j++)
                     {
-                        string test = String.Format("({0} {1})", predicates[i], ex[j]);
+                        string test = string.Format("({0} {1})", predicates[i], ex[j]);
                         object res = this.ReadAndEvaluate(test);
                         Assert.AreEqual(i == j, res, "Failed " + this.section + " " + test);
                     }

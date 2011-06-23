@@ -1,13 +1,53 @@
 ﻿// <copyright file="StringUtils.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System;
     using System.Text;
 
-    class StringUtils : SchemeUtils
+    /// <summary>
+    /// String utilities used by the primitives.
+    /// </summary>
+    public class StringUtils : SchemeUtils
     {
+        /// <summary>
+        /// Turn an object (storing a string) into an array of characters.
+        /// </summary>
+        /// <param name="x">The string object.</param>
+        /// <returns>The character array.</returns>
+        public static char[] Str(object x)
+        {
+            try
+            {
+                return (char[])x;
+            }
+            catch (InvalidCastException)
+            {
+                return Str(Error("expected a string, got: " + x));
+            }
+        }
+
+        /// <summary>
+        /// Convert a list of chars into a string.
+        /// </summary>
+        /// <param name="chars">The object that is a list of chars.</param>
+        /// <returns>The caracter array made up of the chars.</returns>
+        public static char[] ListToString(object chars)
+        {
+            char[] str = new char[Length(chars)];
+
+            int i = 0;
+            while (chars is Pair)
+            {
+                str[i] = Chr(First(chars));
+                chars = Rest(chars);
+                i++;
+            }
+
+            return str;
+        }
+
         /// <summary>
         /// Convert all the elements of a list to strings and append them.
         /// </summary>
@@ -19,7 +59,7 @@ namespace SimpleScheme
             StringBuilder result = new StringBuilder();
             while (args is Pair)
             {
-                result.Append(Stringify(First(args), false));
+                result.Append(AsString(First(args), false));
                 args = Rest(args);
             }
 
@@ -55,7 +95,7 @@ namespace SimpleScheme
                 return xc.Length - yc.Length;
             }
 
-            Error("expected two strings, got: " + Stringify(List(x, y)));
+            Error("expected two strings, got: " + AsString(List(x, y)));
             return 0;
         }
 
@@ -68,12 +108,12 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         public static object StringToNumber(object x, object y)
         {
-            int numberBase = y is double ? (int)Num(y) : 10;
+            int numberBase = y is double ? (int)NumberUtils.Num(y) : 10;
             try
             {
                 return numberBase == 10
-                           ? double.Parse(Stringify(x, false))
-                           : Num(Convert.ToInt64(Stringify(x, false), numberBase));
+                           ? double.Parse(AsString(x, false))
+                           : NumberUtils.Num(Convert.ToInt64(AsString(x, false), numberBase));
             }
             catch (FormatException)
             {
@@ -82,6 +122,118 @@ namespace SimpleScheme
             catch (ArgumentException)
             {
                 return False;
+            }
+        }
+
+        /// <summary>
+        /// Convert an object into a string representation.
+        /// </summary>
+        /// <param name="x">The object to convert.</param>
+        /// <returns>The string representing the object.</returns>
+        public static string AsString(object x)
+        {
+            return AsString(x, true);
+        }
+
+        /// <summary>
+        /// Convert an object into a string representation.
+        /// </summary>
+        /// <param name="x">The object to convert.</param>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <returns>The string representing the object.</returns>
+        public static string AsString(object x, bool quoted)
+        {
+            StringBuilder buf = new StringBuilder();
+            AsString(x, quoted, buf);
+            return buf.ToString();
+        }
+
+        /// <summary>
+        /// Convert an object into a string representation.
+        /// </summary>
+        /// <param name="x">The object to convert.</param>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        public static void AsString(object x, bool quoted, StringBuilder buf)
+        {
+            if (x == null)
+            {
+                buf.Append("()");
+            }
+            else if (x is double)
+            {
+                double d = (double)x;
+                if (Math.Round(d) == d)
+                {
+                    buf.Append((long)d);
+                }
+                else
+                {
+                    buf.Append(d);
+                }
+            }
+            else if (x is char)
+            {
+                if (quoted)
+                {
+                    buf.Append("#\\");
+                }
+
+                buf.Append(x);
+            }
+            else if (x is Pair)
+            {
+                ((Pair)x).AsString(quoted, buf);
+            }
+            else if (x is char[])
+            {
+                char[] chars = (char[])x;
+                if (quoted)
+                {
+                    buf.Append('"');
+                }
+
+                foreach (char c in chars)
+                {
+                    if (quoted && c == '"')
+                    {
+                        buf.Append('\\');
+                    }
+
+                    buf.Append(c);
+                }
+
+                if (quoted)
+                {
+                    buf.Append('"');
+                }
+            }
+            else if (x is object[])
+            {
+                object[] v = (object[])x;
+                buf.Append("#(");
+                for (int i = 0; i < v.Length; i++)
+                {
+                    AsString(v[i], quoted, buf);
+                    if (i != v.Length - 1)
+                    {
+                        buf.Append(' ');
+                    }
+                }
+
+                buf.Append(')');
+            }
+            else if (IsTrue(x))
+            {
+                buf.Append("#t");
+            }
+            else if (IsFalse(x))
+            {
+                buf.Append("#f");
+            }
+            else
+            {
+                buf.Append(x);
             }
         }
     }

@@ -1,5 +1,5 @@
-﻿// <copyright file="Main.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+﻿// <copyright file="MainProgram.cs" company="Charles Hayden">
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace Repl
 {

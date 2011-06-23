@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorDefine.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -30,22 +30,24 @@ namespace SimpleScheme
             /// Handle the define syntax shortcut by inserting lambda.
             /// </summary>
             /// <returns>The evaluated definition.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
                 switch (Pc)
                 {
-                    case 0:
+                    case PC.Initial:
                         if (First(this.Expr) is Pair)
                         {
-                            Pc = 1;
+                            Pc = PC.Step1;
                             return CallEval(Cons("lambda", Cons(Rest(First(this.Expr)), Rest(this.Expr))));
                         }
 
-                        Pc = 2;
+                        Pc = PC.Step2;
                         return CallEval(Second(this.Expr));
-                    case 1:
+
+                    case PC.Step1:
                         return SubReturn(this.Env.Define(First(First(this.Expr)), ReturnedExpr));
-                    case 2:
+
+                    case PC.Step2:
                         return SubReturn(this.Env.Define(First(this.Expr), ReturnedExpr));
                 }
 

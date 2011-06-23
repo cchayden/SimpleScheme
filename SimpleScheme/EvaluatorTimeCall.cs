@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorTimeCall.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -11,10 +11,24 @@ namespace SimpleScheme
     /// </summary>
     public partial class Stepper
     {
+        /// <summary>
+        /// The amount of memory at the start.
+        /// </summary>
         private long startMem;
+
+        /// <summary>
+        /// The starting time.
+        /// </summary>
         private Stopwatch stopwatch;
-        private object ans;
+
+        /// <summary>
+        /// The number of times to repeat the evaluation.
+        /// </summary>
         private int counter;
+
+        /// <summary>
+        /// How far we are into the repeated evaluation.
+        /// </summary>
         private int i;
 
         /// <summary>
@@ -35,47 +49,51 @@ namespace SimpleScheme
             {
                 startMem = GC.GetTotalMemory(true);
                 stopwatch = Stopwatch.StartNew();
-                ans = False;
             }
 
             /// <summary>
             /// Evaluate an application.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (Pc)
+                while (true)
                 {
-                    case 0:
-                        object y = Second(Expr);
-                        counter = y == null ? 1 : (int) Num(y);
-                        i = 0;
-                        Pc = 1;
-                        return SubContinue();
+                    switch (Pc)
+                    {
+                        case PC.Initial:
+                            object y = Second(Expr);
+                            counter = y == null ? 1 : (int)NumberUtils.Num(y);
+                            i = 0;
+                            Pc = PC.Step1;
+                            continue;
 
-                    case 1:
-                        Pc = 2;
-                        object ans = Procedure.Proc(First(Expr)).Apply(Interp, this, null);
-                        if (ans is Stepper)
-                        {
-                            return SubCall((Stepper) ans);
-                        }
-                        return SubContinue(ans);
+                        case PC.Step1:
+                            object ans = Procedure.Proc(First(Expr)).Apply(Interp, this, null);
+                            if (ans is Stepper)
+                            {
+                                return GoToStep(PC.Step2, (Stepper)ans);
+                            }
 
-                    case 2:
-                        i++;
-                        if (i < counter)
-                        {
-                            return SubContinue();
-                        }
+                            Pc = PC.Step2;
+                            ReturnedExpr = ans;
+                            continue;
 
-                        stopwatch.Stop();
-                        long time = stopwatch.ElapsedMilliseconds;
-                        long mem = GC.GetTotalMemory(false) - startMem;
-                        return SubReturn(Cons(ReturnedExpr, List(List(Num(time), "msec"), List(Num(mem), "bytes"))));
+                        case PC.Step2:
+                            i++;
+                            if (i < counter)
+                            {
+                                continue;
+                            }
+
+                            stopwatch.Stop();
+                            long time = stopwatch.ElapsedMilliseconds;
+                            long mem = GC.GetTotalMemory(false) - startMem;
+                            return SubReturn(Cons(ReturnedExpr, List(List(NumberUtils.Num(time), "msec"), List(NumberUtils.Num(mem), "bytes"))));
+                    }
+
+                    return EvalError("TimeCall: program counter error");
                 }
-
-                return EvalError("TimeCall: program counter error");
             }
         }
     }

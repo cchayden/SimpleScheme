@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorReduceCond.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -24,7 +24,7 @@ namespace SimpleScheme
             private object clause;
 
             /// <summary>
-            /// Initializes a new instance of the Stepper.EvaluatorCond class.
+            /// Initializes a new instance of the Stepper.EvaluatorReduceCond class.
             /// </summary>
             /// <param name="interp">The interpreter.</param>
             /// <param name="parent">The parent.  Return to this when done.</param>
@@ -44,51 +44,54 @@ namespace SimpleScheme
             ///     Otherwise return the expression to be evaluated.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case 0:
-                        if (Expr == null)
-                        {
-                            return SubReturn((object) False);
-                        }
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            if (Expr == null)
+                            {
+                                return SubReturn(False);
+                            }
 
-                        this.clause = First(Expr);
-                        Expr = Rest(Expr);
-                        if (First(this.clause) as string == "else")
-                        {
-                            this.result = null;
-                            Pc = 2;
-                        }
-                        else
-                        {
-                            Pc = 1;
-                            return CallEval(First(clause));
-                        }
+                            this.clause = First(Expr);
+                            Expr = Rest(Expr);
+                            if (First(this.clause) as string == "else")
+                            {
+                                this.result = null;
+                                Pc = PC.Step2;
+                            }
+                            else
+                            {
+                                Pc = PC.Step1;
+                                return CallEval(First(clause));
+                            }
 
-                        return SubContinue();
+                            continue;
 
-                    case 1:
-                        this.result = ReturnedExpr;
-                        Pc = Truth(this.result) ? 2 : 0;
-                        return SubContinue();
+                        case PC.Step1:
+                            this.result = ReturnedExpr;
+                            Pc = Truth(this.result) ? PC.Step2 : PC.Initial;
+                            continue;
 
-                    case 2:
-                        if (Rest(this.clause) == null)
-                        {
-                            return SubReturn((object) List("quote", this.result));
-                        }
+                        case PC.Step2:
+                            if (Rest(this.clause) == null)
+                            {
+                                return SubReturn(List("quote", this.result));
+                            }
 
-                        if (Second(this.clause) as string == "=>")
-                        {
-                            return SubReturn((object) List(Third(this.clause), List("quote", this.result)));
-                        }
+                            if (Second(this.clause) as string == "=>")
+                            {
+                                return SubReturn(List(Third(this.clause), List("quote", this.result)));
+                            }
 
-                        return SubReturn((object) Cons("begin", Rest(this.clause)));
+                            return SubReturn(Cons("begin", Rest(this.clause)));
+                    }
+
+                    return EvalError("ReduceCond: program counter error");
                 }
-
-                return EvalError("ReduceCond: program counter error");
             }
         }
     }

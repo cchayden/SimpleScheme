@@ -1,5 +1,5 @@
 ﻿// <copyright file="SchemeUtilsTest.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace Tests
 {
@@ -170,14 +170,14 @@ namespace Tests
             var files = new string[0];
             var accessor = new Scheme_Accessor(false, files);
             Scheme scheme = accessor.Target as Scheme;
-            Assert.AreEqual(accessor.Input, SchemeUtils.InPort(null, scheme));
+            Assert.AreEqual(accessor.Input, FileUtils.InPort(null, scheme));
             using (StringReader reader = new StringReader("abc"))
             {
                 InputPort input = new InputPort(reader);
-                Assert.AreEqual(input, SchemeUtils.InPort(input, scheme));
+                Assert.AreEqual(input, FileUtils.InPort(input, scheme));
             }
 
-            AssertEx.Throws(() => SchemeUtils.InPort(1, scheme));
+            AssertEx.Throws(() => FileUtils.InPort(1, scheme));
         }
 
         /// <summary>
@@ -190,14 +190,14 @@ namespace Tests
             var files = new string[0];
             var accessor = new Scheme_Accessor(false, files);
             Scheme scheme = accessor.Target as Scheme;
-            Assert.AreEqual(accessor.Output, SchemeUtils.OutPort(null, scheme));
+            Assert.AreEqual(accessor.Output, FileUtils.OutPort(null, scheme));
             using (StringWriter writer = new StringWriter())
             {
-                PrintWriter output = new PrintWriter(writer);
-                Assert.AreEqual(output, SchemeUtils.OutPort(output, scheme));
+                OutputPort output = new OutputPort(writer);
+                Assert.AreEqual(output, FileUtils.OutPort(output, scheme));
             }
 
-            AssertEx.Throws(() => SchemeUtils.OutPort(1, scheme));
+            AssertEx.Throws(() => FileUtils.OutPort(1, scheme));
         }
 
         /// <summary>
@@ -295,11 +295,11 @@ namespace Tests
         [TestMethod]
         public void ListToStringTest()
         {
-            var actual = SchemeUtils.ListToString(SchemeUtils.List('a', 'b'));
+            var actual = StringUtils.ListToString(SchemeUtils.List('a', 'b'));
             Assert.AreEqual("ab", new string(actual));
-            actual = SchemeUtils.ListToString(1);
-            Assert.AreEqual(String.Empty, new string(actual));
-            AssertEx.Throws(() => SchemeUtils.ListToString(SchemeUtils.List(1, 2)));
+            actual = StringUtils.ListToString(1);
+            Assert.AreEqual(string.Empty, new string(actual));
+            AssertEx.Throws(() => StringUtils.ListToString(SchemeUtils.List(1, 2)));
         }
 
         /// <summary>
@@ -308,13 +308,13 @@ namespace Tests
         [TestMethod]
         public void ListToVectorTest()
         {
-            var actual = SchemeUtils.ListToVector(SchemeUtils.List(1, 2));
+            var actual = VectorUtils.ListToVector(SchemeUtils.List(1, 2));
             var expected = new object[] { 1, 2 };
             Assert.AreEqual(2, actual.Length);
             Assert.AreEqual(2, expected.Length);
             Assert.AreEqual(expected[0], actual[0]);
             Assert.AreEqual(expected[1], actual[1]);
-            actual = SchemeUtils.ListToVector(1);
+            actual = VectorUtils.ListToVector(1);
             Assert.AreEqual(0, actual.Length);
         }
 
@@ -324,16 +324,16 @@ namespace Tests
         [TestMethod]
         public void NumTest()
         {
-            Assert.AreEqual(0.0, SchemeUtils.Num(0.0));
-            Assert.AreEqual(0.0, SchemeUtils.Num(0));
-            Assert.AreEqual(0.0, SchemeUtils.Num("0"));
-            Assert.AreEqual(1.0, SchemeUtils.Num(1.0));
-            Assert.AreEqual(1.0, SchemeUtils.Num(1));
-            Assert.AreEqual(1.0, SchemeUtils.Num("1"));
-            Assert.AreEqual(0.0, SchemeUtils.Num(false));
-            AssertEx.Throws(() => SchemeUtils.Num('a'));
-            AssertEx.Throws(() => SchemeUtils.Num("xxx"));
-            AssertEx.Throws(() => SchemeUtils.Num("false"));
+            Assert.AreEqual(0.0, NumberUtils.Num(0.0));
+            Assert.AreEqual(0.0, NumberUtils.Num(0));
+            Assert.AreEqual(0.0, NumberUtils.Num("0"));
+            Assert.AreEqual(1.0, NumberUtils.Num(1.0));
+            Assert.AreEqual(1.0, NumberUtils.Num(1));
+            Assert.AreEqual(1.0, NumberUtils.Num("1"));
+            Assert.AreEqual(0.0, NumberUtils.Num(false));
+            AssertEx.Throws(() => NumberUtils.Num('a'));
+            AssertEx.Throws(() => NumberUtils.Num("xxx"));
+            AssertEx.Throws(() => NumberUtils.Num("false"));
         }
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace Tests
         [TestMethod]
         public void StrTest()
         {
-            var actual = SchemeUtils.Str("abc".ToCharArray());
+            var actual = StringUtils.Str("abc".ToCharArray());
             Assert.AreEqual(3, actual.Length);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);
@@ -362,67 +362,67 @@ namespace Tests
         }
 
         /// <summary>
-        /// A test for Stringify
+        /// A test for AsString
         /// </summary>
         [TestMethod]
-        public void StringifyTest()
+        public void AsStringTest()
         {
-            Assert.AreEqual("()", SchemeUtils.Stringify(null));
-            Assert.AreEqual("1", SchemeUtils.Stringify(1.0));
-            Assert.AreEqual("1.5", SchemeUtils.Stringify(1.5));
-            Assert.AreEqual("#\\a", SchemeUtils.Stringify('a'));
-            Assert.AreEqual("(1 . 2)", SchemeUtils.Stringify(new Pair(1, 2)));
-            Assert.AreEqual("(1 2)", SchemeUtils.Stringify(SchemeUtils.List(1, 2)));
-            Assert.AreEqual(@"""abc""", SchemeUtils.Stringify("abc".ToCharArray()));
-            Assert.AreEqual(@"""\""""", SchemeUtils.Stringify(@"""".ToCharArray()));
+            Assert.AreEqual("()", StringUtils.AsString(null));
+            Assert.AreEqual("1", StringUtils.AsString(1.0));
+            Assert.AreEqual("1.5", StringUtils.AsString(1.5));
+            Assert.AreEqual("#\\a", StringUtils.AsString('a'));
+            Assert.AreEqual("(1 . 2)", StringUtils.AsString(new Pair(1, 2)));
+            Assert.AreEqual("(1 2)", StringUtils.AsString(SchemeUtils.List(1, 2)));
+            Assert.AreEqual(@"""abc""", StringUtils.AsString("abc".ToCharArray()));
+            Assert.AreEqual(@"""\""""", StringUtils.AsString(@"""".ToCharArray()));
             var test = new object[] { 1, 2 };
-            Assert.AreEqual("#(1 2)", SchemeUtils.Stringify(test));
-            Assert.AreEqual("#t", SchemeUtils.Stringify(true));
-            Assert.AreEqual("#f", SchemeUtils.Stringify(false));
-            Assert.AreEqual("1", SchemeUtils.Stringify(1));
+            Assert.AreEqual("#(1 2)", StringUtils.AsString(test));
+            Assert.AreEqual("#t", StringUtils.AsString(true));
+            Assert.AreEqual("#f", StringUtils.AsString(false));
+            Assert.AreEqual("1", StringUtils.AsString(1));
         }
 
         /// <summary>
-        /// A test for Stringify with quote flag false.
+        /// A test for AsString with quote flag false.
         /// </summary>
         [TestMethod]
-        public void StringifyTestWithQuote()
+        public void AsStringTestWithQuote()
         {
-            Assert.AreEqual("()", SchemeUtils.Stringify(null, false));
-            Assert.AreEqual("1", SchemeUtils.Stringify(1.0, false));
-            Assert.AreEqual("1.5", SchemeUtils.Stringify(1.5, false));
-            Assert.AreEqual("a", SchemeUtils.Stringify('a', false));
-            Assert.AreEqual("(1 . 2)", SchemeUtils.Stringify(new Pair(1, 2), false));
-            Assert.AreEqual("(1 2)", SchemeUtils.Stringify(SchemeUtils.List(1, 2), false));
-            Assert.AreEqual("abc", SchemeUtils.Stringify("abc".ToCharArray(), false));
-            Assert.AreEqual(@"""", SchemeUtils.Stringify(@"""".ToCharArray(), false));
+            Assert.AreEqual("()", StringUtils.AsString(null, false));
+            Assert.AreEqual("1", StringUtils.AsString(1.0, false));
+            Assert.AreEqual("1.5", StringUtils.AsString(1.5, false));
+            Assert.AreEqual("a", StringUtils.AsString('a', false));
+            Assert.AreEqual("(1 . 2)", StringUtils.AsString(new Pair(1, 2), false));
+            Assert.AreEqual("(1 2)", StringUtils.AsString(SchemeUtils.List(1, 2), false));
+            Assert.AreEqual("abc", StringUtils.AsString("abc".ToCharArray(), false));
+            Assert.AreEqual(@"""", StringUtils.AsString(@"""".ToCharArray(), false));
             var test = new object[] { 1, 2 };
-            Assert.AreEqual("#(1 2)", SchemeUtils.Stringify(test, false));
-            Assert.AreEqual("#t", SchemeUtils.Stringify(true, false));
-            Assert.AreEqual("#f", SchemeUtils.Stringify(false, false));
-            Assert.AreEqual("1", SchemeUtils.Stringify(1));
+            Assert.AreEqual("#(1 2)", StringUtils.AsString(test, false));
+            Assert.AreEqual("#t", StringUtils.AsString(true, false));
+            Assert.AreEqual("#f", StringUtils.AsString(false, false));
+            Assert.AreEqual("1", StringUtils.AsString(1));
         }
 
         /// <summary>
-        /// A test for Stringify with quote flag false.
+        /// A test for AsString with quote flag false.
         /// </summary>
         [TestMethod]
-        public void StringifyTestWithBuf()
+        public void AsStringTestWithBuf()
         {
             StringBuilder buf = new StringBuilder().Append("x");
-            SchemeUtils.Stringify(null, false, buf);
+            StringUtils.AsString(null, false, buf);
             Assert.AreEqual("x()", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeUtils.Stringify(1.0, false, buf);
+            StringUtils.AsString(1.0, false, buf);
             Assert.AreEqual("x1", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeUtils.Stringify(1.5, false, buf);
+            StringUtils.AsString(1.5, false, buf);
             Assert.AreEqual("x1.5", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeUtils.Stringify('a', false, buf);
+            StringUtils.AsString('a', false, buf);
             Assert.AreEqual("xa", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeUtils.Stringify("abc".ToCharArray(), false, buf);
+            StringUtils.AsString("abc".ToCharArray(), false, buf);
             Assert.AreEqual("xabc", buf.ToString());
         }
 
@@ -444,10 +444,10 @@ namespace Tests
         public void VecTest()
         {
             var test = new object[] { 1, 2 };
-            Assert.AreEqual(2, SchemeUtils.Vec(test).Length);
-            Assert.AreEqual(1, SchemeUtils.Vec(test)[0]);
-            Assert.AreEqual(2, SchemeUtils.Vec(test)[1]);
-            AssertEx.Throws(() => SchemeUtils.Vec(1));
+            Assert.AreEqual(2, VectorUtils.Vec(test).Length);
+            Assert.AreEqual(1, VectorUtils.Vec(test)[0]);
+            Assert.AreEqual(2, VectorUtils.Vec(test)[1]);
+            AssertEx.Throws(() => VectorUtils.Vec(1));
         }
 
         /// <summary>
@@ -457,7 +457,7 @@ namespace Tests
         public void VectorToListTest()
         {
             var test = new object[] { 1, 2, 3 };
-            var actual = SchemeUtils.VectorToList(test);
+            var actual = VectorUtils.VectorToList(test);
             Assert.AreEqual(3, SchemeUtils.Length(actual));
             Assert.AreEqual(1, SchemeUtils.First(actual));
             Assert.AreEqual(2, SchemeUtils.Second(actual));
@@ -481,8 +481,8 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                PrintWriter w = new PrintWriter(writer);
-                var actual = SchemeUtils.Write("abc", w, false);
+                OutputPort w = new OutputPort(writer);
+                var actual = FileUtils.Write("abc", w, false);
                 Assert.AreEqual("abc", actual);
                 Assert.AreEqual("abc", writer.ToString());
             }

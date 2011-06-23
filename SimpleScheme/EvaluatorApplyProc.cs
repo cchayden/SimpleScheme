@@ -1,11 +1,9 @@
 ﻿// <copyright file="EvaluatorApplyProc.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// Stepper contains all the individual evaluators
     /// </summary>
@@ -21,9 +19,6 @@ namespace SimpleScheme
             /// </summary>
             private readonly object fn;
 
-            private static int Counter = 0;
-            private readonly int instanceCounter;
-
             /// <summary>
             /// Initializes a new instance of the Stepper.EvaluatorApplyProc class.
             /// </summary>
@@ -36,37 +31,36 @@ namespace SimpleScheme
                 : base(interp, parent, expr, env)
             {
                 this.fn = fn;
-                Counter++;
-                instanceCounter = Counter;
-                //Console.WriteLine("ApplyProc: {0} {1}", expr, instanceCounter);
             }
 
             /// <summary>
             /// Evaluate a proc application.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case 0:
-                        Pc = 1;
-                        return CallList(Expr);
-                    case 1:
-                        object res = Procedure.Proc(this.fn).Apply(this.Interp, this, ReturnedExpr);
-                        if (res is Stepper)
-                        {
-                            Pc = 2;
-                            return this.SubCall((Stepper)res);
-                        }
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            Pc = PC.Step1;
+                            return CallList(Expr);
 
-                        Pc = 3;
-                        return SubReturn(res);
-                    case 2:
-                        return SubReturn(ReturnedExpr);
+                        case PC.Step1:
+                            object res = Procedure.Proc(this.fn).Apply(this.Interp, this, ReturnedExpr);
+                            if (res is Stepper)
+                            {
+                                return this.GoToStep(PC.Step2, (Stepper)res);
+                            }
+
+                            return SubReturn(res);
+                        case PC.Step2:
+                            return SubReturn(ReturnedExpr);
+                    }
+
+                    return EvalError("ApplyProc: program counter error");
                 }
-
-                return EvalError("ApplyProc: program counter error");
             }
         }
     }

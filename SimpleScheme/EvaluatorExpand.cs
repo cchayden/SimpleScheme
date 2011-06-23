@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorExpand.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -36,21 +36,20 @@ namespace SimpleScheme
             /// Expand a macro
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
                 switch (Pc)
                 {
-                    case 0:
+                    case PC.Initial:
                         object expanded = this.fn.Apply(Interp, this, Expr);
                         if (expanded is Stepper)
                         {
-                            Pc = 1;
-                            return SubCall((Stepper)expanded);
+                            return GoToStep(PC.Step1, (Stepper)expanded);
                         }
 
                         return EvalError("Expand: should not get here");
 
-                    case 1:
+                    case PC.Step1:
                         return SubReturn(ReturnedExpr);
                 }
 

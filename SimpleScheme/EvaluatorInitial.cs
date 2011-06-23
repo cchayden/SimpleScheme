@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorInitial.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -27,7 +27,7 @@ namespace SimpleScheme
             /// This should never be called.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
                 return EvalError("Initial: program counter error");
             }

@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorAnd.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -30,37 +30,41 @@ namespace SimpleScheme
             /// Evaluate a sequence of objects, returning  when one is #f, or returning the last.
             /// </summary>
             /// <returns>The next step.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case 0:
-                        if (this.Expr == null)
-                        {
-                            return SubReturn(True);
-                        }
-                        this.Pc = 1;
-                        return SubContinue();
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            if (this.Expr == null)
+                            {
+                                return SubReturn(True);
+                            }
 
-                    case 1:
-                        this.Pc = Rest(this.Expr) != null ? 2 : 3;
-                        return CallEval(First(this.Expr));
+                            this.Pc = PC.Step1;
+                            continue;
 
-                    case 2:
-                        if (IsFalse(this.ReturnedExpr))
-                        {
-                            return SubReturn(False);
-                        }
+                        case PC.Step1:
+                            this.Pc = Rest(this.Expr) == null ? PC.Step3 : PC.Step2;
+                            return CallEval(First(this.Expr));
 
-                        this.Expr = Rest(this.Expr);
-                        this.Pc = 1;
-                        return SubContinue();
+                        case PC.Step2:
+                            if (IsFalse(this.ReturnedExpr))
+                            {
+                                return SubReturn(False);
+                            }
 
-                    case 3:
-                        return SubReturn(this.ReturnedExpr);
+                            this.Expr = Rest(this.Expr);
+                            this.Pc = PC.Step1;
+                            continue;
+
+                        case PC.Step3:
+                            return SubReturn(this.ReturnedExpr);
+                    }
+
+                    return EvalError("And: program counter error");
                 }
-
-                return EvalError("And: program counter error");
             }
         }
     }

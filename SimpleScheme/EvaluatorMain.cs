@@ -1,5 +1,5 @@
 ﻿// <copyright file="EvaluatorMain.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -24,27 +24,6 @@ namespace SimpleScheme
         /// </summary>
         private class EvaluatorMain : Stepper
         {
-            /// <summary>
-            /// Starting Pc value
-            /// </summary>
-            private const int PcBegin = 0;
-
-            /// <summary>
-            /// Pc value when evaluating a primitive, proc, macro or closure.
-            /// </summary>
-            private const int PcMiddle = 1;
-
-            /// <summary>
-            /// Pc value to loop beck and evaluate the result of the
-            ///   previous evaluation step.
-            /// </summary>
-            private const int PcLoop = 2;
-
-            /// <summary>
-            /// Pc value to set the return value and return to the caller.
-            /// </summary>
-            private const int PcReturn = 3;
-
             /// <summary>
             /// A function to be evaluated (primitive, proc, macro, or closure).
             /// </summary>
@@ -76,146 +55,138 @@ namespace SimpleScheme
             ///   and apply the procedure to the evaluated results.
             /// </summary>
             /// <returns>The next step to execute.</returns>
-            public override Stepper EvalStep()
+            public override Stepper RunStep()
             {
-                switch (this.Pc)
+                while (true)
                 {
-                    case PcBegin:
-                        if (this.Expr is string)
-                        {
-                            // Evaluate a string by looking it up in the environment.
-                            // It should correspond to a varialbe name, for which there 
-                            //    is a corresponding value.
-                            return SubReturn(EvalString((string)this.Expr, this.Env));
-                        }
+                    switch (this.Pc)
+                    {
+                        case PC.Initial:
+                            if (this.Expr is string)
+                            {
+                                // Evaluate a string by looking it up in the environment.
+                                // It should correspond to a varialbe name, for which there 
+                                //    is a corresponding value.
+                                return SubReturn(EvalString((string)this.Expr, this.Env));
+                            }
 
-                        if (!(this.Expr is Pair))
-                        {
-                            // If we are evaluating something that is not a pair, 
-                            //    it must be a constant.
-                            // Return the integer, real, boolean, or vector.
-                            return SubReturn(this.Expr);
-                        }
+                            if (!(this.Expr is Pair))
+                            {
+                                // If we are evaluating something that is not a pair, 
+                                //    it must be a constant.
+                                // Return the integer, real, boolean, or vector.
+                                return SubReturn(this.Expr);
+                            }
 
-                        // We are evaluating a pair.
-                        // Split out the first item for special treatment.
-                        this.fn = First(this.Expr);
-                        this.args = Rest(this.Expr);
+                            // We are evaluating a pair.
+                            // Split out the first item for special treatment.
+                            this.fn = First(this.Expr);
+                            this.args = Rest(this.Expr);
 
-                        // Look for one of the special forms. 
-                        switch (this.fn as string)
-                        {
-                            case "quote":
-                                // Evaluate quoted expression by just returning the expression.
-                                return SubReturn(First(this.args));
+                            // Look for one of the special forms. 
+                            switch (this.fn as string)
+                            {
+                                case "quote":
+                                    // Evaluate quoted expression by just returning the expression.
+                                    return SubReturn(First(this.args));
 
-                            case "begin":
-                                {
-                                    // Evaluate begin by evaluating all the items in order, 
-                                    //   and returning the last.
-                                    Pc = PcLoop;
-                                    return CallSequence(this.args);
-                                }
+                                case "begin":
+                                    {
+                                        // Evaluate begin by evaluating all the items in order, 
+                                        //   and returning the last.
+                                        return GoToStep(PC.Step2, CallSequence(this.args));
+                                    }
 
-                            case "define":
-                                {
-                                    // Define is a shortcut for lambda.
-                                    // Evaluate by splicing lambda on the front and evaluating that.
-                                    Pc = PcReturn;
-                                    return CallDefine(this.args);
-                                }
+                                case "define":
+                                    {
+                                        // Define is a shortcut for lambda.
+                                        // Evaluate by splicing lambda on the front and evaluating that.
+                                        return GoToStep(PC.Step3, CallDefine(this.args));
+                                    }
 
-                            case "set!":
-                                {
-                                    // Evaluate a set! expression by evaluating the second, 
-                                    //   then setting the first to it.
-                                    Pc = PcReturn;
-                                    return CallSet(this.args);
-                                }
+                                case "set!":
+                                    {
+                                        // Evaluate a set! expression by evaluating the second, 
+                                        //   then setting the first to it.
+                                        return GoToStep(PC.Step3, CallSet(this.args));
+                                    }
 
-                            case "if":
-                                {
-                                    // Eval an if expression by evaluating the first clause, 
-                                    //    and then returning either the second or third.
-                                    Pc = PcLoop;
-                                    return CallIf(this.args);
-                                }
+                                case "if":
+                                    {
+                                        // Eval an if expression by evaluating the first clause, 
+                                        //    and then returning either the second or third.
+                                        return GoToStep(PC.Step2, CallIf(this.args));
+                                    }
 
-                            case "or":
-                                {
-                                    Pc = PcReturn;
-                                    return CallOr(this.args);
-                                }
+                                case "or":
+                                    {
+                                        return GoToStep(PC.Step3, CallOr(this.args));
+                                    }
 
-                            case "and":
-                                {
-                                    Pc = PcReturn;
-                                    return CallAnd(this.args);
-                                }
+                                case "and":
+                                    {
+                                        return GoToStep(PC.Step3, CallAnd(this.args));
+                                    }
 
-                            case "cond":
-                                Pc = PcLoop;
-                                return CallReduceCond(this.args);
+                                case "cond":
+                                    return GoToStep(PC.Step2, CallReduceCond(this.args));
 
-                            case "lambda":
-                                // Evaluate a lambda by creating a closure.
-                                return SubReturn((object) new Closure(First(this.args), Rest(this.args), this.Env));
+                                case "lambda":
+                                    // Evaluate a lambda by creating a closure.
+                                    return SubReturn(new Closure(First(this.args), Rest(this.args), this.Env));
 
-                            case "macro":
-                                // Evaluate a macro by creating a macro.
-                                return SubReturn((object) new Macro(First(this.args), Rest(this.args), this.Env));
-                        }
+                                case "macro":
+                                    // Evaluate a macro by creating a macro.
+                                    return SubReturn(new Macro(First(this.args), Rest(this.args), this.Env));
+                            }
 
-                        // If we get here, it wasn't one of the special forms.  
-                        // So we need to evaluate the first item (the function) in preparation for
-                        //    doing a procedure call.
-                        Pc = PcMiddle;
-                        return CallEval(this.fn);
+                            // If we get here, it wasn't one of the special forms.  
+                            // So we need to evaluate the first item (the function) in preparation for
+                            //    doing a procedure call.
+                            return GoToStep(PC.Step1, CallEval(this.fn));
 
-                    case PcMiddle:
-                        // Come here after evaluating fn
-                        // make sure we don't assigne expr, since we need it intact below
-                        this.fn = ReturnedExpr;
+                        case PC.Step1:
+                            // Come here after evaluating fn
+                            // make sure we don't assigne expr, since we need it intact below
+                            this.fn = ReturnedExpr;
 
-                        // If the function is a macro, expand it and then continue.
-                        if (this.fn is Macro)
-                        {
-                            Pc = PcLoop;
-                            return CallExpand(this.args, (Macro)this.fn);
-                        }
+                            // If the function is a macro, expand it and then continue.
+                            if (this.fn is Macro)
+                            {
+                                return GoToStep(PC.Step2, CallExpand(this.args, (Macro)this.fn));
+                            }
 
-                        // If the function is a closure, then create a new environment consisting of
-                        //   1 the closure param list
-                        //   2 arguments evaluated in the original environment
-                        //   3 the closure's environment
-                        // Then continue evaluating the closure body in this new environment
-                        if (this.fn is Closure)
-                        {
-                            // CLOSURE CALL -- capture the environment and continue with the body
-                            Pc = PcLoop;
-                            return CallClosure(this.args, (Closure)this.fn);
-                        }
+                            // If the function is a closure, then create a new environment consisting of
+                            //   1 the closure param list
+                            //   2 arguments evaluated in the original environment
+                            //   3 the closure's environment
+                            // Then continue evaluating the closure body in this new environment
+                            if (this.fn is Closure)
+                            {
+                                // CLOSURE CALL -- capture the environment and continue with the body
+                                return GoToStep(PC.Step2, CallClosure(this.args, (Closure)this.fn));
+                            }
 
-                        // This is a procedure call.
-                        // In any other case, the function is a primitive or a user-defined function.
-                        // Evaluate the arguments in the environment, then apply the function 
-                        //    to the arguments.
-                        Pc = PcReturn;
-                        return CallApplyProc(this.args, this.fn);
+                            // This is a procedure call.
+                            // In any other case, the function is a primitive or a user-defined function.
+                            // Evaluate the arguments in the environment, then apply the function 
+                            //    to the arguments.
+                            return GoToStep(PC.Step3, CallApplyProc(this.args, this.fn));
 
-                    case PcLoop:
-                        // Loop: copy results of return to Expr/Env and evaluate again
-                        this.Expr = this.ReturnedExpr;
-                        this.Env = this.ReturnedEnv;
-                        Pc = PcBegin;
-                        return this;
+                        case PC.Step2:
+                            // Loop: copy results of return to Expr/Env and evaluate again
+                            this.Expr = this.ReturnedExpr;
+                            this.Env = this.ReturnedEnv;
+                            Pc = PC.Initial;
+                            continue;
 
-                    case PcReturn:
-                        // Assign return value and return to caller.
-                        return SubReturn(this.ReturnedExpr, this.ReturnedEnv);
+                        case PC.Step3:
+                            // Assign return value and return to caller.
+                            return SubReturn(this.ReturnedExpr, this.ReturnedEnv);
+                    }
+
+                    return EvalError("EvaluatorMain: program counter error");
                 }
-
-                return EvalError("EvaluatorMain: program counter error");
             }
         }
     }

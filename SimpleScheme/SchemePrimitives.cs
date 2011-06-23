@@ -1,5 +1,5 @@
 ﻿// <copyright file="SchemePrimitives.cs" company="Charles Hayden">
-// Copyright © 2008 by Charles Hayden.
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
@@ -126,9 +126,9 @@ namespace SimpleScheme
             `(,make-promise (lambda () ,exp))))";
 
         /// <summary>
-        /// Extensions
+        /// Extensions defined in scheme
         /// </summary>
-        public static string Extensions =
+        public const string Extensions =
          @"(define time
               (macro (exp . rest) `(time-call (lambda () ,exp) . ,rest)))";
     }
