@@ -24,7 +24,7 @@ namespace SimpleScheme
         /// <param name="step">The continuation to return to when applied.</param>
         private Continuation(Stepper step)
         {
-            this.step = step.CallerCaller;
+            this.step = step.Caller;
         }
         #endregion
 
@@ -54,9 +54,10 @@ namespace SimpleScheme
         /// The environment in effect at that time is also restored.
         /// </summary>
         /// <param name="args">The value to return.</param>
+        /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
             this.Value = First(args);
             return Stepper.TransferToStep(this.step, First(args), this.step.Env);

@@ -151,7 +151,7 @@ namespace SimpleScheme
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(Rest(this.clause), this.Caller.Env, this.Caller);
+            return EvaluateSequence.Call(Rest(this.clause), this.Env, this.Caller);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute (the return).</returns>
         private Stepper ApplyRecipientStep()
         {
-            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Caller.Env, this.Caller);
+            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Env, this.Caller);
         }
         #endregion
     }

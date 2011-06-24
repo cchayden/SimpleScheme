@@ -118,7 +118,7 @@ namespace SimpleScheme
             }
 
             this.ReplaceEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);
-            return this.f.ApplyWithCurrentEnv(ContinueHere(this.ReturnStep));
+            return this.f.ApplyWithtEnv(this.Env, this.Caller);
         }
         #endregion
     }

@@ -152,8 +152,8 @@ namespace SimpleScheme
         /// <returns>The next step, which tests the result.</returns>
         private Stepper TestStep()
         {
-            this.ReplaceEnvironment(this.vars, ReturnedExpr, this.CallerEnv);
-            return this.testProc.ApplyWithCurrentEnv(ContinueHere(this.IterateStep));
+            this.ReplaceEnvironment(this.vars, ReturnedExpr, this.Env);
+            return this.testProc.ApplyWithtEnv(this.Env, ContinueHere(this.IterateStep));
         }
 
         /// <summary>

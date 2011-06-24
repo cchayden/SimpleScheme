@@ -146,7 +146,7 @@ namespace SimpleScheme
             }
 
             Procedure fun = Closure.New(this.formals, MakeList(First(this.inits)), this.Env);
-            return fun.Apply(this.vals, ContinueHere(this.BindVarToInit));
+            return fun.Apply(this.vals, this.Env, ContinueHere(this.BindVarToInit));
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace SimpleScheme
         {
             // apply the fun to the vals
             Procedure fun = Closure.New(this.formals, this.body, this.Env);
-            return fun.Apply(this.vals, this.Caller);
+            return fun.Apply(this.vals, this.Caller.Env, this.Caller);
         }
         #endregion
     }

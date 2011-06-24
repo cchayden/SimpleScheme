@@ -133,7 +133,7 @@ namespace SimpleScheme
 
             this.vals = new System.Collections.Generic.List<Obj>(n);
 
-            this.ReplaceEnvironment(this.formals, initVals, this.CallerEnv);
+            this.ReplaceEnvironment(this.formals, initVals, this.Env);
             return ContinueHere(this.EvalInit);
         }
 
@@ -149,7 +149,7 @@ namespace SimpleScheme
             }
 
             Closure fun = Closure.New(this.formals, MakeList(First(this.inits)), this.Env);  
-            return fun.ApplyWithCurrentEnv(ContinueHere(this.BindVarToInit));
+            return fun.ApplyWithtEnv(this.Env, ContinueHere(this.BindVarToInit));
         }
 
         /// <summary>
@@ -183,7 +183,7 @@ namespace SimpleScheme
 
             // apply the fun to the vals and return
             Closure fun = Closure.New(this.formals, this.body, this.Env);
-            return fun.ApplyWithCurrentEnv(ContinueReturn());
+            return fun.ApplyWithtEnv(this.Env, this.Caller);
         }
         #endregion
     }

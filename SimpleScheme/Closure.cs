@@ -67,11 +67,13 @@ namespace SimpleScheme
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
+        /// Creates a new environment, linked to the one given (which should be the lexical parent).
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
+        /// <param name="env">The base environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
             return EvaluateSequence.Call(this.Body, Environment.New(this.FormalParameters, args, this.Env), caller);
         }
@@ -79,13 +81,14 @@ namespace SimpleScheme
         /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
-        /// Uses environment of the caller rather than creating a new one.
+        /// Uses the given environment rather than creating a new one.
         /// </summary>
+        /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        internal Stepper ApplyWithCurrentEnv(Stepper caller)
+        internal Stepper ApplyWithtEnv(Environment env, Stepper caller)
         {
-            return EvaluateSequence.Call(this.Body, caller.Env, caller);
+            return EvaluateSequence.Call(this.Body, env, caller);
         }
 
         /// <summary>

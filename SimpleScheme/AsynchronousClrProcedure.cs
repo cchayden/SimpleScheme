@@ -84,9 +84,10 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
+        /// <param name="env">The environment for the application.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(Obj args, Stepper caller)
+        internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
             Obj target;
             Obj[] argArray;

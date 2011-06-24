@@ -70,7 +70,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Stepper Step1()
         {
-            return Procedure.Proc(First(Expr)).Apply(List.Empty, ContinueHere(this.Step2));
+            return Procedure.Proc(First(Expr)).Apply(List.Empty, this.Env, ContinueHere(this.Step2));
         }
         #endregion
     }

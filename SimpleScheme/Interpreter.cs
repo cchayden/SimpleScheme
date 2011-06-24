@@ -44,11 +44,10 @@ namespace SimpleScheme
         /// <param name="writer">The output writer.</param>
         public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
-            this.halted = new EvaluatorBase("halted");
             this.Trace = false;
             this.Count = false;
-            this.Input = InputPort.New(reader);
-            this.Output = OutputPort.New(writer);
+            this.Input = InputPort.New(reader ?? Console.In);
+            this.Output = OutputPort.New(writer ?? Console.Out);
             if (primEnvironment == null)
             {
                 primEnvironment = Environment.NewPrimitive();
@@ -57,6 +56,7 @@ namespace SimpleScheme
 
             this.Counters = new Counter();
             this.GlobalEnvironment = Environment.NewGlobal(this, primEnvironment);
+            this.halted = new EvaluatorBase("halted", this.GlobalEnvironment, null);
 
             try
             {
@@ -89,28 +89,7 @@ namespace SimpleScheme
         /// <param name="primEnvironment">Environment containing the primitives (can be null).</param>
         /// <param name="files">The files to read.</param>
         public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files)
-            : this(loadStandardMacros, primEnvironment, files, Console.In, Console.Out)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Set up for tests, with standard macros and no files.
-        /// </summary>
-        /// <param name="name">The evaluator name.</param>
-        public Interpreter(string name)
-            : this(true, null, null)
-        {
-            this.halted = new EvaluatorBase(name);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Read a set of files initially, then do interactive input.
-        /// </summary>
-        /// <param name="files">The files to read.</param>
-        public Interpreter(IEnumerable<string> files)
-            : this(true, null, files, Console.In, Console.Out)
+            : this(loadStandardMacros, primEnvironment, files, null, null)
         {
         }
 
@@ -126,6 +105,25 @@ namespace SimpleScheme
         /// <param name="writer">The output writer.</param>
         public Interpreter(IEnumerable<string> files, TextReader reader, TextWriter writer)
             : this(true, null, files, reader, writer)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Read a set of files initially, then do interactive input.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
+        public Interpreter(IEnumerable<string> files)
+            : this(true, null, files, null, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Set up for tests, with standard macros and no files.
+        /// </summary>
+        public Interpreter()
+            : this(true, null, null)
         {
         }
         #endregion

@@ -97,14 +97,6 @@ namespace SimpleScheme
         /// </summary>
         internal Environment ReturnedEnv { get; private set; }
 
-        /// <summary>
-        /// Gets the environment of the caller.
-        /// </summary>
-        internal Environment CallerEnv
-        {
-            get { return this.caller.Env; }
-        }
-
         internal Stepper Caller
         {
             get { return this.caller; }
@@ -220,27 +212,6 @@ namespace SimpleScheme
 
         #region Protected Methods
         /// <summary>
-        /// Assign PC and return the current stepper.
-        /// </summary>
-        /// <param name="nextStep">The new PC value</param>
-        /// <returns>The next step to take.</returns>
-        protected Stepper ContinueHere(StepperFunction nextStep)
-        {
-            this.pc = nextStep;
-            return this;
-        }
-
-        /// <summary>
-        /// Assign PC to be the return step;
-        /// </summary>
-        /// <returns>The next step to take.</returns>
-        protected Stepper ContinueReturn()
-        {
-            this.pc = this.ReturnStep;
-            return this;
-        }
-
-        /// <summary>
         /// Create a new environment and replace the current one with it.
         /// </summary>
         /// <param name="formals">The environment variable names.</param>
@@ -252,9 +223,19 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Assign PC and return the current stepper.
+        /// </summary>
+        /// <param name="nextStep">The new PC value</param>
+        /// <returns>The next step to take.</returns>
+        protected Stepper ContinueHere(StepperFunction nextStep)
+        {
+            this.pc = nextStep;
+            return this;
+        }
+
+        /// <summary>
         /// Return fram an evaluator.
         /// Assign the return value and return the caller task to resume.
-        /// Set pc to catch errors.
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
@@ -268,24 +249,12 @@ namespace SimpleScheme
 
         /// <summary>
         /// Return fram an evaluator, with the default environment
-        /// Set pc to catch errors.
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <returns>The next step, which is in the caller.</returns>
         protected Stepper ReturnFromStep(Obj expr)
         {
             this.caller.ReturnedExpr = expr;
-            return this.caller;
-        }
-
-        /// <summary>
-        /// Return the final result.
-        /// This exists as a separate function so that it can be used as a StepperFunction.
-        /// </summary>
-        /// <returns>The next step, which is in the caller.</returns>
-        protected Stepper ReturnStep()
-        {
-            this.caller.ReturnedExpr = this.ReturnedExpr;
             return this.caller;
         }
 

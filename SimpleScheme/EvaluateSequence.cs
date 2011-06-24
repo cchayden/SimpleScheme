@@ -66,19 +66,6 @@ namespace SimpleScheme
         {
             return new EvaluateSequence(expr, env, caller);
         }
-
-#if FALSE
-        /// <summary>
-        /// Call the sequence evaluator.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>The sequence evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
-        {
-            return new EvaluateSequence(expr, caller.Env, caller);
-        }
-#endif
         #endregion
 
         #region Private Methods
@@ -90,10 +77,6 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalExprStep()
         {
-#if OLD
-            var nextStep = Rest(this.expressions) == List.Empty ? (StepperFunction)this.ReturnStep : this.LoopStep;
-            return EvaluateExpression.Call(First(this.expressions), ContinueHere(nextStep));
-#else
             if (Rest(this.expressions) == List.Empty)
             {
                 // On the last expr in the sequence, return directly to the caller, but use
@@ -101,7 +84,6 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(this.expressions), this.Env, this.Caller);
             }
             return EvaluateExpression.Call(First(this.expressions), this.Env, ContinueHere(this.LoopStep));
-#endif
         }
 
         /// <summary>

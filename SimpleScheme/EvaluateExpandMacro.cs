@@ -76,7 +76,7 @@ namespace SimpleScheme
         /// <returns>The first step to evaluate to macro.</returns>
         private Stepper InitialStep()
         {
-            return this.fn.Apply(Expr, ContinueHere(this.ExpandStep));
+            return this.fn.Apply(Expr, this.Env, ContinueHere(this.ExpandStep));
         }
 
         /// <summary>

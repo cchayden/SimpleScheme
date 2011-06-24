@@ -38,7 +38,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.interpreter = new Interpreter("test");
+            this.interpreter = new Interpreter();
         }
 
         /// <summary>

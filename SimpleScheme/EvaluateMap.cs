@@ -140,7 +140,7 @@ namespace SimpleScheme
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return this.proc.Apply(MapFun(First, MakeList(this.lists)), ContinueHere(this.CollectAndLoopStep));
+                return this.proc.Apply(MapFun(First, MakeList(this.lists)), this.Env, ContinueHere(this.CollectAndLoopStep));
             }
 
             // if we are done, just return the result minus the dummy entry

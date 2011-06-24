@@ -164,6 +164,11 @@ namespace SimpleScheme
                 // Evaluate a symbol by looking it up in the environment.
                 // It should correspond to a variable name, for which there 
                 //    is a corresponding value.
+                if (env == null)
+                {
+                    return ErrorHandlers.EvalError("EvaluateExpression: bad environment");
+                }
+
                 return caller.ContinueStep(env.Lookup((string)expr));
             }
 
@@ -179,19 +184,6 @@ namespace SimpleScheme
             // Break apart and evaluate the fn and args
             return Call(First(expr), Rest(expr), env, caller);
         }
-
-#if FALSE
-        /// <summary>
-        /// Calls the main evaluator.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>The evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
-        {
-            return Call(expr, caller.Env, caller);
-        }
-#endif
         #endregion
 
         #region Private Static Methods
@@ -336,33 +328,33 @@ namespace SimpleScheme
                     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                    return EvaluateCond.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateCond.Call(this.args, this.Env, this.Caller);
 
                 case "let":
                     //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLet.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateLet.Call(this.args, this.Env, this.Caller);
 
                 case "let*":
                     //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetStar.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateLetStar.Call(this.args, this.Env, this.Caller);
 
                 case "letrec":
                     //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetRec.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateLetRec.Call(this.args, this.Env, this.Caller);
 
                 case "do":
                     //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                     ////                           ...)
                     ////                           (<test> <expression> ...)
                     ////                         <command> ...)</r4rs>
-                    return EvaluateDo.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateDo.Call(this.args, this.Env, this.Caller);
 
                 case "time":
                     return EvaluateTime.Call(this.args, this.Env, this.Caller);

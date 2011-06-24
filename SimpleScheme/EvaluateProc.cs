@@ -1,4 +1,5 @@
-﻿// <copyright file="EvaluateProc.cs" company="Charles Hayden">
+﻿#define OLD
+// <copyright file="EvaluateProc.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -89,7 +90,7 @@ namespace SimpleScheme
         /// <returns>The result, or the next step to obtain it.</returns>
         protected Stepper ApplyStep()
         {
-            return this.fn.Apply(ReturnedExpr, ContinueReturn());
+            return this.fn.Apply(ReturnedExpr, this.Env, this.Caller);
         }
         #endregion
 

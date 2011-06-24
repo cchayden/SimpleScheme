@@ -95,7 +95,7 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             this.port = OpenInputFile(First(Expr));
-            return Procedure.Proc(Second(Expr)).Apply(MakeList(this.port), ContinueHere(this.CloseStep));
+            return Procedure.Proc(Second(Expr)).Apply(MakeList(this.port), this.Env, ContinueHere(this.CloseStep));
         }
 
         /// <summary>
