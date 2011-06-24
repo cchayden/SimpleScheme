@@ -79,10 +79,13 @@ namespace SimpleScheme
         {
             if (Rest(this.expressions) == List.Empty)
             {
-                // On the last expr in the sequence, return directly to the caller, but use
-                //  the current env.  This is to achieve tail recursion.
+                // On the last expr in the sequence, return directly to the caller.
+                // This is *crucial* for tail recursion.
+                // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
+                //   EvaluateSequence and each environment will be stacked up.  
                 return EvaluateExpression.Call(First(this.expressions), this.Env, this.Caller);
             }
+
             return EvaluateExpression.Call(First(this.expressions), this.Env, ContinueHere(this.LoopStep));
         }
 

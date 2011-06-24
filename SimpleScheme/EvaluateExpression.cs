@@ -30,11 +30,6 @@ namespace SimpleScheme
         private readonly bool trace;
 
         /// <summary>
-        /// A function to be evaluated (primitive, proc, macro, or closure).
-        /// </summary>
-        private readonly Obj fn;
-
-        /// <summary>
         /// The arguments to the function.
         /// </summary>
         private readonly Obj args;
@@ -43,17 +38,16 @@ namespace SimpleScheme
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateExpression class.
-        /// If expr is needed in the base class, it can be supplied by
-        ///   Cons(fn, args).
+        /// The Expr is used to store the fn to evaluate.  
+        /// The real expression being evaluated is Cons(fn, args).
         /// </summary>
         /// <param name="fn">The function to evaluate.</param>
         /// <param name="args">The function args to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpression(Obj fn, Obj args, Environment env, Stepper caller)
-            : base(null, env, caller)
+            : base(fn, env, caller)
         {
-            this.fn = fn;
             this.args = args;
 
             ContinueHere(this.InitialStep);
@@ -271,7 +265,7 @@ namespace SimpleScheme
         {
             if (this.trace)
             {
-                Console.Out.WriteLine("{0} {1}", this.fn, this.args);
+                Console.Out.WriteLine("{0} {1}", this.Expr, this.args);
             }
 
             // defined as macro for now
@@ -279,7 +273,7 @@ namespace SimpleScheme
             //// <r4rs section="4.2.5">(delay <expression>)</r4rs>
 
             // Look for one of the special forms. 
-            switch (this.fn as string)
+            switch (this.Expr as string)
             {
                 case "begin":
                     // Evaluate begin by evaluating all the items in order, 
@@ -364,7 +358,7 @@ namespace SimpleScheme
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
             //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            return Call(this.fn, this.Env, ContinueHere(this.ApplyProcStep));
+            return Call(this.Expr, this.Env, ContinueHere(this.ApplyProcStep));
         }
 
         /// <summary>

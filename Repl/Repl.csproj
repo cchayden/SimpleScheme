@@ -73,6 +73,7 @@
     <None Include="app.config" />
     <None Include="async.ss" />
     <None Include="couch.ss" />
+    <None Include="count-down.ss" />
     <None Include="do.ss" />
     <None Include="factor.ss" />
     <None Include="fib.ss" />
