@@ -75,9 +75,10 @@ namespace SimpleScheme
         /// Create a list evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // first check for degenerate cases
             if (expr == List.Empty)
@@ -91,7 +92,7 @@ namespace SimpleScheme
                 return caller.ContinueStep(Undefined.Instance);
             }
 
-            return new EvaluateList(expr, caller.Env, caller);
+            return new EvaluateList(expr, env, caller);
         }
         #endregion
 
@@ -103,7 +104,7 @@ namespace SimpleScheme
         private Stepper EvalExprStep()
         {
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(First(this.objs), ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(First(this.objs), this.Env, ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace SimpleScheme
             if (this.objs is Pair)
             {
                 // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(First(this.objs), this);
+                return EvaluateExpression.Call(First(this.objs), this.Env, this);
             }
 
             // We are done now, return

@@ -564,8 +564,8 @@ namespace Tests
             this.Run("#f", "symbol?", "(symbol? '())");
             this.Run("#f", "symbol?", "(symbol? #f)");
             this.ReadAndEvaluate(@"(define char-standard-case char-upcase)
-                                      (if (string=? (symbol->string 'A) ""a"")
-                                        (set! char-standard-case char-downcase))");
+                                   (if (string=? (symbol->string 'A) ""a"")
+                                           (set! char-standard-case char-downcase))");
             this.Run("#t", "standard-case", "(string=? (symbol->string 'a) (symbol->string 'A))");
             this.Run("#t", "standard-case", @"
                              (or (string=? (symbol->string 'a) ""A"")

@@ -1,4 +1,5 @@
-﻿// <copyright file="EvaluateExpression.cs" company="Charles Hayden">
+﻿#define OLD
+// <copyright file="EvaluateExpression.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -179,6 +180,7 @@ namespace SimpleScheme
             return Call(First(expr), Rest(expr), env, caller);
         }
 
+#if FALSE
         /// <summary>
         /// Calls the main evaluator.
         /// </summary>
@@ -189,6 +191,7 @@ namespace SimpleScheme
         {
             return Call(expr, caller.Env, caller);
         }
+#endif
         #endregion
 
         #region Private Static Methods
@@ -291,7 +294,7 @@ namespace SimpleScheme
                     //   and returning the last.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateSequence.Call(this.args, ContinueReturn());
+                    return EvaluateSequence.Call(this.args, this.Env, ContinueReturn());
 
                 case "define":
                     // Define is a shortcut for lambda.
@@ -299,77 +302,77 @@ namespace SimpleScheme
                     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                    return EvaluateDefine.Call(this.args, ContinueReturn());
+                    return EvaluateDefine.Call(this.args, this.Env, this.Caller);
 
                 case "set!":
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
                     //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                    return EvaluateSet.Call(this.args, ContinueHere(this.ReturnStep));
+                    return EvaluateSet.Call(this.args, this.Env, ContinueHere(this.ReturnStep));
 
                 case "if":
                     // Eval an if expression by evaluating the first clause, 
                     //    and then returning either the second or third.
                     //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-                    return EvaluateIf.Call(this.args, ContinueReturn());
+                    return EvaluateIf.Call(this.args, this.Env, this.Caller);
 
                 case "case":
                     //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                     //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-                    return EvaluateCase.Call(this.args, ContinueReturn());
+                    return EvaluateCase.Call(this.args, this.Env, this.Caller);
 
                 case "or":
                     //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-                    return EvaluateOr.Call(this.args, ContinueReturn());
+                    return EvaluateOr.Call(this.args, this.Env, this.Caller);
 
                 case "and":
                     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-                    return EvaluateAnd.Call(this.args, ContinueReturn());
+                    return EvaluateAnd.Call(this.args, this.Env, this.Caller);
 
                 case "cond":
                     //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                    return EvaluateCond.Call(this.args, ContinueReturn());
+                    return EvaluateCond.Call(this.args, this.Env, ContinueReturn());
 
                 case "let":
                     //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLet.Call(this.args, ContinueReturn());
+                    return EvaluateLet.Call(this.args, this.Env, ContinueReturn());
 
                 case "let*":
                     //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetStar.Call(this.args, ContinueReturn());
+                    return EvaluateLetStar.Call(this.args, this.Env, ContinueReturn());
 
                 case "letrec":
                     //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetRec.Call(this.args, ContinueReturn());
+                    return EvaluateLetRec.Call(this.args, this.Env, ContinueReturn());
 
                 case "do":
                     //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                     ////                           ...)
                     ////                           (<test> <expression> ...)
                     ////                         <command> ...)</r4rs>
-                    return EvaluateDo.Call(this.args, ContinueReturn());
+                    return EvaluateDo.Call(this.args, this.Env, ContinueReturn());
 
                 case "time":
-                    return EvaluateTime.Call(this.args, ContinueReturn());
+                    return EvaluateTime.Call(this.args, this.Env, ContinueReturn());
             }
 
             // If we get here, it wasn't one of the special forms.  
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
             //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            return Call(this.fn, ContinueHere(this.ApplyProcStep));
+            return Call(this.fn, this.Env, ContinueHere(this.ApplyProcStep));
         }
 
         /// <summary>

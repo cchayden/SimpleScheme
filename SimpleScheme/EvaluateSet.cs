@@ -53,11 +53,12 @@ namespace SimpleScheme
         /// Calls a set evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateSet(expr, caller.Env, caller);
+            return new EvaluateSet(expr, env, caller);
         }
         #endregion
 
@@ -68,7 +69,7 @@ namespace SimpleScheme
         /// <returns>Code to evaluate the second expression.</returns>
         private Stepper InitialStep()
         {
-            return EvaluateExpression.Call(Second(Expr), ContinueHere(this.SetStep));
+            return EvaluateExpression.Call(Second(Expr), this.Env, ContinueHere(this.SetStep));
         }
 
         /// <summary>

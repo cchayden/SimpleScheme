@@ -97,11 +97,12 @@ namespace SimpleScheme
         /// <param name="proc">The map proc.</param>
         /// <param name="expr">The map list to traverse.</param>
         /// <param name="returnResult">If true, return the result of the map.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The step to execute.</returns>
-        internal static Stepper Call(Procedure proc, Obj expr, bool returnResult, Stepper caller)
+        internal static Stepper Call(Procedure proc, Obj expr, bool returnResult, Environment env, Stepper caller)
         {
-            return new EvaluateMap(proc, expr, caller.Env, returnResult, caller);
+            return new EvaluateMap(proc, expr, env, returnResult, caller);
         }
         #endregion
 

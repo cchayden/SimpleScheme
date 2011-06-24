@@ -67,6 +67,7 @@ namespace SimpleScheme
             return new EvaluateSequence(expr, env, caller);
         }
 
+#if FALSE
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
@@ -77,6 +78,7 @@ namespace SimpleScheme
         {
             return new EvaluateSequence(expr, caller.Env, caller);
         }
+#endif
         #endregion
 
         #region Private Methods
@@ -98,7 +100,7 @@ namespace SimpleScheme
                 //  the current env.  This is to achieve tail recursion.
                 return EvaluateExpression.Call(First(this.expressions), this.Env, this.Caller);
             }
-            return EvaluateExpression.Call(First(this.expressions), ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(First(this.expressions), this.Env, ContinueHere(this.LoopStep));
 #endif
         }
 

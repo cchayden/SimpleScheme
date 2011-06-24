@@ -82,11 +82,12 @@ namespace SimpleScheme
         /// Call letrec evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateLetRec(expr, caller.Env, caller);
+            return new EvaluateLetRec(expr, env, caller);
         }
         #endregion
 

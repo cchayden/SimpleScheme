@@ -52,11 +52,12 @@ namespace SimpleScheme
         /// Call a timed evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateTimeCall(expr, caller.Env, caller);
+            return new EvaluateTimeCall(expr, env, caller);
         }
         #endregion
 

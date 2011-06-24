@@ -60,11 +60,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fn">The function to apply.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        internal static Stepper Call(Procedure fn, Obj expr, Stepper caller)
+        internal static Stepper Call(Procedure fn, Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateProc(fn, expr, caller.Env, caller);
+            return new EvaluateProc(fn, expr, env, caller);
         }
         #endregion
 
@@ -99,7 +100,7 @@ namespace SimpleScheme
         /// <returns>Next action to evaluate the args.</returns>
         private Stepper EvalArgsStep()
         {
-            return EvaluateList.Call(Expr, ContinueHere(this.ApplyStep));
+            return EvaluateList.Call(Expr, this.Env, ContinueHere(this.ApplyStep));
         }
         #endregion
     }

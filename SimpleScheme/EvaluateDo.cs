@@ -82,11 +82,12 @@ namespace SimpleScheme
         /// Call let evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateDo(expr, caller.Env, caller);
+            return new EvaluateDo(expr, env, caller);
         }
         #endregion
 
@@ -141,7 +142,7 @@ namespace SimpleScheme
             this.testProc = Closure.New(this.vars, MakeList(test), this.Env);
 
             // First evaluare inits.
-            return EvaluateList.Call(inits, ContinueHere(this.TestStep));
+            return EvaluateList.Call(inits, this.Env, ContinueHere(this.TestStep));
         }
 
         /// <summary>
@@ -173,13 +174,13 @@ namespace SimpleScheme
                     return ReturnUndefined();
                 }
 
-                return EvaluateSequence.Call(this.exprs, ContinueReturn());
+                return EvaluateSequence.Call(this.exprs, this.Env, ContinueReturn());
             }
             
             // test is false
             // evaluate the steps in the environment of the vars
             // bind to fresh copies of the vars
-            return EvaluateList.Call(this.commands, ContinueHere(this.LoopStep));
+            return EvaluateList.Call(this.commands, this.Env, ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -188,7 +189,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper LoopStep()
         {
-            return EvaluateList.Call(this.steps, ContinueHere(this.TestStep));
+            return EvaluateList.Call(this.steps, this.Env, ContinueHere(this.TestStep));
         }
         #endregion
     }

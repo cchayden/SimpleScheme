@@ -56,11 +56,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fn">The function to apply.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        internal static new Stepper Call(Procedure fn, Obj expr, Stepper caller)
+        internal static new Stepper Call(Procedure fn, Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateProcQuoted(fn, expr, caller.Env, caller);
+            return new EvaluateProcQuoted(fn, expr, env, caller);
         }
         #endregion
     }

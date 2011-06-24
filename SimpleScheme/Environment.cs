@@ -170,7 +170,7 @@ namespace SimpleScheme
                         },
                    0, 
                    1)
-                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller), 1, 2);
+                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2);
         }
         #endregion
 

@@ -60,9 +60,10 @@ namespace SimpleScheme
         /// Create an and evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr == List.Empty)
@@ -70,7 +71,7 @@ namespace SimpleScheme
                 return caller.ContinueStep(SchemeBoolean.True);
             }
 
-            return new EvaluateAnd(expr, caller.Env, caller);
+            return new EvaluateAnd(expr, env, caller);
         }
         #endregion
 
@@ -87,7 +88,7 @@ namespace SimpleScheme
                 //  the current env.  This is to achieve tail recursion.
                 return EvaluateExpression.Call(First(this.tests), this.Env, this.Caller);
             }
-            return EvaluateExpression.Call(First(this.tests), ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(First(this.tests), this.Env, ContinueHere(this.LoopStep));
         }
 
         /// <summary>

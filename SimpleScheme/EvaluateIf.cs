@@ -56,11 +56,12 @@ namespace SimpleScheme
         /// Creates an if evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateIf(expr, caller.Env, caller);
+            return new EvaluateIf(expr, env, caller);
         }
         #endregion
 
@@ -71,7 +72,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private Stepper EvaluateTestStep()
         {
-            return EvaluateExpression.Call(First(Expr), ContinueHere(this.EvaluateAlternativeStep));
+            return EvaluateExpression.Call(First(Expr), this.Env, ContinueHere(this.EvaluateAlternativeStep));
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace SimpleScheme
         private Stepper EvaluateAlternativeStep()
         {
             Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
-            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.Caller);
+            return EvaluateExpression.Call(toEvaluate == List.Empty ? Undefined.Instance : toEvaluate, this.Env, this.Caller);
         }
         #endregion
     }

@@ -72,9 +72,10 @@ namespace SimpleScheme
         /// Calls a cond evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr == List.Empty)
@@ -82,7 +83,7 @@ namespace SimpleScheme
                 return caller.ContinueStep(SchemeBoolean.False);
             }
 
-            return new EvaluateCond(expr, caller.Env, caller);
+            return new EvaluateCond(expr, env, caller);
         }
         #endregion
 
@@ -102,7 +103,7 @@ namespace SimpleScheme
                 return ContinueHere(this.EvalConsequentStep);
             }
 
-            return EvaluateExpression.Call(First(this.clause), ContinueHere(this.TestClauseStep));
+            return EvaluateExpression.Call(First(this.clause), this.Env, ContinueHere(this.TestClauseStep));
         }
 
         /// <summary>
@@ -146,11 +147,11 @@ namespace SimpleScheme
             if (Second(this.clause) as string == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(Third(this.clause), ContinueHere(this.ApplyRecipientStep));
+                return EvaluateExpression.Call(Third(this.clause), this.Env, ContinueHere(this.ApplyRecipientStep));
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(Rest(this.clause), this.Caller);
+            return EvaluateSequence.Call(Rest(this.clause), this.Caller.Env, this.Caller);
         }
 
         /// <summary>
@@ -159,7 +160,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute (the return).</returns>
         private Stepper ApplyRecipientStep()
         {
-            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Caller);
+            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Caller.Env, this.Caller);
         }
         #endregion
     }

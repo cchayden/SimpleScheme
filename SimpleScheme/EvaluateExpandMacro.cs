@@ -60,11 +60,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fn">The macro to expand.</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        internal static Stepper Call(Macro fn, Obj expr, Stepper caller)
+        internal static Stepper Call(Macro fn, Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateExpandMacro(fn, expr, caller.Env, caller);
+            return new EvaluateExpandMacro(fn, expr, env, caller);
         }
         #endregion
 
@@ -84,7 +85,7 @@ namespace SimpleScheme
         /// <returns>Return to caller with the expanded macro.</returns>
         private Stepper ExpandStep()
         {
-            return EvaluateExpression.Call(ReturnedExpr, ContinueReturn());
+            return EvaluateExpression.Call(ReturnedExpr, this.Env, ContinueReturn());
         }
         #endregion
     }

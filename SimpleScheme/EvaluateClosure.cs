@@ -67,11 +67,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="f">The closure to evaluate</param>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        internal static Stepper Call(Closure f, Obj expr, Stepper caller)
+        internal static Stepper Call(Closure f, Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateClosure(f, expr, caller.Env, caller);
+            return new EvaluateClosure(f, expr, env, caller);
         }
         #endregion
 
@@ -100,7 +101,7 @@ namespace SimpleScheme
         /// <returns>The result of evaluating the argument list.</returns>
         private Stepper EvaluateArgsStep()
         {
-            return EvaluateList.Call(Expr, ContinueHere(this.EvalBodyInEnvironmentStep));
+            return EvaluateList.Call(Expr, this.Env, ContinueHere(this.EvalBodyInEnvironmentStep));
         }
 
         /// <summary>

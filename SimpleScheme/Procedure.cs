@@ -53,19 +53,19 @@ namespace SimpleScheme
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-current-continuation",
-                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller))), caller),
+                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller.Env, caller))), caller),
                     1)
                 .DefinePrimitive(
                     "call/cc",
-                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller))), caller),
+                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller.Env, caller))), caller),
                     1)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive("force", (args, caller) => Force(First(args), caller), 1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), false, caller), 1, MaxInt)
+                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), false, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), true, caller), 1, MaxInt)
+                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), true, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
                 .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(First(args) is Procedure), 1);
         }
@@ -135,7 +135,7 @@ namespace SimpleScheme
             // If the function is a macro, expand it and then continue.
             if (this is Macro)
             {
-                return EvaluateExpandMacro.Call((Macro)this, args, caller);
+                return EvaluateExpandMacro.Call((Macro)this, args, caller.Env, caller);
             }
 
             // If the function is a closure, then create a new environment consisting of
@@ -146,14 +146,14 @@ namespace SimpleScheme
             if (this is Closure)
             {
                 // CLOSURE CALL -- capture the environment and evaluate the body
-                return EvaluateClosure.Call((Closure)this, args, caller);
+                return EvaluateClosure.Call((Closure)this, args, caller.Env, caller);
             }
 
             // This is a procedure call.
             // In any other case, the function is a primitive, a continuation, or a ClrProcedure.
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
-            return EvaluateProc.Call(this, args, caller);
+            return EvaluateProc.Call(this, args, caller.Env, caller);
         }
         #endregion
     }

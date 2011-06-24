@@ -76,11 +76,12 @@ namespace SimpleScheme
         /// Creates a case evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The case evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateCase(expr, caller.Env, caller);
+            return new EvaluateCase(expr, env, caller);
         }
         #endregion
 
@@ -92,7 +93,7 @@ namespace SimpleScheme
         private Stepper EvaluateKeyStep()
         {
             this.clauses = Rest(Expr);
-            return EvaluateExpression.Call(First(Expr), ContinueHere(this.AssignKey));
+            return EvaluateExpression.Call(First(Expr), this.Env, ContinueHere(this.AssignKey));
         }
 
         /// <summary>
@@ -163,7 +164,7 @@ namespace SimpleScheme
             }
 
             // eval and return last expr
-            return EvaluateSequence.Call(this.exprList, this.Caller);
+            return EvaluateSequence.Call(this.exprList, this.Caller.Env, this.Caller);
         }
         #endregion
     }

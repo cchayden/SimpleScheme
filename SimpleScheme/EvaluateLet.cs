@@ -83,11 +83,12 @@ namespace SimpleScheme
         /// Call let evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateLet(expr, caller.Env, caller);
+            return new EvaluateLet(expr, env, caller);
         }
         #endregion
 
@@ -139,11 +140,11 @@ namespace SimpleScheme
             if (this.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(Closure.New(this.vars, this.body, this.Env), this.inits, this.Caller);
+                return EvaluateProc.Call(Closure.New(this.vars, this.body, this.Env), this.inits, this.Caller.Env, this.Caller);
             }
 
             // named let -- eval the inits in the outer environment
-            return EvaluateList.Call(this.inits, ContinueHere(this.ApplyNamedLet));
+            return EvaluateList.Call(this.inits, this.Env, ContinueHere(this.ApplyNamedLet));
         }
 
         /// <summary>
