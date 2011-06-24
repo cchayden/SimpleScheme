@@ -328,7 +328,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        ErrorHandlers.Error("Internal error: unrecognized number compare flag: " + op);
+                        ErrorHandlers.Error("Internal error: bad option to NumCompare: " + op);
                         break;
                 }
             }
@@ -402,7 +402,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        ErrorHandlers.Error("Internal error: unrecognized number compute flag: " + op);
+                        ErrorHandlers.Error("Internal error: bad option to NumCompute: " + op);
                         break;
                 }
 

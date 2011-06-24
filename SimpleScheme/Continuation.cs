@@ -28,11 +28,16 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Accessors
+        #region Public Methods
         /// <summary>
-        /// Gets the value to return as the result of executing the continuation.
+        /// Display the continuation as a string.  
+        /// Displays the body, as it has been processed by the reader.
         /// </summary>
-        internal Obj Value { get; private set; }
+        /// <returns>The string form of the continuation.</returns>
+        public override string ToString()
+        {
+            return string.Format("call-with-current-continuation {0}", this.step.Expr);
+        }
         #endregion
 
         #region Static Internal Methods
@@ -59,18 +64,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
-            this.Value = First(args);
             return Stepper.TransferToStep(this.step, First(args), this.step.Env);
-        }
-
-        /// <summary>
-        /// Display the continuation as a string.  
-        /// Displays the body, as it has been processed by the reader.
-        /// </summary>
-        /// <returns>The string form of the continuation.</returns>
-        public override string ToString()
-        {
-            return string.Format("call-with-current-continuation {0}", this.step.Expr);
         }
         #endregion
     }

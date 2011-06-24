@@ -108,13 +108,13 @@ namespace SimpleScheme
         {
             if (Expr == List.Empty)
             {
-                ErrorHandlers.Error("Let*: wrong number of arguments");
+                ErrorHandlers.Error("No arguments arguments for let*");
                 return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Let*: illegal arg list: " + Expr);
+                ErrorHandlers.Error("Bad arg list for let*: " + Expr);
                 return ReturnUndefined();
             }
 

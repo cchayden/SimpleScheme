@@ -185,23 +185,17 @@ namespace SimpleScheme
         /// If the obj is not a vector, return error.
         /// </summary>
         /// <param name="vector">The vector.</param>
-        /// <returns>The list, or undefined.</returns>
+        /// <returns>The vector as a list.</returns>
         private static Obj VectorToList(object vector)
         {
-            if (vector is Obj[])
+            Obj[] vec = Vec(vector);
+            Obj result = List.Empty;
+            for (int i = vec.Length - 1; i >= 0; i--)
             {
-                Obj[] vec = (Obj[])vector;
-                Obj result = List.Empty;
-                for (int i = vec.Length - 1; i >= 0; i--)
-                {
-                    result = Cons(vec[i], result);
-                }
-
-                return result;
+                result = Cons(vec[i], result);
             }
 
-            ErrorHandlers.Error("VectorToList: expected a vector, got: " + vector);
-            return List.Empty;
+            return result;
         }
 
         /// <summary>
@@ -212,19 +206,15 @@ namespace SimpleScheme
         /// <returns>Return value is unspecified.</returns>
         private static Obj VectorFill(Obj vector, object fill)
         {
-            if (vector is Obj[])
+            Obj[] vec = Vec(vector);
+            for (int i = 0; i < vec.Length; i++)
             {
-                Obj[] vec = (Obj[])vector;
-                for (int i = 0; i < vec.Length; i++)
-                {
-                    vec[i] = fill;
-                }
-
-                return Undefined.Instance;
+                vec[i] = fill;
             }
 
-            return ErrorHandlers.Error("VectorFill: expected a vector, got: " + vector);
+            return Undefined.Instance;
         }
+
         #endregion
     }
 }

@@ -38,22 +38,30 @@ namespace SimpleScheme
                 Type cls = ToClass(ClassName);
                 if (cls == null)
                 {
-                    ErrorHandlers.Error("Bad class: can't load class " + ClassName);
+                    ErrorHandlers.Error("Bad class: can't load: " + ClassName);
                     return;    // actually Error throws an exception
                 }
 
                 this.MethodInfo = cls.GetMethod("Begin" + this.MethodName, this.ArgClasses.ToArray());
+                if (this.MethodInfo == null)
+                {
+                    ErrorHandlers.Error("Can't get BeginXXX method: " + this.MethodName);
+                }
 
                 Type[] endClasses = { typeof(IAsyncResult) };
                 this.endMethodInfo = cls.GetMethod("End" + this.MethodName, endClasses);
+                if (this.endMethodInfo == null)
+                {
+                    ErrorHandlers.Error("Can't get EndXXX method: " + this.MethodName);
+                }
             }
             catch (TypeLoadException)
             {
-                ErrorHandlers.Error("Bad class, can't get method: " + this.Name);
+                ErrorHandlers.Error("Bad class: can't load: " + ClassName);
             }
             catch (MissingMethodException)
             {
-                ErrorHandlers.Error("Can't get method: " + this.Name);
+                ErrorHandlers.Error("Can't get method: " + ClassName + ":" + this.Name);
             }
         }
         #endregion

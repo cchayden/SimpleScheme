@@ -114,13 +114,13 @@ namespace SimpleScheme
         {
             if (Expr == List.Empty)
             {
-                ErrorHandlers.Error("Do: wrong number of arguments");
+                ErrorHandlers.Error("No body for do");
                 return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Do: illegal arg list: " + Expr);
+                ErrorHandlers.Error("Bad arg list for do: " + Expr);
                 return ReturnUndefined();
             }
 

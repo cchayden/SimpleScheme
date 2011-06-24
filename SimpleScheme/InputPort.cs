@@ -566,7 +566,7 @@ namespace SimpleScheme
                 }
                 catch (IOException ex)
                 {
-                    return ErrorHandlers.Error("IOException: " + ex);
+                    return ErrorHandlers.Error("IOException on close: " + ex);
                 }
             }
 

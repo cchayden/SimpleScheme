@@ -122,7 +122,7 @@ namespace SimpleScheme
 
             if (!(this.lists is Pair))
             {
-                ErrorHandlers.Error("Map: illegal arg list: " + this.lists);
+                ErrorHandlers.Error("Bad args for map: " + this.lists);
                 return ReturnUndefined();
             }
 

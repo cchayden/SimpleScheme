@@ -137,7 +137,7 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.Error("SetFirst: attempt to set-car of a non-Pair: " + SchemeString.AsString(x));
+            return ErrorHandlers.Error("Attempt to set-car! of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.Error("SetRest: attempt to set-cdr of a non-Pair: " + SchemeString.AsString(x));
+            return ErrorHandlers.Error("Attempt to set-cdr! of a non-Pair: " + SchemeString.AsString(x));
         }
 
         /// <summary>
@@ -313,7 +313,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        ErrorHandlers.Warn("Bad option to memberAssoc: " + eq);
+                        ErrorHandlers.Warn("Internal error: bad option to MemberAssoc: " + eq);
                         return SchemeBoolean.False;
                 }
 

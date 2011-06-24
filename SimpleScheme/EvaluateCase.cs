@@ -120,7 +120,7 @@ namespace SimpleScheme
                 Obj clause = First(this.clauses);
                 if (!(clause is Pair))
                 {
-                    return ErrorHandlers.EvalError("Case: bad syntax in case: " + clause);
+                    return ErrorHandlers.EvalError("Bad syntax in case: " + clause);
                 }
 
                 Obj data = First(clause);

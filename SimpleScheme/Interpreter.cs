@@ -357,7 +357,7 @@ namespace SimpleScheme
             }
             catch (IOException)
             {
-                return ErrorHandlers.Error("Load: can't load " + name);
+                return ErrorHandlers.Error("Can't load " + name);
             }
         }
 

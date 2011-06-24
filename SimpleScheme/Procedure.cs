@@ -85,7 +85,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return Proc(ErrorHandlers.Error("Not a procedure: " + SchemeString.AsString(x)));
+            return Proc(ErrorHandlers.Error("Expected a procedure, got: " + SchemeString.AsString(x)));
         }
 
         /// <summary>

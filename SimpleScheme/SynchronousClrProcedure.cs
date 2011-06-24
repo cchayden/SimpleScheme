@@ -29,24 +29,24 @@ namespace SimpleScheme
                 Type cls = ToClass(ClassName);
                 if (cls == null)
                 {
-                    ErrorHandlers.Error("Bad class: can't load class " + ClassName);
+                    ErrorHandlers.Error("Bad class: can't load " + ClassName);
                 }
                 else
                 {
                     this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
                     if (this.MethodInfo == null)
                     {
-                        ErrorHandlers.Error("Cant get method: " + this.MethodName);
+                        ErrorHandlers.Error("Can't get method: " + this.MethodName);
                     }
                 }
             }
             catch (TypeLoadException)
             {
-                ErrorHandlers.Error("Bad class, can't get method: " + this.Name);
+                ErrorHandlers.Error("Bad class, can't load: " + ClassName);
             }
             catch (MissingMethodException)
             {
-                ErrorHandlers.Error("Can't get method: " + this.Name);
+                ErrorHandlers.Error("Can't get method: " + ClassName + ":" + this.Name);
             }
         }
         #endregion

@@ -37,42 +37,36 @@ namespace SimpleScheme
         #region Constructors
         /// <summary>
         /// Initializes a new instance of the Environment class.
-        /// This is used to create the primitive environment.
-        /// </summary>
-        private Environment()
-        {
-            this.symbolTable = new SymbolTable(0);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Environment class.
         /// This is used to create the global environment.
         /// When we refer to "parent" we mean the enclosing lexical environment.
         /// </summary>
         /// <param name="interp">The interpreter.</param>
-        /// <param name="parent">The parent environment.</param>
-        private Environment(Interpreter interp, Environment parent)
+        /// <param name="lexicalParent">The lexical parent environment.</param>
+        private Environment(Interpreter interp, Environment lexicalParent)
         {
             this.Interp = interp;
-            this.Parent = parent;
+            this.LexicalParent = lexicalParent;
             this.symbolTable = new SymbolTable(0);
-            interp.IncrementCounter(counter);
+            if (interp != null)
+            {
+                interp.IncrementCounter(counter);
+            }
         }
 
         /// <summary>
         /// Initializes a new instance of the Environment class.
-        /// Start out with a set of variable bindings and a parent environment.
+        /// Start out with a set of variable bindings and a lexical parent environment.
         /// The initial variable bindings are the formal parameters and the corresponding argument values.
         /// </summary>
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
-        /// <param name="parent">The parent environment.</param>
-        private Environment(Obj formals, Obj vals, Environment parent)
+        /// <param name="lexicalParent">The lexical parent environment.</param>
+        private Environment(Obj formals, Obj vals, Environment lexicalParent)
         {
-            this.Parent = parent;
-            this.Interp = parent.Interp;
+            this.LexicalParent = lexicalParent;
+            this.Interp = lexicalParent.Interp;
             int count;
-            if (!NumberArgsOk(formals, vals, out count))
+            if (!CheckArgCount(formals, vals, out count))
             {
                 ErrorHandlers.Warn("Wrong number of arguments: expected " + formals + " got " + vals);
             }
@@ -86,15 +80,15 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the interpreter used to hold the global context.
         /// The bottom environment holds the interpreter, but each one copies from its
-        ///   parent, so that it can be accessed directly.
+        ///   lexical parent, so that it can be accessed directly.
         /// This field is written only in the constructor -- it is never modified.
         /// </summary>
         internal Interpreter Interp { get; private set; }
 
         /// <summary>
-        /// Gets the parent environment.
+        /// Gets the lexical parent environment.
         /// </summary>
-        internal Environment Parent { get; private set; }
+        internal Environment LexicalParent { get; private set; }
         #endregion
 
         #region Public Static Methods
@@ -105,35 +99,7 @@ namespace SimpleScheme
         /// <returns>The primitive environment.</returns>
         public static Environment NewPrimitive()
         {
-            return new Environment();
-        }
-
-        /// <summary>
-        /// Creates a new Environment.
-        /// This is used to create the global environment.
-        /// When we refer to "parent" we mean the enclosing lexical environment.
-        /// </summary>
-        /// <param name="interp">The interpreter.</param>
-        /// <param name="parent">The parent environment.</param>
-        /// <returns>The global environment.</returns>
-        internal static Environment NewGlobal(Interpreter interp, Environment parent)
-        {
-            return new Environment(interp, parent);
-        }
-
-        /// <summary>
-        /// Create a new Environment.
-        /// This is for where there is a new binding context.
-        /// Start out with a set of variable bindings and a parent environment.
-        /// The initial variable bindings are the formal parameters and the corresponding argument values.
-        /// </summary>
-        /// <param name="formals">A list of variable names.</param>
-        /// <param name="vals">The values for these variables.</param>
-        /// <param name="parent">The parent environment.</param>
-        /// <returns>The new environment.</returns>
-        internal static Environment New(Obj formals, Obj vals, Environment parent)
-        {
-            return new Environment(formals, vals, parent);
+            return new Environment(null, null);
         }
 
         /// <summary>
@@ -185,6 +151,36 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Internal Static Methods
+        /// <summary>
+        /// Creates a new Environment.
+        /// This is used to create the global environment.
+        /// When we refer to "parent" we mean the enclosing lexical environment.
+        /// </summary>
+        /// <param name="interp">The interpreter.</param>
+        /// <param name="parent">The parent environment.</param>
+        /// <returns>The global environment.</returns>
+        internal static Environment NewGlobal(Interpreter interp, Environment parent)
+        {
+            return new Environment(interp, parent);
+        }
+
+        /// <summary>
+        /// Create a new Environment.
+        /// This is for where there is a new binding context.
+        /// Start out with a set of variable bindings and a parent environment.
+        /// The initial variable bindings are the formal parameters and the corresponding argument values.
+        /// </summary>
+        /// <param name="formals">A list of variable names.</param>
+        /// <param name="vals">The values for these variables.</param>
+        /// <param name="parent">The parent environment.</param>
+        /// <returns>The new environment.</returns>
+        internal static Environment New(Obj formals, Obj vals, Environment parent)
+        {
+            return new Environment(formals, vals, parent);
+        }
+        #endregion
+
         #region Internal Methods
         /// <summary>
         /// Add a new definition into the environment.
@@ -207,7 +203,7 @@ namespace SimpleScheme
                 return var;
             }
 
-            return ErrorHandlers.Error("Define: bad variable: " + var);
+            return ErrorHandlers.Error("Bad variable in define: " + var);
         }
 
         /// <summary>
@@ -227,10 +223,10 @@ namespace SimpleScheme
                 }
 
                 // if we get here, we have not found anything, so look in the parent
-                env = env.Parent;
+                env = env.LexicalParent;
             }
 
-            return ErrorHandlers.Error("Lookup: unbound variable: " + symbol);
+            return ErrorHandlers.Error("Unbound variable: " + symbol);
         }
 
         /// <summary>
@@ -256,12 +252,12 @@ namespace SimpleScheme
                 return val;
             }
 
-            if (this.Parent != Empty)
+            if (this.LexicalParent != Empty)
             {
-                return this.Parent.Set(symbol, val);
+                return this.LexicalParent.Set(symbol, val);
             }
 
-            return ErrorHandlers.Error("Unbound variable: " + symbol);
+            return ErrorHandlers.Error("Unbound variable in set!: " + symbol);
         }
 
         /// <summary>
@@ -314,7 +310,7 @@ namespace SimpleScheme
                     sb.Append("-----\n");
                 }
 
-                env = env.Parent;
+                env = env.LexicalParent;
             }
 
             return sb.ToString();
@@ -350,7 +346,7 @@ namespace SimpleScheme
         /// <param name="count">The number of variables in the list</param>
         /// <returns>True if the lists are both empty lists, if the variable list is just a string, 
         /// or if they are both lists of the same length.</returns>
-        private static bool NumberArgsOk(Obj vars, Obj vals, out int count)
+        private static bool CheckArgCount(Obj vars, Obj vals, out int count)
         {
             count = 0;
             while (true)
@@ -442,7 +438,7 @@ namespace SimpleScheme
                         Obj symbol = First(symbols);
                         if (!(symbol is string))
                         {
-                            ErrorHandlers.Error("AddList: bad formal parameters: " + symbol);
+                            ErrorHandlers.Error("Bad formal parameter: " + symbol);
                         }
 
                         this.Add((string)symbol, First(vals));

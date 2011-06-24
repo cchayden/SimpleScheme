@@ -88,7 +88,7 @@ namespace SimpleScheme
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.Error("Illegal arg list: " + expr);
+                ErrorHandlers.Error("Bad args for list: " + expr);
                 return caller.ContinueStep(Undefined.Instance);
             }
 
