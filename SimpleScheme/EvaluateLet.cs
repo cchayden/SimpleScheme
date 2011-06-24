@@ -158,7 +158,7 @@ namespace SimpleScheme
         {
             Closure fn = Closure.New(this.vars, this.body, this.Env);
             fn.Env.Define(this.name, fn);
-            return fn.Apply(ReturnedExpr, ContinueReturn());
+            return fn.Apply(ReturnedExpr, this.Caller);
         }
         #endregion
     }

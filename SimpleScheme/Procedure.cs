@@ -130,12 +130,12 @@ namespace SimpleScheme
         /// <param name="args">The expression to evaluate.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next step toexecute.</returns>
-        internal Stepper Evaluate(Obj args, Stepper caller)
+        internal Stepper Evaluate(Obj args, Environment env, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
             if (this is Macro)
             {
-                return EvaluateExpandMacro.Call((Macro)this, args, caller.Env, caller);
+                return EvaluateExpandMacro.Call((Macro)this, args, env, caller);
             }
 
             // If the function is a closure, then create a new environment consisting of
@@ -146,14 +146,14 @@ namespace SimpleScheme
             if (this is Closure)
             {
                 // CLOSURE CALL -- capture the environment and evaluate the body
-                return EvaluateClosure.Call((Closure)this, args, caller.Env, caller);
+                return EvaluateClosure.Call((Closure)this, args, env, caller);
             }
 
             // This is a procedure call.
             // In any other case, the function is a primitive, a continuation, or a ClrProcedure.
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
-            return EvaluateProc.Call(this, args, caller.Env, caller);
+            return EvaluateProc.Call(this, args, env, caller);
         }
         #endregion
     }

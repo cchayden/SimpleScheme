@@ -172,7 +172,7 @@ namespace SimpleScheme
         {
             // apply the fun to the vals
             Procedure fun = Closure.New(this.formals, this.body, this.Env);
-            return fun.Apply(this.vals, ContinueReturn());
+            return fun.Apply(this.vals, this.Caller);
         }
         #endregion
     }

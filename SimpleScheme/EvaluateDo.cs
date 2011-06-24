@@ -174,7 +174,7 @@ namespace SimpleScheme
                     return ReturnUndefined();
                 }
 
-                return EvaluateSequence.Call(this.exprs, this.Env, ContinueReturn());
+                return EvaluateSequence.Call(this.exprs, this.Env, this.Caller);
             }
             
             // test is false

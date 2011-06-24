@@ -96,14 +96,14 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             this.port = OpenOutputFile(First(Expr));
-            return Procedure.Proc(Second(Expr)).Apply(MakeList(this.port), ContinueHere(this.ReturnStep));
+            return Procedure.Proc(Second(Expr)).Apply(MakeList(this.port), ContinueHere(this.CloseStep));
         }
 
         /// <summary>
         /// Closes the output port and returns the evaluation result.
         /// </summary>
         /// <returns>The evaluation result.</returns>
-        private new Stepper ReturnStep()
+        private Stepper CloseStep()
         {
             if (this.port != null)
             {

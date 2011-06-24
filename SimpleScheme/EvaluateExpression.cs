@@ -294,7 +294,7 @@ namespace SimpleScheme
                     //   and returning the last.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateSequence.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateSequence.Call(this.args, this.Env, this.Caller);
 
                 case "define":
                     // Define is a shortcut for lambda.
@@ -308,7 +308,7 @@ namespace SimpleScheme
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
                     //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                    return EvaluateSet.Call(this.args, this.Env, ContinueHere(this.ReturnStep));
+                    return EvaluateSet.Call(this.args, this.Env, ContinueHere(this.ReturnValueAndEnvStep));
 
                 case "if":
                     // Eval an if expression by evaluating the first clause, 
@@ -365,7 +365,7 @@ namespace SimpleScheme
                     return EvaluateDo.Call(this.args, this.Env, ContinueReturn());
 
                 case "time":
-                    return EvaluateTime.Call(this.args, this.Env, ContinueReturn());
+                    return EvaluateTime.Call(this.args, this.Env, this.Caller);
             }
 
             // If we get here, it wasn't one of the special forms.  
@@ -383,14 +383,14 @@ namespace SimpleScheme
         private Stepper ApplyProcStep()
         {
             // Come here after evaluating fn
-            return Procedure.Proc(ReturnedExpr).Evaluate(this.args, ContinueReturn());
+            return Procedure.Proc(ReturnedExpr).Evaluate(this.args, this.Env, this.Caller);
         }
 
         /// <summary>
         /// Here after an evaluation that should return a value.
         /// </summary>
         /// <returns>The evaluation result.</returns>
-        private new Stepper ReturnStep()
+        private Stepper ReturnValueAndEnvStep()
         {
             // Assign return value and return to caller.
             return ReturnFromStep(this.ReturnedExpr, this.ReturnedEnv);
