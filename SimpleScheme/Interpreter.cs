@@ -123,7 +123,7 @@ namespace SimpleScheme
         /// Set up for tests, with standard macros and no files.
         /// </summary>
         public Interpreter()
-            : this(true, null, null)
+            : this(true, null, null, null, null)
         {
         }
         #endregion
@@ -157,7 +157,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or setsthe global environment for the interpreter.
         /// </summary>
-        private Environment GlobalEnvironment { get; set; }
+        public Environment GlobalEnvironment { get; set; }
         #endregion
 
         #region Public Methods
@@ -347,7 +347,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fileName">The filename.</param>
         /// <returns>Undefined value.</returns>
-        internal Obj LoadFile(object fileName)
+        public Obj LoadFile(object fileName)
         {
             string name = SchemeString.AsString(fileName, false);
             try
@@ -450,7 +450,7 @@ namespace SimpleScheme
         /// This is done for the side effects, not the value.
         /// </summary>
         /// <param name="str">The string to read and evaluate.</param>
-        private void LoadString(string str)
+        public void LoadString(string str)
         {
             using (StringReader reader = new StringReader(str))
             {

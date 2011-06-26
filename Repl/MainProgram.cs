@@ -27,7 +27,7 @@ namespace Repl
         /// <param name="args">These are files to read initially.</param>
         public static void Main(string[] args)
         {
-            new MainProgram().Run3(args);
+            new MainProgram().Run4(args);
         }
 
         /// <summary>
@@ -62,6 +62,19 @@ namespace Repl
         private void Run3(IEnumerable<string> args)
         {
             var interp = new Interpreter(args);
+            Obj res = interp.ReadEvalPrintLoop();
+            Console.WriteLine(res);
+        }
+
+        /// <summary>
+        /// Example of a top level definition, befor the file is loaded.
+        /// </summary>
+        /// <param name="args">not used.</param>
+        private void Run4(IEnumerable<string> args)
+        {
+            var interp = new Interpreter();
+            interp.GlobalEnvironment.Define("x", 10);   // define x in the global environment
+            interp.LoadString("(p x)");                 // load the string, which has access to x
             Obj res = interp.ReadEvalPrintLoop();
             Console.WriteLine(res);
         }

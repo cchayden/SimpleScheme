@@ -189,7 +189,7 @@ namespace SimpleScheme
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
         /// <returns>The variable added to the environment.</returns>
-        internal Obj Define(Obj var, Obj val)
+        public Obj Define(Obj var, Obj val)
         {
             if (var is string)
             {

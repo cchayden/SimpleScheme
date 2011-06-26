@@ -77,7 +77,6 @@
     <None Include="do.ss" />
     <None Include="factor.ss" />
     <None Include="fib.ss" />
-    <None Include="test-archive.ss" />
     <None Include="test.ss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

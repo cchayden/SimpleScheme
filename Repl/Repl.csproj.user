@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <StartArguments>count-down.ss</StartArguments>
-    <StartWorkingDirectory>C:\Users\chayden\Documents\My Dropbox\SimpleScheme\Repl\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\chayden\SimpleScheme\Repl\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <PublishUrlHistory>publish\</PublishUrlHistory>
