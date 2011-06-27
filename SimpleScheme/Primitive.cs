@@ -63,14 +63,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        /// <summary>
-        /// The signature for primitives.
-        /// </summary>
-        /// <param name="args">The primitive's arguments</param>
-        /// <param name="caller">The calling stepper.</param>
-        /// <returns>The primitive's result.</returns>
-        internal delegate Obj Op(Obj args, Stepper caller);
-
         #region Public Methods
 
         /// <summary>

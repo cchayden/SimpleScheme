@@ -270,7 +270,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        internal Environment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
+        public Environment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
         {
             this.Define(name, new Primitive(operation, minArgs, maxArgs));
             return this;
@@ -285,7 +285,7 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        internal Environment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
+        public Environment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
         {
             return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
         }

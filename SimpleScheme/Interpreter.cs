@@ -417,6 +417,27 @@ namespace SimpleScheme
             }
         }
 
+        public Object ReadEval(InputPort inp)
+        {
+            try
+            {
+                Obj expr;
+                if (InputPort.IsEof(expr = inp.Read()))
+                {
+                    return InputPort.Eof;
+                }
+
+                Obj val = this.Eval(expr);
+                return val;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
+            
+        }
+
         /// <summary>
         /// Increment the given counter.
         /// Skip if if counting is turned off.
@@ -455,6 +476,19 @@ namespace SimpleScheme
             using (StringReader reader = new StringReader(str))
             {
                 this.Load(InputPort.New(reader));
+            }
+        }
+
+        /// <summary>
+        /// Evaluate a string and return the result.
+        /// </summary>
+        /// <param name="str">The program to evaluate.</param>
+        /// <returns>The evaluation result.</returns>
+        public Obj EvalString(string str)
+        {
+            using (StringReader reader = new StringReader(str))
+            {
+                return this.ReadEval(InputPort.New(reader));
             }
         }
 

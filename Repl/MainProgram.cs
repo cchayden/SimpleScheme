@@ -70,12 +70,19 @@ namespace Repl
         /// Example of a top level definition, befor the file is loaded.
         /// </summary>
         /// <param name="args">not used.</param>
-        private void Run4(IEnumerable<string> args)
+        private void Run4(IEnumerable<string> cmdlineArgs)
         {
             var interp = new Interpreter();
-            interp.GlobalEnvironment.Define("x", 10);   // define x in the global environment
-            interp.LoadString("(p x)");                 // load the string, which has access to x
-            Obj res = interp.ReadEvalPrintLoop();
+            // define a variable in the global environment
+            interp.GlobalEnvironment.Define("x", 10);
+            // define a primitive in the global environment
+            interp.GlobalEnvironment.DefinePrimitive("plus-one", (args, caller) => Number.Num(ListPrimitives.First(args)) + 1, 1);
+            // load a program stored in a string
+            interp.LoadString("(p (plus-one x))");
+            // evaluate a program stored in a string
+            Obj res = interp.EvalString("(plus-one x)");
+            Console.WriteLine(res);
+            res = interp.ReadEvalPrintLoop();
             Console.WriteLine(res);
         }
     }

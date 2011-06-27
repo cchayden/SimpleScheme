@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    internal abstract class Stepper : ListPrimitives
+    public abstract class Stepper : ListPrimitives
     {
         #region Fields
         /// <summary>
@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// These values are assigned to the pc.
         /// </summary>
         /// <returns>The next step to take.</returns>
-        internal delegate Stepper StepperFunction();
+        public delegate Stepper StepperFunction();
 
         #region Accessors
         /// <summary>
