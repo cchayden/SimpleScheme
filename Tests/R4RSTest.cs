@@ -38,7 +38,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.interpreter = new Interpreter();
+            this.interpreter = Interpreter.New();
         }
 
         /// <summary>
@@ -1342,7 +1342,7 @@ namespace Tests
                 while (true)
                 {
                     Obj x;
-                    if (InputPort.IsEof(x = inp.Read()))
+                    if (InputPort_Accessor.IsEof(x = inp.Read()))
                     {
                         return last;
                     }

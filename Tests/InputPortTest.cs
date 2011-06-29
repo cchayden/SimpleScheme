@@ -27,7 +27,7 @@ namespace Tests
         [TestMethod]
         public void IsEofTest()
         {
-            Assert.IsTrue(InputPort.IsEof(InputPort.Eof));
+            Assert.IsTrue(InputPort_Accessor.IsEof(InputPort_Accessor.Eof));
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Tests
                 Assert.AreEqual('a', port.ReadChar());
                 Assert.AreEqual('b', port.ReadChar());
                 Assert.AreEqual('c', port.ReadChar());
-                Assert.AreEqual(InputPort.Eof, port.ReadChar());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.ReadChar());
             }
         }
 
@@ -57,7 +57,7 @@ namespace Tests
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 Assert.AreEqual('a', port.PeekChar());
                 Assert.AreEqual('a', port.ReadChar());
-                Assert.AreEqual(InputPort.Eof, port.ReadChar());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.ReadChar());
             }
         }
 
@@ -73,7 +73,7 @@ namespace Tests
                 Assert.AreEqual('a', port.PeekChar());
                 Assert.AreEqual('a', port.ReadChar());
                 port.PeekChar();
-                Assert.AreEqual(InputPort.Eof, port.ReadChar());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.ReadChar());
             }
         }
 
@@ -87,7 +87,7 @@ namespace Tests
             TestNextToken("   abc", "abc");
             TestNextToken("abc   ", "abc");
             TestNextToken("abc def", "abc");
-            TestNextToken(string.Empty, InputPort.Eof);
+            TestNextToken(string.Empty, InputPort_Accessor.Eof);
             TestNextToken("abc(", "abc");
             TestNextToken("abc)", "abc");
             TestNextToken("abc'", "abc");
@@ -113,7 +113,7 @@ namespace Tests
             TestNextToken("`abc", "`");
             TestNextToken(",abc", ",");
             TestNextToken(",@abc", ",@");
-            TestNextToken(";abc", InputPort.Eof);
+            TestNextToken(";abc", InputPort_Accessor.Eof);
             TestNextToken(";\nabc", "abc");
             TestNextToken(@"""abc def""", "abc def");
             TestNextToken(@"""abc", "abc");
@@ -175,7 +175,7 @@ namespace Tests
             using (StringReader reader = new StringReader(string.Empty))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual(InputPort.Eof, port.Read());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.Read());
             }
 
             using (StringReader reader = new StringReader("abc"))

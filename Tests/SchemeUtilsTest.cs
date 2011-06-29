@@ -150,48 +150,6 @@ namespace Tests
         }
 
         /// <summary>
-        /// A test for InPort
-        /// </summary>
-        [TestMethod]
-        [DeploymentItem("SimpleScheme.dll")]
-        public void InPortTest()
-        {
-            var files = new string[0];
-            var accessor = new Interpreter_Accessor(false, null, files);
-            Interpreter interpreter = accessor.Target as Interpreter;
-            Assert.IsNotNull(interpreter);
-            Assert.AreEqual(accessor.Input, InputPort_Accessor.InPort(List.Empty, interpreter.Input));
-            using (StringReader reader = new StringReader("abc"))
-            {
-                InputPort_Accessor input = new InputPort_Accessor(reader);
-                Assert.AreEqual(input, InputPort_Accessor.InPort(input, interpreter.Input));
-            }
-
-            AssertEx.Throws(() => InputPort_Accessor.InPort(1, interpreter.Input));
-        }
-
-        /// <summary>
-        /// A test for OutPort
-        /// </summary>
-        [TestMethod]
-        [DeploymentItem("SimpleScheme.dll")]
-        public void OutPortTest()
-        {
-            var files = new string[0];
-            var accessor = new Interpreter_Accessor(false, null, files);
-            Interpreter interpreter = accessor.Target as Interpreter;
-            Assert.IsNotNull(interpreter);
-            Assert.AreEqual(accessor.Output, OutputPort_Accessor.OutPort(List.Empty, interpreter.Output));
-            using (StringWriter writer = new StringWriter())
-            {
-                OutputPort_Accessor output = new OutputPort_Accessor(writer);
-                Assert.AreEqual(output, OutputPort_Accessor.OutPort(output, interpreter.Output));
-            }
-
-            AssertEx.Throws(() => OutputPort_Accessor.OutPort(1, interpreter.Output));
-        }
-
-        /// <summary>
         /// A test for IsFalse
         /// </summary>
         [TestMethod]

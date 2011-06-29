@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// The scheme interpreter instance.
     /// Each one of these is a complete interpreter, independent of others.
     /// </summary>
-    public sealed class Interpreter
+    public sealed class Interpreter : IInterpreter
     {
         #region Fields
         /// <summary>
@@ -42,7 +42,7 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
-        public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        private Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
             this.Trace = false;
             this.Count = false;
@@ -51,7 +51,7 @@ namespace SimpleScheme
             if (primEnvironment == null)
             {
                 primEnvironment = Environment.NewPrimitive();
-                Environment.InstallPrimitives(primEnvironment);
+                primEnvironment.InstallPrimitives();
             }
 
             this.Counters = new Counter();
@@ -78,66 +78,32 @@ namespace SimpleScheme
                 Console.WriteLine("Caught exception {0}", ex.Message);
             }
         }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Create an interpreter and install the primitives into the global environment.
-        /// Then read a list of files.
-        /// Finally, accept console input.
-        /// </summary>
-        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
-        /// <param name="primEnvironment">Environment containing the primitives (can be null).</param>
-        /// <param name="files">The files to read.</param>
-        public Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files)
-            : this(loadStandardMacros, primEnvironment, files, null, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Read a set of files initially.
-        /// Use the supplied reader and writer.
-        /// To skip interactive reading, use TextReader.Null.
-        /// Or do not call ReadEvalPrint or ReadEvalPrintLoop.
-        /// </summary>
-        /// <param name="files">The files to read.</param>
-        /// <param name="reader">The input reader.</param>
-        /// <param name="writer">The output writer.</param>
-        public Interpreter(IEnumerable<string> files, TextReader reader, TextWriter writer)
-            : this(true, null, files, reader, writer)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Read a set of files initially, then do interactive input.
-        /// </summary>
-        /// <param name="files">The files to read.</param>
-        public Interpreter(IEnumerable<string> files)
-            : this(true, null, files, null, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Set up for tests, with standard macros and no files.
-        /// </summary>
-        public Interpreter()
-            : this(true, null, null, null, null)
-        {
-        }
         #endregion
 
         #region Accessors
         /// <summary>
+        /// Gets the global environment.
+        /// For this accessor, the environment is exposed as the environment interface.
+        /// </summary>
+        public IEnvironment GlobalEnv
+        {
+            get { return this.GlobalEnvironment; }
+        }
+
+        /// <summary>
+        /// Gets the global environment for the interpreter.
+        /// </summary>
+        internal Environment GlobalEnvironment { get; private set; }
+
+        /// <summary>
         /// Gets the input port.
         /// </summary>
-        public InputPort Input { get; private set; }
+        internal InputPort Input { get; private set; }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        public OutputPort Output { get; private set; }
+        internal OutputPort Output { get; private set; }
 
         /// <summary>
         /// Gets the counters collection.
@@ -153,16 +119,52 @@ namespace SimpleScheme
         /// Gets or sets a value indicating whether to count.
         /// </summary>
         private bool Count { get; set; }
-
-        /// <summary>
-        /// Gets or setsthe global environment for the interpreter.
-        /// </summary>
-        public Environment GlobalEnvironment { get; set; }
         #endregion
 
         #region Public Methods
         /// <summary>
+        /// Create a new interpeter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
+        /// <param name="primEnvironment">Environment containing the primitives (can not be null).</param>
+        /// <param name="files">The files to read.</param>
+        /// <param name="reader">The input reader.</param>
+        /// <param name="writer">The output writer.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static Interpreter New(bool loadStandardMacros, IEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        {
+            Environment primEnv = primEnvironment as Environment;
+            if (primEnv == null)
+            {
+                ErrorHandlers.Error("Interpreter primitive environment cannot be null");
+                return null;
+            }
+
+            return new Interpreter(loadStandardMacros, primEnvironment as Environment, files, reader, writer);
+        }
+
+        /// <summary>
+        /// Create a new interpeter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static Interpreter New(IEnumerable<string> files)
+        {
+            return new Interpreter(true, null, files, null, null);
+        }
+
+        /// <summary>
+        /// Create a new interpreter with standard macros and no files to load.
+        /// </summary>
+        /// <returns>A scheme interpreter</returns>
+        public static Interpreter New()
+        {
+            return new Interpreter(true, null, null, null, null);
+        }
+
+        /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
+        /// Used externally only in testing -- not exposed through the interface.
         /// </summary>
         /// <param name="x">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
@@ -263,6 +265,77 @@ namespace SimpleScheme
                 prevExpr = expr;
             }
         }
+
+        /// <summary>
+        /// Load a file.  
+        /// Open the file and read it.
+        /// Evaluate whatever it contains.
+        /// </summary>
+        /// <param name="fileName">The filename.</param>
+        public void LoadFile(object fileName)
+        {
+            string name = SchemeString.AsString(fileName, false);
+            try
+            {
+                this.Load(
+                    InputPort.New(new FileStream(name, FileMode.Open, FileAccess.Read)));
+            }
+            catch (IOException)
+            {
+                ErrorHandlers.Error("Can't load " + name);
+            }
+        }
+
+        /// <summary>
+        /// Read from the given port and evaluate the expression.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The result of the evaluation.</returns>
+        public Obj ReadEval(InputPort inp)
+        {
+            try
+            {
+                Obj expr;
+                if (InputPort.IsEof(expr = inp.Read()))
+                {
+                    return InputPort.Eof;
+                }
+
+                Obj val = this.Eval(expr);
+                return val;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
+        }
+
+        /// <summary>
+        /// Read from a string and evaluate.
+        /// This is done for the side effects, not the value.
+        /// </summary>
+        /// <param name="str">The string to read and evaluate.</param>
+        public void LoadString(string str)
+        {
+            using (StringReader reader = new StringReader(str))
+            {
+                this.Load(InputPort.New(reader));
+            }
+        }
+
+        /// <summary>
+        /// Evaluate a string and return the result.
+        /// </summary>
+        /// <param name="str">The program to evaluate.</param>
+        /// <returns>The evaluation result.</returns>
+        public Obj EvalString(string str)
+        {
+            using (StringReader reader = new StringReader(str))
+            {
+                return this.ReadEval(InputPort.New(reader));
+            }
+        }
         #endregion
 
         #region Define Primitives
@@ -341,27 +414,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Load a file.  
-        /// Open the file and read it.
-        /// Evaluate whatever it contains.
-        /// </summary>
-        /// <param name="fileName">The filename.</param>
-        /// <returns>Undefined value.</returns>
-        public Obj LoadFile(object fileName)
-        {
-            string name = SchemeString.AsString(fileName, false);
-            try
-            {
-                return this.Load(
-                    InputPort.New(new FileStream(name, FileMode.Open, FileAccess.Read)));
-            }
-            catch (IOException)
-            {
-                return ErrorHandlers.Error("Can't load " + name);
-            }
-        }
-
-        /// <summary>
         /// Read from the input port and evaluate whatever is there.
         /// Done for the side effect, not the result.
         /// Since the result is never tested, asynchronous suspensions do not prevent the rest
@@ -417,27 +469,6 @@ namespace SimpleScheme
             }
         }
 
-        public Object ReadEval(InputPort inp)
-        {
-            try
-            {
-                Obj expr;
-                if (InputPort.IsEof(expr = inp.Read()))
-                {
-                    return InputPort.Eof;
-                }
-
-                Obj val = this.Eval(expr);
-                return val;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Caught exception {0}", ex.Message);
-                return Undefined.Instance;
-            }
-            
-        }
-
         /// <summary>
         /// Increment the given counter.
         /// Skip if if counting is turned off.
@@ -466,32 +497,6 @@ namespace SimpleScheme
         #endregion
 
         #region Private Methods
-        /// <summary>
-        /// Read from a string and evaluate.
-        /// This is done for the side effects, not the value.
-        /// </summary>
-        /// <param name="str">The string to read and evaluate.</param>
-        public void LoadString(string str)
-        {
-            using (StringReader reader = new StringReader(str))
-            {
-                this.Load(InputPort.New(reader));
-            }
-        }
-
-        /// <summary>
-        /// Evaluate a string and return the result.
-        /// </summary>
-        /// <param name="str">The program to evaluate.</param>
-        /// <returns>The evaluation result.</returns>
-        public Obj EvalString(string str)
-        {
-            using (StringReader reader = new StringReader(str))
-            {
-                return this.ReadEval(InputPort.New(reader));
-            }
-        }
-
         /// <summary>
         /// Write trace info if trace enabled.
         /// </summary>

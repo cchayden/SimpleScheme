@@ -15,7 +15,7 @@ namespace SimpleScheme
     /// Each link in the chain contains a symbol table of the bindings at that level.
     /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
-    public sealed class Environment : ListPrimitives
+    public sealed class Environment : ListPrimitives, IEnvironment
     {
         #region Fields
         /// <summary>
@@ -105,9 +105,9 @@ namespace SimpleScheme
         /// <summary>
         /// Install primitives into the environment.
         /// </summary>
-        /// <param name="env">The environment to define into.</param>
-        public static void InstallPrimitives(Environment env)
+        public void InstallPrimitives()
         {
+            Environment env = this;
             EvaluateExpression.DefinePrimitives(env);
             Number.DefinePrimitives(env);
             Procedure.DefinePrimitives(env);
@@ -149,6 +149,62 @@ namespace SimpleScheme
         {
             return "Environment \n" + this.Dump();
         }
+
+        /// <summary>
+        /// Add a new definition into the environment.
+        /// If a procedure is being added, set its name.
+        /// </summary>
+        /// <param name="var">This is a variable to add to the environment.</param>
+        /// <param name="val">This is the value of that variable.</param>
+        /// <returns>The variable added to the environment.</returns>
+        public Obj Define(Obj var, Obj val)
+        {
+            if (var is string)
+            {
+                this.symbolTable.Add((string)var, val);
+
+                if (val is Procedure)
+                {
+                    ((Procedure)val).SetName(var.ToString());
+                }
+
+                return var;
+            }
+
+            return ErrorHandlers.Error("Bad variable in define: " + var);
+        }
+
+        /// <summary>
+        /// Define a primitive, taking a variable number of arguments.
+        /// Creates a Primitive and puts it in the environment associated 
+        ///    with the given name.
+        /// Returns the environmet interface.
+        /// </summary>
+        /// <param name="name">The primitive name.</param>
+        /// <param name="operation">The operation to perform.</param>
+        /// <param name="minArgs">The minimum number of arguments.</param>
+        /// <param name="maxArgs">The maximum number of arguments.</param>
+        /// <returns>A refernce to the environment.</returns>
+        public IEnvironment DefinePrim(string name, Op operation, int minArgs, int maxArgs)
+        {
+            return this.DefinePrimitive(name, operation, minArgs, maxArgs);
+        }
+
+        /// <summary>
+        /// Define a primitive, taking a fixed number of arguments.
+        /// Creates a Primitive and puts it in the environment associated 
+        ///    with the given name.
+        /// Returns the environmet interface.
+        /// </summary>
+        /// <param name="name">The primitive name.</param>
+        /// <param name="operation">The operation to perform.</param>
+        /// <param name="numberOfArgs">The number of arguments.</param>
+        /// <returns>A refernce to the environment.</returns>
+        public IEnvironment DefinePrim(string name, Op operation, int numberOfArgs)
+        {
+            return this.DefinePrimitive(name, operation, numberOfArgs);
+        }
+
         #endregion
 
         #region Internal Static Methods
@@ -182,30 +238,6 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
-        /// <summary>
-        /// Add a new definition into the environment.
-        /// If a procedure is being added, set its name.
-        /// </summary>
-        /// <param name="var">This is a variable to add to the environment.</param>
-        /// <param name="val">This is the value of that variable.</param>
-        /// <returns>The variable added to the environment.</returns>
-        public Obj Define(Obj var, Obj val)
-        {
-            if (var is string)
-            {
-                this.symbolTable.Add((string)var, val);
-
-                if (val is Procedure)
-                {
-                    ((Procedure)val).SetName(var.ToString());
-                }
-
-                return var;
-            }
-
-            return ErrorHandlers.Error("Bad variable in define: " + var);
-        }
-
         /// <summary>
         /// Look up a symbol in the environment.
         /// </summary>
@@ -270,7 +302,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
+        internal Environment DefinePrimitive(string name, Op operation, int minArgs, int maxArgs)
         {
             this.Define(name, new Primitive(operation, minArgs, maxArgs));
             return this;
@@ -285,7 +317,7 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public Environment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
+        internal Environment DefinePrimitive(string name, Op operation, int numberOfArgs)
         {
             return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
         }

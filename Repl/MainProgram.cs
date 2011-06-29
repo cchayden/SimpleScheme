@@ -38,7 +38,7 @@ namespace Repl
         /// <param name="args">Files to read.</param>
         private void Run1(IEnumerable<string> args)
         {
-            new Interpreter(args)
+            Interpreter.New(args)
                 .ReadEvalPrintLoop();
         }
 
@@ -49,9 +49,9 @@ namespace Repl
         /// <param name="args">Files to read.</param>
         private void Run2(IEnumerable<string> args)
         {
-            Environment primEnvironment = Environment.NewPrimitive();
-            Environment.InstallPrimitives(primEnvironment);
-            new Interpreter(true, primEnvironment, args, Console.In, Console.Out)
+            IEnvironment primEnvironment = Environment.NewPrimitive();
+            primEnvironment.InstallPrimitives();
+            Interpreter.New(true, primEnvironment, args, Console.In, Console.Out)
                 .ReadEvalPrintLoop();
         }
 
@@ -61,7 +61,7 @@ namespace Repl
         /// <param name="args">Files to read.</param>
         private void Run3(IEnumerable<string> args)
         {
-            var interp = new Interpreter(args);
+            IInterpreter interp = Interpreter.New(args);
             Obj res = interp.ReadEvalPrintLoop();
             Console.WriteLine(res);
         }
@@ -69,16 +69,20 @@ namespace Repl
         /// <summary>
         /// Example of a top level definition, befor the file is loaded.
         /// </summary>
-        /// <param name="args">not used.</param>
+        /// <param name="cmdlineArgs">Param not used.</param>
         private void Run4(IEnumerable<string> cmdlineArgs)
         {
-            var interp = new Interpreter();
+            IInterpreter interp = Interpreter.New();
+
             // define a variable in the global environment
-            interp.GlobalEnvironment.Define("x", 10);
+            interp.GlobalEnv.Define("x", 10);
+
             // define a primitive in the global environment
-            interp.GlobalEnvironment.DefinePrimitive("plus-one", (args, caller) => Number.Num(ListPrimitives.First(args)) + 1, 1);
+            interp.GlobalEnv.DefinePrim("plus-one", (args, caller) => Number.Num(ListPrimitives.First(args)) + 1, 1);
+
             // load a program stored in a string
             interp.LoadString("(p (plus-one x))");
+
             // evaluate a program stored in a string
             Obj res = interp.EvalString("(plus-one x)");
             Console.WriteLine(res);

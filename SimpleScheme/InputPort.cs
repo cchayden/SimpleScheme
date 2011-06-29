@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// Marks the end of the input file.
         /// </summary>
-        public const string Eof = "#!EOF";
+        internal const string Eof = "#!EOF";
 
         /// <summary>
         /// The character stream to read from.
@@ -50,38 +50,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Creates a new InputPort.
-        /// </summary>
-        /// <param name="inp">A text reader</param>
-        /// <returns>A new InputPort.</returns>
-        public static InputPort New(TextReader inp)
-        {
-            return new InputPort(inp);
-        }
-
-        /// <summary>
-        /// Creates a new InputPort.
-        /// </summary>
-        /// <param name="inp">An input stream.</param>
-        /// <returns>A new InputPort.</returns>
-        public static InputPort New(Stream inp)
-        {
-            return new InputPort(inp);
-        }
-
-        /// <summary>
-        /// Tests the obj against EOF.
-        /// </summary>
-        /// <param name="x">The obj to test.</param>
-        /// <returns>True if the obj is EOF.</returns>
-        public static bool IsEof(Obj x)
-        {
-            return x as string == Eof;
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the input primitives.
@@ -108,7 +76,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
                 .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(First(args) is InputPort), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (args, caller) => caller.Env.Interp.LoadFile(First(args)), 1)
+                .DefinePrimitive("load", (args, caller) => LoadFile(caller, First(args)), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
                 .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
@@ -124,6 +92,36 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Static Methods
+        /// <summary>
+        /// Creates a new InputPort.
+        /// </summary>
+        /// <param name="inp">A text reader</param>
+        /// <returns>A new InputPort.</returns>
+        internal static InputPort New(TextReader inp)
+        {
+            return new InputPort(inp);
+        }
+
+        /// <summary>
+        /// Creates a new InputPort.
+        /// </summary>
+        /// <param name="inp">An input stream.</param>
+        /// <returns>A new InputPort.</returns>
+        internal static InputPort New(Stream inp)
+        {
+            return new InputPort(inp);
+        }
+
+        /// <summary>
+        /// Tests the obj against EOF.
+        /// </summary>
+        /// <param name="x">The obj to test.</param>
+        /// <returns>True if the obj is EOF.</returns>
+        internal static bool IsEof(Obj x)
+        {
+            return x as string == Eof;
+        }
+
         /// <summary>
         /// Convert an obj (containing an input port) into an InputPort.
         /// If the given obj is the empty list, return the interpreter's input port.
@@ -196,6 +194,20 @@ namespace SimpleScheme
                 ErrorHandlers.Warn("On input, exception:" + ex);
                 return Eof;
             }
+        }
+        #endregion
+
+        #region Private Static Methods
+        /// <summary>
+        /// Load a file given the filename.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <param name="filename">The file to load from.</param>
+        /// <returns>The next step to execute.</returns>
+        private static Obj LoadFile(Stepper caller, Obj filename)
+        {
+            caller.Env.Interp.LoadFile(filename);
+            return Undefined.Instance;
         }
         #endregion
 

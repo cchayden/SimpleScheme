@@ -51,6 +51,8 @@
     <Compile Include="EvaluateProcQuoted.cs" />
     <Compile Include="EvaluateTime.cs" />
     <Compile Include="EvaluateTimeBase.cs" />
+    <Compile Include="IEnvironment.cs" />
+    <Compile Include="IInterpreter.cs" />
     <Compile Include="ListPrimitives.cs" />
     <Compile Include="SchemeBoolean.cs" />
     <Compile Include="Closure.cs" />

@@ -97,6 +97,9 @@ namespace SimpleScheme
         /// </summary>
         internal Environment ReturnedEnv { get; private set; }
 
+        /// <summary>
+        /// Gets the caller of this stepper.
+        /// </summary>
         internal Stepper Caller
         {
             get { return this.caller; }
