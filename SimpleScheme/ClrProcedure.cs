@@ -172,7 +172,7 @@ namespace SimpleScheme
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
             {
-                ErrorHandlers.Error(Math.Abs(diff) + 
+                ErrorHandlers.SemanticError(Math.Abs(diff) + 
                     " too " + (diff > 0 ? "many" : "few") + 
                     " args to " + Name);
             }
@@ -320,7 +320,7 @@ namespace SimpleScheme
             Type type = ToClass(className);
             if (type == null)
             {
-                return ErrorHandlers.Error("Type cannot be found: " + SchemeString.AsString(className, false));
+                return ErrorHandlers.ClrError("Type cannot be found: " + SchemeString.AsString(className, false));
             }
 
             Assembly assembly = type.Assembly;

@@ -13,19 +13,20 @@ namespace SimpleScheme
     {
         #region Public Static Methods
         /// <summary>
-        /// Convert an Obj containing a character into the character.
+        /// Checks that the object is a character.
         /// </summary>
-        /// <param name="c">The Obj containing the char.</param>
-        /// <returns>The character it contains.</returns>
-        public static char Chr(Obj c)
+        /// <param name="obj">The object.</param>
+        /// <returns>The character.</returns>
+        public static char Chr(Obj obj)
         {
-            if (!(c is char))
+            if (obj is char)
             {
-                return Chr(ErrorHandlers.Error("Expected a char, got: " + c));
+                return (char)obj;
             }
 
-            return (char)c;
+            return Chr(ErrorHandlers.TypeError("char", obj));
         }
+
         #endregion
 
         #region Define Primitives

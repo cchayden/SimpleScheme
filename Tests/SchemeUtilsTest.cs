@@ -280,11 +280,11 @@ namespace Tests
         {
             Assert.AreEqual(0.0, Number.Num(0.0));
             Assert.AreEqual(0.0, Number.Num(0));
-            Assert.AreEqual(0.0, Number.Num("0"));
+            AssertEx.Throws(() => Number.Num("0"));
             Assert.AreEqual(1.0, Number.Num(1.0));
             Assert.AreEqual(1.0, Number.Num(1));
-            Assert.AreEqual(1.0, Number.Num("1"));
-            Assert.AreEqual(0.0, Number.Num(false));
+            AssertEx.Throws(() => Number.Num("1"));
+            AssertEx.Throws(() => Number.Num(false));
             AssertEx.Throws(() => Number.Num('a'));
             AssertEx.Throws(() => Number.Num("xxx"));
             AssertEx.Throws(() => Number.Num("false"));

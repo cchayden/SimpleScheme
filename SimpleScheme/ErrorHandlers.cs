@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using Obj = System.Object;
 
     /// <summary>
     /// Utilities for manipulating lists and vectors, input and output, and converting 
@@ -55,16 +56,127 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Handle an error in an evaluator by printing a message on the console 
+        /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
+        /// These errors are caused by a failed attempt to interpret an object as a value
+        ///   of a specific type.
+        /// </summary>
+        /// <param name="expected">The expected type.</param>
+        /// <param name="got">The actual value.</param>
+        /// <returns>Actually, does not return.</returns>
+        internal static object TypeError(string expected, object got)
+        {
+            string message = String.Format("Expected a {0}, got {1}: {2}", expected, TypeName(got), SchemeString.AsString(got));
+            Console.Error.WriteLine("**** TYPE ERROR: " + message);
+            throw new SchemeTypeException(message);
+        }
+
+        /// <summary>
+        /// Handle an error by printing a message on the console 
+        ///    and throwing an exception.
+        /// These errors represent input/output errors.
         /// </summary>
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static Stepper EvalError(string message)
+        internal static object IoError(string message)
         {
-            Console.Error.WriteLine("**** ERROR: " + message);
-            throw new SchemeException(message);
+            Console.Error.WriteLine("**** I/O ERROR: " + message);
+            throw new SchemeIoException(message);
+        }
+
+        /// <summary>
+        /// Handle an error by printing a message on the console 
+        ///    and throwing an exception.
+        /// These are internal errors, and should never happen.
+        /// </summary>
+        /// <param name="message">The message to display and to put 
+        ///    into the exception.</param>
+        /// <returns>Actually, does not return.</returns>
+        internal static object InternalError(string message)
+        {
+            Console.Error.WriteLine("**** INTERNAL ERROR: " + message);
+            throw new SchemeInternalException(message);
+        }
+
+        /// <summary>
+        /// Handle an error by printing a message on the console 
+        ///    and throwing an exception.
+        /// This is a problem with linking up with the CLR.
+        /// </summary>
+        /// <param name="message">The message to display and to put 
+        ///    into the exception.</param>
+        /// <returns>Actually, does not return.</returns>
+        internal static object ClrError(string message)
+        {
+            Console.Error.WriteLine("**** CLR ERROR: " + message);
+            throw new SchemeClrException(message);
+        }
+
+        /// <summary>
+        /// Handle an error by printing a message on the console 
+        ///    and throwing an exception.
+        /// This is a semantic error, such as giving the wrong number of arguments to a primitive.
+        /// </summary>
+        /// <param name="message">The message to display and to put 
+        ///    into the exception.</param>
+        /// <returns>Actually, does not return.</returns>
+        internal static object SemanticError(string message)
+        {
+            Console.Error.WriteLine("**** SEMANTIC ERROR: " + message);
+            throw new SchemeSemanticException(message);
+        }
+        #endregion
+
+        #region Private Methods
+        /// <summary>
+        /// Find the scheme type name for a given object.
+        /// </summary>
+        /// <param name="obj">The object to use.</param>
+        /// <returns>The scheme type name.</returns>
+        private static string TypeName(Obj obj)
+        {
+            if (obj is bool)
+            {
+                return "boolean";
+            }
+
+            if (obj is string)
+            {
+                return "symbol";
+            }
+
+            if (obj is char)
+            {
+                return "char";
+            }
+
+            if (obj is Obj[])
+            {
+                return "vector";
+            }
+
+            if (obj is Pair)
+            {
+                return "pair";
+            }
+
+            if (obj is double)
+            {
+                return "number";
+            }
+
+            if (obj is char[])
+            {
+                return "string";
+            }
+
+            if (obj is Procedure)
+            {
+                return "procedure";
+            }
+
+            return obj.GetType().ToString();
         }
         #endregion
 
@@ -79,6 +191,88 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
             internal SchemeException(string message) 
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// All exceptions thrown by the interpreter are of this class.
+        /// </summary>
+        [Serializable]
+        public class SchemeTypeException : SchemeException
+        {
+            /// <summary>
+            /// Initializes a new instance of the ErrorHandlers.SchemeTypeException class.
+            /// This is thrown when there is an expectation that a value will be a certain type,
+            /// and it is some other type.
+            /// </summary>
+            /// <param name="message">The message describing the exception.</param>
+            internal SchemeTypeException(string message) 
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// All exceptions thrown by the interpreter are of this class.
+        /// </summary>
+        [Serializable]
+        public class SchemeIoException : SchemeException
+        {
+            /// <summary>
+            /// Initializes a new instance of the ErrorHandlers.SchemeIoException class.
+            /// </summary>
+            /// <param name="message">The message describing the exception.</param>
+            internal SchemeIoException(string message) 
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// All exceptions thrown by the interpreter are of this class.
+        /// </summary>
+        [Serializable]
+        public class SchemeInternalException : SchemeException
+        {
+            /// <summary>
+            /// Initializes a new instance of the ErrorHandlers.SchemeInternalException class.
+            /// </summary>
+            /// <param name="message">The message describing the exception.</param>
+            internal SchemeInternalException(string message) 
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// All exceptions thrown by the interpreter are of this class.
+        /// </summary>
+        [Serializable]
+        public class SchemeSemanticException : SchemeException
+        {
+            /// <summary>
+            /// Initializes a new instance of the ErrorHandlers.SchemeSemanticException class.
+            /// </summary>
+            /// <param name="message">The message describing the exception.</param>
+            internal SchemeSemanticException(string message) 
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// All exceptions thrown by the interpreter are of this class.
+        /// </summary>
+        [Serializable]
+        public class SchemeClrException : SchemeException
+        {
+            /// <summary>
+            /// Initializes a new instance of the ErrorHandlers.SchemeClrException class.
+            /// </summary>
+            /// <param name="message">The message describing the exception.</param>
+            internal SchemeClrException(string message) 
                 : base(message)
             {
             }

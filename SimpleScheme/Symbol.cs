@@ -14,12 +14,11 @@ namespace SimpleScheme
     {
         #region Public Static Methods
         /// <summary>
-        /// Turn an obj that is a symbol into a string.
+        /// Check that the object is a symbol.
         /// Symbols are represented by .NET strings.
-        /// It is stored as one already, so just verify that this is a symbol.
         /// </summary>
-        /// <param name="x">The symbol.</param>
-        /// <returns>The corresponding string.</returns>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding symbol.</returns>
         public static string Sym(Obj x)
         {
             if (x is string)
@@ -27,7 +26,7 @@ namespace SimpleScheme
                 return (string)x;
             }
 
-            return Sym(ErrorHandlers.Error("Expected a symbol, got: " + x));
+            return Sym(ErrorHandlers.TypeError("symbol", x));
         }
         #endregion
 

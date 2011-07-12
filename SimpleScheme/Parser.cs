@@ -304,7 +304,7 @@ namespace SimpleScheme
             object token = this.NextToken();
             if (token as string == InputPort.Eof)
             {
-                return ErrorHandlers.Error("EOF during read.");
+                return ErrorHandlers.IoError("EOF during read.");
             }
 
             if (token as string == ")")
@@ -374,7 +374,7 @@ namespace SimpleScheme
             {
                 if (this.isPushedChar)
                 {
-                    ErrorHandlers.Error("Read bypassed pushed char.");
+                    ErrorHandlers.IoError("Read bypassed pushed char.");
                     this.isPushedChar = false;
                 }
 
@@ -452,7 +452,7 @@ namespace SimpleScheme
                 }
                 catch (IOException ex)
                 {
-                    ErrorHandlers.Error("IOException on close: " + ex);
+                    ErrorHandlers.IoError("IOException on close: " + ex);
                 }
             }
 

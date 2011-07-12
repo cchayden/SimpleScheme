@@ -73,11 +73,10 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Convert the given obj to a procedure.
-        /// It should be one already: if not, throw an error.
+        /// Check that the given object is a procedure.
         /// </summary>
-        /// <param name="x">The obj to convert.</param>
-        /// <returns>The obj as a procedure.</returns>
+        /// <param name="x">The obj to test.</param>
+        /// <returns>The procedure.</returns>
         internal static Procedure Proc(Obj x)
         {
             if (x is Procedure)
@@ -85,7 +84,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return Proc(ErrorHandlers.Error("Expected a procedure, got: " + SchemeString.AsString(x)));
+            return Proc(ErrorHandlers.TypeError("procedure", x));
         }
 
         /// <summary>

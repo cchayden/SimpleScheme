@@ -140,25 +140,25 @@ namespace SimpleScheme
 
         #region Private Static Methods
         /// <summary>
-        /// Convert an obj into an output port.
+        /// Check that the given object is an output port.
         /// If the obj is the empty list, then return the interpreter's outpot port.
         /// </summary>
-        /// <param name="expr">The obj (should be an output port).</param>
+        /// <param name="obj">The object.</param>
         /// <param name="outPort">The output port to use if the port is the empty list.</param>
-        /// <returns>An output port.</returns>
-        private static OutputPort OutPort(Obj expr, OutputPort outPort)
+        /// <returns>The output port.</returns>
+        private static OutputPort OutPort(Obj obj, OutputPort outPort)
         {
-            if (expr == List.Empty)
+            if (obj == List.Empty)
             {
                 return outPort;
             }
 
-            if (expr is OutputPort)
+            if (obj is OutputPort)
             {
-                return (OutputPort)expr;
+                return (OutputPort)obj;
             }
 
-            return OutPort(ErrorHandlers.Error("Expected an output port, got: " + expr), null);
+            return OutPort(ErrorHandlers.TypeError("output port", obj), null);
         }
 
         /// <summary>

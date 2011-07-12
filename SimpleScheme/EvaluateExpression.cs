@@ -160,7 +160,7 @@ namespace SimpleScheme
                 //    is a corresponding value.
                 if (env == null)
                 {
-                    return ErrorHandlers.EvalError("EvaluateExpression: bad environment");
+                    return (Stepper)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
                 }
 
                 return caller.ContinueStep(env.Lookup((string)expr));

@@ -96,13 +96,13 @@ namespace SimpleScheme
             int numArgs = Length(args);
             if (numArgs < this.minArgs)
             {
-                return ErrorHandlers.EvalError("Primitive: too few args, " + numArgs + ", for " +
+                return (Stepper)ErrorHandlers.SemanticError("Primitive: too few args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
 
             if (numArgs > this.maxArgs)
             {
-                return ErrorHandlers.EvalError("Primitive: too many args, " + numArgs + ", for " +
+                return (Stepper)ErrorHandlers.SemanticError("Primitive: too many args, " + numArgs + ", for " +
                              this.Name + ": " + args);
             }
 

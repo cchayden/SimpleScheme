@@ -126,25 +126,25 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Convert an obj (containing an input port) into an InputPort.
+        /// Check that an object is an input port.
         /// If the given obj is the empty list, return the interpreter's input port.
         /// </summary>
-        /// <param name="x">The obj containing the input port.</param>
+        /// <param name="obj">The object.</param>
         /// <param name="inPort">The default input port.</param>
         /// <returns>An input port.</returns>
-        internal static InputPort InPort(Obj x, InputPort inPort)
+        internal static InputPort InPort(Obj obj, InputPort inPort)
         {
-            if (x == List.Empty)
+            if (obj == List.Empty)
             {
                 return inPort;
             }
 
-            if (x is InputPort)
+            if (obj is InputPort)
             {
-                return (InputPort)x;
+                return (InputPort)obj;
             }
 
-            return InPort(ErrorHandlers.Error("Expected an input port, got: " + x), null);
+            return InPort(ErrorHandlers.TypeError("input port", obj), null);
         }
         #endregion
 

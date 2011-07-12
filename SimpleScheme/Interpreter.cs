@@ -282,7 +282,7 @@ namespace SimpleScheme
             }
             catch (IOException)
             {
-                ErrorHandlers.Error("Can't load " + name);
+                ErrorHandlers.IoError("Can't load " + name);
             }
         }
 
@@ -404,7 +404,7 @@ namespace SimpleScheme
 
                 if (step == null)
                 {
-                    return ErrorHandlers.EvalError("PC bad value");
+                    return ErrorHandlers.InternalError("PC bad value");
                 }
 
                 this.TraceStep(step);

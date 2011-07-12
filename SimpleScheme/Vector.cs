@@ -23,18 +23,18 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Convert an obj that should be a vector into an array of objs.
+        /// Check that an object is a vector.
         /// </summary>
-        /// <param name="vector">The vector.</param>
-        /// <returns>The array of objs.</returns>
-        public static Obj[] Vec(object vector)
+        /// <param name="obj">The object.</param>
+        /// <returns>The scheme vector.</returns>
+        public static Obj[] Vec(object obj)
         {
-            if (vector is Obj[]) 
+            if (obj is Obj[]) 
             {
-                return (Obj[])vector;
+                return (Obj[])obj;
             }
 
-            return Vec(ErrorHandlers.Error("Expected a vector, got: " + vector));
+            return Vec(ErrorHandlers.TypeError("vector", obj));
         }
 
         /// <summary>

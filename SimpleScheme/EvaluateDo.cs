@@ -114,13 +114,13 @@ namespace SimpleScheme
         {
             if (Expr == List.Empty)
             {
-                ErrorHandlers.Error("No body for do");
+                ErrorHandlers.SemanticError("No body for do");
                 return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Bad arg list for do: " + Expr);
+                ErrorHandlers.SemanticError("Bad arg list for do: " + Expr);
                 return ReturnUndefined();
             }
 

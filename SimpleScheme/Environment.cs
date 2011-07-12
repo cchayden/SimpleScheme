@@ -171,7 +171,7 @@ namespace SimpleScheme
                 return var;
             }
 
-            return ErrorHandlers.Error("Bad variable in define: " + var);
+            return ErrorHandlers.SemanticError("Bad variable in define: " + var);
         }
 
         /// <summary>
@@ -258,7 +258,7 @@ namespace SimpleScheme
                 env = env.LexicalParent;
             }
 
-            return ErrorHandlers.Error("Unbound variable: " + symbol);
+            return ErrorHandlers.SemanticError("Unbound variable: " + symbol);
         }
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace SimpleScheme
         {
             if (!(var is string))
             {
-                return ErrorHandlers.Error("Attempt to set a non-symbol: " + SchemeString.AsString(var));
+                return ErrorHandlers.SemanticError("Attempt to set a non-symbol: " + SchemeString.AsString(var));
             }
 
             string symbol = (string)var;
@@ -289,7 +289,7 @@ namespace SimpleScheme
                 return this.LexicalParent.Set(symbol, val);
             }
 
-            return ErrorHandlers.Error("Unbound variable in set!: " + symbol);
+            return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
         }
 
         /// <summary>
@@ -470,7 +470,7 @@ namespace SimpleScheme
                         Obj symbol = First(symbols);
                         if (!(symbol is string))
                         {
-                            ErrorHandlers.Error("Bad formal parameter: " + symbol);
+                            ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }
 
                         this.Add((string)symbol, First(vals));

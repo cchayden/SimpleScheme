@@ -103,13 +103,13 @@ namespace SimpleScheme
         {
             if (Expr == List.Empty)
             {
-                ErrorHandlers.Error("No arguments for letrec");
+                ErrorHandlers.SemanticError("No arguments for letrec");
                 return ReturnUndefined();
             }
 
             if (!(Expr is Pair))
             {
-                ErrorHandlers.Error("Bad arg list for letrec: " + Expr);
+                ErrorHandlers.SemanticError("Bad arg list for letrec: " + Expr);
                 return ReturnUndefined();
             }
 

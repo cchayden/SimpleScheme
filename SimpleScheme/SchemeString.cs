@@ -112,18 +112,18 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Turn an obj (storing a scheme string) into an array of characters.
+        /// Check that an oject is a scheme string.
         /// </summary>
-        /// <param name="str">The string.</param>
-        /// <returns>The character array.</returns>
-        public static char[] Str(Obj str)
+        /// <param name="obj">The object.</param>
+        /// <returns>The scheme string.</returns>
+        public static char[] Str(Obj obj)
         {
-            if (str is char[])
+            if (obj is char[])
             {
-                return (char[])str;
+                return (char[])obj;
             }
 
-            return Str(ErrorHandlers.Error("Expected a string, got: " + str));
+            return Str(ErrorHandlers.TypeError("string", obj));
         }
 
         #endregion
@@ -473,7 +473,7 @@ namespace SimpleScheme
                 return Compare((char[])x, (char[])y, ci);
             }
 
-            ErrorHandlers.Error("StringCompare: expected two strings, got: " + AsString(x) + " and " + AsString(y));
+            ErrorHandlers.SemanticError("StringCompare: expected two strings, got: " + AsString(x) + " and " + AsString(y));
             return 0;
         }
 

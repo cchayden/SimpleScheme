@@ -78,11 +78,11 @@ namespace SimpleScheme
             }
             catch (FileNotFoundException)
             {
-                return (InputPort)ErrorHandlers.Error("No such file: " + SchemeString.AsString(filename));
+                return (InputPort)ErrorHandlers.IoError("No such file: " + SchemeString.AsString(filename));
             }
             catch (IOException ex)
             {
-                return (InputPort)ErrorHandlers.Error("IOException: " + ex.Message);
+                return (InputPort)ErrorHandlers.IoError("IOException: " + ex.Message);
             }
         }
         #endregion

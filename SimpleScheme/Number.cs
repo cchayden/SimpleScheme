@@ -32,22 +32,18 @@ namespace SimpleScheme
         /// <returns>The double contained in the obj.</returns>
         public static double Num(Obj x)
         {
-            try
+            if (x is double)
+            {
+                return (double)x;
+            }
+
+            if (x is int || x is long)
             {
                 return Convert.ToDouble(x);
+                
             }
-            catch (InvalidCastException)
-            {
-                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
-            }
-            catch (FormatException)
-            {
-                return Num(ErrorHandlers.Error("Expected a number, got: " + x));
-            }
-            catch (OverflowException)
-            {
-                return Num(ErrorHandlers.Error("Number overflow, got: " + x));
-            }
+
+            return Num(ErrorHandlers.TypeError("number", x));
         }
         #endregion
 
@@ -328,7 +324,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        ErrorHandlers.Error("Internal error: bad option to NumCompare: " + op);
+                        ErrorHandlers.InternalError("Internal error: bad option to NumCompare: " + op);
                         break;
                 }
             }
@@ -402,7 +398,7 @@ namespace SimpleScheme
                         break;
 
                     default:
-                        ErrorHandlers.Error("Internal error: bad option to NumCompute: " + op);
+                        ErrorHandlers.InternalError("Internal error: bad option to NumCompute: " + op);
                         break;
                 }
 
