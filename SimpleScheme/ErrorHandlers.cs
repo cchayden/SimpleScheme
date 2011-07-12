@@ -66,8 +66,8 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object TypeError(string expected, object got)
         {
-            string message = String.Format("Expected a {0}, got {1}: {2}", expected, TypeName(got), SchemeString.AsString(got));
-            Console.Error.WriteLine("**** TYPE ERROR: " + message);
+            string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypeName(got), SchemeString.AsString(got));
+            Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }
 
@@ -81,7 +81,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object IoError(string message)
         {
-            Console.Error.WriteLine("**** I/O ERROR: " + message);
+            Console.Error.WriteLine("**** I/O ERROR: {0}", message);
             throw new SchemeIoException(message);
         }
 
@@ -95,7 +95,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object InternalError(string message)
         {
-            Console.Error.WriteLine("**** INTERNAL ERROR: " + message);
+            Console.Error.WriteLine("**** INTERNAL ERROR: {0}", message);
             throw new SchemeInternalException(message);
         }
 
@@ -109,7 +109,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object ClrError(string message)
         {
-            Console.Error.WriteLine("**** CLR ERROR: " + message);
+            Console.Error.WriteLine("**** CLR ERROR: {0}", message);
             throw new SchemeClrException(message);
         }
 
@@ -123,7 +123,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object SemanticError(string message)
         {
-            Console.Error.WriteLine("**** SEMANTIC ERROR: " + message);
+            Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
         }
         #endregion
