@@ -54,37 +54,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Tests whether the given obj is equal to this pair.
-        /// </summary>
-        /// <param name="x">The obj to test.</param>
-        /// <returns>True if the given obj is equal to this pair.</returns>
-        public override bool Equals(Obj x)
-        {
-            if (!(x is Pair))
-            {
-                return false;
-            }
-
-            if (x == this)
-            {
-                return true;
-            }
-
-            Pair other = (Pair)x;
-            return SchemeBoolean.Equal(this.FirstCell, other.FirstCell) && SchemeBoolean.Equal(this.RestCell, other.RestCell);
-        }
-
-        /// <summary>
-        /// Get hash code.
-        /// We have to provide this if we override Equals.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        /// <summary>
         /// Turn the pair into a string for printing and such.
         /// Ultimately calls AsString.
         /// </summary>
@@ -92,6 +61,33 @@ namespace SimpleScheme
         public override string ToString()
         {
             return SchemeString.AsString(this, true);
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Tests whether two pairs are equal.
+        /// </summary>
+        /// <param name="obj1">The first object (must be a pair).</param>
+        /// <param name="obj2">The other object.</param>
+        /// <returns>True if they are both pairs and 
+        /// all elements are equal.</returns>
+        internal static bool Equal(Obj obj1, Obj obj2)
+        {
+            if (!(obj2 is Pair))
+            {
+                return false;
+            }
+
+            if (obj1 == obj2)
+            {
+                return true;
+            }
+
+            Pair pair1 = (Pair)obj1;
+            Pair pair2 = (Pair)obj2;
+
+            return SchemeBoolean.Equal(First(pair1), First(pair2)) && SchemeBoolean.Equal(Rest(pair1), Rest(pair2));
         }
 
         /// <summary>

@@ -248,11 +248,19 @@ namespace SimpleScheme
         /// <summary>
         /// Tests two strings for equality.
         /// </summary>
-        /// <param name="xstr">The first string.</param>
-        /// <param name="ystr">The second string.</param>
+        /// <param name="obj1">The first object (must be a scheme string..</param>
+        /// <param name="obj2">The second object.</param>
         /// <returns>True if the strings are equal.</returns>
-        internal static bool Equal(char[] xstr, char[] ystr)
+        internal static bool Equal(Obj obj1, Obj obj2)
         {
+            if (!(obj2 is char[]))
+            {
+                return false;
+            }
+
+            char[] xstr = (char[])obj1;
+            char[] ystr = (char[])obj2;
+
             if (xstr.Length != ystr.Length)
             {
                 return false;

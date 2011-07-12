@@ -46,23 +46,18 @@ namespace SimpleScheme
             // test strings
             if (obj1 is char[])
             {
-                if (!(obj2 is char[]))
-                {
-                    return false;
-                }
-
-                return SchemeString.Equal((char[])obj1, (char[])obj2);
+                return SchemeString.Equal(obj1, obj2);
             }
 
             // test vectors
             if (obj1 is Obj[])
             {
-                if (!(obj2 is Obj[]))
-                {
-                    return false;
-                }
+                return Vector.Equal(obj1, obj2);
+            }
 
-                return Vector.Equal((Obj[])obj1, (Obj[])obj2);
+            if (obj1 is Pair)
+            {
+                return Pair.Equal(obj1, obj2);
             }
 
             // delegate to first member, use C# equality

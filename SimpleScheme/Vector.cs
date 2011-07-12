@@ -120,12 +120,19 @@ namespace SimpleScheme
         /// <summary>
         /// Tests whether two vectors are equal.
         /// </summary>
-        /// <param name="vector1">One vector.</param>
-        /// <param name="vector2">The other vector.</param>
+        /// <param name="obj1">The first object (must be a scheme vector).</param>
+        /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both vectors of equal length and 
         /// all elements are equal.</returns>
-        internal static bool Equal(Obj[] vector1, object[] vector2)
+        internal static bool Equal(Obj obj1, Obj obj2)
         {
+            if (!(obj2 is Obj[]))
+            {
+                return false;
+            }
+
+            Obj[] vector1 = (Obj[])obj1;
+            Obj[] vector2 = (Obj[])obj2;
             if (vector1.Length != vector2.Length)
             {
                 return false;
