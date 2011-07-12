@@ -16,11 +16,6 @@ namespace SimpleScheme
         /// Marks the end of the input file.
         /// </summary>
         internal const string Eof = "#!EOF";
-
-        /// <summary>
-        /// Parses the input program.
-        /// </summary>
-        private readonly Parser parser;
         #endregion
 
         #region Construcors
@@ -30,27 +25,16 @@ namespace SimpleScheme
         /// <param name="inp">A text reader.</param>
         private InputPort(TextReader inp)
         {
-            this.parser = new Parser(inp);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the InputPort class.
-        /// </summary>
-        /// <param name="inp">An input stream.</param>
-        private InputPort(Stream inp)
-            : this(new StreamReader(inp))
-        {
+            this.Parser = new Parser(inp);
         }
         #endregion
 
         #region Accessors
+
         /// <summary>
         /// Gets the parser.
         /// </summary>
-        internal Parser Parser
-        {
-            get { return this.parser; }
-        }
+        internal Parser Parser { get; private set; }
         #endregion
 
         #region Define Primitives
@@ -106,16 +90,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Creates a new InputPort.
-        /// </summary>
-        /// <param name="inp">An input stream.</param>
-        /// <returns>A new InputPort.</returns>
-        internal static InputPort New(Stream inp)
-        {
-            return new InputPort(inp);
-        }
-
-        /// <summary>
         /// Tests the obj against EOF.
         /// </summary>
         /// <param name="x">The obj to test.</param>
@@ -157,7 +131,7 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         internal Obj Read()
         {
-            return this.parser.Read();
+            return this.Parser.Read();
         }
 
         /// <summary>
@@ -167,7 +141,7 @@ namespace SimpleScheme
         /// <returns>The undefined instance.</returns>
         internal Obj Close()
         {
-            this.parser.Close();
+            this.Parser.Close();
             return Undefined.Instance;
         }
         #endregion

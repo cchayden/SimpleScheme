@@ -126,21 +126,15 @@ namespace SimpleScheme
         /// Create a new interpeter with a given set of files to run initially.
         /// </summary>
         /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
-        /// <param name="primEnvironment">Environment containing the primitives (can not be null).</param>
+        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
         /// <param name="files">The files to read.</param>
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
         /// <returns>A scheme interpreter.</returns>
         public static Interpreter New(bool loadStandardMacros, IEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
-            Environment primEnv = primEnvironment as Environment;
-            if (primEnv == null)
-            {
-                ErrorHandlers.Error("Interpreter primitive environment cannot be null");
-                return null;
-            }
-
-            return new Interpreter(loadStandardMacros, primEnvironment as Environment, files, reader, writer);
+            Environment primEnv = primEnvironment as Environment ?? Environment.NewPrimitive();
+            return new Interpreter(loadStandardMacros, primEnv, files, reader, writer);
         }
 
         /// <summary>
@@ -278,7 +272,7 @@ namespace SimpleScheme
             try
             {
                 this.Load(
-                    InputPort.New(new FileStream(name, FileMode.Open, FileAccess.Read)));
+                    InputPort.New(new StreamReader(new FileStream(name, FileMode.Open, FileAccess.Read))));
             }
             catch (IOException)
             {

@@ -30,13 +30,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Oublic Static Methods.
+        #region Internal Static Methods.
         /// <summary>
         /// Creates a new OutputPort.
         /// </summary>
         /// <param name="outp">The output port to use for writing.</param>
         /// <returns>The new OutputPort.</returns>
-        public static OutputPort New(TextWriter outp)
+        internal static OutputPort New(TextWriter outp)
         {
             return new OutputPort(outp);
         }

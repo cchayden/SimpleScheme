@@ -436,7 +436,7 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                OutputPort w = OutputPort.New(writer);
+                OutputPort w = OutputPort_Accessor.New(writer);
                 var actual = OutputPort_Accessor.Write("abc", w, false);
                 Assert.AreEqual(Undefined.Instance, actual);
                 Assert.AreEqual("abc", writer.ToString());

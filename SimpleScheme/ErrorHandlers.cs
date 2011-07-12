@@ -176,6 +176,21 @@ namespace SimpleScheme
                 return "procedure";
             }
 
+            if (obj is InputPort)
+            {
+                return "input port";
+            }
+
+            if (obj is OutputPort)
+            {
+                return "output port";
+            }
+
+            if (obj == List.Empty)
+            {
+                return "empty list";
+            }
+
             return obj.GetType().ToString();
         }
         #endregion
