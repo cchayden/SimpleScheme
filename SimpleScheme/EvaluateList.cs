@@ -83,7 +83,7 @@ namespace SimpleScheme
             // first check for degenerate cases
             if (EmptyList.IsType(expr))
             {
-                return caller.ContinueStep(List.Empty);
+                return caller.ContinueStep(EmptyList.Instance);
             }
 
             if (!(expr is Pair))

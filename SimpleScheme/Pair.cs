@@ -166,7 +166,7 @@ namespace SimpleScheme
                 {
                     // this is a circular structure -- truncate
                     buf.Append(" ... [circular list]");
-                    tail = List.Empty;
+                    tail = EmptyList.Instance;
                     break;
                 }
 
@@ -174,7 +174,7 @@ namespace SimpleScheme
                 {
                     // maybe this is a circular structure -- truncate
                     buf.Append(" ... [too long]");
-                    tail = List.Empty;
+                    tail = EmptyList.Instance;
                     break;
                 }
             }

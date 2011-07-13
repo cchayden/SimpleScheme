@@ -128,8 +128,8 @@ namespace SimpleScheme
 
             this.vars = MapFun(First, MakeList(this.bindings));
             this.inits = MapFun(Second, MakeList(this.bindings));
-            this.formals = List.Empty;
-            this.vals = List.Empty;
+            this.formals = EmptyList.Instance;
+            this.vals = EmptyList.Instance;
             return ContinueHere(this.EvalInit);
         }
 

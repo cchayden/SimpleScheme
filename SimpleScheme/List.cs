@@ -10,14 +10,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class List : ListPrimitives
     {
-        #region Constants
-        /// <summary>
-        /// The empty list is represented by a distinguished obj.
-        /// It would also work to have Empty be represeted by null.
-        /// </summary>
-        public static readonly Obj Empty = new EmptyList();
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the list primitives.
@@ -164,7 +156,7 @@ namespace SimpleScheme
         /// <returns>The reversed list.</returns>
         private static Obj Reverse(Obj x)
         {
-            Obj result = Empty;
+            Obj result = EmptyList.Instance;
             while (x is Pair)
             {
                 result = Cons(First(x), result);
@@ -185,7 +177,7 @@ namespace SimpleScheme
         {
             if (EmptyList.IsType(args))
             {
-                return Empty;
+                return EmptyList.Instance;
             }
 
             Pair result = MakeEmptyList();

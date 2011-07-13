@@ -406,7 +406,7 @@ namespace SimpleScheme
         /// <returns>A list of the characters.</returns>
         private static Obj StringToList(object s)
         {
-            Obj result = List.Empty;
+            Obj result = EmptyList.Instance;
             char[] str = Str(s);
             for (int i = str.Length - 1; i >= 0; i--)
             {

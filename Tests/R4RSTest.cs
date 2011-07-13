@@ -1247,7 +1247,7 @@ namespace Tests
             this.Run("#t", "output-port?", "(output-port? test-file)");
             this.Run("#t", "close-output-port", @"(close-output-port test-file)
                                (check-test-file ""tmp2"")");
-            Assert.AreEqual(List.Empty, this.ReadAndEvaluate("errs"));
+            Assert.AreEqual(EmptyList_Accessor.Instance, this.ReadAndEvaluate("errs"));
         }
 
         /// <summary>
@@ -1338,7 +1338,7 @@ namespace Tests
             using (StringReader reader = new StringReader(str))
             {
                 InputPort_Accessor inp = new InputPort_Accessor(reader);
-                Obj last = List.Empty;
+                Obj last = EmptyList_Accessor.Instance;
                 while (true)
                 {
                     Obj x;

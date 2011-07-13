@@ -97,8 +97,8 @@ namespace Tests
         [TestMethod]
         public void EqualTest()
         {
-            Assert.IsTrue(SchemeBoolean_Accessor.Equal(List.Empty, List.Empty));
-            Assert.IsFalse(SchemeBoolean_Accessor.Equal(List.Empty, 1));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(EmptyList_Accessor.Instance, EmptyList_Accessor.Instance));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(EmptyList_Accessor.Instance, 1));
             Assert.IsTrue(SchemeBoolean_Accessor.Equal("abc", "abc"));
             Assert.IsFalse(SchemeBoolean_Accessor.Equal("abc", "ab"));
             Assert.IsFalse(SchemeBoolean_Accessor.Equal("abc", 1));
@@ -205,7 +205,7 @@ namespace Tests
             var actual = ListPrimitives.MakeList(10);
             Assert.AreEqual(1, ListPrimitives.Length(actual));
             Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(List.Empty, ListPrimitives.Rest(actual));
+            Assert.AreEqual(EmptyList_Accessor.Instance, ListPrimitives.Rest(actual));
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Tests
             Assert.AreEqual(2, ListPrimitives.Length(actual));
             Assert.AreEqual(10, ListPrimitives.First(actual));
             Assert.AreEqual(11, ListPrimitives.First(ListPrimitives.Rest(actual)));
-            Assert.AreEqual(List.Empty, ListPrimitives.Rest(ListPrimitives.Rest(actual)));
+            Assert.AreEqual(EmptyList_Accessor.Instance, ListPrimitives.Rest(ListPrimitives.Rest(actual)));
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace Tests
             actual = ListPrimitives.ListStar(ListPrimitives.Cons(10, ListPrimitives.Cons(11, ListPrimitives.MakeList(12))));
             Assert.AreEqual(10, ListPrimitives.First(actual));
             Assert.AreEqual(11, ListPrimitives.Second(actual));
-            Assert.AreEqual(List.Empty, ListPrimitives.Third(actual));
+            Assert.AreEqual(EmptyList_Accessor.Instance, ListPrimitives.Third(actual));
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace Tests
         [TestMethod]
         public void AsStringTest()
         {
-            Assert.AreEqual("()", SchemeString.AsString(List.Empty));
+            Assert.AreEqual("()", SchemeString.AsString(EmptyList_Accessor.Instance));
             Assert.AreEqual("1", SchemeString.AsString(1.0));
             Assert.AreEqual("1.5", SchemeString.AsString(1.5));
             Assert.AreEqual("#\\a", SchemeString.AsString('a'));
@@ -343,7 +343,7 @@ namespace Tests
         [TestMethod]
         public void AsStringTestWithQuote()
         {
-            Assert.AreEqual("()", SchemeString.AsString(List.Empty, false));
+            Assert.AreEqual("()", SchemeString.AsString(EmptyList_Accessor.Instance, false));
             Assert.AreEqual("1", SchemeString.AsString(1.0, false));
             Assert.AreEqual("1.5", SchemeString.AsString(1.5, false));
             Assert.AreEqual("a", SchemeString.AsString('a', false));
@@ -459,7 +459,7 @@ namespace Tests
             Assert.AreEqual("procedure", ErrorHandlers_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
             Assert.AreEqual("input port", ErrorHandlers_Accessor.TypeName(InputPort_Accessor.New(null)));
             Assert.AreEqual("output port", ErrorHandlers_Accessor.TypeName(OutputPort_Accessor.New(null)));
-            Assert.AreEqual("empty list", ErrorHandlers_Accessor.TypeName(List.Empty));
+            Assert.AreEqual("empty list", ErrorHandlers_Accessor.TypeName(EmptyList_Accessor.Instance));
         }
 
         /// <summary>

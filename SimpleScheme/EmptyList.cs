@@ -13,6 +13,12 @@ namespace SimpleScheme
     internal class EmptyList
     {
         /// <summary>
+        /// The empty list is represented by a distinguished obj.
+        /// It would also work to have the empty list be represeted by null.
+        /// </summary>
+        public static readonly Obj Instance = new EmptyList();
+
+        /// <summary>
         /// Print the empty list.
         /// </summary>
         /// <returns>The empty list token.</returns>

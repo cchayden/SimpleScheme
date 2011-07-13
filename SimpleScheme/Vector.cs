@@ -215,7 +215,7 @@ namespace SimpleScheme
         private static Obj VectorToList(object vector)
         {
             Obj[] vec = Vec(vector);
-            Obj result = List.Empty;
+            Obj result = EmptyList.Instance;
             for (int i = vec.Length - 1; i >= 0; i--)
             {
                 result = Cons(vec[i], result);

@@ -124,7 +124,7 @@ namespace SimpleScheme
             this.vars = MapFun(First, MakeList(bindings));
             this.inits = MapFun(Second, MakeList(bindings));
             this.formals = this.vars;
-            Obj initVals = List.Empty;
+            Obj initVals = EmptyList.Instance;
             int n = Length(this.vars);
             for (int i = 0; i < n; i++)
             {

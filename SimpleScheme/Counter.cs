@@ -126,7 +126,7 @@ namespace SimpleScheme
         /// <returns>The list of counterName/count pairs.</returns>
         private Obj GetCounters()
         {
-            Obj res = List.Empty;
+            Obj res = EmptyList.Instance;
             foreach (var kvp in counterNames)
             {
                 int count = this.counters[kvp.Value];

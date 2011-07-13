@@ -31,19 +31,19 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a)
         {
-            return Pair.New(a, List.Empty);
+            return Pair.New(a, EmptyList.Instance);
         }
 
         /// <summary>
         /// Create an empty list.
         /// This is actually a Pair whose First is null.
-        /// This is not the same as List.Empty.
+        /// This is not the same as EmptyList.Instance.
         /// Used where we need a list to start with, the first cell is normally trimmed off later.
         /// </summary>
         /// <returns>A list whose first cell is null.</returns>
         public static Pair MakeEmptyList()
         {
-            return Pair.New(List.Empty, List.Empty);
+            return Pair.New(EmptyList.Instance, EmptyList.Instance);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a, Obj b)
         {
-            return Pair.New(a, Pair.New(b, List.Empty));
+            return Pair.New(a, Pair.New(b, EmptyList.Instance));
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a, Obj b, Obj c)
         {
-            return Pair.New(a, Pair.New(b, Pair.New(c, List.Empty)));
+            return Pair.New(a, Pair.New(b, Pair.New(c, EmptyList.Instance)));
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(Obj a, Obj b, Obj c, Obj d)
         {
-            return Pair.New(a, Pair.New(b, Pair.New(c, Pair.New(d, List.Empty))));
+            return Pair.New(a, Pair.New(b, Pair.New(c, Pair.New(d, EmptyList.Instance))));
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace SimpleScheme
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static Obj First(Obj list)
         {
-            return list is Pair ? ((Pair)list).FirstCell : List.Empty;
+            return list is Pair ? ((Pair)list).FirstCell : EmptyList.Instance;
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static Obj Rest(Obj list)
         {
-            return list is Pair ? ((Pair)list).RestCell : List.Empty;
+            return list is Pair ? ((Pair)list).RestCell : EmptyList.Instance;
         }
 
         /// <summary>

@@ -99,7 +99,7 @@ namespace SimpleScheme
             this.clause = First(this.clauses);
             if (First(this.clause) as string == "else")
             {
-                this.test = List.Empty;
+                this.test = EmptyList.Instance;
                 return ContinueHere(this.EvalConsequentStep);
             }
 

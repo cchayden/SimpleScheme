@@ -309,7 +309,7 @@ namespace SimpleScheme
 
             if (token as string == ")")
             {
-                return List.Empty;  // there was no more
+                return EmptyList.Instance;  // there was no more
             }
 
             if (token as string == ".")
