@@ -73,6 +73,25 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme procedure.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is Procedure;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "procedure";
+        }
+
+        /// <summary>
         /// Check that the given object is a procedure.
         /// </summary>
         /// <param name="x">The obj to test.</param>

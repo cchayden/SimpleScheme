@@ -80,6 +80,25 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme input port.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is InputPort;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "input port";
+        }
+
+        /// <summary>
         /// Creates a new InputPort.
         /// </summary>
         /// <param name="inp">A text reader</param>

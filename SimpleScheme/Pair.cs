@@ -64,7 +64,26 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Internal Static Methods
+        /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme pair.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is Pair;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "pair";
+        }
+
         /// <summary>
         /// Tests whether two pairs are equal.
         /// </summary>

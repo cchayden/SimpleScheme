@@ -97,24 +97,24 @@ namespace Tests
         [TestMethod]
         public void EqualTest()
         {
-            Assert.IsTrue(SchemeBoolean.Equal(List.Empty, List.Empty));
-            Assert.IsFalse(SchemeBoolean.Equal(List.Empty, 1));
-            Assert.IsTrue(SchemeBoolean.Equal("abc", "abc"));
-            Assert.IsFalse(SchemeBoolean.Equal("abc", "ab"));
-            Assert.IsFalse(SchemeBoolean.Equal("abc", 1));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(List.Empty, List.Empty));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(List.Empty, 1));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal("abc", "abc"));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal("abc", "ab"));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal("abc", 1));
             var vec1 = new Obj[] { 1, 2, 3 };
             var vec2 = new Obj[] { 1, 2, 3 };
             var vec3 = new Obj[] { 1, 2 };
             var vec4 = new Obj[] { 1, 2, 4 };
-            Assert.IsTrue(SchemeBoolean.Equal(vec1, vec1));
-            Assert.IsTrue(SchemeBoolean.Equal(vec1, vec2));
-            Assert.IsFalse(SchemeBoolean.Equal(vec1, vec3));
-            Assert.IsFalse(SchemeBoolean.Equal(vec1, vec4));
-            Assert.IsTrue(SchemeBoolean.Equal(1, 1));
-            Assert.IsFalse(SchemeBoolean.Equal(1, 2));
-            Assert.IsTrue(SchemeBoolean.Equal(1.0, 1.0));
-            Assert.IsFalse(SchemeBoolean.Equal(1.0, 2.0));
-            Assert.IsTrue(SchemeBoolean.Equal(true, true));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(vec1, vec1));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(vec1, vec2));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(vec1, vec3));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(vec1, vec4));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(1, 1));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(1, 2));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(1.0, 1.0));
+            Assert.IsFalse(SchemeBoolean_Accessor.Equal(1.0, 2.0));
+            Assert.IsTrue(SchemeBoolean_Accessor.Equal(true, true));
             Assert.IsFalse(SchemeBoolean_Accessor.Equal(true, false));
             Assert.IsTrue(SchemeBoolean_Accessor.Equal('a', 'a'));
             Assert.IsFalse(SchemeBoolean_Accessor.Equal('a', 'b'));
@@ -126,26 +126,26 @@ namespace Tests
         [TestMethod]
         public void EqvTest()
         {
-            Assert.IsTrue(SchemeBoolean.Eqv(null, null));
-            Assert.IsFalse(SchemeBoolean.Eqv(null, 1));
-            Assert.IsTrue(SchemeBoolean.Eqv("abc", "abc"));
-            Assert.IsFalse(SchemeBoolean.Eqv("abc", "ab"));
-            Assert.IsFalse(SchemeBoolean.Eqv("abc", 1));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv(null, null));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(null, 1));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv("abc", "abc"));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv("abc", "ab"));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv("abc", 1));
             Obj[] vec1 = { 1, 2, 3 };
             Obj[] vec2 = { 1, 2, 3 };
             Obj[] vec3 = { 1, 2 };
             Obj[] vec4 = { 1, 2, 4 };
-            Assert.IsTrue(SchemeBoolean.Eqv(vec1, vec1));
-            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec2));
-            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec3));
-            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec4));
-            Assert.IsTrue(SchemeBoolean.Eqv(1, 1));
-            Assert.IsFalse(SchemeBoolean.Eqv(1, 2));
-            Assert.IsTrue(SchemeBoolean.Eqv(1.0, 1.0));
-            Assert.IsFalse(SchemeBoolean.Eqv(1.0, 2.0));
-            Assert.IsTrue(SchemeBoolean.Eqv(true, true));
-            Assert.IsFalse(SchemeBoolean.Eqv(true, false));
-            Assert.IsTrue(SchemeBoolean.Eqv('a', 'a'));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv(vec1, vec1));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(vec1, vec2));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(vec1, vec3));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(vec1, vec4));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv(1, 1));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(1, 2));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv(1.0, 1.0));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(1.0, 2.0));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv(true, true));
+            Assert.IsFalse(SchemeBoolean_Accessor.Eqv(true, false));
+            Assert.IsTrue(SchemeBoolean_Accessor.Eqv('a', 'a'));
             Assert.IsFalse(SchemeBoolean_Accessor.Eqv('a', 'b'));
         }
 
@@ -155,9 +155,9 @@ namespace Tests
         [TestMethod]
         public void IsFalseTest()
         {
-            Assert.IsTrue(SchemeBoolean.IsFalse(false));
-            Assert.IsFalse(SchemeBoolean.IsFalse(true));
-            Assert.IsFalse(SchemeBoolean.IsFalse(0));
+            Assert.IsTrue(SchemeBoolean_Accessor.IsFalse(false));
+            Assert.IsFalse(SchemeBoolean_Accessor.IsFalse(true));
+            Assert.IsFalse(SchemeBoolean_Accessor.IsFalse(0));
         }
 
         /// <summary>
@@ -166,9 +166,9 @@ namespace Tests
         [TestMethod]
         public void IsTrueTest()
         {
-            Assert.IsTrue(SchemeBoolean.IsTrue(true));
-            Assert.IsFalse(SchemeBoolean.IsTrue(false));
-            Assert.IsFalse(SchemeBoolean.IsTrue(0));
+            Assert.IsTrue(SchemeBoolean_Accessor.IsTrue(true));
+            Assert.IsFalse(SchemeBoolean_Accessor.IsTrue(false));
+            Assert.IsFalse(SchemeBoolean_Accessor.IsTrue(0));
         }
 
         /// <summary>
@@ -177,9 +177,9 @@ namespace Tests
         [TestMethod]
         public void TruthTest()
         {
-            Assert.IsTrue(SchemeBoolean.Truth(true));
-            Assert.IsFalse(SchemeBoolean.Truth(false));
-            Assert.IsTrue(SchemeBoolean.Truth(0));
+            Assert.IsTrue(SchemeBoolean_Accessor.Truth(true));
+            Assert.IsFalse(SchemeBoolean_Accessor.Truth(false));
+            Assert.IsTrue(SchemeBoolean_Accessor.Truth(0));
         }
 
         /// <summary>

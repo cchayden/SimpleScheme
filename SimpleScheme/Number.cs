@@ -169,6 +169,28 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Internal Static Methods
+        /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme number.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is double;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "number";
+        }
+
+        #endregion
+
         #region Private Static Methods
         /// <summary>
         /// Compute the greatest common divisor of a list of numbers.

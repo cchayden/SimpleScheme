@@ -192,6 +192,24 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Static Methods
+        /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme string.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is char[];
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "string";
+        }
 
         /// <summary>
         /// Creates a scheme string from a length and fill character.

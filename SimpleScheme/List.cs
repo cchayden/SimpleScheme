@@ -85,6 +85,28 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Internal Static Methods
+        /// <summary>
+        /// Test an object to see if is an empty list.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme empty list.</returns>
+        internal static bool IsEmpty(Obj obj)
+        {
+            return obj == List.Empty;
+        }
+
+        /// <summary>
+        /// Give the name of the empty list (for display).
+        /// </summary>
+        /// <returns>The empty list name.</returns>
+        internal static string EmptyName()
+        {
+            return "empty list";
+        }
+
+        #endregion
+
         #region Private Static Methods
         /// <summary>
         /// Do all the combination car-cdr functions.

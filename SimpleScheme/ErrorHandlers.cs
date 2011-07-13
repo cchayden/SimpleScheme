@@ -136,59 +136,59 @@ namespace SimpleScheme
         /// <returns>The scheme type name.</returns>
         private static string TypeName(Obj obj)
         {
-            if (obj is bool)
+            if (SchemeBoolean.IsType(obj))
             {
-                return "boolean";
+                return SchemeBoolean.TypeName();
             }
 
-            if (obj is string)
+            if (Symbol.IsType(obj))
             {
-                return "symbol";
+                return Symbol.TypeName();
             }
 
-            if (obj is char)
+            if (Character.IsType(obj))
             {
-                return "char";
+                return Character.TypeName();
             }
 
-            if (obj is Obj[])
+            if (Vector.IsType(obj))
             {
-                return "vector";
+                return Vector.TypeName();
             }
 
-            if (obj is Pair)
+            if (Pair.IsType(obj))
             {
-                return "pair";
+                return Pair.TypeName();
             }
 
-            if (obj is double)
+            if (Number.IsType(obj))
             {
-                return "number";
+                return Number.TypeName();
             }
 
-            if (obj is char[])
+            if (SchemeString.IsType(obj))
             {
-                return "string";
+                return SchemeString.TypeName();
             }
 
-            if (obj is Procedure)
+            if (Procedure.IsType(obj))
             {
-                return "procedure";
+                return Procedure.TypeName();
             }
 
-            if (obj is InputPort)
+            if (InputPort.IsType(obj))
             {
-                return "input port";
+                return InputPort.TypeName();
             }
 
-            if (obj is OutputPort)
+            if (OutputPort.IsType(obj))
             {
-                return "output port";
+                return OutputPort.TypeName();
             }
 
-            if (obj == List.Empty)
+            if (List.IsEmpty(obj))
             {
-                return "empty list";
+                return List.EmptyName();
             }
 
             return obj.GetType().ToString();

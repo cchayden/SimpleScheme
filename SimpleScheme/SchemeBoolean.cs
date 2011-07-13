@@ -23,7 +23,26 @@ namespace SimpleScheme
         internal const bool False = false;
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
+        /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme boolean.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is bool;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "bool";
+        }
+
         /// <summary>
         /// Equality test for two objs.
         /// Two objs are equal if they:
@@ -35,7 +54,7 @@ namespace SimpleScheme
         /// <param name="obj1">One member to test.</param>
         /// <param name="obj2">The other member to test.</param>
         /// <returns>True if the objs are equal.</returns>
-        public static bool Equal(Obj obj1, Obj obj2)
+        internal static bool Equal(Obj obj1, Obj obj2)
         {
             // both empty list
             if (obj1 == List.Empty || obj2 == List.Empty)
@@ -75,7 +94,7 @@ namespace SimpleScheme
         /// <param name="obj1">The first obj.</param>
         /// <param name="obj2">The second obj.</param>
         /// <returns>True if they are equivalent.</returns>
-        public static bool Eqv(Obj obj1, Obj obj2)
+        internal static bool Eqv(Obj obj1, Obj obj2)
         {
             return obj1 == obj2 || 
                 (obj1 is bool && obj1.Equals(obj2)) || 
@@ -90,7 +109,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The obj to test.</param>
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
-        public static bool IsFalse(Obj value)
+        internal static bool IsFalse(Obj value)
         {
             return (value is bool) && ((bool)value) == false;
         }
@@ -101,7 +120,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The obj to test.</param>
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
-        public static bool IsTrue(Obj value)
+        internal static bool IsTrue(Obj value)
         {
             return (value is bool) && (bool)value;
         }
@@ -112,7 +131,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The obj to test.</param>
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        public static bool Truth(Obj obj)
+        internal static bool Truth(Obj obj)
         {
             return !IsFalse(obj);
         }

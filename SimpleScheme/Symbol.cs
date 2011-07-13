@@ -47,6 +47,25 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a symbol.</returns>
+        internal static bool IsType(Obj obj)
+        {
+            return obj is string;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static string TypeName()
+        {
+            return "symbol";
+        }
+
+        /// <summary>
         /// Convert symbol into string.
         /// </summary>
         /// <param name="str">The symbol name.</param>
