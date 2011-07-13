@@ -57,24 +57,24 @@ namespace SimpleScheme
         internal static bool Equal(Obj obj1, Obj obj2)
         {
             // both empty list
-            if (obj1 == List.Empty || obj2 == List.Empty)
+            if (EmptyList.IsType(obj1) || EmptyList.IsType(obj2))
             {
                 return obj1 == obj2;
             }
 
             // test strings
-            if (obj1 is char[])
+            if (SchemeString.IsType(obj1))
             {
                 return SchemeString.Equal(obj1, obj2);
             }
 
             // test vectors
-            if (obj1 is Obj[])
+            if (Vector.IsType(obj1))
             {
                 return Vector.Equal(obj1, obj2);
             }
 
-            if (obj1 is Pair)
+            if (Pair.IsType(obj1))
             {
                 return Pair.Equal(obj1, obj2);
             }
@@ -156,7 +156,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
                 .DefinePrimitive("not", (args, caller) => Truth(First(args) is bool && (bool)First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(First(args) == List.Empty), 1);
+                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.IsType(First(args))), 1);
         }
         #endregion
 

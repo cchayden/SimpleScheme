@@ -280,7 +280,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder sb)
         {
             sb.AppendFormat("Step {0}\n", this.Name);
-            string exp = this.Expr == List.Empty ? "()" : this.Expr.ToString();
+            string exp = EmptyList.IsType(this.Expr) ? "()" : this.Expr.ToString();
             sb.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {

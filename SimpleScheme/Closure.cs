@@ -108,8 +108,8 @@ namespace SimpleScheme
         /// <returns>String representing the closure.</returns>
         protected string ToString(string tag)
         {
-            string formals = this.FormalParameters == List.Empty ? "()" : this.FormalParameters.ToString();
-            string body = this.Body == List.Empty ? "()" : this.Body.ToString();
+            string formals = EmptyList.IsType(this.FormalParameters) ? "()" : this.FormalParameters.ToString();
+            string body = EmptyList.IsType(this.Body) ? "()" : this.Body.ToString();
             return string.Format("({0} {1} {2})", tag, formals, body);
         }
         #endregion

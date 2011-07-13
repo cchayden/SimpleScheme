@@ -118,7 +118,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(expt <z>)</r4rs>
                 .DefinePrimitive("expt", (args, caller) => Expt(First(args), Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (args, caller) => args == List.Empty ? Zero : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (args, caller) => EmptyList.IsType(args) ? Zero : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(First(args))), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
@@ -126,7 +126,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (args, caller) => args == List.Empty ? One : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (args, caller) => EmptyList.IsType(args) ? One : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
@@ -366,7 +366,7 @@ namespace SimpleScheme
         /// with the starting value.</returns>
         private static Obj NumCompute(Obj args, char op, double result)
         {
-            if (args == List.Empty)
+            if (EmptyList.IsType(args))
             {
                 // If there are no numbers, apply a unary operation on the starting value.
                 switch (op)

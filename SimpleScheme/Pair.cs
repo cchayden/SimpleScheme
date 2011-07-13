@@ -116,7 +116,7 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to write the string into.</param>
         internal void AsString(bool quoted, StringBuilder buf)
         {
-            if (this.RestCell is Pair && Rest(this.RestCell) == List.Empty)
+            if (this.RestCell is Pair && EmptyList.IsType(Rest(this.RestCell)))
             {
                 string special = null;
 
@@ -179,7 +179,7 @@ namespace SimpleScheme
                 }
             }
 
-            if (tail != List.Empty)
+            if (!EmptyList.IsType(tail))
             {
                 buf.Append(" . ");
                 SchemeString.AsString(tail, quoted, buf);

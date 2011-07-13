@@ -123,7 +123,7 @@ namespace SimpleScheme
         internal static Obj[] New(object length, object fill)
         {
             Obj[] vec = new object[(int)Number.Num(length)];
-            if (fill == List.Empty)
+            if (EmptyList.IsType(fill))
             {
                 fill = Undefined.Instance;
             }

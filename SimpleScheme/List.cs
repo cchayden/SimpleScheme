@@ -85,28 +85,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
-        /// <summary>
-        /// Test an object to see if is an empty list.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme empty list.</returns>
-        internal static bool IsEmpty(Obj obj)
-        {
-            return obj == List.Empty;
-        }
-
-        /// <summary>
-        /// Give the name of the empty list (for display).
-        /// </summary>
-        /// <returns>The empty list name.</returns>
-        internal static string EmptyName()
-        {
-            return "empty list";
-        }
-
-        #endregion
-
         #region Private Static Methods
         /// <summary>
         /// Do all the combination car-cdr functions.
@@ -205,7 +183,7 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static Obj Append(Obj args)
         {
-            if (args == Empty)
+            if (EmptyList.IsType(args))
             {
                 return Empty;
             }
@@ -213,7 +191,7 @@ namespace SimpleScheme
             Pair result = MakeEmptyList();
             Pair accum = result;
 
-            while (Rest(args) != Empty)
+            while (!EmptyList.IsType(Rest(args)))
             {
                 accum = Append(accum, First(args));
                 args = Rest(args);
@@ -234,7 +212,7 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, Obj toCopy)
         {
-            while (toCopy != Empty)
+            while (!EmptyList.IsType(toCopy))
             {
                 tail.RestCell = MakeList(First(toCopy));
                 toCopy = Rest(toCopy);
@@ -253,7 +231,7 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (x == Empty)
+                if (EmptyList.IsType(x))
                 {
                     return true;
                 }
@@ -352,22 +330,7 @@ namespace SimpleScheme
         #endregion
 
         #region Private Class
-        /// <summary>
-        /// This represents the empty list.
-        /// The empty list could just as well be represented by null, but that loses some type
-        ///   safety, since it is compatible with any type.
-        /// </summary>
-        private class EmptyList
-        {
-            /// <summary>
-            /// Print the empty list.
-            /// </summary>
-            /// <returns>The empty list token.</returns>
-            public override string ToString()
-            {
-                return "<empty>";
-            }
-        }
+
         #endregion
     }
 }

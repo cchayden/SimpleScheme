@@ -104,7 +104,7 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the constructed lambda.</returns>
         private Stepper InitialStep()
         {
-            if (Expr == List.Empty)
+            if (EmptyList.IsType(Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for let");
                 return ReturnUndefined();
@@ -129,7 +129,7 @@ namespace SimpleScheme
                 this.body = Rest(Expr);
             }
 
-            if (this.body == List.Empty)
+            if (EmptyList.IsType(this.body))
             {
                 return ReturnUndefined();
             }

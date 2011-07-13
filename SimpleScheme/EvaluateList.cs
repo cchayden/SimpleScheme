@@ -81,7 +81,7 @@ namespace SimpleScheme
         internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // first check for degenerate cases
-            if (expr == List.Empty)
+            if (EmptyList.IsType(expr))
             {
                 return caller.ContinueStep(List.Empty);
             }

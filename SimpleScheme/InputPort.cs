@@ -127,7 +127,7 @@ namespace SimpleScheme
         /// <returns>An input port.</returns>
         internal static InputPort InPort(Obj obj, InputPort inPort)
         {
-            if (obj == List.Empty)
+            if (EmptyList.IsType(obj))
             {
                 return inPort;
             }

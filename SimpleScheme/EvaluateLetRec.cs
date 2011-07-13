@@ -101,13 +101,13 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the init list.</returns>
         private Stepper InitialStep()
         {
-            if (Expr == List.Empty)
+            if (EmptyList.IsType(Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
                 return ReturnUndefined();
             }
 
-            if (!(Expr is Pair))
+            if (!Pair.IsType(Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for letrec: " + Expr);
                 return ReturnUndefined();
@@ -116,7 +116,7 @@ namespace SimpleScheme
             Obj bindings = First(Expr);
             this.body = Rest(Expr);
 
-            if (this.body == List.Empty)
+            if (EmptyList.IsType(this.body))
             {
                 return ReturnUndefined();
             }
@@ -143,7 +143,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalInit()
         {
-            if (this.inits == List.Empty)
+            if (EmptyList.IsType(this.inits))
             {
                 return ContinueHere(this.ApplyProc);
             }

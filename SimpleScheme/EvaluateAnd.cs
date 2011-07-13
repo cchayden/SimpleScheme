@@ -66,7 +66,7 @@ namespace SimpleScheme
         internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (expr == List.Empty)
+            if (EmptyList.IsType(expr))
             {
                 return caller.ContinueStep(SchemeBoolean.True);
             }
@@ -82,7 +82,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper EvalTestStep()
         {
-            if (Rest(this.tests) == List.Empty)
+            if (EmptyList.IsType(Rest(this.tests)))
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.

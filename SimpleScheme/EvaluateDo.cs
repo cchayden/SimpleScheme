@@ -101,7 +101,7 @@ namespace SimpleScheme
         private static Obj ThirdOrFirst(object x)
         {
             Obj res = Third(x);
-            return res == List.Empty ? First(x) : res;
+            return EmptyList.IsType(res) ? First(x) : res;
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the inits.</returns>
         private Stepper InitialStep()
         {
-            if (Expr == List.Empty)
+            if (EmptyList.IsType(Expr))
             {
                 ErrorHandlers.SemanticError("No body for do");
                 return ReturnUndefined();
@@ -133,7 +133,7 @@ namespace SimpleScheme
             this.exprs = Rest(Second(Expr));
             this.commands = Rest(Rest(Expr));
 
-            if (test == List.Empty)
+            if (EmptyList.IsType(test))
             {
                 return ReturnUndefined();
             }
@@ -169,7 +169,7 @@ namespace SimpleScheme
                 // Evaluate exprs and return the value of the last
                 //   in the environment of the vars.
                 // If no exprs, unspecified.
-                if (this.exprs == List.Empty)
+                if (EmptyList.IsType(this.exprs))
                 {
                     return ReturnUndefined();
                 }

@@ -186,9 +186,9 @@ namespace SimpleScheme
                 return OutputPort.TypeName();
             }
 
-            if (List.IsEmpty(obj))
+            if (EmptyList.IsType(obj))
             {
-                return List.EmptyName();
+                return EmptyList.TypeName();
             }
 
             return obj.GetType().ToString();

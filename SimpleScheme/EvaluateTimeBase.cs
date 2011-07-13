@@ -60,7 +60,7 @@ namespace SimpleScheme
         protected Stepper InitialStep()
         {
             Obj y = Second(Expr);
-            this.counter = y == List.Empty ? 1 : (int)Number.Num(y);
+            this.counter = EmptyList.IsType(y) ? 1 : (int)Number.Num(y);
             this.i = 0;
             return ContinueHere(this.Step1);
         }

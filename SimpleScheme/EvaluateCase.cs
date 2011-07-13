@@ -115,7 +115,7 @@ namespace SimpleScheme
         /// <returns>The steps to test che clauses.</returns>
         private Stepper CheckClauseStep()
         {
-            while (this.clauses != List.Empty)
+            while (!EmptyList.IsType(this.clauses))
             {
                 Obj clause = First(this.clauses);
                 if (!(clause is Pair))
@@ -157,7 +157,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper EvalExpr()
         {
-            if (this.exprList == List.Empty)
+            if (EmptyList.IsType(this.exprList))
             {
                 // if no expressions, return key value
                 return ReturnFromStep(this.keyVal);

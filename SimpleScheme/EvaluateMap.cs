@@ -115,7 +115,7 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             // first check for degenerate cases
-            if (this.lists == List.Empty)
+            if (EmptyList.IsType(this.lists))
             {
                 return ReturnUndefined();
             }

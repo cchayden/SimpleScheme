@@ -92,7 +92,7 @@ namespace SimpleScheme
         /// <returns>The items appended.</returns>
         public static Obj ListStar(Obj args)
         {
-            return Rest(args) == List.Empty ? 
+            return EmptyList.IsType(Rest(args)) ? 
                 First(args) : 
                 Cons(First(args), ListStar(Rest(args)));
         }

@@ -167,7 +167,7 @@ namespace SimpleScheme
         /// <returns>The output port.</returns>
         private static OutputPort OutPort(Obj obj, OutputPort outPort)
         {
-            if (obj == List.Empty)
+            if (EmptyList.IsType(obj))
             {
                 return outPort;
             }

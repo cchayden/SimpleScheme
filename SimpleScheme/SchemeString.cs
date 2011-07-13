@@ -45,7 +45,7 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to accumulate the string into.</param>
         public static void AsString(Obj x, bool quoted, StringBuilder buf)
         {
-            if (x == List.Empty)
+            if (EmptyList.IsType(x))
             {
                 buf.Append("()");
             }
@@ -219,7 +219,7 @@ namespace SimpleScheme
         /// <returns>The new scheme string.</returns>
         internal static char[] MakeString(Obj length, Obj fill)
         {
-            char c = (fill == List.Empty) ? (char)0 : Character.Chr(fill);
+            char c = EmptyList.IsType(fill) ? (char)0 : Character.Chr(fill);
             return new string(c, (int)Number.Num(length)).ToCharArray();
         }
 

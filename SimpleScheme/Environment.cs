@@ -131,7 +131,7 @@ namespace SimpleScheme
                    "exit", 
                    (args, caller) =>
                        {
-                            System.Environment.Exit(First(args) == List.Empty ? 0 : (int)Number.Num(First(args)));
+                            System.Environment.Exit(EmptyList.IsType(First(args)) ? 0 : (int)Number.Num(First(args)));
                             return Undefined.Instance;
                         },
                    0, 
@@ -383,12 +383,12 @@ namespace SimpleScheme
             count = 0;
             while (true)
             {
-                if ((vars == List.Empty && vals == List.Empty) || (vars is string))
+                if ((EmptyList.IsType(vars) && EmptyList.IsType(vals)) || EmptyList.IsType(vars))
                 {
                     return true;
                 }
 
-                if (!(vars is Pair && vals is Pair))
+                if (!(Pair.IsType(vars) && Pair.IsType(vals)))
                 {
                     return false;
                 }
@@ -459,7 +459,7 @@ namespace SimpleScheme
             /// <param name="vals">The list of values.</param>
             internal void AddList(Obj symbols, Obj vals)
             {
-                while (symbols != List.Empty)
+                while (!EmptyList.IsType(symbols))
                 {
                     if (symbols is string)
                     {

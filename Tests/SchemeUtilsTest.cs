@@ -444,6 +444,25 @@ namespace Tests
         }
 
         /// <summary>
+        /// A test for type name.
+        /// </summary>
+        [TestMethod]
+        public void TypeNameTest()
+        {
+            Assert.AreEqual("bool", ErrorHandlers_Accessor.TypeName(true));
+            Assert.AreEqual("symbol", ErrorHandlers_Accessor.TypeName("sym"));
+            Assert.AreEqual("char", ErrorHandlers_Accessor.TypeName('c'));
+            Assert.AreEqual("vector", ErrorHandlers_Accessor.TypeName(new Obj[] { 1, 2, 3 }));
+            Assert.AreEqual("pair", ErrorHandlers_Accessor.TypeName(Pair.New(null, null)));
+            Assert.AreEqual("number", ErrorHandlers_Accessor.TypeName(1.0d));
+            Assert.AreEqual("string", ErrorHandlers_Accessor.TypeName(new char[] { 'a', 'b', 'c' }));
+            Assert.AreEqual("procedure", ErrorHandlers_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
+            Assert.AreEqual("input port", ErrorHandlers_Accessor.TypeName(InputPort_Accessor.New(null)));
+            Assert.AreEqual("output port", ErrorHandlers_Accessor.TypeName(OutputPort_Accessor.New(null)));
+            Assert.AreEqual("empty list", ErrorHandlers_Accessor.TypeName(List.Empty));
+        }
+
+        /// <summary>
         /// Extended Assert.
         /// </summary>
         public static class AssertEx
