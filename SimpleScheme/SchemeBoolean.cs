@@ -135,6 +135,17 @@ namespace SimpleScheme
         {
             return !IsFalse(obj);
         }
+
+        /// <summary>
+        /// Convert the bool instance to a string.
+        /// </summary>
+        /// <param name="val">The boolean value to convert.</param>
+        /// <param name="quoted">True if the string should be quoted.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        internal static void AsString(bool val, bool quoted, StringBuilder buf)
+        {
+            buf.Append(val ? "#t" : "#f");
+        }
         #endregion
 
         #region Define Primitives
@@ -157,19 +168,6 @@ namespace SimpleScheme
                 .DefinePrimitive("not", (args, caller) => Truth(First(args) is bool && (bool)First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
                 .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.IsType(First(args))), 1);
-        }
-        #endregion
-
-        #region Internal Static Methods
-        /// <summary>
-        /// Convert the bool instance to a string.
-        /// </summary>
-        /// <param name="val">The boolean value to convert.</param>
-        /// <param name="quoted">True if the string should be quoted.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(bool val, bool quoted, StringBuilder buf)
-        {
-            buf.Append(val ? "#t" : "#f");
         }
         #endregion
     }

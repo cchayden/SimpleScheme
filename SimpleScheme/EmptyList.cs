@@ -12,12 +12,15 @@ namespace SimpleScheme
     /// </summary>
     internal class EmptyList
     {
+        #region Constants
         /// <summary>
         /// The empty list is represented by a distinguished obj.
         /// It would also work to have the empty list be represeted by null.
         /// </summary>
         public static readonly Obj Instance = new EmptyList();
+        #endregion
 
+        #region Public Methods
         /// <summary>
         /// Print the empty list.
         /// </summary>
@@ -26,7 +29,9 @@ namespace SimpleScheme
         {
             return "<empty>";
         }
+        #endregion
 
+        #region Internal Static Methods
         /// <summary>
         /// Test an object's type.
         /// </summary>
@@ -45,5 +50,6 @@ namespace SimpleScheme
         {
             return "empty list";
         }
+        #endregion
     }
 }
