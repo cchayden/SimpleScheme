@@ -33,82 +33,8 @@ namespace SimpleScheme
         public static string AsString(Obj x, bool quoted)
         {
             StringBuilder buf = new StringBuilder();
-            AsString(x, quoted, buf);
+            TypePrimitives.AsString(x, quoted, buf);
             return buf.ToString();
-        }
-
-        /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="x">The obj to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void AsString(Obj x, bool quoted, StringBuilder buf)
-        {
-            if (EmptyList.IsType(x))
-            {
-                buf.Append("()");
-            }
-            else if (x is double)
-            {
-                double d = (double)x;
-                if (Math.Round(d) == d)
-                {
-                    buf.Append((long)d);
-                }
-                else
-                {
-                    buf.Append(d);
-                }
-            }
-            else if (x is char)
-            {
-                if (quoted)
-                {
-                    buf.Append("#\\");
-                }
-
-                if ((char)x == ' ')
-                {
-                    buf.Append("space");
-                } 
-                else
-                {
-                    buf.Append(x);
-                }
-            }
-            else if (x is Pair)
-            {
-                ((Pair)x).AsString(quoted, buf);
-            }
-            else if (x is string)
-            {
-                Symbol.AsString((string)x, quoted, buf);
-            }
-            else if (x is char[])
-            {
-                AsString((char[])x, quoted, buf);
-            }
-            else if (x is Obj[])
-            {
-                Vector.AsString((Obj[])x, quoted, buf);
-            }
-            else if (x is bool)
-            {
-                SchemeBoolean.AsString((bool)x, quoted, buf);
-            }
-            else if (x is Stepper)
-            {
-                ((Stepper)x).AsString(quoted, buf);
-            }
-            else if (x is Undefined)
-            {
-                Undefined.AsString(quoted, buf);
-            }
-            else
-            {
-                buf.Append(x);
-            }
         }
 
         /// <summary>
@@ -118,7 +44,7 @@ namespace SimpleScheme
         /// <returns>The scheme string.</returns>
         public static char[] Str(Obj obj)
         {
-            if (obj is char[])
+            if (IsType(obj))
             {
                 return (char[])obj;
             }
@@ -185,7 +111,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
                 .DefinePrimitive("string>?", (args, caller) => SchemeBoolean.Truth(StringCompare(First(args), Second(args), false) > 0), 2)
                 //// <r4rs section="6.7">(string? <obj>)</r4rs>
-                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(First(args) is char[]), 1)
+                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
                 //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
                 .DefinePrimitive("substring", (args, caller) => Substr(First(args), Second(args), Third(args)), 3);
         }
@@ -209,6 +135,39 @@ namespace SimpleScheme
         internal static string TypeName()
         {
             return "string";
+        }
+
+        /// <summary>
+        /// Convert a scheme string into a string for output.
+        /// </summary>
+        /// <param name="obj">The string to output.</param>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            char[] str = (char[])obj;
+            if (quoted)
+            {
+                buf.Append('"');
+            }
+
+            if (str != null)
+            {
+                foreach (char c in str)
+                {
+                    if (quoted && c == '"')
+                    {
+                        buf.Append('\\');
+                    }
+
+                    buf.Append(c);
+                }
+            }
+
+            if (quoted)
+            {
+                buf.Append('"');
+            }
         }
 
         /// <summary>
@@ -271,7 +230,7 @@ namespace SimpleScheme
         /// <returns>True if the strings are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!(obj2 is char[]))
+            if (!IsType(obj2))
             {
                 return false;
             }
@@ -304,45 +263,13 @@ namespace SimpleScheme
         internal static char[] ListToString(Obj chars)
         {
             StringBuilder str = new StringBuilder();
-            while (chars is Pair)
+            while (Pair.IsType(chars))
             {
                 str.Append(Character.Chr(First(chars)));
                 chars = Rest(chars);
             }
 
             return MakeString(str);
-        }
-
-        /// <summary>
-        /// Covert the SchemeString into a string.
-        /// </summary>
-        /// <param name="str">The string to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(char[] str, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append('"');
-            }
-
-            if (str != null)
-            {
-                foreach (char c in str)
-                {
-                    if (quoted && c == '"')
-                    {
-                        buf.Append('\\');
-                    }
-
-                    buf.Append(c);
-                }
-            }
-
-            if (quoted)
-            {
-                buf.Append('"');
-            }
         }
         #endregion
 
@@ -466,7 +393,7 @@ namespace SimpleScheme
         {
             StringBuilder result = new StringBuilder();
 
-            while (args is Pair)
+            while (Pair.IsType(args))
             {
                 result.Append(AsString(First(args), false));
                 args = Rest(args);
@@ -486,7 +413,7 @@ namespace SimpleScheme
         /// positive if first is greater.</returns>
         private static int StringCompare(Obj x, Obj y, bool ci)
         {
-            if (x is char[] && y is char[])
+            if (IsType(x) && IsType(y))
             {
                 return Compare((char[])x, (char[])y, ci);
             }

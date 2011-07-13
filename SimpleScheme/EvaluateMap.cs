@@ -120,7 +120,7 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            if (!(this.lists is Pair))
+            if (!Pair.IsType(this.lists))
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + this.lists);
                 return ReturnUndefined();
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// If we are done, return the collected results.</returns>
         private Stepper ApplyFunStep()
         {
-            if (First(this.lists) is Pair)
+            if (Pair.IsType(First(this.lists)))
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.

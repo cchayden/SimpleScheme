@@ -110,13 +110,13 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            if (!(Expr is Pair))
+            if (!Pair.IsType(Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let: " + Expr);
                 return ReturnUndefined();
             }
 
-            if (First(Expr) is string)
+            if (Symbol.IsType(First(Expr)))
             {
                 // named let
                 this.name = Symbol.Sym(First(Expr));

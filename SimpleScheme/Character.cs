@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -19,12 +20,12 @@ namespace SimpleScheme
         /// <returns>The character.</returns>
         public static char Chr(Obj obj)
         {
-            if (obj is char)
+            if (IsType(obj))
             {
                 return (char)obj;
             }
 
-            return Chr(ErrorHandlers.TypeError("char", obj));
+            return Chr(ErrorHandlers.TypeError(TypeName(), obj));
         }
         #endregion
 
@@ -73,7 +74,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
                 .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(ChrCompare(First(args), Second(args), false) > 0), 2)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
-                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(First(args) is char), 1);
+                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
         }
         #endregion
 
@@ -95,6 +96,30 @@ namespace SimpleScheme
         internal static string TypeName()
         {
             return "char";
+        }
+
+        /// <summary>
+        /// Convert the character a string.
+        /// </summary>
+        /// <param name="obj">The character to convert.</param>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            char c = (char)obj;
+            if (quoted)
+            {
+                buf.Append("#\\");
+            }
+
+            if (c == ' ')
+            {
+                buf.Append("space");
+            }
+            else
+            {
+                buf.Append(c);
+            }
         }
 
         /// <summary>

@@ -50,7 +50,26 @@ namespace SimpleScheme
         internal Environment Env { get; private set; }
         #endregion
 
-        #region Internal Methods
+        #region Internal Static Methods
+        /// <summary>
+        /// Test an object's type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is a scheme macroclosure.</returns>
+        internal static new bool IsType(Obj obj)
+        {
+            return obj is Closure;
+        }
+
+        /// <summary>
+        /// Give the name of the type (for display).
+        /// </summary>
+        /// <returns>The type name.</returns>
+        internal static new string TypeName()
+        {
+            return "closure";
+        }
+
         /// <summary>
         /// Create a new Closure
         /// </summary>

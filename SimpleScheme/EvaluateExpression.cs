@@ -153,7 +153,7 @@ namespace SimpleScheme
             // do not create an evaluator -- just return the value directly.
             //
             // First look for a symbol.
-            if (expr is string)
+            if (Symbol.IsType(expr))
             {
                 // Evaluate a symbol by looking it up in the environment.
                 // It should correspond to a variable name, for which there 
@@ -163,11 +163,11 @@ namespace SimpleScheme
                     return (Stepper)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
                 }
 
-                return caller.ContinueStep(env.Lookup((string)expr));
+                return caller.ContinueStep(env.Lookup(Symbol.Sym(expr)));
             }
 
             // Look for all other non-pair forms.
-            if (!(expr is Pair))
+            if (!Pair.IsType(expr))
             {
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.

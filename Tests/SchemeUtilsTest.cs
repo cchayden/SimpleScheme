@@ -365,19 +365,19 @@ namespace Tests
         public void AsStringTestWithBuf()
         {
             StringBuilder buf = new StringBuilder().Append("x");
-            SchemeString.AsString(null, false, buf);
+            TypePrimitives_Accessor.AsString(null, false, buf);
             Assert.AreEqual("x", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeString.AsString(1.0, false, buf);
+            TypePrimitives_Accessor.AsString(1.0, false, buf);
             Assert.AreEqual("x1", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeString.AsString(1.5, false, buf);
+            TypePrimitives_Accessor.AsString(1.5, false, buf);
             Assert.AreEqual("x1.5", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeString.AsString('a', false, buf);
+            TypePrimitives_Accessor.AsString('a', false, buf);
             Assert.AreEqual("xa", buf.ToString());
             buf = new StringBuilder().Append("x");
-            SchemeString.AsString("abc", false, buf);
+            TypePrimitives_Accessor.AsString("abc", false, buf);
             Assert.AreEqual("xabc", buf.ToString());
         }
 
@@ -449,17 +449,17 @@ namespace Tests
         [TestMethod]
         public void TypeNameTest()
         {
-            Assert.AreEqual("bool", ErrorHandlers_Accessor.TypeName(true));
-            Assert.AreEqual("symbol", ErrorHandlers_Accessor.TypeName("sym"));
-            Assert.AreEqual("char", ErrorHandlers_Accessor.TypeName('c'));
-            Assert.AreEqual("vector", ErrorHandlers_Accessor.TypeName(new Obj[] { 1, 2, 3 }));
-            Assert.AreEqual("pair", ErrorHandlers_Accessor.TypeName(Pair.New(null, null)));
-            Assert.AreEqual("number", ErrorHandlers_Accessor.TypeName(1.0d));
-            Assert.AreEqual("string", ErrorHandlers_Accessor.TypeName(new char[] { 'a', 'b', 'c' }));
-            Assert.AreEqual("procedure", ErrorHandlers_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
-            Assert.AreEqual("input port", ErrorHandlers_Accessor.TypeName(InputPort_Accessor.New(null)));
-            Assert.AreEqual("output port", ErrorHandlers_Accessor.TypeName(OutputPort_Accessor.New(null)));
-            Assert.AreEqual("empty list", ErrorHandlers_Accessor.TypeName(EmptyList_Accessor.Instance));
+            Assert.AreEqual("bool", TypePrimitives_Accessor.TypeName(true));
+            Assert.AreEqual("symbol", TypePrimitives_Accessor.TypeName("sym"));
+            Assert.AreEqual("char", TypePrimitives_Accessor.TypeName('c'));
+            Assert.AreEqual("vector", TypePrimitives_Accessor.TypeName(new Obj[] { 1, 2, 3 }));
+            Assert.AreEqual("pair", TypePrimitives_Accessor.TypeName(Pair.New(null, null)));
+            Assert.AreEqual("number", TypePrimitives_Accessor.TypeName(1.0d));
+            Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new char[] { 'a', 'b', 'c' }));
+            Assert.AreEqual("procedure", TypePrimitives_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
+            Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(InputPort_Accessor.New(null)));
+            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(OutputPort_Accessor.New(null)));
+            Assert.AreEqual("empty list", TypePrimitives_Accessor.TypeName(EmptyList_Accessor.Instance));
         }
 
         /// <summary>

@@ -67,7 +67,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
                 .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), true, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(First(args) is Procedure), 1);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
         }
         #endregion
 
@@ -98,7 +98,7 @@ namespace SimpleScheme
         /// <returns>The procedure.</returns>
         internal static Procedure Proc(Obj x)
         {
-            if (x is Procedure)
+            if (IsType(x))
             {
                 return (Procedure)x;
             }
@@ -114,7 +114,7 @@ namespace SimpleScheme
         /// <returns>The result of applying the proc.</returns>
         internal static Obj Force(Obj promise, Stepper caller)
         {
-            return !(promise is Procedure) ? promise : Proc(promise).Apply(null, caller.Env, caller);
+            return !IsType(promise) ? promise : Proc(promise).Apply(null, caller.Env, caller);
         }
         #endregion
 
@@ -153,7 +153,7 @@ namespace SimpleScheme
         internal Stepper Evaluate(Obj args, Environment env, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
-            if (this is Macro)
+            if (Macro.IsType(this))
             {
                 return EvaluateExpandMacro.Call((Macro)this, args, env, caller);
             }
@@ -163,7 +163,7 @@ namespace SimpleScheme
             //   2 arguments evaluated in the original environment
             //   3 the closure's environment
             // Then continue evaluating the closure body in this new environment
-            if (this is Closure)
+            if (Closure.IsType(this))
             {
                 // CLOSURE CALL -- capture the environment and evaluate the body
                 return EvaluateClosure.Call((Closure)this, args, env, caller);

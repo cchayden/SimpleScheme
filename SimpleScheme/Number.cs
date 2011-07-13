@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -32,12 +33,12 @@ namespace SimpleScheme
         /// <returns>The double contained in the obj.</returns>
         public static double Num(Obj x)
         {
-            if (x is double)
+            if (Number.IsType(x))
             {
                 return (double)x;
             }
 
-            if (x is int || x is long)
+            if (x is byte || x is int || x is long || x is float)
             {
                 return Convert.ToDouble(x);
                 
@@ -45,6 +46,26 @@ namespace SimpleScheme
 
             return Num(ErrorHandlers.TypeError("number", x));
         }
+
+        /// <summary>
+        /// Convert the number a string.
+        /// </summary>
+        /// <param name="obj">The number to convert.</param>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            double d = Num(obj);
+            if (Math.Round(d) == d)
+            {
+                buf.Append((long)d);
+            }
+            else
+            {
+                buf.Append(d);
+            }
+        }
+
         #endregion
 
         #region Define Primitives
@@ -201,7 +222,7 @@ namespace SimpleScheme
         {
             long gcd = 0;
 
-            while (args is Pair)
+            while (Pair.IsType(args))
             {
                 gcd = Gcd2(Math.Abs((long)Num(First(args))), gcd);
                 args = Rest(args);
@@ -228,7 +249,7 @@ namespace SimpleScheme
         /// <returns>True if the number is exact.</returns>
         private static bool IsExact(Obj x)
         {
-            if (!(x is double))
+            if (!IsType(x))
             {
                 return false;
             }
@@ -257,7 +278,7 @@ namespace SimpleScheme
         {
             long lcm = 1;
 
-            while (args is Pair)
+            while (Pair.IsType(args))
             {
                 long n = Math.Abs((long)Num(First(args)));
                 long g = Gcd2(n, lcm);
@@ -277,7 +298,7 @@ namespace SimpleScheme
         /// <returns>A string version of the number.</returns>
         private static Obj NumberToString(Obj x, Obj y)
         {
-            int numberBase = y is double ? (int)Num(y) : 10;
+            int numberBase = Number.IsType(y) ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
                 return Convert.ToString((long)Num(x), numberBase).ToCharArray();
@@ -296,7 +317,7 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         private static Obj NumCompare(Obj args, char op)
         {
-            while (Rest(args) is Pair)
+            while (Pair.IsType(Rest(args)))
             {
                 double x = Num(First(args));
                 args = Rest(args);
@@ -382,7 +403,7 @@ namespace SimpleScheme
                 }
             }
 
-            while (args is Pair)
+            while (Pair.IsType(args))
             {
                 double x = Num(First(args));
                 switch (op)

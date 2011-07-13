@@ -61,7 +61,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (args, caller) => caller.Env.Interp.Input, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(First(args) is InputPort), 1)
+                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
                 .DefinePrimitive("load", (args, caller) => LoadFile(caller, First(args)), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
@@ -132,7 +132,7 @@ namespace SimpleScheme
                 return inPort;
             }
 
-            if (obj is InputPort)
+            if (IsType(obj))
             {
                 return (InputPort)obj;
             }

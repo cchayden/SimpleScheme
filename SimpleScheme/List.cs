@@ -58,7 +58,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
                 .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), 'm', 'v'), 2)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(First(args) is Pair), 1)
+                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.IsType(First(args))), 1)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
                 .DefinePrimitive("reverse", (args, caller) => Reverse(First(args)), 1)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
@@ -123,7 +123,7 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         private static Obj SetFirst(Obj x, Obj y)
         {
-            if (x is Pair)
+            if (Pair.IsType(x))
             {
                 ((Pair)x).FirstCell = y;
                 return Undefined.Instance;
@@ -140,7 +140,7 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         private static Obj SetRest(Obj x, Obj y)
         {
-            if (x is Pair)
+            if (Pair.IsType(x))
             {
                 ((Pair)x).RestCell = y;
                 return Undefined.Instance;
@@ -157,7 +157,7 @@ namespace SimpleScheme
         private static Obj Reverse(Obj x)
         {
             Obj result = EmptyList.Instance;
-            while (x is Pair)
+            while (Pair.IsType(x))
             {
                 result = Cons(First(x), result);
                 x = ((Pair)x).RestCell;
@@ -228,7 +228,7 @@ namespace SimpleScheme
                     return true;
                 }
 
-                if (!(x is Pair))
+                if (!Pair.IsType(x))
                 {
                     return false;
                 }
@@ -286,7 +286,7 @@ namespace SimpleScheme
         /// <returns>The results that wer found.</returns>
         private static Obj MemberAssoc(Obj obj, Obj list, char m, char eq)
         {
-            while (list is Pair)
+            while (Pair.IsType(list))
             {
                 Obj target = m == 'm' ? First(list) : First(First(list));
                 bool found;

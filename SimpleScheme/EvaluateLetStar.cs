@@ -112,7 +112,7 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            if (!(Expr is Pair))
+            if (!Pair.IsType(Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let*: " + Expr);
                 return ReturnUndefined();

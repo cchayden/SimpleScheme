@@ -147,7 +147,7 @@ namespace SimpleScheme
             int n = Length(args);
             List<Type> array = new List<Type>(n);
 
-            while (args is Pair)
+            while (Pair.IsType(args))
             {
                 array.Add(ToClass(First(args)));
                 args = Rest(args);
@@ -181,7 +181,7 @@ namespace SimpleScheme
 
             int i = 0;
             int a = 0;
-            while (args is Pair)
+            while (Pair.IsType(args))
             {
                 Obj elem = First(args);
                 if (this.ArgClasses[i] == typeof(int))

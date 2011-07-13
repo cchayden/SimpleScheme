@@ -114,7 +114,21 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region Internal Static Methods
+
+        /// <summary>
+        /// Convert the stepper instance to a string.
+        /// Could also consider printing the Expr.
+        /// </summary>
+        /// <param name="quoted">True if the string should be quoted.</param>
+        /// <param name="buf">The buffer to accumulate the string into.</param>
+        internal static void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<stepper>");
+            }
+        }
         /// <summary>
         /// Transfer to a given stepper.  
         /// This can be used to return fram an evaluator.
@@ -195,20 +209,6 @@ namespace SimpleScheme
             if (this.Env != null)
             {
                 this.Env.Interp.IncrementCounter(counterIdent);
-            }
-        }
-
-        /// <summary>
-        /// Convert the stepper instance to a string.
-        /// Could also consider printing the Expr.
-        /// </summary>
-        /// <param name="quoted">True if the string should be quoted.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal void AsString(bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("<stepper>");
             }
         }
         #endregion

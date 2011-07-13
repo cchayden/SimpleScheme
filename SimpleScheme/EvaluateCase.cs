@@ -118,7 +118,7 @@ namespace SimpleScheme
             while (!EmptyList.IsType(this.clauses))
             {
                 Obj clause = First(this.clauses);
-                if (!(clause is Pair))
+                if (!Pair.IsType(clause))
                 {
                     return (Stepper)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
@@ -127,13 +127,13 @@ namespace SimpleScheme
                 this.exprList = Rest(clause);
 
                 // look for else datum
-                if (data is string && (string)data == "else")
+                if (Symbol.IsType(data) && Symbol.Sym(data) == "else")
                 {
                     return this.EvalExpr();
                 }
 
                 // look for a match within the list of datum items
-                while (data is Pair)
+                while (Pair.IsType(data))
                 {
                     if (SchemeBoolean.Eqv(this.keyVal, First(data)))
                     {

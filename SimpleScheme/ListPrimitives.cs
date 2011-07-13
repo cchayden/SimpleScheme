@@ -104,7 +104,7 @@ namespace SimpleScheme
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static Obj First(Obj list)
         {
-            return list is Pair ? ((Pair)list).FirstCell : EmptyList.Instance;
+            return Pair.IsType(list) ? ((Pair)list).FirstCell : EmptyList.Instance;
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static Obj Rest(Obj list)
         {
-            return list is Pair ? ((Pair)list).RestCell : EmptyList.Instance;
+            return Pair.IsType(list) ? ((Pair)list).RestCell : EmptyList.Instance;
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace SimpleScheme
         public static int Length(Obj list)
         {
             int len = 0;
-            while (list is Pair)
+            while (Pair.IsType(list))
             {
                 len++;
                 list = ((Pair)list).RestCell;
@@ -182,7 +182,7 @@ namespace SimpleScheme
 
             // Iterate down the list, taking the function and building a list of the results.
             expr = First(expr);
-            while (expr is Pair)
+            while (Pair.IsType(expr))
             {
                 accum = (Pair)(accum.RestCell = MakeList(fun(First(expr))));
                 expr = ((Pair)expr).RestCell;

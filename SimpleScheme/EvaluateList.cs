@@ -86,7 +86,7 @@ namespace SimpleScheme
                 return caller.ContinueStep(EmptyList.Instance);
             }
 
-            if (!(expr is Pair))
+            if (!Pair.IsType(expr))
             {
                 ErrorHandlers.SemanticError("Bad args for list: " + expr);
                 return caller.ContinueStep(Undefined.Instance);
@@ -118,7 +118,7 @@ namespace SimpleScheme
             this.accum = (Pair)(this.accum.RestCell = MakeList(ReturnedExpr));
             this.objs = Rest(this.objs);
 
-            if (this.objs is Pair)
+            if (Pair.IsType(this.objs))
             {
                 // Come back to this step, so don't assign PC for better performance.
                 return EvaluateExpression.Call(First(this.objs), this.Env, this);

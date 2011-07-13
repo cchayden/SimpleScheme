@@ -96,6 +96,7 @@
     <Compile Include="ErrorHandlers.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="SynchronousClrProcedure.cs" />
+    <Compile Include="TypePrimitives.cs" />
     <Compile Include="Undefined.cs" />
     <Compile Include="Vector.cs" />
   </ItemGroup>

@@ -93,7 +93,7 @@ namespace SimpleScheme
         /// all elements are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!(obj2 is Pair))
+            if (!IsType(obj2))
             {
                 return false;
             }
@@ -114,15 +114,16 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Is the string to be quoted?</param>
         /// <param name="buf">The buffer to write the string into.</param>
-        internal void AsString(bool quoted, StringBuilder buf)
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
         {
-            if (this.RestCell is Pair && EmptyList.IsType(Rest(this.RestCell)))
+            Pair pair = (Pair)obj;
+            if (IsType(pair.RestCell) && EmptyList.IsType(Rest(pair.RestCell)))
             {
                 string special = null;
 
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
-                switch (this.FirstCell as string)
+                switch (pair.FirstCell as string)
                 {
                     case "quote":
                         special = "'";
@@ -143,22 +144,22 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    SchemeString.AsString(Second(this), quoted, buf);
+                    TypePrimitives.AsString(Second(pair), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            SchemeString.AsString(this.FirstCell, quoted, buf);
+            TypePrimitives.AsString(pair.FirstCell, quoted, buf);
 
-            Obj tail = this.RestCell;
+            Obj tail = pair.RestCell;
 
             int len = 0;
-            while (tail is Pair)
+            while (IsType(tail))
             {
                 buf.Append(' ');
-                SchemeString.AsString(First(tail), quoted, buf);
+                TypePrimitives.AsString(First(tail), quoted, buf);
                 Obj oldTail = tail;
                 tail = Rest(tail);
                 len++;
@@ -182,7 +183,7 @@ namespace SimpleScheme
             if (!EmptyList.IsType(tail))
             {
                 buf.Append(" . ");
-                SchemeString.AsString(tail, quoted, buf);
+                TypePrimitives.AsString(tail, quoted, buf);
             }
 
             buf.Append(')');

@@ -66,7 +66,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object TypeError(string expected, object got)
         {
-            string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypeName(got), SchemeString.AsString(got));
+            string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), SchemeString.AsString(got));
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }
@@ -125,73 +125,6 @@ namespace SimpleScheme
         {
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
-        }
-        #endregion
-
-        #region Private Methods
-        /// <summary>
-        /// Find the scheme type name for a given object.
-        /// </summary>
-        /// <param name="obj">The object to use.</param>
-        /// <returns>The scheme type name.</returns>
-        private static string TypeName(Obj obj)
-        {
-            if (SchemeBoolean.IsType(obj))
-            {
-                return SchemeBoolean.TypeName();
-            }
-
-            if (Symbol.IsType(obj))
-            {
-                return Symbol.TypeName();
-            }
-
-            if (Character.IsType(obj))
-            {
-                return Character.TypeName();
-            }
-
-            if (Vector.IsType(obj))
-            {
-                return Vector.TypeName();
-            }
-
-            if (Pair.IsType(obj))
-            {
-                return Pair.TypeName();
-            }
-
-            if (Number.IsType(obj))
-            {
-                return Number.TypeName();
-            }
-
-            if (SchemeString.IsType(obj))
-            {
-                return SchemeString.TypeName();
-            }
-
-            if (Procedure.IsType(obj))
-            {
-                return Procedure.TypeName();
-            }
-
-            if (InputPort.IsType(obj))
-            {
-                return InputPort.TypeName();
-            }
-
-            if (OutputPort.IsType(obj))
-            {
-                return OutputPort.TypeName();
-            }
-
-            if (EmptyList.IsType(obj))
-            {
-                return EmptyList.TypeName();
-            }
-
-            return obj.GetType().ToString();
         }
         #endregion
 

@@ -21,7 +21,7 @@ namespace SimpleScheme
         /// <returns>The corresponding symbol.</returns>
         public static string Sym(Obj x)
         {
-            if (x is string)
+            if (Symbol.IsType(x))
             {
                 return (string)x;
             }
@@ -41,7 +41,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
                 .DefinePrimitive("symbol->string", (args, caller) => SchemeString.MakeString(Sym(First(args))), 1)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(First(args) is string), 1);
+                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
         }
         #endregion
 
@@ -68,12 +68,12 @@ namespace SimpleScheme
         /// <summary>
         /// Convert symbol into string.
         /// </summary>
-        /// <param name="str">The symbol name.</param>
+        /// <param name="obj">The symbol name.</param>
         /// <param name="quoted">Whether to quote the string.</param>
         /// <param name="buf">Accumulate the result into here.</param>
-        internal static void AsString(string str, bool quoted, StringBuilder buf)
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
         {
-            buf.Append(str);
+            buf.Append((string)obj);
         }
         #endregion
     }

@@ -159,11 +159,11 @@ namespace SimpleScheme
         /// <returns>The variable added to the environment.</returns>
         public Obj Define(Obj var, Obj val)
         {
-            if (var is string)
+            if (Symbol.IsType(var))
             {
                 this.symbolTable.Add((string)var, val);
 
-                if (val is Procedure)
+                if (Procedure.IsType(val))
                 {
                     ((Procedure)val).SetName(var.ToString());
                 }
@@ -273,12 +273,12 @@ namespace SimpleScheme
         /// <returns>The value that the variable was set to.</returns>
         internal Obj Set(Obj var, Obj val)
         {
-            if (!(var is string))
+            if (!Symbol.IsType(var))
             {
                 return ErrorHandlers.SemanticError("Attempt to set a non-symbol: " + SchemeString.AsString(var));
             }
 
-            string symbol = (string)var;
+            string symbol = Symbol.Sym(var);
             if (this.symbolTable.Update(symbol, val))
             {
                 return val;
@@ -461,19 +461,19 @@ namespace SimpleScheme
             {
                 while (!EmptyList.IsType(symbols))
                 {
-                    if (symbols is string)
+                    if (Symbol.IsType(symbols))
                     {
-                        this.Add((string)symbols, vals);
+                        this.Add(Symbol.Sym(symbols), vals);
                     }
                     else
                     {
                         Obj symbol = First(symbols);
-                        if (!(symbol is string))
+                        if (!Symbol.IsType(symbol))
                         {
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }
 
-                        this.Add((string)symbol, First(vals));
+                        this.Add(Symbol.Sym(symbol), First(vals));
                     }
 
                     symbols = Rest(symbols);

@@ -91,7 +91,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
                 .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(First(args)), 1)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(First(args) is OutputPort), 1)
+                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
                 .DefinePrimitive(
@@ -172,7 +172,7 @@ namespace SimpleScheme
                 return outPort;
             }
 
-            if (obj is OutputPort)
+            if (IsType(obj))
             {
                 return (OutputPort)obj;
             }
