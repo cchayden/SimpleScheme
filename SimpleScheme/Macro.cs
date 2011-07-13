@@ -24,6 +24,18 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Display the macro as a string.  
+        /// Displays the formal parameters and the body, as it has been processed by the reader.
+        /// </summary>
+        /// <returns>The string form of the closure.</returns>
+        public override string ToString()
+        {
+            return this.ToString("macro");
+        }
+        #endregion
+
         #region Internal Static Methods
         /// <summary>
         /// Test an object's type.
@@ -54,18 +66,6 @@ namespace SimpleScheme
         internal static new Macro New(Obj parms, Obj body, Environment env)
         {
             return new Macro(parms, body, env);
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Display the macro as a string.  
-        /// Displays the formal parameters and the body, as it has been processed by the reader.
-        /// </summary>
-        /// <returns>The string form of the closure.</returns>
-        public override string ToString()
-        {
-            return this.ToString("macro");
         }
         #endregion
     }

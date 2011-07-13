@@ -271,8 +271,10 @@ namespace SimpleScheme
             string name = SchemeString.AsString(fileName, false);
             try
             {
-                this.Load(
-                    InputPort.New(new StreamReader(new FileStream(name, FileMode.Open, FileAccess.Read))));
+                using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
+                {
+                    this.Load(InputPort.New(new StreamReader(fs)));
+                }
             }
             catch (IOException)
             {

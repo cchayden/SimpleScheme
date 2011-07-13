@@ -88,6 +88,7 @@ namespace SimpleScheme
                 //  the current env.  This is to achieve tail recursion.
                 return EvaluateExpression.Call(First(this.tests), this.Env, this.Caller);
             }
+
             return EvaluateExpression.Call(First(this.tests), this.Env, ContinueHere(this.LoopStep));
         }
 

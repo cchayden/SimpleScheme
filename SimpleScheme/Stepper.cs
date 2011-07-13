@@ -63,12 +63,15 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Delegates
         /// <summary>
         /// This is the type for the stepper functions.
+        /// It takes no arguments and returns a Stepper.
         /// These values are assigned to the pc.
         /// </summary>
         /// <returns>The next step to take.</returns>
         public delegate Stepper StepperFunction();
+        #endregion
 
         #region Accessors
         /// <summary>
@@ -115,7 +118,6 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Static Methods
-
         /// <summary>
         /// Convert the stepper instance to a string.
         /// Could also consider printing the Expr.
@@ -129,6 +131,7 @@ namespace SimpleScheme
                 buf.Append("<stepper>");
             }
         }
+
         /// <summary>
         /// Transfer to a given stepper.  
         /// This can be used to return fram an evaluator.
@@ -165,6 +168,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Run the step represented by the PC.
+        /// Just execute the stepper function stored in pc.
         /// </summary>
         /// <returns>The next step to run.</returns>
         internal Stepper RunStep()

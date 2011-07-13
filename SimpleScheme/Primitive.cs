@@ -12,7 +12,7 @@ namespace SimpleScheme
     ///   the primitive.  It also knows the min and max number of arguments it expects.
     /// Each instance of Primitive is immutable.
     /// </summary>
-    internal sealed class Primitive : Procedure
+    public sealed class Primitive : Procedure
     {
         #region Fields
         /// <summary>
@@ -61,6 +61,16 @@ namespace SimpleScheme
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
         }
+        #endregion
+
+        #region Delegates
+        /// <summary>
+        /// The signature for primitives.
+        /// </summary>
+        /// <param name="args">The primitive's arguments</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The primitive's result.</returns>
+        public delegate Obj Op(Obj args, Stepper caller);
         #endregion
 
         #region Public Methods

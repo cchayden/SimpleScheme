@@ -306,7 +306,6 @@ namespace Tests
                                     (test '(list 3 4) 'quasiquote (quasiquote (list (unquote (+ 1 2)) 4)))");
 
             this.Run("`(list ,(+ 1 2) 4)", "quasiquote", "'(quasiquote (list (unquote (+ 1 2)) 4))");
-
         }
 
         /// <summary>

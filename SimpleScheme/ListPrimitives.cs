@@ -14,14 +14,6 @@ namespace SimpleScheme
     /// </summary>
     public class ListPrimitives
     {
-        /// <summary>
-        /// The signature for primitives.
-        /// </summary>
-        /// <param name="args">The primitive's arguments</param>
-        /// <param name="caller">The calling stepper.</param>
-        /// <returns>The primitive's result.</returns>
-        public delegate Obj Op(Obj args, Stepper caller);
-
         #region Public Static Methods
         /// <summary>
         /// Create a list from an obj.

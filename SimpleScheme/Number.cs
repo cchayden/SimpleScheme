@@ -33,7 +33,7 @@ namespace SimpleScheme
         /// <returns>The double contained in the obj.</returns>
         public static double Num(Obj x)
         {
-            if (Number.IsType(x))
+            if (IsType(x))
             {
                 return (double)x;
             }
@@ -41,7 +41,6 @@ namespace SimpleScheme
             if (x is byte || x is int || x is long || x is float)
             {
                 return Convert.ToDouble(x);
-                
             }
 
             return Num(ErrorHandlers.TypeError("number", x));
@@ -298,7 +297,7 @@ namespace SimpleScheme
         /// <returns>A string version of the number.</returns>
         private static Obj NumberToString(Obj x, Obj y)
         {
-            int numberBase = Number.IsType(y) ? (int)Num(y) : 10;
+            int numberBase = IsType(y) ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
                 return Convert.ToString((long)Num(x), numberBase).ToCharArray();

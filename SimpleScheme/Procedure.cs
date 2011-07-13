@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    internal abstract class Procedure : ListPrimitives
+    public abstract class Procedure : ListPrimitives
     {
         #region Constants
         /// <summary>

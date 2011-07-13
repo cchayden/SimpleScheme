@@ -112,6 +112,7 @@ namespace SimpleScheme
         /// <summary>
         /// Turns the pair into a string.
         /// </summary>
+        /// <param name="obj">The object to convert to a string.</param>
         /// <param name="quoted">Is the string to be quoted?</param>
         /// <param name="buf">The buffer to write the string into.</param>
         internal static void AsString(Obj obj, bool quoted, StringBuilder buf)

@@ -156,8 +156,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        /// <returns>The variable added to the environment.</returns>
-        public Obj Define(Obj var, Obj val)
+        public void Define(Obj var, Obj val)
         {
             if (Symbol.IsType(var))
             {
@@ -167,11 +166,11 @@ namespace SimpleScheme
                 {
                     ((Procedure)val).SetName(var.ToString());
                 }
-
-                return var;
             }
-
-            return ErrorHandlers.SemanticError("Bad variable in define: " + var);
+            else
+            {
+                ErrorHandlers.SemanticError("Bad variable in define: " + var);
+            }
         }
 
         /// <summary>
@@ -185,7 +184,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IEnvironment DefinePrim(string name, Op operation, int minArgs, int maxArgs)
+        public IEnvironment DefinePrim(Obj name, Primitive.Op operation, int minArgs, int maxArgs)
         {
             return this.DefinePrimitive(name, operation, minArgs, maxArgs);
         }
@@ -200,7 +199,7 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IEnvironment DefinePrim(string name, Op operation, int numberOfArgs)
+        public IEnvironment DefinePrim(Obj name, Primitive.Op operation, int numberOfArgs)
         {
             return this.DefinePrimitive(name, operation, numberOfArgs);
         }
@@ -302,7 +301,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        internal Environment DefinePrimitive(string name, Op operation, int minArgs, int maxArgs)
+        internal Environment DefinePrimitive(Obj name, Primitive.Op operation, int minArgs, int maxArgs)
         {
             this.Define(name, new Primitive(operation, minArgs, maxArgs));
             return this;
@@ -317,7 +316,7 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>A refernce to the environment.</returns>
-        internal Environment DefinePrimitive(string name, Op operation, int numberOfArgs)
+        internal Environment DefinePrimitive(Obj name, Primitive.Op operation, int numberOfArgs)
         {
             return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
         }

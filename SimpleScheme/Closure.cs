@@ -50,6 +50,18 @@ namespace SimpleScheme
         internal Environment Env { get; private set; }
         #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Display the closure as a string.  
+        /// Displays the formal parameters and the body, as it has been processed by the reader.
+        /// </summary>
+        /// <returns>The string form of the closure.</returns>
+        public override string ToString()
+        {
+            return this.ToString("lambda");
+        }
+        #endregion
+
         #region Internal Static Methods
         /// <summary>
         /// Test an object's type.
@@ -108,16 +120,6 @@ namespace SimpleScheme
         internal Stepper ApplyWithtEnv(Environment env, Stepper caller)
         {
             return EvaluateSequence.Call(this.Body, env, caller);
-        }
-
-        /// <summary>
-        /// Display the closure as a string.  
-        /// Displays the formal parameters and the body, as it has been processed by the reader.
-        /// </summary>
-        /// <returns>The string form of the closure.</returns>
-        public override string ToString()
-        {
-            return this.ToString("lambda");
         }
 
         /// <summary>
