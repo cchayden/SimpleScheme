@@ -115,6 +115,41 @@ namespace SimpleScheme
         {
             get { return this.caller.caller; }
         }
+
+        /// <summary>
+        /// Gets the current input port.
+        /// </summary>
+        internal InputPort CurrentInputPort
+        {
+            get { return this.Env.Interp.Input;  }
+        }
+
+        /// <summary>
+        /// Gets the current output port.
+        /// </summary>
+        internal OutputPort CurrentOutputPort
+        {
+            get { return this.Env.Interp.Output;  }
+        }
+
+        /// <summary>
+        /// Gets the current counters class.
+        /// </summary>
+        internal Counter CurrentCounters
+        {
+            get { return this.Env.Interp.Counters; }
+        }
+
+        internal bool TraceFlag
+        {
+            get { return this.Env.Interp.Trace; }
+            set { this.Env.Interp.Trace = value; }
+        }
+        internal bool CountFlag
+        {
+            get { return this.Env.Interp.Count; }
+            set { this.Env.Interp.Count = value; }
+        }
         #endregion
 
         #region Internal Static Methods
@@ -129,7 +164,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<stepper>");
+                buf.Append(obj == Suspended ? "<suspended>" : "<stepper>");
             }
         }
 
@@ -187,6 +222,15 @@ namespace SimpleScheme
             this.ReturnedExpr = expr;
             return this;
         }
+        
+        /// <summary>
+        /// Call the interpreter in the environment to start evaluating steps.
+        /// </summary>
+        /// <returns>The return value of the evaluation (or halted or suspended).</returns>
+        internal Obj EvalStep()
+        {
+            return this.Env.Interp.EvalStep(this);
+        }
 
         /// <summary>
         /// Create a stack backtrace
@@ -216,6 +260,16 @@ namespace SimpleScheme
                 this.Env.Interp.IncrementCounter(counterIdent);
             }
         }
+
+        /// <summary>
+        /// Load the given file.
+        /// </summary>
+        /// <param name="filename">The file to load.</param>
+        internal void LoadFile(Obj filename)
+        {
+            this.Env.Interp.LoadFile(filename);
+        }
+
         #endregion
 
         #region Protected Methods

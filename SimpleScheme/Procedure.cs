@@ -86,6 +86,12 @@ namespace SimpleScheme
             return "procedure";
         }
 
+        /// <summary>
+        /// Write the procedure to the string builder.
+        /// </summary>
+        /// <param name="obj">The procedure (not used).</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
         internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
         {
             buf.Append("<procedure>");

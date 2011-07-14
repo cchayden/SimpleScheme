@@ -116,7 +116,7 @@ namespace SimpleScheme
                              this.Name + ": " + args);
             }
 
-            env.Interp.IncrementCounter(counter);
+            caller.IncrementCounter(counter);
 
             // Execute the operation
             Obj res = this.operation(args, caller);

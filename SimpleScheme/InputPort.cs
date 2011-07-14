@@ -60,11 +60,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
                 .DefinePrimitive("close-input-port", (args, caller) => CloseInputPort(First(args), caller), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
-                .DefinePrimitive("current-input-port", (args, caller) => caller.Env.Interp.Input, 0)
+                .DefinePrimitive("current-input-port", (args, caller) => caller.CurrentInputPort, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
                 .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (args, caller) => LoadFile(caller, First(args)), 1)
+                .DefinePrimitive("load", (args, caller) => LoadFile(First(args), caller), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
                 .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
@@ -99,6 +99,12 @@ namespace SimpleScheme
             return "input port";
         }
 
+        /// <summary>
+        /// Write the input port to a buffer.
+        /// </summary>
+        /// <param name="obj">The input port (not used).</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The buffer to write to.</param>
         internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
         {
             buf.Append("<input port>");
@@ -166,15 +172,16 @@ namespace SimpleScheme
         #endregion
 
         #region Private Static Methods
+
         /// <summary>
         /// Load a file given the filename.
         /// </summary>
-        /// <param name="caller">The calling stepper.</param>
         /// <param name="filename">The file to load from.</param>
+        /// <param name="caller">The calling stepper.</param>
         /// <returns>The next step to execute.</returns>
-        private static Obj LoadFile(Stepper caller, Obj filename)
+        private static object LoadFile(object filename, Stepper caller)
         {
-            caller.Env.Interp.LoadFile(filename);
+            caller.LoadFile(filename);
             return Undefined.Instance;
         }
 
@@ -187,7 +194,7 @@ namespace SimpleScheme
         /// <returns>Undefined obect.</returns>
         private static Obj CloseInputPort(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
             return p.Close();
         }
 
@@ -200,7 +207,7 @@ namespace SimpleScheme
         /// <returns>The character in the input.</returns>
         private static Obj PeekChar(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
             return p.Parser.PeekChar();
         }
 
@@ -213,7 +220,7 @@ namespace SimpleScheme
         /// <returns>The expression read.</returns>
         private static Obj Read(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
             return p.Parser.Read();
         }
 
@@ -226,7 +233,7 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private static Obj ReadChar(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
             return p.Parser.ReadChar();
         }
         #endregion

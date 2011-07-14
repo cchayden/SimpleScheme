@@ -59,13 +59,13 @@ namespace SimpleScheme
         {
             env
                 //// (dump-counters)
-                .DefinePrimitive("dump-counters", (args, caller) => caller.Env.Interp.Counters.DumpCounters(), 0)
+                .DefinePrimitive("dump-counters", (args, caller) => caller.CurrentCounters.DumpCounters(), 0)
                 //// (get-counters)
-                .DefinePrimitive("get-counters", (args, caller) => caller.Env.Interp.Counters.GetCounters(), 0)
+                .DefinePrimitive("get-counters", (args, caller) => caller.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
-                .DefinePrimitive("get-counter", (args, caller) => caller.Env.Interp.Counters.GetCounter(First(args)), 1)
+                .DefinePrimitive("get-counter", (args, caller) => caller.CurrentCounters.GetCounter(First(args)), 1)
                 //// (reset-counters)
-                .DefinePrimitive("reset-counters", (args, caller) => caller.Env.Interp.Counters.ResetCounters(), 0);
+                .DefinePrimitive("reset-counters", (args, caller) => caller.CurrentCounters.ResetCounters(), 0);
         }
         #endregion
 

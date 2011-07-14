@@ -110,7 +110,8 @@ namespace SimpleScheme
                 argArray = this.ToArgListBegin(Rest(args), new AsyncState(target, caller));
             }
 
-            this.MethodInfo.Invoke(target, argArray);
+            Obj res = this.MethodInfo.Invoke(target, argArray);
+            IAsyncResult ares = res as IAsyncResult;
             return Stepper.Suspended;
         }
         #endregion
@@ -163,7 +164,7 @@ namespace SimpleScheme
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
-            caller.Env.Interp.EvalStep(caller);
+            caller.EvalStep();
         }
 
         /// <summary>

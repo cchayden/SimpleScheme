@@ -27,7 +27,7 @@ namespace Repl
         /// <param name="args">These are files to read initially.</param>
         public static void Main(string[] args)
         {
-            new MainProgram().Run4(args);
+            new MainProgram().Run5(args);
         }
 
         /// <summary>
@@ -89,5 +89,15 @@ namespace Repl
             res = interp.ReadEvalPrintLoop();
             Console.WriteLine(res);
         }
+
+        private void Run5(IEnumerable<string> args)
+        {
+            Obj res = Interpreter.New(args)
+                .ReadEvalPrintAsync();
+            Console.ReadLine();   // from the expression entered
+            Console.ReadLine();   // waits here while operation completes
+            Console.ReadLine();   // waits here after operation completes
+        }
+
     }
 }

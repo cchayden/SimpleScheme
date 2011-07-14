@@ -113,12 +113,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
         /// </summary>
-        private bool Trace { get; set; }
+        internal bool Trace { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to count.
         /// </summary>
-        private bool Count { get; set; }
+        internal bool Count { get; set; }
         #endregion
 
         #region Public Methods
@@ -204,8 +204,8 @@ namespace SimpleScheme
         /// <summary>
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
-        /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        public Obj ReadEvalPrintAsync()
+        /// <returns>If end of file, InputPort.Eof, otherwise the IAsyncResult.</returns>
+        public IAsyncResult ReadEvalPrintAsync()
         {
             try
             {
@@ -214,7 +214,7 @@ namespace SimpleScheme
                 this.Output.Flush();
                 if (InputPort.IsEof(expr = this.Input.ReadObj()))
                 {
-                    return InputPort.Eof;
+                    return new CompletedAsyncResult<string>(InputPort.Eof);
                 }
 
                 return this.BeginEval(
@@ -234,14 +234,15 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 Console.WriteLine("Caught exception {0}", ex.Message);
-                return Undefined.Instance;
+                return null;
             }
         }
 
         /// <summary>
         /// Read from an input port, evaluate in the global environment, and print the result.
         /// If value is undefined, do not print anything.
-        /// If the result is suspended, then don't print anything either.
+        /// If the result is suspended, keep on going with another expression.
+        /// This will then execute both expressions asynchronously.
         /// Catch and discard exceptions.
         /// </summary>
         /// <returns>The result of the last evaluation.</returns>
@@ -343,13 +344,13 @@ namespace SimpleScheme
         {
             env
                 //// (trace-on)
-                .DefinePrimitive("trace-on", (args, caller) => caller.Env.Interp.Trace = true, 0)
+                .DefinePrimitive("trace-on", (args, caller) => SetTrace(caller, true), 0)
                 //// (trace-off)
-                .DefinePrimitive("trace-off", (args, caller) => caller.Env.Interp.Trace = false, 0)
+                .DefinePrimitive("trace-off", (args, caller) => SetTrace(caller, false), 0)
                 //// (counters-on)
-                .DefinePrimitive("counters-on", (args, caller) => caller.Env.Interp.Count = true, 0)
+                .DefinePrimitive("counters-on", (args, caller) => SetCount(caller, true), 0)
                 //// (counters-off)
-                .DefinePrimitive("counters-off", (args, caller) => caller.Env.Interp.Count = false, 0)
+                .DefinePrimitive("counters-off", (args, caller) => SetCount(caller, false), 0)
                 //// (backtrace)
                 .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
         }
@@ -368,11 +369,6 @@ namespace SimpleScheme
             return this.EvalStep(EvaluateExpression.Call(expr, env, this.halted));
         }
 
-        // TODO instead of calling Name in the step, call TraceStep.
-        // TODO TraceStep should show name and any relevant operands
-        // TODO evaluate-proc should show the proc name
-        // TODO It should do it only once per stepper
-
         /// <summary>
         /// Perform steps until evaluation is complete or suspended.
         /// After suspension, return to this entry point.
@@ -385,6 +381,7 @@ namespace SimpleScheme
             {
                 if (step == Stepper.Suspended)
                 {
+                    // TODO should this return the async result?
                     return step;
                 }
 
@@ -405,6 +402,8 @@ namespace SimpleScheme
 
                 this.TraceStep(step);
                 step.IncrementCounter(counter);
+
+                // run the step and capture the next step
                 step = step.RunStep();
             }
         }
@@ -480,6 +479,30 @@ namespace SimpleScheme
         #endregion
 
         #region Private Static Methods
+        /// <summary>
+        /// Sets tracing on or off.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <param name="flag">The new trace state.</param>
+        /// <returns>Undefined object.</returns>
+        private static Obj SetTrace(Stepper caller, bool flag)
+        {
+            caller.TraceFlag = flag;
+            return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Sets counting on or off.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <param name="flag">The new count state.</param>
+        /// <returns>Undefined object.</returns>
+        private static Obj SetCount(Stepper caller, bool flag)
+        {
+            caller.CountFlag = flag;
+            return Undefined.Instance;
+        }
+
         /// <summary>
         /// Display a stack backtrace.
         /// </summary>

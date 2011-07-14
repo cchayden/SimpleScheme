@@ -39,6 +39,7 @@
     <Compile Include="AsynchronousClrProcedure.cs" />
     <Compile Include="AsyncResult.cs" />
     <Compile Include="Character.cs" />
+    <Compile Include="CompletedAsyncResult.cs" />
     <Compile Include="Counter.cs" />
     <Compile Include="EmptyList.cs" />
     <Compile Include="EvaluateAnd.cs">
