@@ -49,7 +49,7 @@ namespace SimpleScheme
                 return (char[])obj;
             }
 
-            return Str(ErrorHandlers.TypeError("string", obj));
+            return Str(ErrorHandlers.TypeError(TypeName(), obj));
         }
 
         #endregion
@@ -75,8 +75,6 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.6">(string->number <number>)</r4rs>
                 //// <r4rs section="6.5.6">(string->number <number> <radix>)</r4rs>
                 .DefinePrimitive("string->number", (args, caller) => StringToNumber(First(args), Second(args)), 1, 2)
-                //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
-                .DefinePrimitive("string->symbol", (args, caller) => string.Intern(new string(Str(First(args)))), 1)
                 //// <r4rs section="6.7">(string-append <string> ...)</r4rs>
                 .DefinePrimitive("string-append", (args, caller) => StringAppend(args), 0, MaxInt)
                 .DefinePrimitive("string-concat", (args, caller) => StringAppend(First(args)), 1)
@@ -113,7 +111,9 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string? <obj>)</r4rs>
                 .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
                 //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
-                .DefinePrimitive("substring", (args, caller) => Substr(First(args), Second(args), Third(args)), 3);
+                .DefinePrimitive("substring", (args, caller) => Substr(First(args), Second(args), Third(args)), 3)
+                //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
+                .DefinePrimitive("symbol->string", (args, caller) => MakeString(First(args)), 1);
         }
         #endregion
 
@@ -183,7 +183,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Initializes a new instance of the SchemeString class.
+        /// Creates a scheme string from a string builder.
         /// </summary>
         /// <param name="buf">A string builder containing the string value.</param>
         /// <returns>The new scheme string.</returns>
@@ -203,13 +203,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Make a (scheme) string from the .NET string.
+        /// Make a scheme string from the given object.
+        /// The object must be a symbol
         /// </summary>
-        /// <param name="str">The string to convert.</param>
+        /// <param name="str">The symbol to convert.</param>
         /// <returns>The scheme string.</returns>
-        internal static char[] MakeString(string str)
+        internal static char[] MakeString(Obj str)
         {
-            return str.ToCharArray();
+            return Symbol.Sym(str).ToCharArray();
         }
 
         /// <summary>

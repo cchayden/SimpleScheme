@@ -85,11 +85,7 @@ namespace SimpleScheme
                 .DefinePrimitive("current-output-port", (args, caller) => caller.Env.Interp.Output, 0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
-                .DefinePrimitive(
-                    "display",
-                    (args, caller) => Write(First(args), OutPort(Second(args), caller.Env.Interp.Output), false),
-                    1, 
-                    2)
+                .DefinePrimitive("display", (args, caller) => Display(First(args), Second(args), caller), 1, 2)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
                 .DefinePrimitive("newline", (args, caller) => Newline(First(args), caller), 0, 1)
@@ -99,20 +95,12 @@ namespace SimpleScheme
                 .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
-                .DefinePrimitive(
-                   "write",
-                   (args, caller) => Write(First(args), OutPort(Second(args), caller.Env.Interp.Output), true), 
-                   1,
-                   2)
+                .DefinePrimitive("write", (args, caller) => Write(First(args), Second(args), caller), 1, 2)
                 //// (p <expr>)
                 .DefinePrimitive("p", (args, caller) => P(First(args)), 1)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
-                .DefinePrimitive(
-                    "write-char",
-                    (args, caller) => Write(First(args), OutPort(Second(args), caller.Env.Interp.Output), false),
-                    1,
-                    2)
+                .DefinePrimitive("write-char", (args, caller) => WriteChar(First(args), Second(args), caller), 1, 2)
                 //// (dump-env)
                 .DefinePrimitive("dump-env", (args, caller) => DumpEnv(caller), 0);
         }
@@ -125,7 +113,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to write.</param>
         internal void Write(Obj expr)
         {
-            Write(expr, this, true);
+            WriteObj(expr, this, true);
         }
 
         /// <summary>
@@ -165,24 +153,18 @@ namespace SimpleScheme
         #region Private Static Methods
         /// <summary>
         /// Check that the given object is an output port.
-        /// If the obj is the empty list, then return the interpreter's outpot port.
         /// </summary>
         /// <param name="obj">The object.</param>
-        /// <param name="outPort">The output port to use if the port is the empty list.</param>
         /// <returns>The output port.</returns>
-        private static OutputPort OutPort(Obj obj, OutputPort outPort)
+        private static OutputPort OutPort(Obj obj)
         {
-            if (EmptyList.IsType(obj))
-            {
-                return outPort;
-            }
-
             if (IsType(obj))
             {
                 return (OutputPort)obj;
             }
 
-            return OutPort(ErrorHandlers.TypeError("output port", obj), null);
+            ErrorHandlers.TypeError(TypeName(), obj);
+            return null;
         }
 
         /// <summary>
@@ -192,11 +174,53 @@ namespace SimpleScheme
         /// <param name="port">The output port.</param>
         /// <param name="quoted">Whether to quote strings and chars.</param>
         /// <returns>Undefined value.</returns>
-        private static Obj Write(Obj expr, OutputPort port, bool quoted)
+        private static Obj WriteObj(Obj expr, OutputPort port, bool quoted)
         {
             port.Print(SchemeString.AsString(expr, quoted));
             port.Flush();
             return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Write an expression on a given port, or onto the default port.
+        /// The output is not quoted.
+        /// </summary>
+        /// <param name="expr">The expression to write.</param>
+        /// <param name="port">The port, or the empty list.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The undefined object.</returns>
+        private static Obj Display(Obj expr, Obj port, Stepper caller)
+        {
+            OutputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Output : OutPort(port);
+            return WriteObj(expr, p, false);
+        }
+
+        /// <summary>
+        /// Write an expression on a given port, or onto the default port.
+        /// The output is quoted.
+        /// </summary>
+        /// <param name="expr">The expression to write.</param>
+        /// <param name="port">The port, or the empty list.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The undefined object.</returns>
+        private static Object Write(Obj expr, Obj port, Stepper caller)
+        {
+            OutputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Output : OutPort(port);
+            return WriteObj(expr, p, true);
+        }
+
+        /// <summary>
+        /// Write a character on a given port, or onto the default port.
+        /// The output is not quoted.
+        /// </summary>
+        /// <param name="expr">The expression to write.</param>
+        /// <param name="port">The port, or the empty list.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The undefined object.</returns>
+        private static Object WriteChar(Obj expr, Obj port, Stepper caller)
+        {
+            OutputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Output : OutPort(port);
+            return WriteObj(expr, p, false);
         }
 
         /// <summary>
@@ -218,7 +242,8 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         private static Obj CloseOutputPort(Obj port, Stepper caller)
         {
-            OutPort(port, caller.Env.Interp.Output).Close();
+            OutputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Output : OutPort(port);
+            p.Close();
             return Undefined.Instance;
         }
 
@@ -230,8 +255,9 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         private static Obj Newline(Obj port, Stepper caller)
         {
-            OutPort(port, caller.Env.Interp.Output).Println();
-            OutPort(port, caller.Env.Interp.Output).Flush();
+            OutputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Output : OutPort(port);
+            p.Println();
+            p.Flush();
             return Undefined.Instance;
         }
 

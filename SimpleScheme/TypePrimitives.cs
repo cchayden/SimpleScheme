@@ -13,11 +13,24 @@ namespace SimpleScheme
     public class TypePrimitives
     {
         #region Constants
+
         /// <summary>
-        /// The primitive types that can be used as args.
+        /// In primitiveTypes, the abbreviated type name.
+        /// </summary>
+        private const int abbrev = 0;
+
+        /// <summary>
+        /// In primitiveTypes, the full type name.
+        /// </summary>
+        private const int full = 1;
+
+        /// <summary>
+        /// The primitive types that can be used as args for Clr methods.
+        /// Both bare and array versions of each of these are defined.
         /// </summary>
         private static readonly string[][] primitiveTypes = 
         {
+            // simple types
             new[] { "boolean", "System.Boolean" },
             new[] { "char", "System.Char" }, 
             new[] { "string", "System.String" }, 
@@ -27,11 +40,22 @@ namespace SimpleScheme
             new[] { "long", "System.Int64" }, 
             new[] { "float", "System.Single" }, 
             new[] { "double", "System.Double" }, 
+            // arrays
+            new[] { "boolean[]", "System.Boolean[]" },
+            new[] { "char[]", "System.Char[]" }, 
+            new[] { "string[]", "System.String[]" }, 
+            new[] { "byte[]", "System.Byte[]" },
+            new[] { "short[]", "System.Int16[]" }, 
+            new[] { "int[]", "System.Int32[]" }, 
+            new[] { "long[]", "System.Int64[]" }, 
+            new[] { "float[]", "System.Single[]" }, 
+            new[] { "double[]", "System.Double[]" }, 
         };
         #endregion
 
         /// <summary>
         /// Table of entries used to map the type to a name.
+        /// These are the classes that correspond to scheme's primitive types.
         /// </summary>
         private static readonly TypeNameEntry[] typeNames = 
         {
@@ -50,6 +74,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Table of entries used to map the type to a name.
+        /// These include the scheme types as well as additional implementation types.
         /// </summary>
         private static readonly AsStringEntry[] asStringEntries = 
         {
@@ -70,6 +95,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Find the scheme type name for a given object.
+        /// Used to format error messages.
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>The scheme type name.</returns>
@@ -123,20 +149,18 @@ namespace SimpleScheme
             var typeName = SchemeString.AsString(arg, false);
             foreach (var type in primitiveTypes)
             {
-                string abbrev = type[0];
-                string full = type[1];
-                if (typeName == abbrev)
+                if (typeName == type[abbrev])
                 {
-                    return Type.GetType(full);
-                }
-
-                if (typeName == abbrev + "[]")
-                {
-                    return Type.GetType(full + "[]");
+                    return Type.GetType(type[full]);
                 }
             }
 
-            return typeName == "void" ? typeof(void) : Type.GetType(typeName);
+            if (typeName == "void")
+            {
+                return typeof(void);
+            }
+
+            return Type.GetType(typeName);
         }
 
         /// <summary>

@@ -231,7 +231,7 @@ namespace Tests
             Assert.AreEqual(10, actual);
             actual = ListPrimitives.ListStar(ListPrimitives.MakeList(10, 11));
             Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(11, ListPrimitives.Rest((Pair)actual));
+            Assert.AreEqual(11, ListPrimitives.Rest(actual));
             actual = ListPrimitives.ListStar(ListPrimitives.Cons(10, ListPrimitives.Cons(11, ListPrimitives.MakeList(12))));
             Assert.AreEqual(10, ListPrimitives.First(actual));
             Assert.AreEqual(11, ListPrimitives.Second(actual));
@@ -437,7 +437,7 @@ namespace Tests
             using (StringWriter writer = new StringWriter())
             {
                 OutputPort w = OutputPort_Accessor.New(writer);
-                var actual = OutputPort_Accessor.Write("abc", w, false);
+                var actual = OutputPort_Accessor.WriteObj("abc", w, false);
                 Assert.AreEqual(Undefined.Instance, actual);
                 Assert.AreEqual("abc", writer.ToString());
             }
@@ -455,7 +455,7 @@ namespace Tests
             Assert.AreEqual("vector", TypePrimitives_Accessor.TypeName(new Obj[] { 1, 2, 3 }));
             Assert.AreEqual("pair", TypePrimitives_Accessor.TypeName(Pair.New(null, null)));
             Assert.AreEqual("number", TypePrimitives_Accessor.TypeName(1.0d));
-            Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new char[] { 'a', 'b', 'c' }));
+            Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new [] { 'a', 'b', 'c' }));
             Assert.AreEqual("procedure", TypePrimitives_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
             Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(InputPort_Accessor.New(null)));
             Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(OutputPort_Accessor.New(null)));

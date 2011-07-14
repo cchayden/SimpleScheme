@@ -63,7 +63,10 @@ namespace SimpleScheme
                 //// (methodasync <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method",
-                   (args, caller) => new SynchronousClrProcedure(SchemeString.AsString(First(args), false), SchemeString.AsString(Second(args), false), Rest(Rest(args))),
+                   (args, caller) => new SynchronousClrProcedure(
+                       SchemeString.AsString(First(args), false), 
+                       SchemeString.AsString(Second(args), false), 
+                       Rest(Rest(args))),
                     2,
                     MaxInt);
         }

@@ -212,7 +212,7 @@ namespace SimpleScheme
                 Obj expr;
                 this.Output.Print("> ");
                 this.Output.Flush();
-                if (InputPort.IsEof(expr = this.Input.Read()))
+                if (InputPort.IsEof(expr = this.Input.ReadObj()))
                 {
                     return InputPort.Eof;
                 }
@@ -292,7 +292,7 @@ namespace SimpleScheme
             try
             {
                 Obj expr;
-                if (InputPort.IsEof(expr = inp.Read()))
+                if (InputPort.IsEof(expr = inp.ReadObj()))
                 {
                     return InputPort.Eof;
                 }
@@ -422,7 +422,7 @@ namespace SimpleScheme
             while (true)
             {
                 Obj input;
-                if (InputPort.IsEof(input = inp.Read()))
+                if (InputPort.IsEof(input = inp.ReadObj()))
                 {
                     inp.Close();
                     return Undefined.Instance;
@@ -443,7 +443,7 @@ namespace SimpleScheme
                 Obj expr;
                 this.Output.Print("> ");
                 this.Output.Flush();
-                if (InputPort.IsEof(expr = this.Input.Read()))
+                if (InputPort.IsEof(expr = this.Input.ReadObj()))
                 {
                     return InputPort.Eof;
                 }

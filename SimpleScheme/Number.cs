@@ -43,7 +43,7 @@ namespace SimpleScheme
                 return Convert.ToDouble(x);
             }
 
-            return Num(ErrorHandlers.TypeError("number", x));
+            return Num(ErrorHandlers.TypeError(TypeName(), x));
         }
 
         /// <summary>

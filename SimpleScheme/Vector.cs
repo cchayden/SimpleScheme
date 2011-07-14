@@ -34,7 +34,7 @@ namespace SimpleScheme
                 return (Obj[])obj;
             }
 
-            return Vec(ErrorHandlers.TypeError("vector", obj));
+            return Vec(ErrorHandlers.TypeError(TypeName(), obj));
         }
 
         /// <summary>

@@ -122,7 +122,7 @@ namespace Tests
                 while (true)
                 {
                     Obj x;
-                    if (InputPort_Accessor.IsEof(x = inp.Read()))
+                    if (InputPort_Accessor.IsEof(x = inp.ReadObj()))
                     {
                         return last;
                     }

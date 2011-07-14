@@ -58,7 +58,7 @@ namespace SimpleScheme
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive("call-with-input-file", (args, caller) => EvaluateCallWithInputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (args, caller) => InPort(First(args), caller.Env.Interp.Input).Close(), 1)
+                .DefinePrimitive("close-input-port", (args, caller) => CloseInputPort(First(args), caller), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (args, caller) => caller.Env.Interp.Input, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
@@ -69,13 +69,13 @@ namespace SimpleScheme
                 .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (args, caller) => InPort(First(args), caller.Env.Interp.Input).Parser.PeekChar(), 0, 1)
+                .DefinePrimitive("peek-char", (args, caller) => PeekChar(First(args), caller), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (args, caller) => InPort(First(args), caller.Env.Interp.Input).Parser.Read(), 0, 1)
+                .DefinePrimitive("read", (args, caller) => Read(First(args), caller), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (args, caller) => InPort(First(args), caller.Env.Interp.Input).Parser.ReadChar(), 0, 1);
+                .DefinePrimitive("read-char", (args, caller) => ReadChar(First(args), caller), 0, 1);
         }
         #endregion
 
@@ -126,24 +126,18 @@ namespace SimpleScheme
 
         /// <summary>
         /// Check that an object is an input port.
-        /// If the given obj is the empty list, return the interpreter's input port.
         /// </summary>
         /// <param name="obj">The object.</param>
-        /// <param name="inPort">The default input port.</param>
         /// <returns>An input port.</returns>
-        internal static InputPort InPort(Obj obj, InputPort inPort)
+        internal static InputPort InPort(Obj obj)
         {
-            if (EmptyList.IsType(obj))
-            {
-                return inPort;
-            }
-
             if (IsType(obj))
             {
                 return (InputPort)obj;
             }
 
-            return InPort(ErrorHandlers.TypeError("input port", obj), null);
+            ErrorHandlers.TypeError(TypeName(), obj);
+            return null;
         }
         #endregion
 
@@ -154,7 +148,7 @@ namespace SimpleScheme
         /// The result can be a list, or it could be a string (representing a symbol).
         /// </summary>
         /// <returns>The object that was read.</returns>
-        internal Obj Read()
+        internal Obj ReadObj()
         {
             return this.Parser.Read();
         }
@@ -182,6 +176,58 @@ namespace SimpleScheme
         {
             caller.Env.Interp.LoadFile(filename);
             return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Close the given input port.
+        /// If none given, closes the default input port.
+        /// </summary>
+        /// <param name="port">The port to close.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>Undefined obect.</returns>
+        private static Obj CloseInputPort(Obj port, Stepper caller)
+        {
+            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            return p.Close();
+        }
+
+        /// <summary>
+        /// Peek for a character on the given input port.
+        /// If none given, uses the default input port.
+        /// </summary>
+        /// <param name="port">The port to use.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The character in the input.</returns>
+        private static Obj PeekChar(Obj port, Stepper caller)
+        {
+            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            return p.Parser.PeekChar();
+        }
+
+        /// <summary>
+        /// Read an expression from the given input port.
+        /// If none given, uses the default input port.
+        /// </summary>
+        /// <param name="port">The port to use.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The expression read.</returns>
+        private static Obj Read(Obj port, Stepper caller)
+        {
+            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            return p.Parser.Read();
+        }
+
+        /// <summary>
+        /// Read a character on the given input port.
+        /// If none given, uses the default input port.
+        /// </summary>
+        /// <param name="port">The port to use.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>The character read.</returns>
+        private static Obj ReadChar(Obj port, Stepper caller)
+        {
+            InputPort p = EmptyList.IsType(port) ? caller.Env.Interp.Input : InPort(port);
+            return p.Parser.ReadChar();
         }
         #endregion
     }

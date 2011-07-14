@@ -21,12 +21,24 @@ namespace SimpleScheme
         /// <returns>The corresponding symbol.</returns>
         public static string Sym(Obj x)
         {
-            if (Symbol.IsType(x))
+            if (IsType(x))
             {
                 return (string)x;
             }
 
-            return Sym(ErrorHandlers.TypeError("symbol", x));
+            ErrorHandlers.TypeError(TypeName(), x);
+            return null;
+        }
+
+        /// <summary>
+        /// Create a new symbol from an object.
+        /// The object must be a schme string.
+        /// </summary>
+        /// <param name="obj">The object, which must be a scheme string.</param>
+        /// <returns>The symbol.</returns>
+        public static string New(Obj obj)
+        {
+            return new string(SchemeString.Str(obj));
         }
         #endregion
 
@@ -38,8 +50,8 @@ namespace SimpleScheme
         internal static void DefinePrimitives(Environment env)
         {
             env
-                //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
-                .DefinePrimitive("symbol->string", (args, caller) => SchemeString.MakeString(Sym(First(args))), 1)
+                //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
+                .DefinePrimitive("string->symbol", (args, caller) => New(First(args)), 1)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
                 .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
         }

@@ -52,14 +52,8 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
                 .DefinePrimitive("apply", (args, caller) => Proc(First(args)).Apply(ListStar(Rest(args)), caller.Env, caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
-                .DefinePrimitive(
-                    "call-with-current-continuation",
-                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller.Env, caller))), caller.Env, caller),
-                    1)
-                .DefinePrimitive(
-                    "call/cc",
-                    (args, caller) => Proc(First(args)).Apply(MakeList(Continuation.New(EvaluateContinuation.Call(First(args), caller.Env, caller))), caller.Env, caller),
-                    1)
+                .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(First(args), caller), 1)
+                .DefinePrimitive("call/cc", (args, caller) => CallCc(First(args), caller), 1)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive("force", (args, caller) => Force(First(args), caller), 1)
@@ -109,7 +103,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return Proc(ErrorHandlers.TypeError("procedure", x));
+            return Proc(ErrorHandlers.TypeError(TypeName(), x));
         }
 
         /// <summary>
@@ -180,6 +174,22 @@ namespace SimpleScheme
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
             return EvaluateProc.Call(this, args, env, caller);
+        }
+        #endregion
+
+        #region Private Methods
+        /// <summary>
+        /// Perform the call/cc primitive.
+        /// Create a continuation that captures the caller's environment and returns to the caller.
+        /// The continuation itself is a sequence that evaluates the expr in the caller's environment and returns to the caller.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>A function to continue the evaluation.</returns>
+        private static Obj CallCc(Obj expr, Stepper caller)
+        {
+            return Proc(expr).Apply(
+                MakeList(Continuation.New(EvaluateContinuation.Call(expr, caller.Env, caller))), caller.Env, caller);
         }
         #endregion
     }
