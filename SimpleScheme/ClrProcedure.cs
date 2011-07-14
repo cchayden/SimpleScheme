@@ -14,24 +14,6 @@ namespace SimpleScheme
     /// </summary>
     internal abstract class ClrProcedure : Procedure
     {
-        #region Constants
-        /// <summary>
-        /// The primitive types that can be used as args.
-        /// </summary>
-        private static readonly string[][] primitiveTypes = 
-        {
-            new[] { "boolean", "System.Boolean" },
-            new[] { "char", "System.Char" }, 
-            new[] { "string", "System.String" }, 
-            new[] { "byte", "System.Byte" },
-            new[] { "short", "System.Int16" }, 
-            new[] { "int", "System.Int32" }, 
-            new[] { "long", "System.Int64" }, 
-            new[] { "float", "System.Single" }, 
-            new[] { "double", "System.Double" }, 
-        };
-        #endregion
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
@@ -100,41 +82,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Protected Static Methods
-        /// <summary>
-        /// Gets a CLR type from the given arg.
-        /// Either it already holds a type, or else it holds a type name.
-        /// If it is a name, then create the type from the name.
-        /// </summary>
-        /// <param name="arg">A Type or a type name.</param>
-        /// <returns>The type corresponding to the name.</returns>
-        protected static Type ToClass(Obj arg)
-        {
-            if (arg is Type)
-            {
-                return (Type)arg;
-            }
-
-            var typeName = SchemeString.AsString(arg, false);
-            foreach (var type in primitiveTypes)
-            {
-                string abbrev = type[0];
-                string full = type[1];
-                if (typeName == abbrev)
-                {
-                    return Type.GetType(full);
-                }
-
-                if (typeName == abbrev + "[]")
-                {
-                    return Type.GetType(full + "[]");
-                }
-            }
-
-            return typeName == "void" ? typeof(void) : Type.GetType(typeName);
-        }
-        #endregion
-
         #region Protected Methods
         /// <summary>
         /// Take a list of Type or type name elements and create a corresponding 
@@ -149,7 +96,7 @@ namespace SimpleScheme
 
             while (Pair.IsType(args))
             {
-                array.Add(ToClass(First(args)));
+                array.Add(TypePrimitives.ToClass(First(args)));
                 args = Rest(args);
             }
 
@@ -317,7 +264,7 @@ namespace SimpleScheme
         /// <returns>An instance of the class.</returns>
         private static object CreateInstance(object className)
         {
-            Type type = ToClass(className);
+            Type type = TypePrimitives.ToClass(className);
             if (type == null)
             {
                 return ErrorHandlers.ClrError("Type cannot be found: " + SchemeString.AsString(className, false));
@@ -336,7 +283,7 @@ namespace SimpleScheme
         /// <returns>An array of the class.</returns>
         private static object CreateArrayInstance(object className, object length)
         {
-            Type type = ToClass(className);
+            Type type = TypePrimitives.ToClass(className);
             int len = (int)Number.Num(length);
             return Array.CreateInstance(type, len);
         }

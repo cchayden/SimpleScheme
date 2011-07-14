@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.IO;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -96,6 +97,11 @@ namespace SimpleScheme
         internal static string TypeName()
         {
             return "input port";
+        }
+
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("<input port>");
         }
 
         /// <summary>

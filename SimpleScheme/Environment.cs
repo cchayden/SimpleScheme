@@ -160,11 +160,11 @@ namespace SimpleScheme
         {
             if (Symbol.IsType(var))
             {
-                this.symbolTable.Add((string)var, val);
+                this.symbolTable.Add(var, val);
 
                 if (Procedure.IsType(val))
                 {
-                    ((Procedure)val).SetName(var.ToString());
+                    Procedure.Proc(val).SetName(var.ToString());
                 }
             }
             else
@@ -240,10 +240,11 @@ namespace SimpleScheme
         /// <summary>
         /// Look up a symbol in the environment.
         /// </summary>
-        /// <param name="symbol">The name of the variable to look up.</param>
+        /// <param name="obj">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        internal Obj Lookup(string symbol)
+        internal Obj Lookup(Obj obj)
         {
+            string symbol = Symbol.Sym(obj);
             Environment env = this;
             while (env != Empty)
             {
@@ -445,9 +446,9 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            internal void Add(string symbol, Obj val)
+            internal void Add(Obj symbol, Obj val)
             {
-                this.symbolTable[symbol] = val;
+                this.symbolTable[Symbol.Sym(symbol)] = val;
             }
 
             /// <summary>
@@ -462,7 +463,7 @@ namespace SimpleScheme
                 {
                     if (Symbol.IsType(symbols))
                     {
-                        this.Add(Symbol.Sym(symbols), vals);
+                        this.Add(symbols, vals);
                     }
                     else
                     {
@@ -472,7 +473,7 @@ namespace SimpleScheme
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }
 
-                        this.Add(Symbol.Sym(symbol), First(vals));
+                        this.Add(symbol, First(vals));
                     }
 
                     symbols = Rest(symbols);

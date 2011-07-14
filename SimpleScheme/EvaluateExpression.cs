@@ -163,7 +163,7 @@ namespace SimpleScheme
                     return (Stepper)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
                 }
 
-                return caller.ContinueStep(env.Lookup(Symbol.Sym(expr)));
+                return caller.ContinueStep(env.Lookup(expr));
             }
 
             // Look for all other non-pair forms.

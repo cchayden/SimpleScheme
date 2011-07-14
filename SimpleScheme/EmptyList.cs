@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -27,7 +28,7 @@ namespace SimpleScheme
         /// <returns>The empty list token.</returns>
         public override string ToString()
         {
-            return "<empty>";
+            return "()";
         }
         #endregion
 
@@ -50,6 +51,12 @@ namespace SimpleScheme
         {
             return "empty list";
         }
+
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("()");
+        }
+
         #endregion
     }
 }

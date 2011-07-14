@@ -35,7 +35,7 @@ namespace SimpleScheme
             try
             {
                 this.ArgClasses = this.ClassListBegin(argClassNames);
-                Type cls = ToClass(ClassName);
+                Type cls = TypePrimitives.ToClass(ClassName);
                 if (cls == null)
                 {
                     ErrorHandlers.ClrError("Bad class: can't load: " + ClassName);
@@ -126,8 +126,8 @@ namespace SimpleScheme
         private List<Type> ClassListBegin(Obj args)
         {
             List<Type> array = ClassList(args);
-            array.Add(ToClass("System.AsyncCallback"));
-            array.Add(ToClass("System.Object"));
+            array.Add(TypePrimitives.ToClass("System.AsyncCallback"));
+            array.Add(TypePrimitives.ToClass("System.Object"));
 
             return array;
         }

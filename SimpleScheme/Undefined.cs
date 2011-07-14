@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.Text;
+    using Obj = System.Object;
 
     /// <summary>
     /// Represents an undefined scheme value.
@@ -30,9 +31,10 @@ namespace SimpleScheme
         /// <summary>
         /// Convert the undefined instance a string.
         /// </summary>
+        /// <param name="obj">The undefined object.</param>
         /// <param name="quoted">True if the string should be quoted.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(bool quoted, StringBuilder buf)
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

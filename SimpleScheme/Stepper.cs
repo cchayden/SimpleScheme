@@ -122,9 +122,10 @@ namespace SimpleScheme
         /// Convert the stepper instance to a string.
         /// Could also consider printing the Expr.
         /// </summary>
+        /// <param name="obj">The stepper.</param>
         /// <param name="quoted">True if the string should be quoted.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(bool quoted, StringBuilder buf)
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

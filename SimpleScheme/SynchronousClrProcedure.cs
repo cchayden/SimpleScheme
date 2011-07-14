@@ -26,7 +26,7 @@ namespace SimpleScheme
             try
             {
                 this.ArgClasses = ClassList(argClassNames);
-                Type cls = ToClass(ClassName);
+                Type cls = TypePrimitives.ToClass(ClassName);
                 if (cls == null)
                 {
                     ErrorHandlers.ClrError("Bad class: can't load " + ClassName);

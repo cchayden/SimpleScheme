@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.IO;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -50,6 +51,10 @@ namespace SimpleScheme
             return "output port";
         }
 
+        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("<output port>");
+        }
         /// <summary>
         /// Creates a new OutputPort.
         /// </summary>
