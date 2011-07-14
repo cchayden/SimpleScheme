@@ -18,6 +18,11 @@ namespace SimpleScheme
         private readonly TResult result;
 
         /// <summary>
+        /// Needed even though it complete synchronously.
+        /// </summary>
+        private ManualResetEvent asyncWaitHandle;
+
+        /// <summary>
         /// Initializes a new instance of the CompletedAsyncResult class.
         /// </summary>
         /// <param name="result">The result toreturn.</param>
@@ -39,7 +44,22 @@ namespace SimpleScheme
         /// </summary>
         public WaitHandle AsyncWaitHandle
         {
-            get { return null; }
+            get
+            {
+                // Lazy creation, since WaitHandler is not always needed.
+                if (this.asyncWaitHandle == null)
+                {
+                    ManualResetEvent mre = new ManualResetEvent(true);
+                    if (Interlocked.CompareExchange(ref this.asyncWaitHandle, mre, null) != null)
+                    {
+                        // Another thread created this object's event; dispose 
+                        // the event we just created
+                        mre.Close();
+                    }
+                }
+
+                return this.asyncWaitHandle;
+            }
         }
 
         /// <summary>
