@@ -17,12 +17,12 @@ namespace SimpleScheme
         /// <summary>
         /// In primitiveTypes, the abbreviated type name.
         /// </summary>
-        private const int abbrev = 0;
+        private const int Abbrev = 0;
 
         /// <summary>
         /// In primitiveTypes, the full type name.
         /// </summary>
-        private const int full = 1;
+        private const int Full = 1;
 
         /// <summary>
         /// The primitive types that can be used as args for Clr methods.
@@ -40,6 +40,7 @@ namespace SimpleScheme
             new[] { "long", "System.Int64" }, 
             new[] { "float", "System.Single" }, 
             new[] { "double", "System.Double" }, 
+
             // arrays
             new[] { "boolean[]", "System.Boolean[]" },
             new[] { "char[]", "System.Char[]" }, 
@@ -124,7 +125,7 @@ namespace SimpleScheme
             {
                 if (entry.TypePredicate(x))
                 {
-                    entry.AsString(x, quoted, buf);
+                    entry.AsStringFun(x, quoted, buf);
                     return;
                 }
             }
@@ -149,9 +150,9 @@ namespace SimpleScheme
             var typeName = SchemeString.AsString(arg, false);
             foreach (var type in primitiveTypes)
             {
-                if (typeName == type[abbrev])
+                if (typeName == type[Abbrev])
                 {
-                    return Type.GetType(type[full]);
+                    return Type.GetType(type[Full]);
                 }
             }
 
@@ -203,17 +204,17 @@ namespace SimpleScheme
             /// <summary>
             /// The function that gets the type name.
             /// </summary>
-            public readonly Action<Obj, bool, StringBuilder> AsString;
+            public readonly Action<Obj, bool, StringBuilder> AsStringFun;
 
             /// <summary>
             /// Initializes a new instance of the TypePrimitives.AsStringEntry struct.
             /// </summary>
             /// <param name="typePredicate">Type tester.</param>
-            /// <param name="asString">Type string generator.</param>
-            public AsStringEntry(Func<Obj, bool> typePredicate, Action<Obj, bool, StringBuilder> asString)
+            /// <param name="asStringFun">Type string generator.</param>
+            public AsStringEntry(Func<Obj, bool> typePredicate, Action<Obj, bool, StringBuilder> asStringFun)
             {
                 this.TypePredicate = typePredicate;
-                this.AsString = asString;
+                this.AsStringFun = asStringFun;
             }
         }
     }

@@ -110,8 +110,7 @@ namespace SimpleScheme
                 argArray = this.ToArgListBegin(Rest(args), new AsyncState(target, caller));
             }
 
-            Obj res = this.MethodInfo.Invoke(target, argArray);
-            IAsyncResult ares = res as IAsyncResult;
+            IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
             return Stepper.Suspended;
         }
         #endregion

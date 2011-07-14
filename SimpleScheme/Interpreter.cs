@@ -522,13 +522,15 @@ namespace SimpleScheme
         /// <param name="step">The step to trace.</param>
         private void TraceStep(Stepper step)
         {
-            if (this.Trace)
+            if (!this.Trace)
             {
-                string info = step.TraceInfo();
-                if (info != null)
-                {
-                    Console.Out.WriteLine("{0}: {1}", info, step.Expr);
-                }
+                return;
+            }
+
+            string info = step.TraceInfo();
+            if (info != null)
+            {
+                Console.Out.WriteLine("{0}: {1}", info, step.Expr);
             }
         }
         #endregion
