@@ -432,7 +432,7 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         private static Obj StringToNumber(object x, object y)
         {
-            int numberBase = y is double ? (int)Number.Num(y) : 10;
+            int numberBase = Number.IsType(y) ? (int)Number.Num(y) : 10;
             try
             {
                 return numberBase == 10

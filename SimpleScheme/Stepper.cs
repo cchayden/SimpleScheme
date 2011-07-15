@@ -140,11 +140,18 @@ namespace SimpleScheme
             get { return this.Env.Interp.Counters; }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to trace.
+        /// </summary>
         internal bool TraceFlag
         {
             get { return this.Env.Interp.Trace; }
             set { this.Env.Interp.Trace = value; }
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to count instructions.
+        /// </summary>
         internal bool CountFlag
         {
             get { return this.Env.Interp.Count; }
@@ -186,9 +193,10 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Trace information for the step.
+        /// Do this only once per instance.
         /// </summary>
         /// <returns>Info to print for the trace.</returns>
         internal virtual string TraceInfo()
@@ -335,15 +343,15 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the current step into a string builder.
         /// </summary>
-        /// <param name="sb">The string builder to write to.</param>
-        private void DumpStep(StringBuilder sb)
+        /// <param name="buf">The string builder to write to.</param>
+        private void DumpStep(StringBuilder buf)
         {
-            sb.AppendFormat("Step {0}\n", this.Name);
+            buf.AppendFormat("Step {0}\n", this.Name);
             string exp = EmptyList.IsType(this.Expr) ? "()" : this.Expr.ToString();
-            sb.AppendFormat("  Expr: {0}\n", exp);
+            buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {
-                sb.AppendFormat("  Env:\n{0}", this.Env.Dump(1, 3));
+                buf.AppendFormat("  Env:\n{0}", this.Env.Dump(1, 3));
             }
         }
         #endregion

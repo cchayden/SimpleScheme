@@ -528,10 +528,12 @@ namespace SimpleScheme
             }
 
             string info = step.TraceInfo();
-            if (info != null)
+            if (info == null)
             {
-                Console.Out.WriteLine("{0}: {1}", info, step.Expr);
+                return;
             }
+
+            Console.Out.WriteLine("{0}: {1}", info, step.Expr);
         }
         #endregion
     }
