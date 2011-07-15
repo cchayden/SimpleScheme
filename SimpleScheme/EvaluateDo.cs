@@ -141,12 +141,15 @@ namespace SimpleScheme
             // prepare test proc to execute each time through
             this.testProc = Closure.New(this.vars, MakeList(test), this.Env);
 
+            // push an empty environment, to hold the iteration variables
+            this.PushEmptyEnvironment(this.Env);
+
             // First evaluare inits.
             return EvaluateList.Call(inits, this.Env, ContinueHere(this.TestStep));
         }
 
         /// <summary>
-        /// Evaluate the test expr in the environment agumented with the variables with their computed values.
+        /// Evaluate the test expr in the environment containing the variables with their new values.
         /// These are the init values or the step values.
         /// </summary>
         /// <returns>The next step, which tests the result.</returns>
@@ -184,7 +187,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Evaluate the step expressions and loop back to the test.
+        /// Evaluate the step expressions.  
         /// </summary>
         /// <returns>The next step.</returns>
         private Stepper LoopStep()

@@ -133,7 +133,7 @@ namespace SimpleScheme
 
             this.vals = new System.Collections.Generic.List<Obj>(n);
 
-            this.ReplaceEnvironment(this.formals, initVals, this.Env);
+            this.PushEnvironment(this.formals, initVals, this.Env);
             return ContinueHere(this.EvalInit);
         }
 

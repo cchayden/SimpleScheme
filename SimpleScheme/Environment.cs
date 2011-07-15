@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
@@ -69,8 +68,8 @@ namespace SimpleScheme
         /// <param name="lexicalParent">The lexical parent environment.</param>
         private Environment(Obj formals, Obj vals, Interpreter interp, Environment lexicalParent)
         {
-            this.LexicalParent = lexicalParent;
             this.Interp = interp;
+            this.LexicalParent = lexicalParent;
             int count;
             if (!CheckArgCount(formals, vals, out count))
             {
@@ -147,6 +146,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Creates a new empty environment.
+        /// </summary>
+        /// <param name="parent">The lexically enclosing environment.</param>
+        /// <returns>The new environment.</returns>
+        internal static Environment NewEmpty(Environment parent)
+        {
+            return new Environment(parent.Interp, parent);
+        }
+
+        /// <summary>
         /// Create a new Environment.
         /// This is for where there is a new binding context.
         /// Start out with a set of variable bindings and a parent environment.
@@ -155,7 +164,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
-        /// <param name="parent">The parent environment.</param>
+        /// <param name="parent">The lexically enclosing environment.</param>
         /// <returns>The new environment.</returns>
         internal static Environment New(Obj formals, Obj vals, Environment parent)
         {
@@ -256,6 +265,7 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
+        /// <param name="port">The port to dump the environment to.</param>
         internal void DumpEnv(OutputPort port)
         {
             port.Outp.WriteLine(this.Dump(100, 0));

@@ -286,10 +286,31 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
-        /// <param name="parent">The caller environment.</param>
+        /// <param name="parent">The existing environment.</param>
         protected void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
         {
+            this.Env = Environment.New(formals, vals, parent.LexicalParent);
+        }
+
+        /// <summary>
+        /// Push a new environment made up of the formals and their values.
+        /// Link it to the parent environment.
+        /// </summary>
+        /// <param name="formals">The environment variable names.</param>
+        /// <param name="vals">The values of the variables.</param>
+        /// <param name="parent">The lexically enclosing environment.</param>
+        protected void PushEnvironment(Obj formals, Obj vals, Environment parent)
+        {
             this.Env = Environment.New(formals, vals, parent);
+        }
+
+        /// <summary>
+        /// Push an empty environment.
+        /// </summary>
+        /// <param name="parent">The lexically enclosing environment.</param>
+        protected void PushEmptyEnvironment(Environment parent)
+        {
+            this.Env = Environment.NewEmpty(parent);
         }
 
         /// <summary>
