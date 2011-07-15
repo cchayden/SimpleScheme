@@ -18,11 +18,6 @@ namespace SimpleScheme
         private readonly Closure f;
 
         /// <summary>
-        /// Indicates whether to trace.
-        /// </summary>
-        private readonly bool trace;
-
-        /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
         private const string StepperName = "evaluate-closure";
@@ -46,7 +41,6 @@ namespace SimpleScheme
         {
             this.f = f;
             ContinueHere(this.EvaluateArgsStep);
-            this.trace = false;
             IncrementCounter(counter);
         }
         #endregion
@@ -107,14 +101,14 @@ namespace SimpleScheme
         /// <summary>
         /// Back here after evaluating the args, now apply the closure itself.
         /// Create a new environment matching the formal parameters up with the evaluated arguments, and link
-        ///   back to the caller's environment.  The evaluate the closure body.
+        ///   back to the caller's environment.  Then evaluate the closure body.
         /// </summary>
         /// <returns>The next step to evaluate the closure.</returns>
         private Stepper EvalBodyInEnvironmentStep()
         {
-            if (this.trace)
+            if (Caller.TraceFlag)
             {
-                Console.Out.WriteLine("({0} {1})", this.f.Name, First(ReturnedExpr));
+                Caller.CurrentOutputPort.Outp.WriteLine("evaluate-closure: ({0} {1})", this.f.Name, First(ReturnedExpr));
             }
 
             this.ReplaceEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);

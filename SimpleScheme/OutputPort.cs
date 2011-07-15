@@ -13,13 +13,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class OutputPort : ListPrimitives
     {
-        #region Fields
-        /// <summary>
-        /// The output port to write to.
-        /// </summary>
-        private readonly TextWriter outp;
-        #endregion
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the OutputPort class.
@@ -27,9 +20,14 @@ namespace SimpleScheme
         /// <param name="outp">The output port to use for writing.</param>
         private OutputPort(TextWriter outp)
         {
-            this.outp = outp;
+            this.Outp = outp;
         }
         #endregion
+
+        /// <summary>
+        /// The output port to write to.
+        /// </summary>
+        internal TextWriter Outp { get; private set; }
 
         #region Internal Static Methods.
         /// <summary>
@@ -78,7 +76,7 @@ namespace SimpleScheme
         /// Define the output primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
@@ -128,7 +126,7 @@ namespace SimpleScheme
         /// </summary>
         internal void Close()
         {
-            this.outp.Close();
+            this.Outp.Close();
         }
 
         /// <summary>
@@ -136,7 +134,7 @@ namespace SimpleScheme
         /// </summary>
         internal void Flush()
         {
-            this.outp.Flush();
+            this.Outp.Flush();
         }
 
         /// <summary>
@@ -145,7 +143,7 @@ namespace SimpleScheme
         /// <param name="expr">The obj to print.</param>
         internal void Print(Obj expr)
         {
-            this.outp.Write(expr);
+            this.Outp.Write(expr);
         }
 
         /// <summary>
@@ -153,7 +151,7 @@ namespace SimpleScheme
         /// </summary>
         internal void Println()
         {
-            this.outp.WriteLine();
+            this.Outp.WriteLine();
         }
         #endregion
 
@@ -275,7 +273,7 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         private static Obj DumpEnv(Stepper caller)
         {
-            caller.Env.DumpEnv();
+            caller.Env.DumpEnv(caller.CurrentOutputPort);
             return Undefined.Instance;
         }
 

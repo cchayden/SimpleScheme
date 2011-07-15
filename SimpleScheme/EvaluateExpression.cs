@@ -25,11 +25,6 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create(StepperName);
 
         /// <summary>
-        /// Trace flag.
-        /// </summary>
-        private readonly bool trace;
-
-        /// <summary>
         /// The arguments to the function.
         /// </summary>
         private readonly Obj args;
@@ -51,7 +46,11 @@ namespace SimpleScheme
             this.args = args;
 
             ContinueHere(this.InitialStep);
-            this.trace = false;
+            if (caller.TraceFlag)
+            {
+                caller.CurrentOutputPort.Outp.WriteLine("evaluate: {0} {1}", fn, args);
+            }
+
             IncrementCounter(counter);
         }
         #endregion
@@ -74,7 +73,7 @@ namespace SimpleScheme
         /// Ususlly these constructs are not handled as primitives, but are instead
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -263,11 +262,6 @@ namespace SimpleScheme
         /// <returns>The next thing to do.</returns>
         private Stepper InitialStep()
         {
-            if (this.trace)
-            {
-                Console.Out.WriteLine("{0} {1}", this.Expr, this.args);
-            }
-
             // defined as macro for now
             //// <r4rs section="4.2.6">(quasiquote <template>)</r4rs>
             //// <r4rs section="4.2.5">(delay <expression>)</r4rs>

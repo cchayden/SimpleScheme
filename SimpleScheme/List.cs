@@ -15,7 +15,7 @@ namespace SimpleScheme
         /// Define the list primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -100,7 +100,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="env">The environment to define the functions in.</param>
         /// <param name="access">The access string so far.</param>
-        private static void DefineAccessPrimitives(Environment env, string access)
+        private static void DefineAccessPrimitives(PrimitiveEnvironment env, string access)
         {
             string prim = "c" + access + "r";
             env.DefinePrimitive(prim, (args, caller) => Cxr(prim, args), 1);

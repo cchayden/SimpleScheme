@@ -153,7 +153,7 @@ namespace SimpleScheme
         /// Define the boolean primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>

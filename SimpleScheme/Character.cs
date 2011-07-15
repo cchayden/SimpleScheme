@@ -34,7 +34,7 @@ namespace SimpleScheme
         /// Define the character primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>

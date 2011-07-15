@@ -42,20 +42,16 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
-        private Interpreter(bool loadStandardMacros, Environment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        private Interpreter(bool loadStandardMacros, PrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
             this.Trace = false;
             this.Count = false;
             this.Input = InputPort.New(reader ?? Console.In);
             this.Output = OutputPort.New(writer ?? Console.Out);
-            if (primEnvironment == null)
-            {
-                primEnvironment = Environment.NewPrimitive();
-                primEnvironment.InstallPrimitives();
-            }
+            this.PrimEnvironment = primEnvironment ?? PrimitiveEnvironment.New();
 
             this.Counters = new Counter();
-            this.GlobalEnvironment = Environment.NewGlobal(this, primEnvironment);
+            this.GlobalEnvironment = Environment.NewGlobal(this, PrimEnvironment);
             this.halted = new EvaluatorBase("halted", this.GlobalEnvironment, null);
 
             try
@@ -90,10 +86,20 @@ namespace SimpleScheme
             get { return this.GlobalEnvironment; }
         }
 
+        public IPrimitiveEnvironment PrimEnv
+        {
+            get { return this.PrimEnvironment; }
+        }
+
         /// <summary>
         /// Gets the global environment for the interpreter.
         /// </summary>
         internal Environment GlobalEnvironment { get; private set; }
+
+        /// <summary>
+        /// Gets the rimitive environment for the interpreter.
+        /// </summary>
+        internal PrimitiveEnvironment PrimEnvironment { get; private set; }
 
         /// <summary>
         /// Gets the input port.
@@ -131,10 +137,21 @@ namespace SimpleScheme
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
         /// <returns>A scheme interpreter.</returns>
-        public static Interpreter New(bool loadStandardMacros, IEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        public static Interpreter New(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
-            Environment primEnv = primEnvironment as Environment ?? Environment.NewPrimitive();
+            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? PrimitiveEnvironment.New();
             return new Interpreter(loadStandardMacros, primEnv, files, reader, writer);
+        }
+
+        /// <summary>
+        /// Create a new interpeter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static Interpreter New(IPrimitiveEnvironment primEnvironment)
+        {
+            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? PrimitiveEnvironment.New();
+            return new Interpreter(true, primEnv, null, null, null);
         }
 
         /// <summary>
@@ -158,13 +175,12 @@ namespace SimpleScheme
 
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
-        /// Used externally only in testing -- not exposed through the interface.
         /// </summary>
-        /// <param name="x">The expression to evaluate.</param>
+        /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Obj Eval(Obj x)
+        public Obj Eval(Obj expr)
         {
-            return this.Eval(x, this.GlobalEnvironment);
+            return this.Eval(expr, this.GlobalEnvironment);
         }
 
         /// <summary>
@@ -340,7 +356,7 @@ namespace SimpleScheme
         /// Define the counter primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// (trace-on)
@@ -510,7 +526,7 @@ namespace SimpleScheme
         /// <returns>Undefined result.</returns>
         private static Obj Backtrace(Stepper caller)
         {
-            Console.Out.WriteLine(caller.StackBacktrace());
+            caller.CurrentOutputPort.Outp.WriteLine(caller.StackBacktrace());
             return Undefined.Instance;
         }
         #endregion
@@ -533,7 +549,7 @@ namespace SimpleScheme
                 return;
             }
 
-            Console.Out.WriteLine("{0}: {1}", info, step.Expr);
+            step.CurrentOutputPort.Outp.WriteLine("{0}: {1}", info, step.Expr);
         }
         #endregion
     }

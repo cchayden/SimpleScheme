@@ -4,9 +4,7 @@
 namespace Repl
 {
     using System;
-    using System.Collections.Generic;
     using SimpleScheme;
-    using Environment = SimpleScheme.Environment;
     using Obj = System.Object;
 
     // TODO checklist
@@ -22,12 +20,50 @@ namespace Repl
     public class MainProgram
     {
         /// <summary>
+        /// The files to load.
+        /// </summary>
+        private readonly string[] files;
+
+        /// <summary>
+        /// Initializes a new instance of the MainProgram class.
+        /// </summary>
+        /// <param name="files">The files to load.</param>
+        private MainProgram(string[] files)
+        {
+            this.files = files;
+        }
+
+        /// <summary>
         /// Run the REPL.
         /// </summary>
         /// <param name="args">These are files to read initially.</param>
         public static void Main(string[] args)
         {
-            new MainProgram().Run5(args);
+            string sel = args[0];
+            string[] files = new string[args.Length - 1];
+            Array.ConstrainedCopy(args, 1, files, 0, args.Length - 1);
+            MainProgram main = new MainProgram(files);
+            switch (sel)
+            {
+                case "simple":
+                    main.RunSimple();
+                    break;
+                case "explicit":
+                    main.RunExplicit();
+                    break;
+                case "results":
+                    main.RunResults();
+                    break;
+                case "custom":
+                    main.RunCustom();
+                    break;
+                case "async":
+                    main.RunAsync();
+                    break;
+                default:
+                    Console.WriteLine("did not recognize first arg");
+                    break;
+            }
         }
 
         /// <summary>
@@ -35,10 +71,9 @@ namespace Repl
         /// Pass it some files to read.
         /// Then go into a read/eval/print loop.
         /// </summary>
-        /// <param name="args">Files to read.</param>
-        private void Run1(IEnumerable<string> args)
+        private void RunSimple()
         {
-            Interpreter.New(args)
+            Interpreter.New(this.files)
                 .ReadEvalPrintLoop();
         }
 
@@ -46,22 +81,19 @@ namespace Repl
         /// Start a scheme interpreter.
         /// Demonstrate supplying primitive environment explicitly.
         /// </summary>
-        /// <param name="args">Files to read.</param>
-        private void Run2(IEnumerable<string> args)
+        private void RunExplicit()
         {
-            IEnvironment primEnvironment = Environment.NewPrimitive();
-            primEnvironment.InstallPrimitives();
-            Interpreter.New(true, primEnvironment, args, Console.In, Console.Out)
+            IPrimitiveEnvironment primEnvironment = PrimitiveEnvironment.New();
+            Interpreter.New(true, primEnvironment, this.files, Console.In, Console.Out)
                 .ReadEvalPrintLoop();
         }
 
         /// <summary>
         /// Get result from REPL
         /// </summary>
-        /// <param name="args">Files to read.</param>
-        private void Run3(IEnumerable<string> args)
+        private void RunResults()
         {
-            IInterpreter interp = Interpreter.New(args);
+            IInterpreter interp = Interpreter.New(this.files);
             Obj res = interp.ReadEvalPrintLoop();
             Console.WriteLine(res);
         }
@@ -69,8 +101,7 @@ namespace Repl
         /// <summary>
         /// Example of a top level definition, befor the file is loaded.
         /// </summary>
-        /// <param name="cmdlineArgs">Param not used.</param>
-        private void Run4(IEnumerable<string> cmdlineArgs)
+        private void RunCustom()
         {
             IInterpreter interp = Interpreter.New();
 
@@ -78,7 +109,7 @@ namespace Repl
             interp.GlobalEnv.Define("x", 10);
 
             // define a primitive in the global environment
-            interp.GlobalEnv.DefinePrim("plus-one", (args, caller) => Number.Num(ListPrimitives.First(args)) + 1, 1);
+            interp.PrimEnv.DefinePrim("plus-one", (args, caller) => Number.Num(ListPrimitives.First(args)) + 1, 1);
 
             // load a program stored in a string
             interp.LoadString("(p (plus-one x))");
@@ -90,9 +121,12 @@ namespace Repl
             Console.WriteLine(res);
         }
 
-        private void Run5(IEnumerable<string> args)
+        /// <summary>
+        /// Run asynchronously.
+        /// </summary>
+        private void RunAsync()
         {
-            Obj res = Interpreter.New(args)
+            Obj res = Interpreter.New(this.files)
                 .ReadEvalPrintAsync();
             Console.ReadLine();   // from the expression entered
             Console.ReadLine();   // waits here while operation completes

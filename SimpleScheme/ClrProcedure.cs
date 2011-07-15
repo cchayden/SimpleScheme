@@ -70,7 +70,7 @@ namespace SimpleScheme
         /// Define the clr procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static new void DefinePrimitives(Environment env)
+        internal static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// (class <class-name>)

@@ -55,11 +55,11 @@ namespace SimpleScheme
         /// Define the counter primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// (dump-counters)
-                .DefinePrimitive("dump-counters", (args, caller) => caller.CurrentCounters.DumpCounters(), 0)
+                .DefinePrimitive("dump-counters", (args, caller) => caller.CurrentCounters.DumpCounters(caller), 0)
                 //// (get-counters)
                 .DefinePrimitive("get-counters", (args, caller) => caller.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
@@ -112,11 +112,11 @@ namespace SimpleScheme
         /// Dump the counters on the console.
         /// </summary>
         /// <returns>The result is unspecified.</returns>
-        private Obj DumpCounters()
+        private Obj DumpCounters(Stepper caller)
         {
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
-            Console.Out.WriteLine(sb.ToString());
+            caller.CurrentOutputPort.Outp.WriteLine(sb.ToString());
             return Undefined.Instance;
         }
 

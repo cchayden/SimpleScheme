@@ -72,7 +72,7 @@ namespace SimpleScheme
         /// Define the numeric primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(Environment env)
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
             // not implemented
             //// <r4rs section="6.5.5">(numerator <q>)</r4rs>

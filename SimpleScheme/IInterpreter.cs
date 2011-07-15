@@ -13,9 +13,23 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the global environment of the interpreter.
         /// Each interpreter has its own global environment.
-        /// The primitive environment is "below" this and is shared between interpreter instances.
+        /// The primitive environment is "below" this and so it can shared between interpreter instances.
         /// </summary>
         IEnvironment GlobalEnv { get; }
+
+        /// <summary>
+        /// Gets the primitive environment for the interpreter.
+        /// Each interpreter has one primitive environment.
+        /// The primitive environment is the only one in which primitives can be defined.
+        /// </summary>
+        IPrimitiveEnvironment PrimEnv { get; }
+
+        /// <summary>
+        /// Evaluate an expression (expressed as a list) in the global environment.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <returns>The result of the evaluation.</returns>
+        object Eval(object expr);
 
         /// <summary>
         /// Begin an asynchronous evaluation.  This may return before the evaluation is complete.

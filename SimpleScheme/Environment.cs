@@ -15,13 +15,18 @@ namespace SimpleScheme
     /// Each link in the chain contains a symbol table of the bindings at that level.
     /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
-    public sealed class Environment : ListPrimitives, IEnvironment
+    public class Environment : ListPrimitives, IEnvironment
     {
         #region Fields
         /// <summary>
         /// Represents the end of the environment chain.
         /// </summary>
-        private const Environment Empty = null;
+        protected const Environment Empty = null;
+
+        /// <summary>
+        /// Used for an interpreter with no environment (the primitive environment).
+        /// </summary>
+        protected const Interpreter NullInterp = null;
 
         /// <summary>
         /// The symbol table for this enviornment.
@@ -42,12 +47,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        private Environment(Interpreter interp, Environment lexicalParent)
+        protected Environment(Interpreter interp, Environment lexicalParent)
         {
             this.Interp = interp;
             this.LexicalParent = lexicalParent;
             this.symbolTable = new SymbolTable(0);
-            if (interp != null)
+            if (interp != NullInterp)
             {
                 interp.IncrementCounter(counter);
             }
@@ -60,11 +65,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
+        /// <param name="interp">The interpreter, always the parent's interpreter.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        private Environment(Obj formals, Obj vals, Environment lexicalParent)
+        private Environment(Obj formals, Obj vals, Interpreter interp, Environment lexicalParent)
         {
             this.LexicalParent = lexicalParent;
-            this.Interp = lexicalParent.Interp;
+            this.Interp = interp;
             int count;
             if (!CheckArgCount(formals, vals, out count))
             {
@@ -89,55 +95,6 @@ namespace SimpleScheme
         /// Gets the lexical parent environment.
         /// </summary>
         internal Environment LexicalParent { get; private set; }
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Create a new primitive environment.
-        /// This is used to share the primitives among several interpreters.
-        /// </summary>
-        /// <returns>The primitive environment.</returns>
-        public static Environment NewPrimitive()
-        {
-            return new Environment(null, null);
-        }
-
-        /// <summary>
-        /// Install primitives into the environment.
-        /// </summary>
-        public void InstallPrimitives()
-        {
-            Environment env = this;
-            EvaluateExpression.DefinePrimitives(env);
-            Number.DefinePrimitives(env);
-            Procedure.DefinePrimitives(env);
-            List.DefinePrimitives(env);
-            InputPort.DefinePrimitives(env);
-            OutputPort.DefinePrimitives(env);
-            Vector.DefinePrimitives(env);
-            SchemeBoolean.DefinePrimitives(env);
-            SchemeString.DefinePrimitives(env);
-            Character.DefinePrimitives(env);
-            Symbol.DefinePrimitives(env);
-            ClrProcedure.DefinePrimitives(env);
-            SynchronousClrProcedure.DefinePrimitives(env);
-            AsynchronousClrProcedure.DefinePrimitives(env);
-            Counter.DefinePrimitives(env);
-            Interpreter.DefinePrimitives(env);
-            ErrorHandlers.DefinePrimitives(env);
-
-            env
-                .DefinePrimitive(
-                   "exit", 
-                   (args, caller) =>
-                       {
-                            System.Environment.Exit(EmptyList.IsType(First(args)) ? 0 : (int)Number.Num(First(args)));
-                            return Undefined.Instance;
-                        },
-                   0, 
-                   1)
-                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2);
-        }
         #endregion
 
         #region Public Methods
@@ -166,58 +123,27 @@ namespace SimpleScheme
                 {
                     Procedure.Proc(val).SetName(var.ToString());
                 }
+
+                return;
             }
-            else
-            {
-                ErrorHandlers.SemanticError("Bad variable in define: " + var);
-            }
-        }
 
-        /// <summary>
-        /// Define a primitive, taking a variable number of arguments.
-        /// Creates a Primitive and puts it in the environment associated 
-        ///    with the given name.
-        /// Returns the environmet interface.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operation">The operation to perform.</param>
-        /// <param name="minArgs">The minimum number of arguments.</param>
-        /// <param name="maxArgs">The maximum number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        public IEnvironment DefinePrim(Obj name, Primitive.Op operation, int minArgs, int maxArgs)
-        {
-            return this.DefinePrimitive(name, operation, minArgs, maxArgs);
+            ErrorHandlers.SemanticError("Bad variable in define: " + var);
         }
-
-        /// <summary>
-        /// Define a primitive, taking a fixed number of arguments.
-        /// Creates a Primitive and puts it in the environment associated 
-        ///    with the given name.
-        /// Returns the environmet interface.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operation">The operation to perform.</param>
-        /// <param name="numberOfArgs">The number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        public IEnvironment DefinePrim(Obj name, Primitive.Op operation, int numberOfArgs)
-        {
-            return this.DefinePrimitive(name, operation, numberOfArgs);
-        }
-
         #endregion
 
         #region Internal Static Methods
         /// <summary>
-        /// Creates a new Environment.
-        /// This is used to create the global environment.
-        /// When we refer to "parent" we mean the enclosing lexical environment.
+        /// Creates a new global environment.
+        /// In this case, parent is a primitive environment.
+        /// When other environments are created, they grab the interpreter from their parent, so all environments
+        ///   have the same interpeter, but no one has to search down for it.
         /// </summary>
         /// <param name="interp">The interpreter.</param>
-        /// <param name="parent">The parent environment.</param>
+        /// <param name="primEnvironment">The parent environment, a primitive environment.</param>
         /// <returns>The global environment.</returns>
-        internal static Environment NewGlobal(Interpreter interp, Environment parent)
+        internal static Environment NewGlobal(Interpreter interp, PrimitiveEnvironment primEnvironment)
         {
-            return new Environment(interp, parent);
+            return new Environment(interp, primEnvironment);
         }
 
         /// <summary>
@@ -225,6 +151,7 @@ namespace SimpleScheme
         /// This is for where there is a new binding context.
         /// Start out with a set of variable bindings and a parent environment.
         /// The initial variable bindings are the formal parameters and the corresponding argument values.
+        /// The new environment uses the same interperter as its parent.
         /// </summary>
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
@@ -232,13 +159,15 @@ namespace SimpleScheme
         /// <returns>The new environment.</returns>
         internal static Environment New(Obj formals, Obj vals, Environment parent)
         {
-            return new Environment(formals, vals, parent);
+            return new Environment(formals, vals, parent.Interp, parent);
         }
         #endregion
 
         #region Internal Methods
         /// <summary>
         /// Look up a symbol in the environment.
+        /// This is the single most expensive operation in the whole interpreter.
+        /// Is there some way to make this faster?
         /// </summary>
         /// <param name="obj">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
@@ -246,6 +175,8 @@ namespace SimpleScheme
         {
             string symbol = Symbol.Sym(obj);
             Environment env = this;
+
+            // search down the chain of environments for a definition
             while (env != Empty)
             {
                 Obj val;
@@ -254,7 +185,7 @@ namespace SimpleScheme
                     return val;
                 }
 
-                // if we get here, we have not found anything, so look in the parent
+                // if we have not found anything yet, look in the parent
                 env = env.LexicalParent;
             }
 
@@ -279,52 +210,26 @@ namespace SimpleScheme
             }
 
             string symbol = Symbol.Sym(var);
-            if (this.symbolTable.Update(symbol, val))
-            {
-                return val;
-            }
+            Environment env = this;
 
-            if (this.LexicalParent != Empty)
+            // search down the chain of environments for a definition
+            while (env != Empty)
             {
-                return this.LexicalParent.Set(symbol, val);
+                if (env.symbolTable.Update(symbol, val))
+                {
+                    return val;
+                }
+
+                // if we have not found anything yet, look in the parent
+                env = env.LexicalParent;
             }
 
             return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
         }
 
         /// <summary>
-        /// Define a primitive, taking a variable number of arguments.
-        /// Creates a Primitive and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operation">The operation to perform.</param>
-        /// <param name="minArgs">The minimum number of arguments.</param>
-        /// <param name="maxArgs">The maximum number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        internal Environment DefinePrimitive(Obj name, Primitive.Op operation, int minArgs, int maxArgs)
-        {
-            this.Define(name, new Primitive(operation, minArgs, maxArgs));
-            return this;
-        }
-
-        /// <summary>
-        /// Define a primitive, taking a fixed number of arguments.
-        /// Creates a Primitive and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="operation">The operation to perform.</param>
-        /// <param name="numberOfArgs">The number of arguments.</param>
-        /// <returns>A refernce to the environment.</returns>
-        internal Environment DefinePrimitive(Obj name, Primitive.Op operation, int numberOfArgs)
-        {
-            return this.DefinePrimitive(name, operation, numberOfArgs, numberOfArgs);
-        }
-
-        /// <summary>
         /// Dump the stack of environments.
-        /// At each level, sow the symbol table.
+        /// At each level, show the symbol table.
         /// </summary>
         /// <param name="levels">The number of levels to show.</param>
         /// <param name="indent">The number of characters to indent.</param>
@@ -351,9 +256,9 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
-        internal void DumpEnv()
+        internal void DumpEnv(OutputPort port)
         {
-            Console.Out.WriteLine(this.Dump(100, 0));
+            port.Outp.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>
@@ -383,12 +288,13 @@ namespace SimpleScheme
             count = 0;
             while (true)
             {
-                if ((EmptyList.IsType(vars) && EmptyList.IsType(vals)) || EmptyList.IsType(vars))
+                // (vars is empty && vals is empty) || vars is empty ==> vars is empty 
+                if (EmptyList.IsType(vars))
                 {
                     return true;
                 }
 
-                if (!(Pair.IsType(vars) && Pair.IsType(vals)))
+                if (!Pair.IsType(vars) || !Pair.IsType(vals))
                 {
                     return false;
                 }
@@ -437,7 +343,6 @@ namespace SimpleScheme
                     return true;
                 }
 
-                val = null;  // not used
                 return false;
             }
 

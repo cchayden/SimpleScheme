@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// Define the async clr procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static new void DefinePrimitives(Environment env)
+        internal static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
