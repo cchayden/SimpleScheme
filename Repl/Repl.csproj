@@ -72,6 +72,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="async.ss" />
+    <None Include="clr.ss" />
     <None Include="couch.ss" />
     <None Include="count-down.ss" />
     <None Include="do.ss" />

@@ -27,4 +27,16 @@
 (define count (CountDocuments db))
 (define all (GetAllDocuments db))
 (define doc0 (GetDocument db (Id (vector-ref all 0))))
+
+(define do-test
+  (lambda (n) 
+    (do ((i 0 (+ i 1))) ((= i n)) 
+      (GetDocument db (Id (vector-ref all 0))))))
+
+; gives microseconds per iteration
+(define test (lambda (n) 
+  (/ (* 1000 (caadr (time (do-test n)))) n)))
+
+(begin (display (test 1000))(newline))
+
 (p "loaded")
