@@ -285,7 +285,7 @@ namespace SimpleScheme
         /// <param name="fileName">The filename.</param>
         public void LoadFile(object fileName)
         {
-            string name = SchemeString.AsString(fileName, false);
+            string name = Printer.AsString(fileName, false);
             try
             {
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))

@@ -78,7 +78,7 @@ namespace SimpleScheme
         internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (EmptyList.IsType(expr))
+            if (TypePrimitives.IsEmptyList(expr))
             {
                 return caller.ContinueStep(SchemeBoolean.False);
             }
@@ -122,7 +122,7 @@ namespace SimpleScheme
             }
 
             this.clauses = Rest(this.clauses);
-            if (EmptyList.IsType(this.clauses))
+            if (TypePrimitives.IsEmptyList(this.clauses))
             {
                 return ReturnUndefined();
             }
@@ -138,7 +138,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private Stepper EvalConsequentStep()
         {
-            if (EmptyList.IsType(Rest(this.clause)))
+            if (TypePrimitives.IsEmptyList(Rest(this.clause)))
             {
                 // no consequent: return the test as the result
                 return ReturnFromStep(this.test);

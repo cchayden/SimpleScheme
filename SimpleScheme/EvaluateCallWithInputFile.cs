@@ -74,11 +74,11 @@ namespace SimpleScheme
         {
             try
             {
-                return InputPort.New(new StreamReader(SchemeString.AsString(filename, false)));
+                return InputPort.New(new StreamReader(Printer.AsString(filename, false)));
             }
             catch (FileNotFoundException)
             {
-                return (InputPort)ErrorHandlers.IoError("No such file: " + SchemeString.AsString(filename));
+                return (InputPort)ErrorHandlers.IoError("No such file: " + Printer.AsString(filename));
             }
             catch (IOException ex)
             {

@@ -62,41 +62,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
                 .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), true, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsProcedure(First(args))), 1);
         }
         #endregion
 
         #region Internal Static Methods
-        /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme procedure.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is Procedure;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "procedure";
-        }
-
-        /// <summary>
-        /// Write the procedure to the string builder.
-        /// </summary>
-        /// <param name="obj">The procedure (not used).</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            buf.Append("<procedure>");
-        }
-
         /// <summary>
         /// Check that the given object is a procedure.
         /// </summary>
@@ -104,12 +74,12 @@ namespace SimpleScheme
         /// <returns>The procedure.</returns>
         internal static Procedure Proc(Obj x)
         {
-            if (IsType(x))
+            if (TypePrimitives.IsProcedure(x))
             {
                 return (Procedure)x;
             }
 
-            return Proc(ErrorHandlers.TypeError(TypeName(), x));
+            return Proc(ErrorHandlers.TypeError(TypePrimitives.ProcedureName, x));
         }
 
         /// <summary>
@@ -120,7 +90,7 @@ namespace SimpleScheme
         /// <returns>The result of applying the proc.</returns>
         internal static Obj Force(Obj promise, Stepper caller)
         {
-            return !IsType(promise) ? promise : Proc(promise).Apply(null, caller.Env, caller);
+            return !TypePrimitives.IsProcedure(promise) ? promise : Proc(promise).Apply(null, caller.Env, caller);
         }
         #endregion
 
@@ -159,7 +129,7 @@ namespace SimpleScheme
         internal Stepper Evaluate(Obj args, Environment env, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
-            if (Macro.IsType(this))
+            if (TypePrimitives.IsMacro(this))
             {
                 return EvaluateExpandMacro.Call((Macro)this, args, env, caller);
             }
@@ -169,7 +139,7 @@ namespace SimpleScheme
             //   2 arguments evaluated in the original environment
             //   3 the closure's environment
             // Then continue evaluating the closure body in this new environment
-            if (Closure.IsType(this))
+            if (TypePrimitives.IsClosure(this))
             {
                 // CLOSURE CALL -- capture the environment and evaluate the body
                 return EvaluateClosure.Call((Closure)this, args, env, caller);

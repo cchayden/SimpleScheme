@@ -81,12 +81,12 @@ namespace SimpleScheme
         internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // first check for degenerate cases
-            if (EmptyList.IsType(expr))
+            if (TypePrimitives.IsEmptyList(expr))
             {
                 return caller.ContinueStep(EmptyList.Instance);
             }
 
-            if (!Pair.IsType(expr))
+            if (!TypePrimitives.IsPair(expr))
             {
                 ErrorHandlers.SemanticError("Bad args for list: " + expr);
                 return caller.ContinueStep(Undefined.Instance);
@@ -115,17 +115,17 @@ namespace SimpleScheme
         private Stepper LoopStep()
         {
             // back from the evaluation -- save the result and keep going with the rest
-            this.accum = (Pair)(this.accum.RestCell = MakeList(ReturnedExpr));
+            this.accum = (Pair)this.accum.SetRest(MakeList(ReturnedExpr));
             this.objs = Rest(this.objs);
 
-            if (Pair.IsType(this.objs))
+            if (TypePrimitives.IsPair(this.objs))
             {
                 // Come back to this step, so don't assign PC for better performance.
                 return EvaluateExpression.Call(First(this.objs), this.Env, this);
             }
 
             // We are done now, return
-            return ReturnFromStep(this.result.RestCell);
+            return ReturnFromStep(Rest(this.result));
         }
         #endregion
     }

@@ -84,7 +84,7 @@ namespace SimpleScheme
         /// <returns>The items appended.</returns>
         public static Obj ListStar(Obj args)
         {
-            return EmptyList.IsType(Rest(args)) ? 
+            return TypePrimitives.IsEmptyList(Rest(args)) ? 
                 First(args) : 
                 Cons(First(args), ListStar(Rest(args)));
         }
@@ -96,7 +96,7 @@ namespace SimpleScheme
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static Obj First(Obj list)
         {
-            return Pair.IsType(list) ? ((Pair)list).FirstCell : EmptyList.Instance;
+            return TypePrimitives.IsPair(list) ? ((Pair)list).FirstCell : EmptyList.Instance;
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static Obj Rest(Obj list)
         {
-            return Pair.IsType(list) ? ((Pair)list).RestCell : EmptyList.Instance;
+            return TypePrimitives.IsPair(list) ? ((Pair)list).RestCell : EmptyList.Instance;
         }
 
         /// <summary>
@@ -150,10 +150,10 @@ namespace SimpleScheme
         public static int Length(Obj list)
         {
             int len = 0;
-            while (Pair.IsType(list))
+            while (TypePrimitives.IsPair(list))
             {
                 len++;
-                list = ((Pair)list).RestCell;
+                list = Rest(list);
             }
 
             return len;
@@ -174,10 +174,10 @@ namespace SimpleScheme
 
             // Iterate down the list, taking the function and building a list of the results.
             expr = First(expr);
-            while (Pair.IsType(expr))
+            while (TypePrimitives.IsPair(expr))
             {
-                accum = (Pair)(accum.RestCell = MakeList(fun(First(expr))));
-                expr = ((Pair)expr).RestCell;
+                accum = (Pair)accum.SetRest(MakeList(fun(First(expr))));
+                expr = Rest(expr);
             }
 
             return Rest(result);

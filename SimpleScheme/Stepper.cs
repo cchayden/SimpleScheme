@@ -161,21 +161,6 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Convert the stepper instance to a string.
-        /// Could also consider printing the Expr.
-        /// </summary>
-        /// <param name="obj">The stepper.</param>
-        /// <param name="quoted">True if the string should be quoted.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(obj == Suspended ? "<suspended>" : "<stepper>");
-            }
-        }
-
-        /// <summary>
         /// Transfer to a given stepper.  
         /// This can be used to return fram an evaluator.
         /// Assign the return value and return the caller task to resume.
@@ -368,7 +353,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder buf)
         {
             buf.AppendFormat("Step {0}\n", this.Name);
-            string exp = EmptyList.IsType(this.Expr) ? "()" : this.Expr.ToString();
+            string exp = TypePrimitives.IsEmptyList(this.Expr) ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {

@@ -115,10 +115,10 @@ namespace SimpleScheme
         /// <returns>The steps to test che clauses.</returns>
         private Stepper CheckClauseStep()
         {
-            while (!EmptyList.IsType(this.clauses))
+            while (!TypePrimitives.IsEmptyList(this.clauses))
             {
                 Obj clause = First(this.clauses);
-                if (!Pair.IsType(clause))
+                if (!TypePrimitives.IsPair(clause))
                 {
                     return (Stepper)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
@@ -127,13 +127,13 @@ namespace SimpleScheme
                 this.exprList = Rest(clause);
 
                 // look for else datum
-                if (Symbol.IsType(data) && Symbol.Sym(data) == "else")
+                if (TypePrimitives.IsSymbol(data) && Symbol.Sym(data) == "else")
                 {
                     return this.EvalExpr();
                 }
 
                 // look for a match within the list of datum items
-                while (Pair.IsType(data))
+                while (TypePrimitives.IsPair(data))
                 {
                     if (SchemeBoolean.Eqv(this.keyVal, First(data)))
                     {
@@ -157,7 +157,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper EvalExpr()
         {
-            if (EmptyList.IsType(this.exprList))
+            if (TypePrimitives.IsEmptyList(this.exprList))
             {
                 // if no expressions, return key value
                 return ReturnFromStep(this.keyVal);

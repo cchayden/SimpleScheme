@@ -64,8 +64,8 @@ namespace SimpleScheme
                 .DefinePrimitive(
                    "method",
                    (args, caller) => new SynchronousClrProcedure(
-                       SchemeString.AsString(First(args), false), 
-                       SchemeString.AsString(Second(args), false), 
+                       Printer.AsString(First(args), false), 
+                       Printer.AsString(Second(args), false), 
                        Rest(Rest(args))),
                     2,
                     MaxInt);

@@ -38,25 +38,6 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme macro.</returns>
-        internal static new bool IsType(Obj obj)
-        {
-            return obj is Macro;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static new string TypeName()
-        {
-            return "macro";
-        }
-
-        /// <summary>
         /// Creates a new Macro.
         /// </summary>
         /// <param name="parms">The macro params.</param>

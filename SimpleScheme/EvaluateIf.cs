@@ -84,7 +84,7 @@ namespace SimpleScheme
         private Stepper EvaluateAlternativeStep()
         {
             Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
-            return EvaluateExpression.Call(EmptyList.IsType(toEvaluate) ? Undefined.Instance : toEvaluate, this.Env, this.Caller);
+            return EvaluateExpression.Call(TypePrimitives.IsEmptyList(toEvaluate) ? Undefined.Instance : toEvaluate, this.Env, this.Caller);
         }
         #endregion
     }

@@ -33,7 +33,7 @@ namespace SimpleScheme
         /// <returns>The double contained in the obj.</returns>
         public static double Num(Obj x)
         {
-            if (IsType(x))
+            if (TypePrimitives.IsNumber(x))
             {
                 return (double)x;
             }
@@ -43,28 +43,8 @@ namespace SimpleScheme
                 return Convert.ToDouble(x);
             }
 
-            return Num(ErrorHandlers.TypeError(TypeName(), x));
+            return Num(ErrorHandlers.TypeError(TypePrimitives.NumberName, x));
         }
-
-        /// <summary>
-        /// Convert the number a string.
-        /// </summary>
-        /// <param name="obj">The number to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            double d = Num(obj);
-            if (Math.Round(d) == d)
-            {
-                buf.Append((long)d);
-            }
-            else
-            {
-                buf.Append(d);
-            }
-        }
-
         #endregion
 
         #region Define Primitives
@@ -138,7 +118,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(expt <z>)</r4rs>
                 .DefinePrimitive("expt", (args, caller) => Expt(First(args), Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (args, caller) => EmptyList.IsType(args) ? Zero : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (args, caller) => TypePrimitives.IsEmptyList(args) ? Zero : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(First(args))), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
@@ -146,7 +126,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (args, caller) => EmptyList.IsType(args) ? One : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (args, caller) => TypePrimitives.IsEmptyList(args) ? One : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
@@ -189,28 +169,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
-        /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme number.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is double;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "number";
-        }
-
-        #endregion
-
         #region Private Static Methods
         /// <summary>
         /// Compute the greatest common divisor of a list of numbers.
@@ -221,7 +179,7 @@ namespace SimpleScheme
         {
             long gcd = 0;
 
-            while (Pair.IsType(args))
+            while (TypePrimitives.IsPair(args))
             {
                 gcd = Gcd2(Math.Abs((long)Num(First(args))), gcd);
                 args = Rest(args);
@@ -248,7 +206,7 @@ namespace SimpleScheme
         /// <returns>True if the number is exact.</returns>
         private static bool IsExact(Obj x)
         {
-            if (!IsType(x))
+            if (!TypePrimitives.IsNumber(x))
             {
                 return false;
             }
@@ -277,7 +235,7 @@ namespace SimpleScheme
         {
             long lcm = 1;
 
-            while (Pair.IsType(args))
+            while (TypePrimitives.IsPair(args))
             {
                 long n = Math.Abs((long)Num(First(args)));
                 long g = Gcd2(n, lcm);
@@ -297,7 +255,7 @@ namespace SimpleScheme
         /// <returns>A string version of the number.</returns>
         private static Obj NumberToString(Obj x, Obj y)
         {
-            int numberBase = IsType(y) ? (int)Num(y) : 10;
+            int numberBase = TypePrimitives.IsNumber(y) ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
                 return Convert.ToString((long)Num(x), numberBase).ToCharArray();
@@ -316,7 +274,7 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         private static Obj NumCompare(Obj args, char op)
         {
-            while (Pair.IsType(Rest(args)))
+            while (TypePrimitives.IsPair(Rest(args)))
             {
                 double x = Num(First(args));
                 args = Rest(args);
@@ -386,7 +344,7 @@ namespace SimpleScheme
         /// with the starting value.</returns>
         private static Obj NumCompute(Obj args, char op, double result)
         {
-            if (EmptyList.IsType(args))
+            if (TypePrimitives.IsEmptyList(args))
             {
                 // If there are no numbers, apply a unary operation on the starting value.
                 switch (op)
@@ -402,7 +360,7 @@ namespace SimpleScheme
                 }
             }
 
-            while (Pair.IsType(args))
+            while (TypePrimitives.IsPair(args))
             {
                 double x = Num(First(args));
                 switch (op)

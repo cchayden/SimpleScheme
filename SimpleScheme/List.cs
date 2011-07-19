@@ -58,7 +58,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
                 .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), 'm', 'v'), 2)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.IsType(First(args))), 1)
+                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsPair(First(args))), 1)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
                 .DefinePrimitive("reverse", (args, caller) => Reverse(First(args)), 1)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
@@ -123,13 +123,13 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         private static Obj SetFirst(Obj x, Obj y)
         {
-            if (Pair.IsType(x))
+            if (TypePrimitives.IsPair(x))
             {
-                ((Pair)x).FirstCell = y;
+                ((Pair)x).SetFirst(y);
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + SchemeString.AsString(x));
+            return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(x));
         }
 
         /// <summary>
@@ -140,13 +140,13 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         private static Obj SetRest(Obj x, Obj y)
         {
-            if (Pair.IsType(x))
+            if (TypePrimitives.IsPair(x))
             {
-                ((Pair)x).RestCell = y;
+                ((Pair)x).SetRest(y);
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + SchemeString.AsString(x));
+            return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(x));
         }
 
         /// <summary>
@@ -157,10 +157,10 @@ namespace SimpleScheme
         private static Obj Reverse(Obj x)
         {
             Obj result = EmptyList.Instance;
-            while (Pair.IsType(x))
+            while (TypePrimitives.IsPair(x))
             {
                 result = Cons(First(x), result);
-                x = ((Pair)x).RestCell;
+                x = Rest(x);
             }
 
             return result;
@@ -175,7 +175,7 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static Obj Append(Obj args)
         {
-            if (EmptyList.IsType(args))
+            if (TypePrimitives.IsEmptyList(args))
             {
                 return EmptyList.Instance;
             }
@@ -183,13 +183,13 @@ namespace SimpleScheme
             Pair result = MakeEmptyList();
             Pair accum = result;
 
-            while (!EmptyList.IsType(Rest(args)))
+            while (!TypePrimitives.IsEmptyList(Rest(args)))
             {
                 accum = Append(accum, First(args));
                 args = Rest(args);
             }
 
-            accum.RestCell = First(args);
+            accum.SetRest(First(args));
 
             return Rest(result);
         }
@@ -204,9 +204,9 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, Obj toCopy)
         {
-            while (!EmptyList.IsType(toCopy))
+            while (!TypePrimitives.IsEmptyList(toCopy))
             {
-                tail.RestCell = MakeList(First(toCopy));
+                tail.SetRest(MakeList(First(toCopy)));
                 toCopy = Rest(toCopy);
                 tail = (Pair)Rest(tail);
             }
@@ -223,12 +223,12 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (EmptyList.IsType(x))
+                if (TypePrimitives.IsEmptyList(x))
                 {
                     return true;
                 }
 
-                if (!Pair.IsType(x))
+                if (!TypePrimitives.IsPair(x))
                 {
                     return false;
                 }
@@ -286,7 +286,7 @@ namespace SimpleScheme
         /// <returns>The results that wer found.</returns>
         private static Obj MemberAssoc(Obj obj, Obj list, char m, char eq)
         {
-            while (Pair.IsType(list))
+            while (TypePrimitives.IsPair(list))
             {
                 Obj target = m == 'm' ? First(list) : First(First(list));
                 bool found;

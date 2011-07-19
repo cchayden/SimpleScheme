@@ -26,8 +26,8 @@ namespace SimpleScheme
         /// <param name="methodName">The name of the CLR method.</param>
         protected ClrProcedure(Obj targetClassName, Obj methodName)
         {
-            this.ClassName = SchemeString.AsString(targetClassName, false);
-            this.MethodName = SchemeString.AsString(methodName, false);
+            this.ClassName = Printer.AsString(targetClassName, false);
+            this.MethodName = Printer.AsString(methodName, false);
             this.Name = this.ClassName + "." + this.MethodName;
         }
         #endregion
@@ -94,7 +94,7 @@ namespace SimpleScheme
             int n = Length(args);
             List<Type> array = new List<Type>(n);
 
-            while (Pair.IsType(args))
+            while (TypePrimitives.IsPair(args))
             {
                 array.Add(TypePrimitives.ToClass(First(args)));
                 args = Rest(args);
@@ -128,7 +128,7 @@ namespace SimpleScheme
 
             int i = 0;
             int a = 0;
-            while (Pair.IsType(args))
+            while (TypePrimitives.IsPair(args))
             {
                 Obj elem = First(args);
                 if (this.ArgClasses[i] == typeof(int))
@@ -137,7 +137,7 @@ namespace SimpleScheme
                 }
                 else if (this.ArgClasses[i] == typeof(string))
                 {
-                    array[a++] = SchemeString.AsString(elem, false);
+                    array[a++] = Printer.AsString(elem, false);
                 }
                 else
                 {
@@ -171,7 +171,7 @@ namespace SimpleScheme
         {
             try
             {
-                return Type.GetType(SchemeString.AsString(className, false));
+                return Type.GetType(Printer.AsString(className, false));
             }
             catch (TypeLoadException)
             {
@@ -267,7 +267,7 @@ namespace SimpleScheme
             Type type = TypePrimitives.ToClass(className);
             if (type == null)
             {
-                return ErrorHandlers.ClrError("Type cannot be found: " + SchemeString.AsString(className, false));
+                return ErrorHandlers.ClrError("Type cannot be found: " + Printer.AsString(className, false));
             }
 
             Assembly assembly = type.Assembly;

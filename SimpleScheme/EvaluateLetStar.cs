@@ -106,13 +106,13 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the init list.</returns>
         private Stepper InitialStep()
         {
-            if (EmptyList.IsType(Expr))
+            if (TypePrimitives.IsEmptyList(Expr))
             {
                 ErrorHandlers.SemanticError("No arguments arguments for let*");
                 return ReturnUndefined();
             }
 
-            if (!Pair.IsType(Expr))
+            if (!TypePrimitives.IsPair(Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let*: " + Expr);
                 return ReturnUndefined();
@@ -121,7 +121,7 @@ namespace SimpleScheme
             this.bindings = First(Expr);
             this.body = Rest(Expr);
 
-            if (EmptyList.IsType(this.body))
+            if (TypePrimitives.IsEmptyList(this.body))
             {
                 return ReturnUndefined();
             }
@@ -140,7 +140,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalInit()
         {
-            if (EmptyList.IsType(this.inits))
+            if (TypePrimitives.IsEmptyList(this.inits))
             {
                 return ContinueHere(this.ApplyLambda);
             }

@@ -37,7 +37,7 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// (error <message> ...)
-                .DefinePrimitive("error", (args, caller) => Error(SchemeString.AsString(args)), 0, MaxInt);
+                .DefinePrimitive("error", (args, caller) => Error(Printer.AsString(args)), 0, MaxInt);
         }
         #endregion
 
@@ -66,7 +66,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static object TypeError(string expected, object got)
         {
-            string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), SchemeString.AsString(got));
+            string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), Printer.AsString(got));
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }

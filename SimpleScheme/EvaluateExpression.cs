@@ -152,7 +152,7 @@ namespace SimpleScheme
             // do not create an evaluator -- just return the value directly.
             //
             // First look for a symbol.
-            if (Symbol.IsType(expr))
+            if (TypePrimitives.IsSymbol(expr))
             {
                 // Evaluate a symbol by looking it up in the environment.
                 // It should correspond to a variable name, for which there 
@@ -166,7 +166,7 @@ namespace SimpleScheme
             }
 
             // Look for all other non-pair forms.
-            if (!Pair.IsType(expr))
+            if (!TypePrimitives.IsPair(expr))
             {
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.

@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -20,12 +19,12 @@ namespace SimpleScheme
         /// <returns>The character.</returns>
         public static char Chr(Obj obj)
         {
-            if (IsType(obj))
+            if (TypePrimitives.IsCharacter(obj))
             {
                 return (char)obj;
             }
 
-            return Chr(ErrorHandlers.TypeError(TypeName(), obj));
+            return Chr(ErrorHandlers.TypeError(TypePrimitives.CharacterName, obj));
         }
         #endregion
 
@@ -74,54 +73,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
                 .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(ChrCompare(First(args), Second(args), false) > 0), 2)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
-                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
+                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsCharacter(First(args))), 1);
         }
         #endregion
 
         #region Internal Static Methods
-        /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme character.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is char;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "char";
-        }
-
-        /// <summary>
-        /// Convert the character a string.
-        /// </summary>
-        /// <param name="obj">The character to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            char c = (char)obj;
-            if (quoted)
-            {
-                buf.Append("#\\");
-            }
-
-            if (c == ' ')
-            {
-                buf.Append("space");
-            }
-            else
-            {
-                buf.Append(c);
-            }
-        }
-
         /// <summary>
         /// Compares two characters.
         /// </summary>

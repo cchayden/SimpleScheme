@@ -31,32 +31,5 @@ namespace SimpleScheme
             return "()";
         }
         #endregion
-
-        #region Internal Static Methods
-        /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is an empty list.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is EmptyList;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "empty list";
-        }
-
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            buf.Append("()");
-        }
-
-        #endregion
     }
 }

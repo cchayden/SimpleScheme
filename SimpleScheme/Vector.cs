@@ -29,12 +29,12 @@ namespace SimpleScheme
         /// <returns>The scheme vector.</returns>
         public static Obj[] Vec(object obj)
         {
-            if (IsType(obj)) 
+            if (TypePrimitives.IsVector(obj)) 
             {
                 return (Obj[])obj;
             }
 
-            return Vec(ErrorHandlers.TypeError(TypeName(), obj));
+            return Vec(ErrorHandlers.TypeError(TypePrimitives.VectorName, obj));
         }
 
         /// <summary>
@@ -46,13 +46,13 @@ namespace SimpleScheme
         {
             Obj[] vec = new Obj[Length(objs)];
 
-            if (!Pair.IsType(objs))
+            if (!TypePrimitives.IsPair(objs))
             {
                 return vec;
             }
 
             int i = 0;
-            while (Pair.IsType(objs))
+            while (TypePrimitives.IsPair(objs))
             {
                 vec[i++] = First(objs);
                 objs = Rest(objs);
@@ -90,30 +90,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
                 .DefinePrimitive("vector-set!", (args, caller) => VectorSet(First(args), Second(args), Third(args)), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1);
+                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsVector(First(args))), 1);
         }
         #endregion
 
         #region Internal Static Methods
-        /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme vector.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is Obj[];
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "vector";
-        }
-
         /// <summary>
         /// Create a vector from a length and an optional fill value.
         /// </summary>
@@ -123,7 +104,7 @@ namespace SimpleScheme
         internal static Obj[] New(object length, object fill)
         {
             Obj[] vec = new object[(int)Number.Num(length)];
-            if (EmptyList.IsType(fill))
+            if (TypePrimitives.IsEmptyList(fill))
             {
                 fill = Undefined.Instance;
             }
@@ -145,7 +126,7 @@ namespace SimpleScheme
         /// all elements are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!IsType(obj2))
+            if (!TypePrimitives.IsVector(obj2))
             {
                 return false;
             }
@@ -166,30 +147,6 @@ namespace SimpleScheme
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Convert the vector a string.
-        /// </summary>
-        /// <param name="obj">The vector to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            Obj[] vec = (Obj[])obj;
-            buf.Append("#(");
-            if (vec.Length > 0)
-            {
-                foreach (Obj v in vec)
-                {
-                    TypePrimitives.AsString(v, quoted, buf);
-                    buf.Append(' ');
-                }
-
-                buf.Remove(buf.Length - 1, 1);
-            }
-
-            buf.Append(')');
         }
         #endregion
 

@@ -28,14 +28,14 @@ namespace SimpleScheme
 
         #region Accessors
         /// <summary>
-        /// Gets or sets the first obj of the pair.
+        /// Gets the first obj of the pair.
         /// </summary>
-        internal Obj FirstCell { get; set; }
+        internal Obj FirstCell { get; private set; }
 
         /// <summary>
-        /// Gets or sets the rest of the objs in the list.
+        /// Gets the rest of the objs in the list.
         /// </summary>
-        internal Obj RestCell { get; set; }
+        internal Obj RestCell { get; private set; }
         #endregion
 
         #region Public Static Methods
@@ -60,134 +60,71 @@ namespace SimpleScheme
         /// <returns>A string representing the pair.</returns>
         public override string ToString()
         {
-            return SchemeString.AsString(this, true);
+            return Printer.AsString(this, true);
         }
         #endregion
 
         #region Internal Static Methods
         /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme pair.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is Pair;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "pair";
-        }
-
-        /// <summary>
         /// Tests whether two pairs are equal.
+        /// The first object must be a pair.
+        /// If the list is circulr, this will loop forever.
         /// </summary>
         /// <param name="obj1">The first object (must be a pair).</param>
         /// <param name="obj2">The other object.</param>
-        /// <returns>True if they are both pairs and 
-        /// all elements are equal.</returns>
+        /// <returns>True if they are both pairs and all elements are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!IsType(obj2))
+            if (!TypePrimitives.IsPair(obj2))
             {
                 return false;
-            }
-
-            if (obj1 == obj2)
-            {
-                return true;
             }
 
             Pair pair1 = (Pair)obj1;
             Pair pair2 = (Pair)obj2;
 
-            return SchemeBoolean.Equal(First(pair1), First(pair2)) && SchemeBoolean.Equal(Rest(pair1), Rest(pair2));
+            while (true)
+            {
+                if (!SchemeBoolean.Equal(First(pair1), First(pair2)))
+                {
+                    return false;
+                }
+
+                obj1 = Rest(pair1);
+                obj2 = Rest(pair2);
+
+                if (!TypePrimitives.IsPair(obj1) || !TypePrimitives.IsPair(obj2))
+                {
+                    return SchemeBoolean.Equal(obj1, obj2);
+                }
+
+                pair1 = (Pair)obj1;
+                pair2 = (Pair)obj2;
+            }
+        }
+        #endregion
+
+        #region Internal Static Methods
+        /// <summary>
+        /// Destructive setter for the rest cell of the pair.
+        /// </summary>
+        /// <param name="value">The new first cell value.</param>
+        /// <returns>The new cell value.</returns>
+        internal Obj SetFirst(Obj value)
+        {
+            this.FirstCell = value;
+            return value;
         }
 
         /// <summary>
-        /// Turns the pair into a string.
+        /// Destructive setter for the rest cell of the pair.
         /// </summary>
-        /// <param name="obj">The object to convert to a string.</param>
-        /// <param name="quoted">Is the string to be quoted?</param>
-        /// <param name="buf">The buffer to write the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
+        /// <param name="value">The new rest cell value.</param>
+        /// <returns>The new cell value.</returns>
+        internal Obj SetRest(Obj value)
         {
-            Pair pair = (Pair)obj;
-            if (IsType(pair.RestCell) && EmptyList.IsType(Rest(pair.RestCell)))
-            {
-                string special = null;
-
-                // There is just one more thing in the pair.  See if the first thing 
-                //    is one of these special forms.
-                switch (pair.FirstCell as string)
-                {
-                    case "quote":
-                        special = "'";
-                        break;
-                    case "quasiquote":
-                        special = "`";
-                        break;
-                    case "unquote":
-                        special = ",";
-                        break;
-                    case "unquote-splicing":
-                        special = ",@";
-                        break;
-                }
-
-                if (special != null)
-                {
-                    // There was a special form, and one more thing.
-                    // Append a special symbol and the remaining thing.
-                    buf.Append(special);
-                    TypePrimitives.AsString(Second(pair), quoted, buf);
-                    return;
-                }
-            }
-
-            // Normal case -- put out the whole list within parentheses.
-            buf.Append('(');
-            TypePrimitives.AsString(pair.FirstCell, quoted, buf);
-
-            Obj tail = pair.RestCell;
-
-            int len = 0;
-            while (IsType(tail))
-            {
-                buf.Append(' ');
-                TypePrimitives.AsString(First(tail), quoted, buf);
-                Obj oldTail = tail;
-                tail = Rest(tail);
-                len++;
-                if (tail == oldTail)
-                {
-                    // this is a circular structure -- truncate
-                    buf.Append(" ... [circular list]");
-                    tail = EmptyList.Instance;
-                    break;
-                }
-
-                if (len > 1000)
-                {
-                    // maybe this is a circular structure -- truncate
-                    buf.Append(" ... [too long]");
-                    tail = EmptyList.Instance;
-                    break;
-                }
-            }
-
-            if (!EmptyList.IsType(tail))
-            {
-                buf.Append(" . ");
-                TypePrimitives.AsString(tail, quoted, buf);
-            }
-
-            buf.Append(')');
+            this.RestCell = value;
+            return value;
         }
         #endregion
     }

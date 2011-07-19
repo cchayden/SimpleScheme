@@ -104,19 +104,19 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the constructed lambda.</returns>
         private Stepper InitialStep()
         {
-            if (EmptyList.IsType(Expr))
+            if (TypePrimitives.IsEmptyList(Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for let");
                 return ReturnUndefined();
             }
 
-            if (!Pair.IsType(Expr))
+            if (!TypePrimitives.IsPair(Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let: " + Expr);
                 return ReturnUndefined();
             }
 
-            if (Symbol.IsType(First(Expr)))
+            if (TypePrimitives.IsSymbol(First(Expr)))
             {
                 // named let
                 this.name = Symbol.Sym(First(Expr));
@@ -129,7 +129,7 @@ namespace SimpleScheme
                 this.body = Rest(Expr);
             }
 
-            if (EmptyList.IsType(this.body))
+            if (TypePrimitives.IsEmptyList(this.body))
             {
                 return ReturnUndefined();
             }

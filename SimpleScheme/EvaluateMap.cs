@@ -115,12 +115,12 @@ namespace SimpleScheme
         private Stepper InitialStep()
         {
             // first check for degenerate cases
-            if (EmptyList.IsType(this.lists))
+            if (TypePrimitives.IsEmptyList(this.lists))
             {
                 return ReturnUndefined();
             }
 
-            if (!Pair.IsType(this.lists))
+            if (!TypePrimitives.IsPair(this.lists))
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + this.lists);
                 return ReturnUndefined();
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// If we are done, return the collected results.</returns>
         private Stepper ApplyFunStep()
         {
-            if (Pair.IsType(First(this.lists)))
+            if (TypePrimitives.IsPair(First(this.lists)))
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
@@ -157,7 +157,7 @@ namespace SimpleScheme
             if (this.returnResult)
             {
                 // Builds a list by tacking new values onto the tail.
-                this.accum = (Pair)(this.accum.RestCell = MakeList(ReturnedExpr));
+                this.accum = (Pair)this.accum.SetRest(MakeList(ReturnedExpr));
             }
 
             // Step down each of the lists

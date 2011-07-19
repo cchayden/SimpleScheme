@@ -15,41 +15,18 @@ namespace SimpleScheme
     {
         #region Public Static Methods
         /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="x">The obj to convert.</param>
-        /// <returns>The string representing the obj.</returns>
-        public static string AsString(Obj x)
-        {
-            return AsString(x, true);
-        }
-
-        /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="x">The obj to convert.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <returns>The string representing the obj.</returns>
-        public static string AsString(Obj x, bool quoted)
-        {
-            StringBuilder buf = new StringBuilder();
-            TypePrimitives.AsString(x, quoted, buf);
-            return buf.ToString();
-        }
-
-        /// <summary>
         /// Check that an oject is a scheme string.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme string.</returns>
         public static char[] Str(Obj obj)
         {
-            if (IsType(obj))
+            if (TypePrimitives.IsString(obj))
             {
                 return (char[])obj;
             }
 
-            return Str(ErrorHandlers.TypeError(TypeName(), obj));
+            return Str(ErrorHandlers.TypeError(TypePrimitives.StringName, obj));
         }
 
         #endregion
@@ -109,7 +86,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
                 .DefinePrimitive("string>?", (args, caller) => SchemeBoolean.Truth(StringCompare(First(args), Second(args), false) > 0), 2)
                 //// <r4rs section="6.7">(string? <obj>)</r4rs>
-                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
+                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsString(First(args))), 1)
                 //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
                 .DefinePrimitive("substring", (args, caller) => Substr(First(args), Second(args), Third(args)), 3)
                 //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
@@ -119,58 +96,6 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme string.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is char[];
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "string";
-        }
-
-        /// <summary>
-        /// Convert a scheme string into a string for output.
-        /// </summary>
-        /// <param name="obj">The string to output.</param>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            char[] str = (char[])obj;
-            if (quoted)
-            {
-                buf.Append('"');
-            }
-
-            if (str != null)
-            {
-                foreach (char c in str)
-                {
-                    if (quoted && c == '"')
-                    {
-                        buf.Append('\\');
-                    }
-
-                    buf.Append(c);
-                }
-            }
-
-            if (quoted)
-            {
-                buf.Append('"');
-            }
-        }
-
-        /// <summary>
         /// Creates a scheme string from a length and fill character.
         /// </summary>
         /// <param name="length">The length of the string to make.</param>
@@ -178,7 +103,7 @@ namespace SimpleScheme
         /// <returns>The new scheme string.</returns>
         internal static char[] MakeString(Obj length, Obj fill)
         {
-            char c = EmptyList.IsType(fill) ? (char)0 : Character.Chr(fill);
+            char c = TypePrimitives.IsEmptyList(fill) ? (char)0 : Character.Chr(fill);
             return new string(c, (int)Number.Num(length)).ToCharArray();
         }
 
@@ -231,7 +156,7 @@ namespace SimpleScheme
         /// <returns>True if the strings are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!IsType(obj2))
+            if (!TypePrimitives.IsString(obj2))
             {
                 return false;
             }
@@ -264,7 +189,7 @@ namespace SimpleScheme
         internal static char[] ListToString(Obj chars)
         {
             StringBuilder str = new StringBuilder();
-            while (Pair.IsType(chars))
+            while (TypePrimitives.IsPair(chars))
             {
                 str.Append(Character.Chr(First(chars)));
                 chars = Rest(chars);
@@ -394,9 +319,9 @@ namespace SimpleScheme
         {
             StringBuilder result = new StringBuilder();
 
-            while (Pair.IsType(args))
+            while (TypePrimitives.IsPair(args))
             {
-                result.Append(AsString(First(args), false));
+                result.Append(Printer.AsString(First(args), false));
                 args = Rest(args);
             }
 
@@ -414,12 +339,14 @@ namespace SimpleScheme
         /// positive if first is greater.</returns>
         private static int StringCompare(Obj x, Obj y, bool ci)
         {
-            if (IsType(x) && IsType(y))
+            if (TypePrimitives.IsString(x) && TypePrimitives.IsString(y))
             {
                 return Compare((char[])x, (char[])y, ci);
             }
 
-            ErrorHandlers.SemanticError("StringCompare: expected two strings, got: " + AsString(x) + " and " + AsString(y));
+            ErrorHandlers.SemanticError("StringCompare: expected two strings, got: " + 
+                Printer.AsString(x) + " and " + 
+                Printer.AsString(y));
             return 0;
         }
 
@@ -432,12 +359,12 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         private static Obj StringToNumber(object x, object y)
         {
-            int numberBase = Number.IsType(y) ? (int)Number.Num(y) : 10;
+            int numberBase = TypePrimitives.IsNumber(y) ? (int)Number.Num(y) : 10;
             try
             {
                 return numberBase == 10
-                           ? double.Parse(AsString(x, false))
-                           : Number.Num(Convert.ToInt64(AsString(x, false), numberBase));
+                           ? double.Parse(Printer.AsString(x, false))
+                           : Number.Num(Convert.ToInt64(Printer.AsString(x, false), numberBase));
             }
             catch (FormatException)
             {

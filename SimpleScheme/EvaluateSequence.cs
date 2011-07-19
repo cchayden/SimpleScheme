@@ -77,7 +77,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalExprStep()
         {
-            if (EmptyList.IsType(Rest(this.expressions)))
+            if (TypePrimitives.IsEmptyList(Rest(this.expressions)))
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.

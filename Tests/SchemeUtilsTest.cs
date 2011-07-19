@@ -321,20 +321,20 @@ namespace Tests
         [TestMethod]
         public void AsStringTest()
         {
-            Assert.AreEqual("()", SchemeString.AsString(EmptyList_Accessor.Instance));
-            Assert.AreEqual("1", SchemeString.AsString(1.0));
-            Assert.AreEqual("1.5", SchemeString.AsString(1.5));
-            Assert.AreEqual("#\\a", SchemeString.AsString('a'));
-            Assert.AreEqual("(1 . 2)", SchemeString.AsString(Pair.New(1, 2)));
-            Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2)));
-            Assert.AreEqual(@"abc", SchemeString.AsString("abc"));
+            Assert.AreEqual("()", Printer.AsString(EmptyList_Accessor.Instance));
+            Assert.AreEqual("1", Printer.AsString(1.0));
+            Assert.AreEqual("1.5", Printer.AsString(1.5));
+            Assert.AreEqual("#\\a", Printer.AsString('a'));
+            Assert.AreEqual("(1 . 2)", Printer.AsString(Pair.New(1, 2)));
+            Assert.AreEqual("(1 2)", Printer.AsString(ListPrimitives.MakeList(1, 2)));
+            Assert.AreEqual(@"abc", Printer.AsString("abc"));
             char[] empty = new char[0];
-            Assert.AreEqual(@"""""", SchemeString.AsString(empty));
+            Assert.AreEqual(@"""""", Printer.AsString(empty));
             var test = new Obj[] { 1, 2 };
-            Assert.AreEqual("#(1 2)", SchemeString.AsString(test));
-            Assert.AreEqual("#t", SchemeString.AsString(true));
-            Assert.AreEqual("#f", SchemeString.AsString(false));
-            Assert.AreEqual("1", SchemeString.AsString(1));
+            Assert.AreEqual("#(1 2)", Printer.AsString(test));
+            Assert.AreEqual("#t", Printer.AsString(true));
+            Assert.AreEqual("#f", Printer.AsString(false));
+            Assert.AreEqual("1", Printer.AsString(1));
         }
 
         /// <summary>
@@ -343,19 +343,19 @@ namespace Tests
         [TestMethod]
         public void AsStringTestWithQuote()
         {
-            Assert.AreEqual("()", SchemeString.AsString(EmptyList_Accessor.Instance, false));
-            Assert.AreEqual("1", SchemeString.AsString(1.0, false));
-            Assert.AreEqual("1.5", SchemeString.AsString(1.5, false));
-            Assert.AreEqual("a", SchemeString.AsString('a', false));
-            Assert.AreEqual("(1 . 2)", SchemeString.AsString(Pair.New(1, 2), false));
-            Assert.AreEqual("(1 2)", SchemeString.AsString(ListPrimitives.MakeList(1, 2), false));
-            Assert.AreEqual("abc", SchemeString.AsString("abc", false));
-            Assert.AreEqual(@"""", SchemeString.AsString(@"""", false));
+            Assert.AreEqual("()", Printer.AsString(EmptyList_Accessor.Instance, false));
+            Assert.AreEqual("1", Printer.AsString(1.0, false));
+            Assert.AreEqual("1.5", Printer.AsString(1.5, false));
+            Assert.AreEqual("a", Printer.AsString('a', false));
+            Assert.AreEqual("(1 . 2)", Printer.AsString(Pair.New(1, 2), false));
+            Assert.AreEqual("(1 2)", Printer.AsString(ListPrimitives.MakeList(1, 2), false));
+            Assert.AreEqual("abc", Printer.AsString("abc", false));
+            Assert.AreEqual(@"""", Printer.AsString(@"""", false));
             var test = new Obj[] { 1, 2 };
-            Assert.AreEqual("#(1 2)", SchemeString.AsString(test, false));
-            Assert.AreEqual("#t", SchemeString.AsString(true, false));
-            Assert.AreEqual("#f", SchemeString.AsString(false, false));
-            Assert.AreEqual("1", SchemeString.AsString(1));
+            Assert.AreEqual("#(1 2)", Printer.AsString(test, false));
+            Assert.AreEqual("#t", Printer.AsString(true, false));
+            Assert.AreEqual("#f", Printer.AsString(false, false));
+            Assert.AreEqual("1", Printer.AsString(1));
         }
 
         /// <summary>
@@ -365,19 +365,19 @@ namespace Tests
         public void AsStringTestWithBuf()
         {
             StringBuilder buf = new StringBuilder().Append("x");
-            TypePrimitives_Accessor.AsString(null, false, buf);
+            Printer_Accessor.AsString(null, false, buf);
             Assert.AreEqual("x", buf.ToString());
             buf = new StringBuilder().Append("x");
-            TypePrimitives_Accessor.AsString(1.0, false, buf);
+            Printer_Accessor.AsString(1.0, false, buf);
             Assert.AreEqual("x1", buf.ToString());
             buf = new StringBuilder().Append("x");
-            TypePrimitives_Accessor.AsString(1.5, false, buf);
+            Printer_Accessor.AsString(1.5, false, buf);
             Assert.AreEqual("x1.5", buf.ToString());
             buf = new StringBuilder().Append("x");
-            TypePrimitives_Accessor.AsString('a', false, buf);
+            Printer_Accessor.AsString('a', false, buf);
             Assert.AreEqual("xa", buf.ToString());
             buf = new StringBuilder().Append("x");
-            TypePrimitives_Accessor.AsString("abc", false, buf);
+            Printer_Accessor.AsString("abc", false, buf);
             Assert.AreEqual("xabc", buf.ToString());
         }
 
@@ -449,13 +449,13 @@ namespace Tests
         [TestMethod]
         public void TypeNameTest()
         {
-            Assert.AreEqual("bool", TypePrimitives_Accessor.TypeName(true));
+            Assert.AreEqual("boolean", TypePrimitives_Accessor.TypeName(true));
             Assert.AreEqual("symbol", TypePrimitives_Accessor.TypeName("sym"));
-            Assert.AreEqual("char", TypePrimitives_Accessor.TypeName('c'));
+            Assert.AreEqual("character", TypePrimitives_Accessor.TypeName('c'));
             Assert.AreEqual("vector", TypePrimitives_Accessor.TypeName(new Obj[] { 1, 2, 3 }));
             Assert.AreEqual("pair", TypePrimitives_Accessor.TypeName(Pair.New(null, null)));
             Assert.AreEqual("number", TypePrimitives_Accessor.TypeName(1.0d));
-            Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new [] { 'a', 'b', 'c' }));
+            Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new[] { 'a', 'b', 'c' }));
             Assert.AreEqual("procedure", TypePrimitives_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
             Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(InputPort_Accessor.New(null)));
             Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(OutputPort_Accessor.New(null)));

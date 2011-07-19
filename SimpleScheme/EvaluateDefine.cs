@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the body of the definition.</returns>
         private Stepper InitialStep()
         {
-            if (Pair.IsType(First(Expr)))
+            if (TypePrimitives.IsPair(First(Expr)))
             {
                 this.Env.Define(First(First(Expr)), Closure.New(Rest(First(Expr)), Rest(Expr), this.Env));
                 return ReturnUndefined();

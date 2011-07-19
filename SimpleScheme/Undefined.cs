@@ -26,21 +26,5 @@ namespace SimpleScheme
         {
         }
         #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Convert the undefined instance a string.
-        /// </summary>
-        /// <param name="obj">The undefined object.</param>
-        /// <param name="quoted">True if the string should be quoted.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("<undefined>");
-            }
-        }
-        #endregion
     }
 }

@@ -114,11 +114,11 @@ namespace SimpleScheme
         /// <param name="val">This is the value of that variable.</param>
         public void Define(Obj var, Obj val)
         {
-            if (Symbol.IsType(var))
+            if (TypePrimitives.IsSymbol(var))
             {
                 this.symbolTable.Add(var, val);
 
-                if (Procedure.IsType(val))
+                if (TypePrimitives.IsProcedure(val))
                 {
                     Procedure.Proc(val).SetName(var.ToString());
                 }
@@ -213,9 +213,9 @@ namespace SimpleScheme
         /// <returns>The value that the variable was set to.</returns>
         internal Obj Set(Obj var, Obj val)
         {
-            if (!Symbol.IsType(var))
+            if (!TypePrimitives.IsSymbol(var))
             {
-                return ErrorHandlers.SemanticError("Attempt to set a non-symbol: " + SchemeString.AsString(var));
+                return ErrorHandlers.SemanticError("Attempt to set a non-symbol: " + Printer.AsString(var));
             }
 
             string symbol = Symbol.Sym(var);
@@ -299,12 +299,12 @@ namespace SimpleScheme
             while (true)
             {
                 // (vars is empty && vals is empty) || vars is empty ==> vars is empty 
-                if (EmptyList.IsType(vars))
+                if (TypePrimitives.IsEmptyList(vars))
                 {
                     return true;
                 }
 
-                if (!Pair.IsType(vars) || !Pair.IsType(vals))
+                if (!TypePrimitives.IsPair(vars) || !TypePrimitives.IsPair(vals))
                 {
                     return false;
                 }
@@ -374,16 +374,16 @@ namespace SimpleScheme
             /// <param name="vals">The list of values.</param>
             internal void AddList(Obj symbols, Obj vals)
             {
-                while (!EmptyList.IsType(symbols))
+                while (!TypePrimitives.IsEmptyList(symbols))
                 {
-                    if (Symbol.IsType(symbols))
+                    if (TypePrimitives.IsSymbol(symbols))
                     {
                         this.Add(symbols, vals);
                     }
                     else
                     {
                         Obj symbol = First(symbols);
-                        if (!Symbol.IsType(symbol))
+                        if (!TypePrimitives.IsSymbol(symbol))
                         {
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }

@@ -62,7 +62,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (args, caller) => caller.CurrentInputPort, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(IsType(First(args))), 1)
+                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsInputPort(First(args))), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
                 .DefinePrimitive("load", (args, caller) => LoadFile(First(args), caller), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
@@ -80,36 +80,6 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Static Methods
-        /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme input port.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is InputPort;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "input port";
-        }
-
-        /// <summary>
-        /// Write the input port to a buffer.
-        /// </summary>
-        /// <param name="obj">The input port (not used).</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The buffer to write to.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            buf.Append("<input port>");
-        }
-
         /// <summary>
         /// Creates a new InputPort.
         /// </summary>
@@ -137,12 +107,12 @@ namespace SimpleScheme
         /// <returns>An input port.</returns>
         internal static InputPort InPort(Obj obj)
         {
-            if (IsType(obj))
+            if (TypePrimitives.IsInputPort(obj))
             {
                 return (InputPort)obj;
             }
 
-            ErrorHandlers.TypeError(TypeName(), obj);
+            ErrorHandlers.TypeError(TypePrimitives.InputPortName, obj);
             return null;
         }
         #endregion
@@ -194,7 +164,7 @@ namespace SimpleScheme
         /// <returns>Undefined obect.</returns>
         private static Obj CloseInputPort(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
             return p.Close();
         }
 
@@ -207,7 +177,7 @@ namespace SimpleScheme
         /// <returns>The character in the input.</returns>
         private static Obj PeekChar(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
             return p.Parser.PeekChar();
         }
 
@@ -220,7 +190,7 @@ namespace SimpleScheme
         /// <returns>The expression read.</returns>
         private static Obj Read(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
             return p.Parser.Read();
         }
 
@@ -233,7 +203,7 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private static Obj ReadChar(Obj port, Stepper caller)
         {
-            InputPort p = EmptyList.IsType(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
             return p.Parser.ReadChar();
         }
         #endregion

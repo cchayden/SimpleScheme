@@ -1322,7 +1322,7 @@ namespace Tests
         private void Run(string expected, string label, string expr)
         {
             Obj res = this.ReadAndEvaluate(expr);
-            string actual = SchemeString.AsString(res, true);
+            string actual = Printer.AsString(res, true);
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }

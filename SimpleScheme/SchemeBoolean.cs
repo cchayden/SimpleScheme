@@ -25,25 +25,6 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Test an object's type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme boolean.</returns>
-        internal static bool IsType(Obj obj)
-        {
-            return obj is bool;
-        }
-
-        /// <summary>
-        /// Give the name of the type (for display).
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string TypeName()
-        {
-            return "bool";
-        }
-
-        /// <summary>
         /// Equality test for two objs.
         /// Two objs are equal if they:
         ///   are both empty lists
@@ -57,24 +38,24 @@ namespace SimpleScheme
         internal static bool Equal(Obj obj1, Obj obj2)
         {
             // both empty list
-            if (EmptyList.IsType(obj1) || EmptyList.IsType(obj2))
+            if (TypePrimitives.IsEmptyList(obj1) || TypePrimitives.IsEmptyList(obj2))
             {
                 return obj1 == obj2;
             }
 
             // test strings
-            if (SchemeString.IsType(obj1))
+            if (TypePrimitives.IsString(obj1))
             {
                 return SchemeString.Equal(obj1, obj2);
             }
 
             // test vectors
-            if (Vector.IsType(obj1))
+            if (TypePrimitives.IsVector(obj1))
             {
                 return Vector.Equal(obj1, obj2);
             }
 
-            if (Pair.IsType(obj1))
+            if (TypePrimitives.IsPair(obj1))
             {
                 return Pair.Equal(obj1, obj2);
             }
@@ -111,7 +92,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         internal static bool IsFalse(Obj value)
         {
-            return IsType(value) && (bool)value == false;
+            return TypePrimitives.IsBoolean(value) && (bool)value == false;
         }
 
         /// <summary>
@@ -122,7 +103,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
         internal static bool IsTrue(Obj value)
         {
-            return IsType(value) && (bool)value;
+            return TypePrimitives.IsBoolean(value) && (bool)value;
         }
 
         /// <summary>
@@ -135,17 +116,6 @@ namespace SimpleScheme
         {
             return !IsFalse(obj);
         }
-
-        /// <summary>
-        /// Convert the bool instance to a string.
-        /// </summary>
-        /// <param name="obj">The boolean value to convert.</param>
-        /// <param name="quoted">True if the string should be quoted.</param>
-        /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj obj, bool quoted, StringBuilder buf)
-        {
-            buf.Append((bool)obj ? "#t" : "#f");
-        }
         #endregion
 
         #region Define Primitives
@@ -157,7 +127,7 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(IsType(First(args))), 1)
+                .DefinePrimitive("boolean?", (args, caller) => Truth(TypePrimitives.IsBoolean(First(args))), 1)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
@@ -165,9 +135,9 @@ namespace SimpleScheme
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(IsType(First(args)) && (bool)First(args) == false), 1)
+                .DefinePrimitive("not", (args, caller) => Truth(TypePrimitives.IsBoolean(First(args)) && (bool)First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.IsType(First(args))), 1);
+                .DefinePrimitive("null?", (args, caller) => Truth(TypePrimitives.IsEmptyList(First(args))), 1);
         }
         #endregion
     }
