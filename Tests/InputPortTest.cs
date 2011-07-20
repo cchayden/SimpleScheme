@@ -188,20 +188,20 @@ namespace Tests
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 var actual = port.ReadObj();
-                Assert.AreEqual(1.0, ListPrimitives.First(actual));
-                Assert.AreEqual(2.0, ListPrimitives.Second(actual));
-                Assert.AreEqual(3.0, ListPrimitives.Third(actual));
+                Assert.AreEqual(1.0, List.First(actual));
+                Assert.AreEqual(2.0, List.Second(actual));
+                Assert.AreEqual(3.0, List.Third(actual));
             }
 
             using (StringReader reader = new StringReader("('a 'b 'c)"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 var actual = port.ReadObj();
-                Assert.AreEqual("quote", ListPrimitives.First(ListPrimitives.First(actual)));
-                Assert.AreEqual("a", ListPrimitives.Second(ListPrimitives.First(actual)));
-                Assert.AreEqual("quote", ListPrimitives.First(ListPrimitives.Second(actual)));
-                Assert.AreEqual("b", ListPrimitives.Second(ListPrimitives.Second(actual)));
-                Assert.AreEqual("c", ListPrimitives.Second(ListPrimitives.Third(actual)));
+                Assert.AreEqual("quote", List.First(List.First(actual)));
+                Assert.AreEqual("a", List.Second(List.First(actual)));
+                Assert.AreEqual("quote", List.First(List.Second(actual)));
+                Assert.AreEqual("b", List.Second(List.Second(actual)));
+                Assert.AreEqual("c", List.Second(List.Third(actual)));
             }
 
             using (StringReader reader = new StringReader(")abc"))
@@ -222,32 +222,32 @@ namespace Tests
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 var actual = port.ReadObj();
-                Assert.AreEqual("quote", ListPrimitives.First(actual));
-                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives.Rest(actual)));
+                Assert.AreEqual("quote", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader("`abc"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 var actual = port.ReadObj();
-                Assert.AreEqual("quasiquote", ListPrimitives.First(actual));
-                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives.Rest(actual)));
+                Assert.AreEqual("quasiquote", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader(",abc"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 var actual = port.ReadObj();
-                Assert.AreEqual("unquote", ListPrimitives.First(actual));
-                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives .Rest(actual)));
+                Assert.AreEqual("unquote", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
 
             using (StringReader reader = new StringReader(",@abc"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
                 var actual = port.ReadObj();
-                Assert.AreEqual("unquote-splicing", ListPrimitives.First(actual));
-                Assert.AreEqual("abc", ListPrimitives.First(ListPrimitives.Rest(actual)));
+                Assert.AreEqual("unquote-splicing", List.First(actual));
+                Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
         }
 

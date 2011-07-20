@@ -51,7 +51,7 @@ namespace SimpleScheme
             this.PrimEnvironment = primEnvironment ?? new PrimitiveEnvironment();
 
             this.Counters = new Counter();
-            this.GlobalEnvironment = new Environment(this, PrimEnvironment);
+            this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
             this.halted = new EvaluatorBase("halted", this.GlobalEnvironment, null);
 
             try
@@ -86,6 +86,9 @@ namespace SimpleScheme
             get { return this.GlobalEnvironment; }
         }
 
+        /// <summary>
+        /// Gets the primitive environment.
+        /// </summary>
         public IPrimitiveEnvironment PrimEnv
         {
             get { return this.PrimEnvironment; }
@@ -240,7 +243,7 @@ namespace SimpleScheme
                             object val = this.EndEval(ar);
                             if (val != Undefined.Instance)
                             {
-                                this.Output.Write(val);
+                                this.Output.Write(Printer.AsString(val, false));
                                 this.Output.WriteLine();
                                 this.Output.Flush();
                             }
@@ -466,7 +469,7 @@ namespace SimpleScheme
                 Obj val = this.Eval(expr);
                 if (val != Undefined.Instance)
                 {
-                    this.Output.Write(val);
+                    this.Output.Write(Printer.AsString(val, false));
                     this.Output.WriteLine();
                     this.Output.Flush();
                 }

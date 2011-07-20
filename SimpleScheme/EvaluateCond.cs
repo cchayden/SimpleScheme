@@ -96,14 +96,14 @@ namespace SimpleScheme
         /// <returns>Usually, the step to evaluate the first clause.</returns>
         private Stepper EvalClauseStep()
         {
-            this.clause = First(this.clauses);
-            if (First(this.clause) as string == "else")
+            this.clause = List.First(this.clauses);
+            if (List.First(this.clause) as string == "else")
             {
                 this.test = EmptyList.Instance;
                 return ContinueHere(this.EvalConsequentStep);
             }
 
-            return EvaluateExpression.Call(First(this.clause), this.Env, ContinueHere(this.TestClauseStep));
+            return EvaluateExpression.Call(List.First(this.clause), this.Env, ContinueHere(this.TestClauseStep));
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace SimpleScheme
                 return ContinueHere(this.EvalConsequentStep);
             }
 
-            this.clauses = Rest(this.clauses);
+            this.clauses = List.Rest(this.clauses);
             if (TypePrimitives.IsEmptyList(this.clauses))
             {
                 return ReturnUndefined();
@@ -138,20 +138,20 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private Stepper EvalConsequentStep()
         {
-            if (TypePrimitives.IsEmptyList(Rest(this.clause)))
+            if (TypePrimitives.IsEmptyList(List.Rest(this.clause)))
             {
                 // no consequent: return the test as the result
                 return ReturnFromStep(this.test);
             }
 
-            if (Second(this.clause) as string == "=>")
+            if (List.Second(this.clause) as string == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(Third(this.clause), this.Env, ContinueHere(this.ApplyRecipientStep));
+                return EvaluateExpression.Call(List.Third(this.clause), this.Env, ContinueHere(this.ApplyRecipientStep));
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(Rest(this.clause), this.Env, this.Caller);
+            return EvaluateSequence.Call(List.Rest(this.clause), this.Env, this.Caller);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute (the return).</returns>
         private Stepper ApplyRecipientStep()
         {
-            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), MakeList(this.test), this.Env, this.Caller);
+            return EvaluateProcQuoted.Call(Procedure.Proc(ReturnedExpr), List.New(this.test), this.Env, this.Caller);
         }
         #endregion
     }

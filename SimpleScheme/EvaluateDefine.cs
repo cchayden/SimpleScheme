@@ -71,13 +71,13 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the body of the definition.</returns>
         private Stepper InitialStep()
         {
-            if (TypePrimitives.IsPair(First(Expr)))
+            if (TypePrimitives.IsPair(List.First(Expr)))
             {
-                this.Env.Define(First(First(Expr)), new Closure(Rest(First(Expr)), Rest(Expr), this.Env));
+                this.Env.Define(List.First(List.First(Expr)), new Closure(List.Rest(List.First(Expr)), List.Rest(Expr), this.Env));
                 return ReturnUndefined();
             }
 
-            return EvaluateExpression.Call(Second(Expr), this.Env, ContinueHere(this.StoreDefine));
+            return EvaluateExpression.Call(List.Second(Expr), this.Env, ContinueHere(this.StoreDefine));
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace SimpleScheme
         /// <returns>Execution continues in the caller.</returns>
         private Stepper StoreDefine()
         {
-            this.Env.Define(First(Expr), ReturnedExpr);
+            this.Env.Define(List.First(Expr), ReturnedExpr);
             return ReturnUndefined();
         }
         #endregion

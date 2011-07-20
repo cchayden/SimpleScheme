@@ -3,14 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
-    /// A pair consists of two cells, named FirstCell and RestCell.
+    /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : ListPrimitives
+    public sealed class Pair
     {
         #region Constructor
         /// <summary>
@@ -21,41 +20,26 @@ namespace SimpleScheme
         /// referenced by this.</param>
         internal Pair(Obj first, Obj rest)
         {
-            this.FirstCell = first;
-            this.RestCell = rest;
+            this.First = first;
+            this.Rest = rest;
         }
         #endregion
 
         #region Accessors
         /// <summary>
-        /// Gets the first obj of the pair.
+        /// Gets or sets the first obj of the pair.
         /// </summary>
-        internal Obj FirstCell { get; private set; }
+        internal Obj First { get; set; }
 
         /// <summary>
-        /// Gets the rest of the objs in the list.
+        /// Gets or sets the rest of the objs in the list.
         /// </summary>
-        internal Obj RestCell { get; private set; }
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Create a new pair.
-        /// </summary>
-        /// <param name="first">The first object.</param>
-        /// <param name="rest">The rest of the objs in the list are 
-        /// referenced by this.</param>
-        /// <returns>The new pair.</returns>
-        public static Pair New(Obj first, Obj rest)
-        {
-            return new Pair(first, rest);
-        }
+        internal Obj Rest { get; set; }
         #endregion
 
         #region Public Methods
         /// <summary>
-        /// Turn the pair into a string for printing and such.
-        /// Ultimately calls AsString.
+        /// Turn the pair into a string for display.
         /// </summary>
         /// <returns>A string representing the pair.</returns>
         public override string ToString()
@@ -85,13 +69,13 @@ namespace SimpleScheme
 
             while (true)
             {
-                if (!SchemeBoolean.Equal(First(pair1), First(pair2)))
+                if (!SchemeBoolean.Equal(List.First(pair1), List.First(pair2)))
                 {
                     return false;
                 }
 
-                obj1 = Rest(pair1);
-                obj2 = Rest(pair2);
+                obj1 = List.Rest(pair1);
+                obj2 = List.Rest(pair2);
 
                 if (!TypePrimitives.IsPair(obj1) || !TypePrimitives.IsPair(obj2))
                 {
@@ -101,30 +85,6 @@ namespace SimpleScheme
                 pair1 = (Pair)obj1;
                 pair2 = (Pair)obj2;
             }
-        }
-        #endregion
-
-        #region Internal Static Methods
-        /// <summary>
-        /// Destructive setter for the rest cell of the pair.
-        /// </summary>
-        /// <param name="value">The new first cell value.</param>
-        /// <returns>The new cell value.</returns>
-        internal Obj SetFirst(Obj value)
-        {
-            this.FirstCell = value;
-            return value;
-        }
-
-        /// <summary>
-        /// Destructive setter for the rest cell of the pair.
-        /// </summary>
-        /// <param name="value">The new rest cell value.</param>
-        /// <returns>The new cell value.</returns>
-        internal Obj SetRest(Obj value)
-        {
-            this.RestCell = value;
-            return value;
         }
         #endregion
     }

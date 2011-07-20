@@ -10,17 +10,8 @@ namespace SimpleScheme
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public sealed class OutputPort : ListPrimitives
+    public static class OutputPort
     {
-        #region Constructor
-        /// <summary>
-        /// Prevents a default instance of the OutputPort class from being created.
-        /// </summary>
-        private OutputPort()
-        {
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the output primitives.
@@ -35,27 +26,27 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
                 .DefinePrimitive("call-with-output-file", (args, caller) => EvaluateCallWithOutputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
-                .DefinePrimitive("close-output-port", (args, caller) => CloseOutputPort(First(args), caller), 1)
+                .DefinePrimitive("close-output-port", (args, caller) => CloseOutputPort(List.First(args), caller), 1)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
                 .DefinePrimitive("current-output-port", (args, caller) => caller.CurrentOutputPort, 0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
-                .DefinePrimitive("display", (args, caller) => Display(First(args), Second(args), caller), 1, 2)
+                .DefinePrimitive("display", (args, caller) => Display(List.First(args), List.Second(args), caller), 1, 2)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
-                .DefinePrimitive("newline", (args, caller) => Newline(First(args), caller), 0, 1)
+                .DefinePrimitive("newline", (args, caller) => Newline(List.First(args), caller), 0, 1)
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
-                .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(First(args)), 1)
+                .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args)), 1)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsOutputPort(First(args))), 1)
+                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsOutputPort(List.First(args))), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
-                .DefinePrimitive("write", (args, caller) => Write(First(args), Second(args), caller), 1, 2)
+                .DefinePrimitive("write", (args, caller) => Write(List.First(args), List.Second(args), caller), 1, 2)
                 //// (p <expr>)
-                .DefinePrimitive("p", (args, caller) => P(First(args)), 1)
+                .DefinePrimitive("p", (args, caller) => P(List.First(args)), 1)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
-                .DefinePrimitive("write-char", (args, caller) => WriteChar(First(args), Second(args), caller), 1, 2)
+                .DefinePrimitive("write-char", (args, caller) => WriteChar(List.First(args), List.Second(args), caller), 1, 2)
                 //// (dump-env)
                 .DefinePrimitive("dump-env", (args, caller) => DumpEnv(caller), 0);
         }

@@ -69,7 +69,7 @@ namespace SimpleScheme
         /// <returns>Code to evaluate the second expression.</returns>
         private Stepper InitialStep()
         {
-            return EvaluateExpression.Call(Second(Expr), this.Env, ContinueHere(this.SetStep));
+            return EvaluateExpression.Call(List.Second(Expr), this.Env, ContinueHere(this.SetStep));
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace SimpleScheme
         /// <returns>Returns to caller.</returns>
         private Stepper SetStep()
         {
-            this.Env.Set(First(Expr), ReturnedExpr);
+            this.Env.Set(List.First(Expr), ReturnedExpr);
             return ReturnUndefined();
         }
         #endregion

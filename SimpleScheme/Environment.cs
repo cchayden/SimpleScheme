@@ -15,7 +15,7 @@ namespace SimpleScheme
     /// Each link in the chain contains a symbol table of the bindings at that level.
     /// Each lookup searches down the symbol tables in the chain, from the top to the bottom.
     /// </summary>
-    public class Environment : ListPrimitives, IEnvironment
+    public class Environment : IEnvironment
     {
         #region Constants
         /// <summary>
@@ -61,6 +61,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Initializes a new instance of the Environment class.
         /// Creates a new empty environment.
         /// </summary>
         /// <param name="lexicalParent">The lexically enclosing environment.</param>
@@ -279,8 +280,8 @@ namespace SimpleScheme
                     return false;
                 }
 
-                vars = Rest(vars);
-                vals = Rest(vals);
+                vars = List.Rest(vars);
+                vals = List.Rest(vals);
                 count++;
             }
         }
@@ -352,17 +353,17 @@ namespace SimpleScheme
                     }
                     else
                     {
-                        Obj symbol = First(symbols);
+                        Obj symbol = List.First(symbols);
                         if (!TypePrimitives.IsSymbol(symbol))
                         {
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }
 
-                        this.Add(symbol, First(vals));
+                        this.Add(symbol, List.First(vals));
                     }
 
-                    symbols = Rest(symbols);
-                    vals = Rest(vals);
+                    symbols = List.Rest(symbols);
+                    vals = List.Rest(vals);
                 }
             }
 

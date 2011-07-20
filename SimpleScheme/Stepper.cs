@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public abstract class Stepper : ListPrimitives
+    public abstract class Stepper
     {
         #region Fields
         /// <summary>

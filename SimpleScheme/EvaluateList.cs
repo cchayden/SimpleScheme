@@ -54,7 +54,7 @@ namespace SimpleScheme
 
             // Start with an empty list.
             // The empty cell will be stripped off at the end.
-            this.accum = this.result = MakeEmptyList();
+            this.accum = this.result = List.NewEmpty();
             ContinueHere(this.EvalExprStep);
             IncrementCounter(counter);
         }
@@ -104,7 +104,7 @@ namespace SimpleScheme
         private Stepper EvalExprStep()
         {
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(First(this.objs), this.Env, ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(List.First(this.objs), this.Env, ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -115,17 +115,17 @@ namespace SimpleScheme
         private Stepper LoopStep()
         {
             // back from the evaluation -- save the result and keep going with the rest
-            this.accum = (Pair)this.accum.SetRest(MakeList(ReturnedExpr));
-            this.objs = Rest(this.objs);
+            this.accum = (Pair)(this.accum.Rest = List.New(ReturnedExpr));
+            this.objs = List.Rest(this.objs);
 
             if (TypePrimitives.IsPair(this.objs))
             {
                 // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(First(this.objs), this.Env, this);
+                return EvaluateExpression.Call(List.First(this.objs), this.Env, this);
             }
 
             // We are done now, return
-            return ReturnFromStep(Rest(this.result));
+            return ReturnFromStep(List.Rest(this.result));
         }
         #endregion
     }

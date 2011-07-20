@@ -113,22 +113,22 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            Obj bindings = First(Expr);
-            this.body = Rest(Expr);
+            Obj bindings = List.First(Expr);
+            this.body = List.Rest(Expr);
 
             if (TypePrimitives.IsEmptyList(this.body))
             {
                 return ReturnUndefined();
             }
 
-            this.vars = MapFun(First, MakeList(bindings));
-            this.inits = MapFun(Second, MakeList(bindings));
+            this.vars = List.MapFun(List.First, List.New(bindings));
+            this.inits = List.MapFun(List.Second, List.New(bindings));
             this.formals = this.vars;
             Obj initVals = EmptyList.Instance;
-            int n = Length(this.vars);
+            int n = List.Length(this.vars);
             for (int i = 0; i < n; i++)
             {
-                initVals = Cons(Undefined.Instance, initVals);
+                initVals = List.Cons(Undefined.Instance, initVals);
             }
 
             this.vals = new System.Collections.Generic.List<Obj>(n);
@@ -148,7 +148,7 @@ namespace SimpleScheme
                 return ContinueHere(this.ApplyProc);
             }
 
-            Closure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);  
+            Closure fun = new Closure(this.formals, List.New(List.First(this.inits)), this.Env);  
             return fun.ApplyWithtEnv(this.Env, ContinueHere(this.BindVarToInit));
         }
 
@@ -161,8 +161,8 @@ namespace SimpleScheme
         private Stepper BindVarToInit()
         {
             this.vals.Add(ReturnedExpr);
-            this.vars = Rest(this.vars);
-            this.inits = Rest(this.inits);
+            this.vars = List.Rest(this.vars);
+            this.inits = List.Rest(this.inits);
             return ContinueHere(this.EvalInit);
         }
 
@@ -174,11 +174,11 @@ namespace SimpleScheme
         {
             // assign the inits into the env
             Obj var = this.formals;
-            int n = Length(this.formals);
+            int n = List.Length(this.formals);
             for (int i = 0; i < n; i++)
             {
-                this.Env.Set(First(var), this.vals[i]);
-                var = Rest(var);
+                this.Env.Set(List.First(var), this.vals[i]);
+                var = List.Rest(var);
             }
 
             // apply the fun to the vals and return

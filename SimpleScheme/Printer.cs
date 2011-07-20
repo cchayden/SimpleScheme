@@ -27,6 +27,10 @@ namespace SimpleScheme
                 new AsStringEntry(obj => TypePrimitives.IsPair(obj), (x, quoted, buf) => PairAsString(x, quoted, buf)),
                 new AsStringEntry(obj => TypePrimitives.IsNumber(obj), (x, quoted, buf) => NumberAsString(x, quoted, buf)),
                 new AsStringEntry(obj => TypePrimitives.IsString(obj), (x, quoted, buf) => StringAsString(x, quoted, buf)),
+                new AsStringEntry(obj => TypePrimitives.IsPrimitive(obj), (x, quoted, buf) => PrimitiveAsString(x, quoted, buf)),
+                new AsStringEntry(obj => TypePrimitives.IsClosure(obj), (x, quoted, buf) => ClosureAsString(x, quoted, buf)),
+                new AsStringEntry(obj => TypePrimitives.IsContinuation(obj), (x, quoted, buf) => ContinuationAsString(x, quoted, buf)),
+                new AsStringEntry(obj => TypePrimitives.IsMacro(obj), (x, quoted, buf) => MacroAsString(x, quoted, buf)),
                 new AsStringEntry(obj => TypePrimitives.IsProcedure(obj), (x, quoted, buf) => ProcedureAsString(x, quoted, buf)),
                 new AsStringEntry(obj => TypePrimitives.IsInputPort(obj), (x, quoted, buf) => InputPortAsString(x, quoted, buf)),
                 new AsStringEntry(obj => TypePrimitives.IsOutputPort(obj), (x, quoted, buf) => OutputPortAsString(x, quoted, buf)),
@@ -167,14 +171,14 @@ namespace SimpleScheme
         private static void PairAsString(Obj obj, bool quoted, StringBuilder buf)
         {
             Pair pair = (Pair)obj;
-            if (TypePrimitives.IsPair(ListPrimitives.Rest(pair)) && 
-                TypePrimitives.IsEmptyList(ListPrimitives.Rest(ListPrimitives.Rest(pair))))
+            if (TypePrimitives.IsPair(List.Rest(pair)) && 
+                TypePrimitives.IsEmptyList(List.Rest(List.Rest(pair))))
             {
                 string special = null;
 
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
-                switch (ListPrimitives.First(pair) as string)
+                switch (List.First(pair) as string)
                 {
                     case "quote":
                         special = "'";
@@ -195,24 +199,24 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    AsString(ListPrimitives.Second(pair), quoted, buf);
+                    AsString(List.Second(pair), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            AsString(ListPrimitives.First(pair), quoted, buf);
+            AsString(List.First(pair), quoted, buf);
 
-            Obj tail = ListPrimitives.Rest(pair);
+            Obj tail = List.Rest(pair);
 
             int len = 0;
             while (TypePrimitives.IsPair(tail))
             {
                 buf.Append(' ');
-                AsString(ListPrimitives.First(tail), quoted, buf);
+                AsString(List.First(tail), quoted, buf);
                 Obj oldTail = tail;
-                tail = ListPrimitives.Rest(tail);
+                tail = List.Rest(tail);
                 len++;
                 if (tail == oldTail)
                 {
@@ -293,6 +297,54 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Write the primitive to the string builder.
+        /// </summary>
+        /// <param name="obj">The primitive.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        private static void PrimitiveAsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("primitive: ");
+            buf.Append(obj.ToString());
+        }
+
+        /// <summary>
+        /// Write the closure to the string builder.
+        /// </summary>
+        /// <param name="obj">The closure.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        private static void ClosureAsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("closure: ");
+            buf.Append(obj.ToString());
+        }
+
+        /// <summary>
+        /// Write the continuation to the string builder.
+        /// </summary>
+        /// <param name="obj">The continuation.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        private static void ContinuationAsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("continuation: ");
+            buf.Append(obj.ToString());
+        }
+
+        /// <summary>
+        /// Write the macro to the string builder.
+        /// </summary>
+        /// <param name="obj">The macro.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        private static void MacroAsString(Obj obj, bool quoted, StringBuilder buf)
+        {
+            buf.Append("macro: ");
+            buf.Append(obj.ToString());
+        }
+
+        /// <summary>
         /// Write the procedure to the string builder.
         /// </summary>
         /// <param name="obj">The procedure (not used).</param>
@@ -301,6 +353,9 @@ namespace SimpleScheme
         private static void ProcedureAsString(Obj obj, bool quoted, StringBuilder buf)
         {
             buf.Append("<procedure>");
+            if (! quoted)
+            {
+            }
         }
 
         /// <summary>

@@ -74,11 +74,11 @@ namespace SimpleScheme
         {
             env
                 //// (class <class-name>)
-                .DefinePrimitive("class", (args, caller) => Class(First(args)), 1)
+                .DefinePrimitive("class", (args, caller) => Class(List.First(args)), 1)
                 //// (new <class-name>)
-                .DefinePrimitive("new", (args, caller) => New(First(args)), 1)
+                .DefinePrimitive("new", (args, caller) => New(List.First(args)), 1)
                 //// (new-array <class-name> <length>)
-                .DefinePrimitive("new-array", (args, caller) => NewArray(First(args), Second(args)), 2);
+                .DefinePrimitive("new-array", (args, caller) => NewArray(List.First(args), List.Second(args)), 2);
         }
         #endregion
 
@@ -91,13 +91,13 @@ namespace SimpleScheme
         /// <returns>An array of Types corresponding to the list.</returns>
         protected List<Type> ClassList(Obj args)
         {
-            int n = Length(args);
+            int n = List.Length(args);
             List<Type> array = new List<Type>(n);
 
             while (TypePrimitives.IsPair(args))
             {
-                array.Add(TypePrimitives.ToClass(First(args)));
-                args = Rest(args);
+                array.Add(TypePrimitives.ToClass(List.First(args)));
+                args = List.Rest(args);
             }
 
             return array;
@@ -114,7 +114,7 @@ namespace SimpleScheme
         /// <returns>An array of arguments for the method call.</returns>
         protected object[] ToArgList(object args, object[] additionalArgs)
         {
-            int n = Length(args);
+            int n = List.Length(args);
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
@@ -130,7 +130,7 @@ namespace SimpleScheme
             int a = 0;
             while (TypePrimitives.IsPair(args))
             {
-                Obj elem = First(args);
+                Obj elem = List.First(args);
                 if (this.ArgClasses[i] == typeof(int))
                 {
                     array[a++] = (int)Number.Num(elem);
@@ -145,7 +145,7 @@ namespace SimpleScheme
                 }
 
                 i++;
-                args = Rest(args);
+                args = List.Rest(args);
             }
 
             // required by style cop

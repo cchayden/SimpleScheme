@@ -4,14 +4,13 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
     /// Utilities that have to do with numbers.
     /// Scheme numbers are preresented by .NET double.
     /// </summary>
-    public sealed class Number : ListPrimitives
+    public static class Number
     {
         #region Constants
         /// <summary>
@@ -23,15 +22,6 @@ namespace SimpleScheme
         /// Define the one obj.
         /// </summary>
         internal const double One = 1.0D;
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Prevents a default instance of the Number class from being created.
-        /// </summary>
-        private Number()
-        {
-        }
         #endregion
 
         #region Public Static Methods
@@ -86,11 +76,11 @@ namespace SimpleScheme
                 .DefinePrimitive("+", (args, caller) => NumCompute(args, '+', 0.0), 0, MaxInt)
                 //// <r4rs section="6.5.5">(- <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(- <z>)</r4rs>
-                .DefinePrimitive("-", (args, caller) => NumCompute(Rest(args), '-', Num(First(args))), 1, MaxInt)
+                .DefinePrimitive("-", (args, caller) => NumCompute(List.Rest(args), '-', Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(/ <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z1> <z2> ...)</r4rs>
-                .DefinePrimitive("/", (args, caller) => NumCompute(Rest(args), '/', Num(First(args))), 1, MaxInt)
+                .DefinePrimitive("/", (args, caller) => NumCompute(List.Rest(args), '/', Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(= <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive("=", (args, caller) => NumCompare(args, '='), 2, MaxInt)
                 //// <r4rs section="6.5.5">(< <z1> <z2> <z3> ...)</r4rs>
@@ -102,79 +92,79 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(>= <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive(">=", (args, caller) => NumCompare(args, 'G'), 2, MaxInt)
                 //// <r4rs section="6.5.5">(abs <x>)</r4rs>
-                .DefinePrimitive("abs", (args, caller) => Num(Math.Abs(Num(First(args)))), 1)
+                .DefinePrimitive("abs", (args, caller) => Num(Math.Abs(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(ceiling <x>)</r4rs>
-                .DefinePrimitive("ceiling", (args, caller) => Num(Math.Ceiling(Num(First(args)))), 1)
+                .DefinePrimitive("ceiling", (args, caller) => Num(Math.Ceiling(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(floor <x>)</r4rs>
-                .DefinePrimitive("floor", (args, caller) => Num(Math.Floor(Num(First(args)))), 1)
+                .DefinePrimitive("floor", (args, caller) => Num(Math.Floor(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(acos <z>)</r4rs>
-                .DefinePrimitive("acos", (args, caller) => Num(Math.Acos(Num(First(args)))), 1)
+                .DefinePrimitive("acos", (args, caller) => Num(Math.Acos(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(asin <z>)</r4rs>
-                .DefinePrimitive("asin", (args, caller) => Num(Math.Asin(Num(First(args)))), 1)
+                .DefinePrimitive("asin", (args, caller) => Num(Math.Asin(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(atan <z>)</r4rs>
                 //// <r4rs section="6.5.5">(atan <y> <x>)</r4rs>
-                .DefinePrimitive("atan", (args, caller) => Num(Math.Atan(Num(First(args)))), 1)
+                .DefinePrimitive("atan", (args, caller) => Num(Math.Atan(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(complex? <obj>)</r4rs>
-                .DefinePrimitive("complex?", (args, caller) => IsNumber(First(args)), 1)
+                .DefinePrimitive("complex?", (args, caller) => IsNumber(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(cos <z>)</r4rs>
-                .DefinePrimitive("cos", (args, caller) => Num(Math.Cos(Num(First(args)))), 1)
+                .DefinePrimitive("cos", (args, caller) => Num(Math.Cos(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(even? <n>)</r4rs>
-                .DefinePrimitive("even?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(First(args))) % 2 == 0), 1)
+                .DefinePrimitive("even?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 == 0), 1)
                 //// <r4rs section="6.5.5">(exact? <obj>)</r4rs>
-                .DefinePrimitive("exact?", (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 1)
+                .DefinePrimitive("exact?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(exp <z>)</r4rs>
-                .DefinePrimitive("exp", (args, caller) => Num(Math.Exp(Num(First(args)))), 1)
+                .DefinePrimitive("exp", (args, caller) => Num(Math.Exp(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(expt <z>)</r4rs>
-                .DefinePrimitive("expt", (args, caller) => Expt(First(args), Second(args)), 2)
+                .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
                 .DefinePrimitive("gcd", (args, caller) => TypePrimitives.IsEmptyList(args) ? Zero : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
-                .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(First(args))), 1)
+                .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(List.First(args))), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
-                .DefinePrimitive("integer->char", (args, caller) => Character.Chr((char)(int)Num(First(args))), 1)
+                .DefinePrimitive("integer->char", (args, caller) => Character.Chr((char)(int)Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
-                .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 1)
+                .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
                 .DefinePrimitive("lcm", (args, caller) => TypePrimitives.IsEmptyList(args) ? One : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
-                .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(First(args)))), 1)
+                .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("max", (args, caller) => NumCompute(args, 'X', Num(First(args))), 1, MaxInt)
+                .DefinePrimitive("max", (args, caller) => NumCompute(args, 'X', Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(min? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("min", (args, caller) => NumCompute(args, 'N', Num(First(args))), 1, MaxInt)
+                .DefinePrimitive("min", (args, caller) => NumCompute(args, 'N', Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(module <n1> <n2>)</r4rs>
-                .DefinePrimitive("modulo", (args, caller) => Modulo(First(args), Second(args)), 2)
+                .DefinePrimitive("modulo", (args, caller) => Modulo(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(negative? <x>)</r4rs>
-                .DefinePrimitive("negative?", (args, caller) => SchemeBoolean.Truth(Num(First(args)) < 0), 1)
+                .DefinePrimitive("negative?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) < 0), 1)
                 //// <r4rs section="6.5.6">(number->string <number>)</r4rs>
                 //// <r4rs section="6.5.6">(number->string <number> <radix>)</r4rs>
-                .DefinePrimitive("number->string", (args, caller) => NumberToString(First(args), Second(args)), 1, 2)
+                .DefinePrimitive("number->string", (args, caller) => NumberToString(List.First(args), List.Second(args)), 1, 2)
                 //// <r4rs section="6.5.5">(number? <obj>)</r4rs>
-                .DefinePrimitive("number?", (args, caller) => IsNumber(First(args)), 1)
+                .DefinePrimitive("number?", (args, caller) => IsNumber(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(odd? <n>)</r4rs>
-                .DefinePrimitive("odd?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(First(args))) % 2 != 0), 1)
+                .DefinePrimitive("odd?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 != 0), 1)
                 //// <r4rs section="6.5.5">(positive? <x>)</r4rs>
-                .DefinePrimitive("positive?", (args, caller) => SchemeBoolean.Truth(Num(First(args)) > 0), 1)
+                .DefinePrimitive("positive?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) > 0), 1)
                 //// <r4rs section="6.5.5">(quotient <n1> <n2>)</r4rs>
-                .DefinePrimitive("quotient", (args, caller) => Quotient(First(args), Second(args)), 2)
+                .DefinePrimitive("quotient", (args, caller) => Quotient(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(rational? <obj>)</r4rs>
-                .DefinePrimitive("rational?", (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 1)
+                .DefinePrimitive("rational?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(real? <obj>)</r4rs>
-                .DefinePrimitive("real?", (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 1)
+                .DefinePrimitive("real?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(remainder <n1> <n2>)</r4rs>
-                .DefinePrimitive("remainder", (args, caller) => Num((long)Num(First(args)) % (long)Num(Second(args))), 2)
+                .DefinePrimitive("remainder", (args, caller) => Num((long)Num(List.First(args)) % (long)Num(List.Second(args))), 2)
                 //// <r4rs section="6.5.5">(round <x>)</r4rs>
-                .DefinePrimitive("round", (args, caller) => Num(Math.Round(Num(First(args)))), 1)
+                .DefinePrimitive("round", (args, caller) => Num(Math.Round(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(sin <z>)</r4rs>
-                .DefinePrimitive("sin", (args, caller) => Num(Math.Sin(Num(First(args)))), 1)
+                .DefinePrimitive("sin", (args, caller) => Num(Math.Sin(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(sqrt <z>)</r4rs>
-                .DefinePrimitive("sqrt", (args, caller) => Num(Math.Sqrt(Num(First(args)))), 1)
+                .DefinePrimitive("sqrt", (args, caller) => Num(Math.Sqrt(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(tan <z>)</r4rs>
-                .DefinePrimitive("tan", (args, caller) => Num(Math.Tan(Num(First(args)))), 1)
+                .DefinePrimitive("tan", (args, caller) => Num(Math.Tan(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(truncate <x>)</r4rs>
-                .DefinePrimitive("truncate", (args, caller) => Truncate(First(args)), 1)
+                .DefinePrimitive("truncate", (args, caller) => Truncate(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(zero? <z>)</r4rs>
-                .DefinePrimitive("zero?", (args, caller) => SchemeBoolean.Truth(Num(First(args)) == 0), 1);
+                .DefinePrimitive("zero?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) == 0), 1);
         }
         #endregion
 
@@ -190,8 +180,8 @@ namespace SimpleScheme
 
             while (TypePrimitives.IsPair(args))
             {
-                gcd = Gcd2(Math.Abs((long)Num(First(args))), gcd);
-                args = Rest(args);
+                gcd = Gcd2(Math.Abs((long)Num(List.First(args))), gcd);
+                args = List.Rest(args);
             }
 
             return Num(gcd);
@@ -246,10 +236,10 @@ namespace SimpleScheme
 
             while (TypePrimitives.IsPair(args))
             {
-                long n = Math.Abs((long)Num(First(args)));
+                long n = Math.Abs((long)Num(List.First(args)));
                 long g = Gcd2(n, lcm);
                 lcm = g == 0 ? g : (n / g) * lcm;
-                args = Rest(args);
+                args = List.Rest(args);
             }
 
             return Num(lcm);
@@ -283,12 +273,12 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         private static Obj NumCompare(Obj args, char op)
         {
-            while (TypePrimitives.IsPair(Rest(args)))
+            while (TypePrimitives.IsPair(List.Rest(args)))
             {
-                double x = Num(First(args));
-                args = Rest(args);
+                double x = Num(List.First(args));
+                args = List.Rest(args);
 
-                double y = Num(First(args));
+                double y = Num(List.First(args));
 
                 switch (op)
                 {
@@ -371,7 +361,7 @@ namespace SimpleScheme
 
             while (TypePrimitives.IsPair(args))
             {
-                double x = Num(First(args));
+                double x = Num(List.First(args));
                 switch (op)
                 {
                     case 'X': // max
@@ -411,7 +401,7 @@ namespace SimpleScheme
                         break;
                 }
 
-                args = Rest(args);
+                args = List.Rest(args);
             }
 
             return Num(result);

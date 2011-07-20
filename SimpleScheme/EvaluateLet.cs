@@ -116,17 +116,17 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            if (TypePrimitives.IsSymbol(First(Expr)))
+            if (TypePrimitives.IsSymbol(List.First(Expr)))
             {
                 // named let
-                this.name = Symbol.Sym(First(Expr));
-                this.bindings = Second(Expr);
-                this.body = Rest(Rest(Expr));
+                this.name = Symbol.Sym(List.First(Expr));
+                this.bindings = List.Second(Expr);
+                this.body = List.Rest(List.Rest(Expr));
             }
             else
             {
-                this.bindings = First(Expr);
-                this.body = Rest(Expr);
+                this.bindings = List.First(Expr);
+                this.body = List.Rest(Expr);
             }
 
             if (TypePrimitives.IsEmptyList(this.body))
@@ -134,8 +134,8 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            this.vars = MapFun(First, MakeList(this.bindings));
-            this.inits = MapFun(Second, MakeList(this.bindings));
+            this.vars = List.MapFun(List.First, List.New(this.bindings));
+            this.inits = List.MapFun(List.Second, List.New(this.bindings));
 
             if (this.name == null)
             {

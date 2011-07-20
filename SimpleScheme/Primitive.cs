@@ -14,7 +14,7 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Primitive : Procedure
     {
-        #region Fields
+        #region Constants
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
@@ -24,7 +24,9 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
+        #endregion
 
+        #region Fields
         /// <summary>
         /// The code to perform the operation.
         /// The stepper function is executed to perform the primitive operation.
@@ -103,7 +105,7 @@ namespace SimpleScheme
         internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
             // First check the number of arguments
-            int numArgs = Length(args);
+            int numArgs = List.Length(args);
             if (numArgs < this.minArgs)
             {
                 return (Stepper)ErrorHandlers.SemanticError("Primitive: too few args, " + numArgs + ", for " +

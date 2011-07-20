@@ -101,7 +101,7 @@ namespace SimpleScheme
                 ////                         <command> ...)</r4rs>
                 .DefinePrimitive("do", (args, caller) => new EvaluateExpression("do", args, caller.Env, caller), 0, MaxInt)
                 //// Instead of returning a value, return an evaulator that can be run to get the value
-                .DefinePrimitive("eval", (args, caller) => Call(First(args), caller.Env, caller), 1, 2)
+                .DefinePrimitive("eval", (args, caller) => Call(List.First(args), caller.Env, caller), 1, 2)
                 //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                 //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
                 .DefinePrimitive("if", (args, caller) => new EvaluateExpression("if", args, caller.Env, caller), 0, MaxInt)
@@ -175,7 +175,7 @@ namespace SimpleScheme
             }
 
             // Break apart and evaluate the fn and args
-            return Call(First(expr), Rest(expr), env, caller);
+            return Call(List.First(expr), List.Rest(expr), env, caller);
         }
         #endregion
 
@@ -225,7 +225,7 @@ namespace SimpleScheme
         /// <returns>The quoted expression.</returns>
         private static Stepper EvalQuote(Obj args, Stepper caller)
         {
-            return caller.ContinueStep(First(args));
+            return caller.ContinueStep(List.First(args));
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalLambda(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(new Closure(First(args), Rest(args), env));
+            return caller.ContinueStep(new Closure(List.First(args), List.Rest(args), env));
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalMacro(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(new Macro(First(args), Rest(args), env));
+            return caller.ContinueStep(new Macro(List.First(args), List.Rest(args), env));
         }
         #endregion
 

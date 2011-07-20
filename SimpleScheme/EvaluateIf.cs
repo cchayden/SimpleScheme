@@ -72,7 +72,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private Stepper EvaluateTestStep()
         {
-            return EvaluateExpression.Call(First(Expr), this.Env, ContinueHere(this.EvaluateAlternativeStep));
+            return EvaluateExpression.Call(List.First(Expr), this.Env, ContinueHere(this.EvaluateAlternativeStep));
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private Stepper EvaluateAlternativeStep()
         {
-            Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? Second(Expr) : Third(Expr);
+            Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? List.Second(Expr) : List.Third(Expr);
             return EvaluateExpression.Call(TypePrimitives.IsEmptyList(toEvaluate) ? Undefined.Instance : toEvaluate, this.Env, this.Caller);
         }
         #endregion

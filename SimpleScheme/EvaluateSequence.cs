@@ -77,16 +77,16 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper EvalExprStep()
         {
-            if (TypePrimitives.IsEmptyList(Rest(this.expressions)))
+            if (TypePrimitives.IsEmptyList(List.Rest(this.expressions)))
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
                 // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
                 //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(First(this.expressions), this.Env, this.Caller);
+                return EvaluateExpression.Call(List.First(this.expressions), this.Env, this.Caller);
             }
 
-            return EvaluateExpression.Call(First(this.expressions), this.Env, ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(List.First(this.expressions), this.Env, ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace SimpleScheme
         /// <returns>Immediately steps back.</returns>
         private Stepper LoopStep()
         {
-            this.expressions = Rest(this.expressions);
+            this.expressions = List.Rest(this.expressions);
             return ContinueHere(this.EvalExprStep);
         }
         #endregion

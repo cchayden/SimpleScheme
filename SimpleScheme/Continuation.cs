@@ -52,7 +52,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
-            return Stepper.TransferToStep(this.step, First(args), this.step.Env);
+            return Stepper.TransferToStep(this.step, List.First(args), this.step.Env);
         }
         #endregion
     }

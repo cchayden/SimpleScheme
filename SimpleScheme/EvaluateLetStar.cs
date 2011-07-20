@@ -118,16 +118,16 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            this.bindings = First(Expr);
-            this.body = Rest(Expr);
+            this.bindings = List.First(Expr);
+            this.body = List.Rest(Expr);
 
             if (TypePrimitives.IsEmptyList(this.body))
             {
                 return ReturnUndefined();
             }
 
-            this.vars = MapFun(First, MakeList(this.bindings));
-            this.inits = MapFun(Second, MakeList(this.bindings));
+            this.vars = List.MapFun(List.First, List.New(this.bindings));
+            this.inits = List.MapFun(List.Second, List.New(this.bindings));
             this.formals = EmptyList.Instance;
             this.vals = EmptyList.Instance;
             return ContinueHere(this.EvalInit);
@@ -145,7 +145,7 @@ namespace SimpleScheme
                 return ContinueHere(this.ApplyLambda);
             }
 
-            Procedure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);
+            Procedure fun = new Closure(this.formals, List.New(List.First(this.inits)), this.Env);
             return fun.Apply(this.vals, this.Env, ContinueHere(this.BindVarToInit));
         }
 
@@ -157,10 +157,10 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private Stepper BindVarToInit()
         {
-            this.formals = Cons(First(this.vars), this.formals);
-            this.vals = Cons(ReturnedExpr, this.vals);
-            this.vars = Rest(this.vars);
-            this.inits = Rest(this.inits);
+            this.formals = List.Cons(List.First(this.vars), this.formals);
+            this.vals = List.Cons(ReturnedExpr, this.vals);
+            this.vars = List.Rest(this.vars);
+            this.inits = List.Rest(this.inits);
             return ContinueHere(this.EvalInit);
         }
 

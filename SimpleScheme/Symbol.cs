@@ -3,14 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
     /// Handles scheme symbols.
     /// Smybols are represented by .NET strings.
     /// </summary>
-    public class Symbol : ListPrimitives
+    public class Symbol
     {
         #region Constructors
         /// <summary>
@@ -60,9 +59,9 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
-                .DefinePrimitive("string->symbol", (args, caller) => New(First(args)), 1)
+                .DefinePrimitive("string->symbol", (args, caller) => New(List.First(args)), 1)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsSymbol(First(args))), 1);
+                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsSymbol(List.First(args))), 1);
         }
         #endregion
     }

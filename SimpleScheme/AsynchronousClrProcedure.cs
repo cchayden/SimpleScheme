@@ -78,7 +78,7 @@ namespace SimpleScheme
                 //// (method-async <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method-async",
-                   (args, caller) => new AsynchronousClrProcedure(First(args), Second(args), Rest(Rest(args))),
+                   (args, caller) => new AsynchronousClrProcedure(List.First(args), List.Second(args), List.Rest(List.Rest(args))),
                    2,
                    MaxInt);
         }
@@ -106,8 +106,8 @@ namespace SimpleScheme
             }
             else
             {
-                target = First(args);
-                argArray = this.ToArgListBegin(Rest(args), new AsyncState(target, caller));
+                target = List.First(args);
+                argArray = this.ToArgListBegin(List.Rest(args), new AsyncState(target, caller));
             }
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;

@@ -219,6 +219,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Tests whether to given object is a scheme primitive.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme primitive.</returns>
+        public static bool IsPrimitive(Obj obj)
+        {
+            return obj is Primitive;
+        }
+
+        /// <summary>
         /// Tests whether to given object is a scheme procedure.
         /// </summary>
         /// <param name="obj">The object to test</param>
@@ -226,6 +236,16 @@ namespace SimpleScheme
         public static bool IsProcedure(Obj obj)
         {
             return obj is Procedure;
+        }
+
+        /// <summary>
+        /// Tests whether to given object is a scheme continuation.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme continuation.</returns>
+        public static bool IsContinuation(Obj obj)
+        {
+            return obj is Continuation;
         }
 
         /// <summary>

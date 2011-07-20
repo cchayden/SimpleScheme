@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : ListPrimitives
+    public abstract class Procedure
     {
         #region Constants
         /// <summary>
@@ -49,19 +49,19 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => Proc(First(args)).Apply(ListStar(Rest(args)), caller.Env, caller), 2, MaxInt)
+                .DefinePrimitive("apply", (args, caller) => Proc(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller.Env, caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
-                .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(First(args), caller), 1)
-                .DefinePrimitive("call/cc", (args, caller) => CallCc(First(args), caller), 1)
+                .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(List.First(args), caller), 1)
+                .DefinePrimitive("call/cc", (args, caller) => CallCc(List.First(args), caller), 1)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
-                .DefinePrimitive("force", (args, caller) => Force(First(args), caller), 1)
+                .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), false, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(Proc(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(First(args)), Rest(args), true, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsProcedure(First(args))), 1);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsProcedure(List.First(args))), 1);
         }
         #endregion
 
@@ -164,7 +164,7 @@ namespace SimpleScheme
         private static Obj CallCc(Obj expr, Stepper caller)
         {
             return Proc(expr).Apply(
-                MakeList(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller.Env, caller);
+                List.New(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller.Env, caller);
         }
         #endregion
     }

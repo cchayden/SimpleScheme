@@ -72,7 +72,7 @@ namespace SimpleScheme
             this.returnResult = returnResult;
             if (returnResult)
             {
-                this.accum = this.result = MakeEmptyList();
+                this.accum = this.result = List.NewEmpty();
             }
 
             ContinueHere(this.InitialStep);
@@ -136,15 +136,15 @@ namespace SimpleScheme
         /// If we are done, return the collected results.</returns>
         private Stepper ApplyFunStep()
         {
-            if (TypePrimitives.IsPair(First(this.lists)))
+            if (TypePrimitives.IsPair(List.First(this.lists)))
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return this.proc.Apply(MapFun(First, MakeList(this.lists)), this.Env, ContinueHere(this.CollectAndLoopStep));
+                return this.proc.Apply(List.MapFun(List.First, List.New(this.lists)), this.Env, ContinueHere(this.CollectAndLoopStep));
             }
 
             // if we are done, just return the result minus the dummy entry
-            return ReturnFromStep(this.returnResult ? Rest(this.result) : Undefined.Instance);
+            return ReturnFromStep(this.returnResult ? List.Rest(this.result) : Undefined.Instance);
         }
 
         /// <summary>
@@ -157,11 +157,11 @@ namespace SimpleScheme
             if (this.returnResult)
             {
                 // Builds a list by tacking new values onto the tail.
-                this.accum = (Pair)this.accum.SetRest(MakeList(ReturnedExpr));
+                this.accum = (Pair)(this.accum.Rest = List.New(ReturnedExpr));
             }
 
             // Step down each of the lists
-            this.lists = MapFun(Rest, MakeList(this.lists));
+            this.lists = List.MapFun(List.Rest, List.New(this.lists));
             return ContinueHere(this.ApplyFunStep);
         }
         #endregion

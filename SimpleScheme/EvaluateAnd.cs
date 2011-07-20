@@ -82,14 +82,14 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper EvalTestStep()
         {
-            if (TypePrimitives.IsEmptyList(Rest(this.tests)))
+            if (TypePrimitives.IsEmptyList(List.Rest(this.tests)))
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(First(this.tests), this.Env, this.Caller);
+                return EvaluateExpression.Call(List.First(this.tests), this.Env, this.Caller);
             }
 
-            return EvaluateExpression.Call(First(this.tests), this.Env, ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(List.First(this.tests), this.Env, ContinueHere(this.LoopStep));
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace SimpleScheme
                 return ReturnFromStep(SchemeBoolean.False);
             }
 
-            this.tests = Rest(this.tests);
+            this.tests = List.Rest(this.tests);
             return ContinueHere(this.EvalTestStep);
         }
         #endregion

@@ -56,7 +56,6 @@
     <Compile Include="IEnvironment.cs" />
     <Compile Include="IInterpreter.cs" />
     <Compile Include="IPrimitiveEnvironment.cs" />
-    <Compile Include="ListPrimitives.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="PrimitiveEnvironment.cs" />
     <Compile Include="Printer.cs" />

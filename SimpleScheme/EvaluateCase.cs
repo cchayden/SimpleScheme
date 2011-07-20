@@ -92,8 +92,8 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private Stepper EvaluateKeyStep()
         {
-            this.clauses = Rest(Expr);
-            return EvaluateExpression.Call(First(Expr), this.Env, ContinueHere(this.AssignKey));
+            this.clauses = List.Rest(Expr);
+            return EvaluateExpression.Call(List.First(Expr), this.Env, ContinueHere(this.AssignKey));
         }
 
         /// <summary>
@@ -117,14 +117,14 @@ namespace SimpleScheme
         {
             while (!TypePrimitives.IsEmptyList(this.clauses))
             {
-                Obj clause = First(this.clauses);
+                Obj clause = List.First(this.clauses);
                 if (!TypePrimitives.IsPair(clause))
                 {
                     return (Stepper)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
 
-                Obj data = First(clause);
-                this.exprList = Rest(clause);
+                Obj data = List.First(clause);
+                this.exprList = List.Rest(clause);
 
                 // look for else datum
                 if (TypePrimitives.IsSymbol(data) && Symbol.Sym(data) == "else")
@@ -135,16 +135,16 @@ namespace SimpleScheme
                 // look for a match within the list of datum items
                 while (TypePrimitives.IsPair(data))
                 {
-                    if (SchemeBoolean.Eqv(this.keyVal, First(data)))
+                    if (SchemeBoolean.Eqv(this.keyVal, List.First(data)))
                     {
                         return this.EvalExpr();
                     }
 
-                    data = Rest(data);
+                    data = List.Rest(data);
                 }
 
                 // didn't find a match -- look at the next clause
-               this.clauses = Rest(this.clauses);
+               this.clauses = List.Rest(this.clauses);
             }
 
             // no clauses matched -- unspecified

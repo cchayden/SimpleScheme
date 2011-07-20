@@ -3,13 +3,12 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
     /// Operations on boolean values.
     /// </summary>
-    public sealed class SchemeBoolean : ListPrimitives
+    public static class SchemeBoolean
     {
         #region Constants
         /// <summary>
@@ -24,12 +23,7 @@ namespace SimpleScheme
         #endregion
 
         #region Constructors
-        /// <summary>
-        /// Prevents a default instance of the SchemeBoolean class from being created.
-        /// </summary>
-        private SchemeBoolean()
-        {
-        }
+
         #endregion
 
         #region Internal Static Methods
@@ -136,17 +130,17 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(TypePrimitives.IsBoolean(First(args))), 1)
+                .DefinePrimitive("boolean?", (args, caller) => Truth(TypePrimitives.IsBoolean(List.First(args))), 1)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
+                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(First(args), Second(args))), 2)
+                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2)
+                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(TypePrimitives.IsBoolean(First(args)) && (bool)First(args) == false), 1)
+                .DefinePrimitive("not", (args, caller) => Truth(TypePrimitives.IsBoolean(List.First(args)) && (bool)List.First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(TypePrimitives.IsEmptyList(First(args))), 1);
+                .DefinePrimitive("null?", (args, caller) => Truth(TypePrimitives.IsEmptyList(List.First(args))), 1);
         }
         #endregion
     }

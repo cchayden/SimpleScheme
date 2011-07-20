@@ -59,7 +59,7 @@ namespace SimpleScheme
         /// <returns>Continue to next step.</returns>
         protected Stepper InitialStep()
         {
-            Obj y = Second(Expr);
+            Obj y = List.Second(Expr);
             this.counter = TypePrimitives.IsEmptyList(y) ? 1 : (int)Number.Num(y);
             this.i = 0;
             return ContinueHere(this.Step1);
@@ -92,9 +92,9 @@ namespace SimpleScheme
             long time = this.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - this.startMem;
             return ReturnFromStep(
-                    Cons(
+                    List.Cons(
                         ReturnedExpr, 
-                        MakeList(MakeList(Number.Num(time), "msec"), MakeList(Number.Num(mem), "bytes"))));
+                        List.New(List.New(Number.Num(time), "msec"), List.New(Number.Num(mem), "bytes"))));
         }
         #endregion
     }

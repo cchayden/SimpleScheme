@@ -3,14 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public class Vector : ListPrimitives
+    public class Vector
     {
         #region Constructor
         /// <summary>
@@ -49,24 +48,24 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (args, caller) => FromList(First(args)), 1)
+                .DefinePrimitive("list->vector", (args, caller) => FromList(List.First(args)), 1)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (args, caller) => MakeVector(First(args), Second(args)), 1, 2)
+                .DefinePrimitive("make-vector", (args, caller) => MakeVector(List.First(args), List.Second(args)), 1, 2)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive("vector", (args, caller) => FromList(args), 0, MaxInt)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (args, caller) => VectorToList(First(args)), 1)
+                .DefinePrimitive("vector->list", (args, caller) => VectorToList(List.First(args)), 1)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                .DefinePrimitive("vector-fill", (args, caller) => VectorFill(First(args), Second(args)), 2)
+                .DefinePrimitive("vector-fill", (args, caller) => VectorFill(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (args, caller) => Number.Num(Vec(First(args)).Length), 1)
+                .DefinePrimitive("vector-length", (args, caller) => Number.Num(Vec(List.First(args)).Length), 1)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (args, caller) => Vec(First(args))[(int)Number.Num(Second(args))], 2)
+                .DefinePrimitive("vector-ref", (args, caller) => Vec(List.First(args))[(int)Number.Num(List.Second(args))], 2)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (args, caller) => VectorSet(First(args), Second(args), Third(args)), 3)
+                .DefinePrimitive("vector-set!", (args, caller) => VectorSet(List.First(args), List.Second(args), List.Third(args)), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsVector(First(args))), 1);
+                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsVector(List.First(args))), 1);
         }
         #endregion
 
@@ -78,7 +77,7 @@ namespace SimpleScheme
         /// <returns>A vector of the objs.</returns>
         internal static Obj[] FromList(object objs)
         {
-            Obj[] vec = new Obj[Length(objs)];
+            Obj[] vec = new Obj[List.Length(objs)];
 
             if (!TypePrimitives.IsPair(objs))
             {
@@ -88,8 +87,8 @@ namespace SimpleScheme
             int i = 0;
             while (TypePrimitives.IsPair(objs))
             {
-                vec[i++] = First(objs);
-                objs = Rest(objs);
+                vec[i++] = List.First(objs);
+                objs = List.Rest(objs);
             }
 
             return vec;
@@ -176,7 +175,7 @@ namespace SimpleScheme
             Obj result = EmptyList.Instance;
             for (int i = vec.Length - 1; i >= 0; i--)
             {
-                result = Cons(vec[i], result);
+                result = List.Cons(vec[i], result);
             }
 
             return result;

@@ -94,8 +94,8 @@ namespace SimpleScheme
         /// <returns>The next step, or else if the result is available, continue on to the next step.</returns>
         private Stepper InitialStep()
         {
-            this.port = OpenInputFile(First(Expr));
-            return Procedure.Proc(Second(Expr)).Apply(MakeList(this.port), this.Env, ContinueHere(this.CloseStep));
+            this.port = OpenInputFile(List.First(Expr));
+            return Procedure.Proc(List.Second(Expr)).Apply(List.New(this.port), this.Env, ContinueHere(this.CloseStep));
         }
 
         /// <summary>

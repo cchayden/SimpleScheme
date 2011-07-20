@@ -48,13 +48,13 @@ namespace SimpleScheme
                         ErrorHandlers.Warn("Extra . ignored.");
                         return this.Read(inp);
                     case "'": 
-                        return ListPrimitives.MakeList("quote", this.Read(inp));
+                        return List.New("quote", this.Read(inp));
                     case "`":
-                        return ListPrimitives.MakeList("quasiquote", this.Read(inp));
+                        return List.New("quasiquote", this.Read(inp));
                     case ",": 
-                        return ListPrimitives.MakeList("unquote", this.Read(inp));
+                        return List.New("unquote", this.Read(inp));
                     case ",@": 
-                        return ListPrimitives.MakeList("unquote-splicing", this.Read(inp));
+                        return List.New("unquote-splicing", this.Read(inp));
                     default:
                         return token;
                 }
@@ -366,7 +366,7 @@ namespace SimpleScheme
             }
 
             this.tokStream.PushToken(token);
-            return ListPrimitives.Cons(this.Read(inp), this.ReadTail(inp, true));
+            return List.Cons(this.Read(inp), this.ReadTail(inp, true));
         }
         #endregion
 

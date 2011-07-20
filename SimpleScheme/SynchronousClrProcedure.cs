@@ -64,9 +64,9 @@ namespace SimpleScheme
                 .DefinePrimitive(
                    "method",
                    (args, caller) => new SynchronousClrProcedure(
-                       Printer.AsString(First(args), false), 
-                       Printer.AsString(Second(args), false), 
-                       Rest(Rest(args))),
+                       Printer.AsString(List.First(args), false), 
+                       Printer.AsString(List.Second(args), false), 
+                       List.Rest(List.Rest(args))),
                     2,
                     MaxInt);
         }
@@ -94,8 +94,8 @@ namespace SimpleScheme
             }
             else
             {
-                target = First(args);
-                argArray = this.ToArgList(Rest(args), null);
+                target = List.First(args);
+                argArray = this.ToArgList(List.Rest(args), null);
             }
 
             return caller.ContinueStep(this.MethodInfo.Invoke(target, argArray));

@@ -100,8 +100,8 @@ namespace SimpleScheme
         /// <returns>The third, if it exists, otherwise the first.</returns>
         private static Obj ThirdOrFirst(object x)
         {
-            Obj res = Third(x);
-            return TypePrimitives.IsEmptyList(res) ? First(x) : res;
+            Obj res = List.Third(x);
+            return TypePrimitives.IsEmptyList(res) ? List.First(x) : res;
         }
 
         /// <summary>
@@ -124,14 +124,14 @@ namespace SimpleScheme
                 return ReturnUndefined();
             }
 
-            Obj bindings = First(Expr);
-            this.vars = MapFun(First, MakeList(bindings));
-            Obj inits = MapFun(Second, MakeList(bindings));
-            this.steps = MapFun(ThirdOrFirst, MakeList(bindings));
+            Obj bindings = List.First(Expr);
+            this.vars = List.MapFun(List.First, List.New(bindings));
+            Obj inits = List.MapFun(List.Second, List.New(bindings));
+            this.steps = List.MapFun(ThirdOrFirst, List.New(bindings));
 
-            Obj test = First(Second(Expr));
-            this.exprs = Rest(Second(Expr));
-            this.commands = Rest(Rest(Expr));
+            Obj test = List.First(List.Second(Expr));
+            this.exprs = List.Rest(List.Second(Expr));
+            this.commands = List.Rest(List.Rest(Expr));
 
             if (TypePrimitives.IsEmptyList(test))
             {
@@ -139,7 +139,7 @@ namespace SimpleScheme
             }
 
             // prepare test proc to execute each time through
-            this.testProc = new Closure(this.vars, MakeList(test), this.Env);
+            this.testProc = new Closure(this.vars, List.New(test), this.Env);
 
             // push an empty environment, to hold the iteration variables
             this.PushEmptyEnvironment(this.Env);

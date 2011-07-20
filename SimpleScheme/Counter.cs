@@ -16,7 +16,7 @@ namespace SimpleScheme
     /// The counter id is used as an index into a counter array.
     /// An array is used because accessing through a dictionary is relatively slow.
     /// </summary>
-    internal class Counter : ListPrimitives
+    internal class Counter
     {
         #region Fields
         /// <summary>
@@ -63,7 +63,7 @@ namespace SimpleScheme
                 //// (get-counters)
                 .DefinePrimitive("get-counters", (args, caller) => caller.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
-                .DefinePrimitive("get-counter", (args, caller) => caller.CurrentCounters.GetCounter(First(args)), 1)
+                .DefinePrimitive("get-counter", (args, caller) => caller.CurrentCounters.GetCounter(List.First(args)), 1)
                 //// (reset-counters)
                 .DefinePrimitive("reset-counters", (args, caller) => caller.CurrentCounters.ResetCounters(), 0);
         }
@@ -132,7 +132,7 @@ namespace SimpleScheme
                 int count = this.counters[kvp.Value];
                 if (count > 0)
                 {
-                    res = Cons(Cons(kvp.Key, count), res);
+                    res = List.Cons(List.Cons(kvp.Key, count), res);
                 }
             }
 

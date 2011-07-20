@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Represents an input port, a mechanism for reading input.
     /// </summary>
-    public sealed class InputPort : ListPrimitives
+    public sealed class InputPort
     {
         #region Fields
         /// <summary>
@@ -57,28 +57,28 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
-                .DefinePrimitive("eof-object?", (args, caller) => SchemeBoolean.Truth(IsEof(First(args))), 1)
+                .DefinePrimitive("eof-object?", (args, caller) => SchemeBoolean.Truth(IsEof(List.First(args))), 1)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive("call-with-input-file", (args, caller) => EvaluateCallWithInputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (args, caller) => CloseInputPort(First(args), caller), 1)
+                .DefinePrimitive("close-input-port", (args, caller) => CloseInputPort(List.First(args), caller), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (args, caller) => caller.CurrentInputPort, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsInputPort(First(args))), 1)
+                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsInputPort(List.First(args))), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (args, caller) => LoadFile(First(args), caller), 1)
+                .DefinePrimitive("load", (args, caller) => LoadFile(List.First(args), caller), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
-                .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args)), 1)
+                .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(List.First(args)), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (args, caller) => PeekChar(First(args), caller), 0, 1)
+                .DefinePrimitive("peek-char", (args, caller) => PeekChar(List.First(args), caller), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (args, caller) => Read(First(args), caller), 0, 1)
+                .DefinePrimitive("read", (args, caller) => Read(List.First(args), caller), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (args, caller) => ReadChar(First(args), caller), 0, 1);
+                .DefinePrimitive("read-char", (args, caller) => ReadChar(List.First(args), caller), 0, 1);
         }
         #endregion
 
@@ -137,6 +137,7 @@ namespace SimpleScheme
             {
                 ErrorHandlers.IoError("IOException on close: " + ex);
             }
+
             return Undefined.Instance;
         }
         #endregion

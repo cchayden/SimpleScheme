@@ -39,10 +39,10 @@ namespace Tests
         [TestMethod]
         public void ConsTest()
         {
-            var actual = ListPrimitives.Cons(1, 2);
+            var actual = List.Cons(1, 2);
             Assert.IsInstanceOfType(actual, typeof(Pair));
-            Assert.AreEqual(1, ListPrimitives.First(actual));
-            Assert.AreEqual(2, ListPrimitives.Rest(actual));
+            Assert.AreEqual(1, List.First(actual));
+            Assert.AreEqual(2, List.Rest(actual));
         }
 
         /// <summary>
@@ -51,9 +51,9 @@ namespace Tests
         [TestMethod]
         public void SecondTest()
         {
-            var actual = ListPrimitives.Cons(1, ListPrimitives.Cons(2, 3));
+            var actual = List.Cons(1, List.Cons(2, 3));
             Assert.IsInstanceOfType(actual, typeof(Pair));
-            Assert.AreEqual(2, ListPrimitives.Second(actual));
+            Assert.AreEqual(2, List.Second(actual));
         }
 
         /// <summary>
@@ -62,9 +62,9 @@ namespace Tests
         [TestMethod]
         public void ThirdTest()
         {
-            var actual = ListPrimitives.Cons(1, ListPrimitives.Cons(2, ListPrimitives.Cons(3, 4)));
+            var actual = List.Cons(1, List.Cons(2, List.Cons(3, 4)));
             Assert.IsInstanceOfType(actual, typeof(Pair));
-            Assert.AreEqual(3, ListPrimitives.Third(actual));
+            Assert.AreEqual(3, List.Third(actual));
         }
 
         /// <summary>
@@ -73,9 +73,9 @@ namespace Tests
         [TestMethod]
         public void SetFirstTest()
         {
-            var actual = ListPrimitives.Cons(1, 2);
+            var actual = List.Cons(1, 2);
             List_Accessor.SetFirst(actual, 10);
-            Assert.AreEqual(10, ListPrimitives.First(actual));
+            Assert.AreEqual(10, List.First(actual));
             AssertEx.Throws(() => List_Accessor.SetFirst(1, 10));
         }
 
@@ -85,9 +85,9 @@ namespace Tests
         [TestMethod]
         public void SetRestTest()
         {
-            var actual = ListPrimitives.Cons(1, 2);
+            var actual = List.Cons(1, 2);
             List_Accessor.SetRest(actual, 10);
-            Assert.AreEqual(10, ListPrimitives.Rest(actual));
+            Assert.AreEqual(10, List.Rest(actual));
             AssertEx.Throws(() => List_Accessor.SetRest(1, 10));
         }
 
@@ -188,37 +188,37 @@ namespace Tests
         [TestMethod]
         public void LengthTest()
         {
-            Assert.AreEqual(0, ListPrimitives.Length(null));
-            Assert.AreEqual(0, ListPrimitives.Length(0));
-            var actual = ListPrimitives.Cons(1, 2);
-            Assert.AreEqual(1, ListPrimitives.Length(actual));
-            actual = ListPrimitives.Cons(1, ListPrimitives.Cons(2, 3));
-            Assert.AreEqual(2, ListPrimitives.Length(actual));
+            Assert.AreEqual(0, List.Length(null));
+            Assert.AreEqual(0, List.Length(0));
+            var actual = List.Cons(1, 2);
+            Assert.AreEqual(1, List.Length(actual));
+            actual = List.Cons(1, List.Cons(2, 3));
+            Assert.AreEqual(2, List.Length(actual));
         }
 
         /// <summary>
-        /// A test for MakeList (one arg)
+        /// A test for New (one arg)
         /// </summary>
         [TestMethod]
         public void ListTest1()
         {
-            var actual = ListPrimitives.MakeList(10);
-            Assert.AreEqual(1, ListPrimitives.Length(actual));
-            Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(EmptyList_Accessor.Instance, ListPrimitives.Rest(actual));
+            var actual = List.New(10);
+            Assert.AreEqual(1, List.Length(actual));
+            Assert.AreEqual(10, List.First(actual));
+            Assert.AreEqual(EmptyList_Accessor.Instance, List.Rest(actual));
         }
 
         /// <summary>
-        /// A test for MakeList (two args)
+        /// A test for New (two args)
         /// </summary>
         [TestMethod]
         public void ListTest2()
         {
-            var actual = ListPrimitives.MakeList(10, 11);
-            Assert.AreEqual(2, ListPrimitives.Length(actual));
-            Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(11, ListPrimitives.First(ListPrimitives.Rest(actual)));
-            Assert.AreEqual(EmptyList_Accessor.Instance, ListPrimitives.Rest(ListPrimitives.Rest(actual)));
+            var actual = List.New(10, 11);
+            Assert.AreEqual(2, List.Length(actual));
+            Assert.AreEqual(10, List.First(actual));
+            Assert.AreEqual(11, List.First(List.Rest(actual)));
+            Assert.AreEqual(EmptyList_Accessor.Instance, List.Rest(List.Rest(actual)));
         }
 
         /// <summary>
@@ -227,15 +227,16 @@ namespace Tests
         [TestMethod]
         public void ListStarTest()
         {
-            var actual = ListPrimitives.ListStar(ListPrimitives.MakeList(10));
+            var actual = List_Accessor.ListStar(List.New(10));
             Assert.AreEqual(10, actual);
-            actual = ListPrimitives.ListStar(ListPrimitives.MakeList(10, 11));
-            Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(11, ListPrimitives.Rest(actual));
-            actual = ListPrimitives.ListStar(ListPrimitives.Cons(10, ListPrimitives.Cons(11, ListPrimitives.MakeList(12))));
-            Assert.AreEqual(10, ListPrimitives.First(actual));
-            Assert.AreEqual(11, ListPrimitives.Second(actual));
-            Assert.AreEqual(EmptyList_Accessor.Instance, ListPrimitives.Third(actual));
+            actual = List_Accessor.ListStar(List.New(10, List.New(11)));
+            Assert.AreEqual(10, List.First(actual));
+            Assert.AreEqual(11, List.First(List.Rest(actual)));
+            actual = List_Accessor.ListStar(List.Cons(10, List.New(11, List.New(12))));
+            Assert.AreEqual(10, List.First(actual));
+            Assert.AreEqual(11, List.Second(actual));
+            Assert.AreEqual(12, List.Third(actual));
+            Assert.AreEqual(EmptyList_Accessor.Instance, List.Rest(List.Third(actual)));
         }
 
         /// <summary>
@@ -245,7 +246,7 @@ namespace Tests
         public void ListToStringTest()
         {
             var expected = new[] { 'a', 'b' };
-            var actual = SchemeString_Accessor.ListToString(ListPrimitives.MakeList('a', 'b'));
+            var actual = SchemeString_Accessor.ListToString(List.New('a', 'b'));
             for (int i = 0; i < expected.Length; i++)
             {
                 Assert.AreEqual(expected[i], actual[i]);
@@ -253,7 +254,7 @@ namespace Tests
 
             actual = SchemeString_Accessor.ListToString(1);
             Assert.AreEqual(0, actual.Length);
-            AssertEx.Throws(() => SchemeString_Accessor.ListToString(ListPrimitives.MakeList(1, 2)));
+            AssertEx.Throws(() => SchemeString_Accessor.ListToString(List.New(1, 2)));
         }
 
         /// <summary>
@@ -262,7 +263,7 @@ namespace Tests
         [TestMethod]
         public void ListToVectorTest()
         {
-            var actual = Vector_Accessor.FromList(ListPrimitives.MakeList(1, 2));
+            var actual = Vector_Accessor.FromList(List.New(1, 2));
             var expected = new Obj[] { 1, 2 };
             Assert.AreEqual(2, actual.Length);
             Assert.AreEqual(2, expected.Length);
@@ -296,10 +297,10 @@ namespace Tests
         [TestMethod]
         public void ReverseTest()
         {
-            var test = ListPrimitives.MakeList(1, 2);
+            var test = List.New(1, 2);
             var actual = List_Accessor.Reverse(test);
-            Assert.AreEqual(2, ListPrimitives.First(actual));
-            Assert.AreEqual(1, ListPrimitives.First(ListPrimitives.Rest(actual)));
+            Assert.AreEqual(2, List.First(actual));
+            Assert.AreEqual(1, List.First(List.Rest(actual)));
         }
 
         /// <summary>
@@ -326,7 +327,7 @@ namespace Tests
             Assert.AreEqual("1.5", Printer.AsString(1.5));
             Assert.AreEqual("#\\a", Printer.AsString('a'));
             Assert.AreEqual("(1 . 2)", Printer.AsString(new Pair_Accessor(1, 2)));
-            Assert.AreEqual("(1 2)", Printer.AsString(ListPrimitives.MakeList(1, 2)));
+            Assert.AreEqual("(1 2)", Printer.AsString(List.New(1, 2)));
             Assert.AreEqual(@"abc", Printer.AsString("abc"));
             char[] empty = new char[0];
             Assert.AreEqual(@"""""", Printer.AsString(empty));
@@ -348,7 +349,7 @@ namespace Tests
             Assert.AreEqual("1.5", Printer.AsString(1.5, false));
             Assert.AreEqual("a", Printer.AsString('a', false));
             Assert.AreEqual("(1 . 2)", Printer.AsString(new Pair_Accessor(1, 2), false));
-            Assert.AreEqual("(1 2)", Printer.AsString(ListPrimitives.MakeList(1, 2), false));
+            Assert.AreEqual("(1 2)", Printer.AsString(List.New(1, 2), false));
             Assert.AreEqual("abc", Printer.AsString("abc", false));
             Assert.AreEqual(@"""", Printer.AsString(@"""", false));
             var test = new Obj[] { 1, 2 };
@@ -413,10 +414,10 @@ namespace Tests
         {
             var test = new Obj[] { 1, 2, 3 };
             var actual = Vector_Accessor.VectorToList(test);
-            Assert.AreEqual(3, ListPrimitives.Length(actual));
-            Assert.AreEqual(1, ListPrimitives.First(actual));
-            Assert.AreEqual(2, ListPrimitives.Second(actual));
-            Assert.AreEqual(3, ListPrimitives.Third(actual));
+            Assert.AreEqual(3, List.Length(actual));
+            Assert.AreEqual(1, List.First(actual));
+            Assert.AreEqual(2, List.Second(actual));
+            Assert.AreEqual(3, List.Third(actual));
         }
 
         /// <summary>

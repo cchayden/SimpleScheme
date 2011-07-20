@@ -50,7 +50,7 @@ namespace Tests
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
             Obj res = this.ReadAndEvaluate(Test);
-            Assert.AreEqual(17, ListPrimitives.Length(res), "Failed " + this.section);
+            Assert.AreEqual(17, List.Length(res), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
 
