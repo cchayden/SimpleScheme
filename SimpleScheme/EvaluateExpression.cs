@@ -237,7 +237,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalLambda(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(Closure.New(First(args), Rest(args), env));
+            return caller.ContinueStep(new Closure(First(args), Rest(args), env));
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalMacro(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(Macro.New(First(args), Rest(args), env));
+            return caller.ContinueStep(new Macro(First(args), Rest(args), env));
         }
         #endregion
 

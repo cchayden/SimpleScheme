@@ -46,12 +46,12 @@ namespace SimpleScheme
         {
             this.Trace = false;
             this.Count = false;
-            this.Input = InputPort.New(reader ?? Console.In);
+            this.Input = new InputPort(reader ?? Console.In);
             this.Output = writer ?? Console.Out;
-            this.PrimEnvironment = primEnvironment ?? PrimitiveEnvironment.New();
+            this.PrimEnvironment = primEnvironment ?? new PrimitiveEnvironment();
 
             this.Counters = new Counter();
-            this.GlobalEnvironment = Environment.NewGlobal(this, PrimEnvironment);
+            this.GlobalEnvironment = new Environment(this, PrimEnvironment);
             this.halted = new EvaluatorBase("halted", this.GlobalEnvironment, null);
 
             try
@@ -139,7 +139,7 @@ namespace SimpleScheme
         /// <returns>A scheme interpreter.</returns>
         public static Interpreter New(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
-            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? PrimitiveEnvironment.New();
+            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? new PrimitiveEnvironment();
             return new Interpreter(loadStandardMacros, primEnv, files, reader, writer);
         }
 
@@ -150,7 +150,7 @@ namespace SimpleScheme
         /// <returns>A scheme interpreter.</returns>
         public static Interpreter New(IPrimitiveEnvironment primEnvironment)
         {
-            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? PrimitiveEnvironment.New();
+            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? new PrimitiveEnvironment();
             return new Interpreter(true, primEnv, null, null, null);
         }
 
@@ -290,7 +290,7 @@ namespace SimpleScheme
             {
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
-                    this.Load(InputPort.New(new StreamReader(fs)));
+                    this.Load(new InputPort(new StreamReader(fs)));
                 }
             }
             catch (IOException)
@@ -333,7 +333,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                this.Load(InputPort.New(reader));
+                this.Load(new InputPort(reader));
             }
         }
 
@@ -346,7 +346,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                return this.ReadEval(InputPort.New(reader));
+                return this.ReadEval(new InputPort(reader));
             }
         }
         #endregion

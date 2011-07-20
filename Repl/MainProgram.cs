@@ -83,7 +83,7 @@ namespace Repl
         /// </summary>
         private void RunExplicit()
         {
-            IPrimitiveEnvironment primEnvironment = PrimitiveEnvironment.New();
+            IPrimitiveEnvironment primEnvironment = new PrimitiveEnvironment();
             Interpreter.New(true, primEnvironment, this.files, Console.In, Console.Out)
                 .ReadEvalPrintLoop();
         }

@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
-        private Pair(Obj first, Obj rest)
+        internal Pair(Obj first, Obj rest)
         {
             this.FirstCell = first;
             this.RestCell = rest;

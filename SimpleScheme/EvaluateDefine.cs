@@ -73,7 +73,7 @@ namespace SimpleScheme
         {
             if (TypePrimitives.IsPair(First(Expr)))
             {
-                this.Env.Define(First(First(Expr)), Closure.New(Rest(First(Expr)), Rest(Expr), this.Env));
+                this.Env.Define(First(First(Expr)), new Closure(Rest(First(Expr)), Rest(Expr), this.Env));
                 return ReturnUndefined();
             }
 

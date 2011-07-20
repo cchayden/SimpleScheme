@@ -164,7 +164,7 @@ namespace SimpleScheme
         private static Obj CallCc(Obj expr, Stepper caller)
         {
             return Proc(expr).Apply(
-                MakeList(Continuation.New(EvaluateContinuation.Call(expr, caller.Env, caller))), caller.Env, caller);
+                MakeList(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller.Env, caller);
         }
         #endregion
     }

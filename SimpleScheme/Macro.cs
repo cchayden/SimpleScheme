@@ -18,7 +18,7 @@ namespace SimpleScheme
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        private Macro(Obj parms, Obj body, Environment env)
+        internal Macro(Obj parms, Obj body, Environment env)
             : base(parms, body, env)
         {
         }
@@ -36,18 +36,5 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
-        /// <summary>
-        /// Creates a new Macro.
-        /// </summary>
-        /// <param name="parms">The macro params.</param>
-        /// <param name="body">The macro body.</param>
-        /// <param name="env">The environment that the macro is defined in.</param>
-        /// <returns>A new instance of Macro class.</returns>
-        internal static new Macro New(Obj parms, Obj body, Environment env)
-        {
-            return new Macro(parms, body, env);
-        }
-        #endregion
     }
 }

@@ -16,65 +16,45 @@ namespace SimpleScheme
         /// <summary>
         /// The character stream to read from.
         /// </summary>
-        private readonly CharacterStream inStream;
+        private readonly CharacterStream charStream = new CharacterStream();
 
         /// <summary>
         /// The token stream to read from.
         /// </summary>
-        private readonly TokenStream tokStream;
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the Parser class.
-        /// </summary>
-        /// <param name="inp">The input (a TextReader).</param>
-        public Parser(TextReader inp)
-        {
-            this.inStream = new CharacterStream(inp);
-            this.tokStream = new TokenStream();
-        }
+        private readonly TokenStream tokStream = new TokenStream();
         #endregion
 
         #region Internal Methods
-        /// <summary>
-        /// Close the input port.
-        /// </summary>
-        internal void Close()
-        {
-            this.inStream.Close();
-        }
-
         /// <summary>
         /// Read a whole expression.
         /// Handles parentheses and the various kinds of quote syntax shortcuts.
         /// Warns about extra right parentheses and dots.
         /// </summary>
         /// <returns>The expression as a list.</returns>
-        internal Obj Read()
+        internal Obj Read(TextReader inp)
         {
             try
             {
-                object token = this.NextToken();
+                object token = this.NextToken(inp);
 
                 switch (token as string)
                 {
                     case "(": 
-                        return this.ReadTail(false);
+                        return this.ReadTail(inp, false);
                     case ")":
                         ErrorHandlers.Warn("Extra ) ignored.");
-                        return this.Read();
+                        return this.Read(inp);
                     case ".":
                         ErrorHandlers.Warn("Extra . ignored.");
-                        return this.Read();
+                        return this.Read(inp);
                     case "'": 
-                        return ListPrimitives.MakeList("quote", this.Read());
+                        return ListPrimitives.MakeList("quote", this.Read(inp));
                     case "`":
-                        return ListPrimitives.MakeList("quasiquote", this.Read());
+                        return ListPrimitives.MakeList("quasiquote", this.Read(inp));
                     case ",": 
-                        return ListPrimitives.MakeList("unquote", this.Read());
+                        return ListPrimitives.MakeList("unquote", this.Read(inp));
                     case ",@": 
-                        return ListPrimitives.MakeList("unquote-splicing", this.Read());
+                        return ListPrimitives.MakeList("unquote-splicing", this.Read(inp));
                     default:
                         return token;
                 }
@@ -89,10 +69,10 @@ namespace SimpleScheme
         /// <summary>
         /// Take a peek at the next character, without consuming it.
         /// </summary>
-        /// <returns>The next character (as a cell).</returns>
-        internal object PeekChar()
+        /// <returns>The next character (as a scheme character).</returns>
+        internal Obj PeekChar(TextReader inp)
         {
-            int p = this.inStream.PeekCh();
+            int p = this.PeekCh(inp);
             if (p == -1)
             {
                 return InputPort.Eof;
@@ -106,14 +86,14 @@ namespace SimpleScheme
         /// Gets a pushed character, if present.
         /// </summary>
         /// <returns>The character read, or EOF.</returns>
-        internal object ReadChar()
+        internal object ReadChar(TextReader inp)
         {
             try
             {
-                int ch = this.inStream.GetPushedChar();
+                int ch = this.charStream.Get();
                 if (ch == -2)
                 {
-                    ch = this.inStream.ReadChar();
+                    ch = this.ReadNextChar(inp);
                 }
 
                 if (ch == -1)
@@ -132,12 +112,66 @@ namespace SimpleScheme
         #endregion
 
         #region Private Methods
+        private int PeekCh(TextReader inp)
+        {
+            int ch = this.charStream.Peek();
+            if (ch != -1)
+            {
+                return ch;
+            }
+
+            try
+            {
+                this.charStream.Push(ch = inp.Read());
+                return ch;
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.Warn("On input, exception: " + ex);
+                return -1;
+            }
+        }
+
         /// <summary>
-        /// Gets the next token from the input port.
+        /// Pop a buffered character, if one is availab.e
+        /// Otherwise read one from the stream.
+        /// </summary>
+        /// <param name="inp">The input stream to read from.</param>
+        /// <returns>The character read.</returns>
+        private int ReadOrPop(TextReader inp)
+        {
+            int ch = this.charStream.Pop();
+            if (ch != -1)
+            {
+                return ch;
+            }
+
+            return inp.Read();
+        }
+
+        /// <summary>
+        /// Read the next character from the reader.
+        /// If there is a buffered character, throw it away and give a warning.
+        /// </summary>
+        /// <param name="inp">The input stream to read from.</param>
+        /// <returns>The character read.</returns>
+        private int ReadNextChar(TextReader inp)
+        {
+            int ch = this.charStream.Pop();
+            if (ch != -1)
+            {
+                    ErrorHandlers.IoError("Read bypassed pushed char.");
+            }
+
+            return inp.Read();
+        }
+
+        /// <summary>
+        /// Gets the next token from the input stream.
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
         /// <returns>the next token.</returns>
-        private object NextToken()
+        private object NextToken(TextReader inp)
         {
             // See if we should re-use a pushed token or character
             object token = this.tokStream.GetPushedToken();
@@ -146,12 +180,12 @@ namespace SimpleScheme
                 return token;
             }
 
-            int ch = this.inStream.ReadOrPop();
+            int ch = this.ReadOrPop(inp);
 
             // Skip whitespace
             while (char.IsWhiteSpace((char)ch))
             {
-                ch = this.inStream.ReadChar();
+                ch = this.ReadNextChar(inp);
             }
 
             // See what kind of non-whitespace character we got
@@ -173,29 +207,29 @@ namespace SimpleScheme
                     return "`";
 
                 case ',':
-                    ch = this.inStream.ReadChar();
+                    ch = this.ReadNextChar(inp);
                     if (ch == '@')
                     {
                         return ",@";
                     }
 
-                    this.inStream.PushChar(ch);
+                    this.charStream.Push(ch);
                     return ",";
 
                 case ';':
                     while (ch != -1 && ch != '\n' && ch != '\r')
                     {
-                        ch = this.inStream.ReadChar();
+                        ch = this.ReadNextChar(inp);
                     }
 
-                    return this.NextToken();
+                    return this.NextToken(inp);
 
                 case '"':
                     {
                         StringBuilder buff = new StringBuilder { Length = 0 };
-                        while ((ch = this.inStream.ReadChar()) != '"' & ch != -1)
+                        while ((ch = this.ReadNextChar(inp)) != '"' & ch != -1)
                         {
-                            buff.Append((char)((ch == '\\') ? this.inStream.ReadChar() : ch));
+                            buff.Append((char)((ch == '\\') ? this.ReadNextChar(inp) : ch));
                         }
 
                         if (ch == -1)
@@ -207,7 +241,7 @@ namespace SimpleScheme
                     }
 
                 case '#':
-                    switch (ch = this.inStream.ReadChar())
+                    switch (ch = this.ReadNextChar(inp))
                     {
                         case 't':
                         case 'T':
@@ -218,15 +252,15 @@ namespace SimpleScheme
                             return SchemeBoolean.False;
 
                         case '(':
-                            this.inStream.PushChar('(');
-                            return Vector.New(this.Read());
+                            this.charStream.Push('(');
+                            return Vector.FromList(this.Read(inp));
 
                         case '\\':
-                            ch = this.inStream.ReadChar();
+                            ch = this.ReadNextChar(inp);
                             if (ch == 's' || ch == 'S' || ch == 'n' || ch == 'N')
                             {
-                                this.inStream.PushChar(ch);
-                                token = this.NextToken();
+                                this.charStream.Push(ch);
+                                token = this.NextToken(inp);
                                 if (token is string && (token as string).Length == 1)
                                 {
                                     return Character.Chr((char)ch);
@@ -252,17 +286,17 @@ namespace SimpleScheme
                         case 'e':
                         case 'i':
                         case 'd':
-                            return this.NextToken();
+                            return this.NextToken(inp);
 
                         case 'b':
                         case 'o':
                         case 'x':
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
-                            return this.NextToken();
+                            return this.NextToken(inp);
 
                         default:
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
-                            return this.NextToken();
+                            return this.NextToken(inp);
                     }
 
                 default:
@@ -272,13 +306,13 @@ namespace SimpleScheme
                         do
                         {
                             buff.Append((char)ch);
-                            ch = this.inStream.ReadChar();
+                            ch = this.ReadNextChar(inp);
                         } 
                         while (!char.IsWhiteSpace((char)ch) && ch != -1 && 
                             ch != '(' && ch != ')' && ch != '\'' &&
                                  ch != ';' && ch != '"' && ch != ',' && ch != '`');
 
-                        this.inStream.PushChar(ch);
+                        this.charStream.Push(ch);
                         if (c == '.' || c == '+' || c == '-' || (c >= '0' && c <= '9'))
                         {
                             double value;
@@ -297,11 +331,12 @@ namespace SimpleScheme
         /// Read the tail of a list.
         /// The opening left paren has been read, also perhaps some of the list.
         /// </summary>
+        /// <param name="inp">The input stream.</param>
         /// <param name="dotOk">True if a dot is OK at this point.</param>
         /// <returns>A list of the tokens read.</returns>
-        private Obj ReadTail(bool dotOk)
+        private Obj ReadTail(TextReader inp, bool dotOk)
         {
-            object token = this.NextToken();
+            object token = this.NextToken(inp);
             if (token as string == InputPort.Eof)
             {
                 return ErrorHandlers.IoError("EOF during read.");
@@ -314,14 +349,14 @@ namespace SimpleScheme
 
             if (token as string == ".")
             {
-                if (! dotOk)
+                if (!dotOk)
                 {
                     ErrorHandlers.Warn("Dot not allowed here, ignored.");
-                    return this.ReadTail(false);
+                    return this.ReadTail(inp, false);
                 }
 
-                object result = this.Read();
-                token = this.NextToken();
+                object result = this.Read(inp);
+                token = this.NextToken(inp);
                 if (token as string != ")")
                 {
                     ErrorHandlers.Warn("Expecting ')' got " + token + " after dot");
@@ -331,7 +366,7 @@ namespace SimpleScheme
             }
 
             this.tokStream.PushToken(token);
-            return ListPrimitives.Cons(this.Read(), this.ReadTail(true));
+            return ListPrimitives.Cons(this.Read(inp), this.ReadTail(inp, true));
         }
         #endregion
 
@@ -343,11 +378,6 @@ namespace SimpleScheme
         private class CharacterStream
         {
             /// <summary>
-            /// The input port to read from.
-            /// </summary>
-            private readonly TextReader inp;
-
-            /// <summary>
             /// True if there is a pushed character.
             /// </summary>
             private bool isPushedChar; // = false;
@@ -358,48 +388,29 @@ namespace SimpleScheme
             private int pushedChar = -1;
 
             /// <summary>
-            /// Initializes a new instance of the Parser.CharacterStream class.
-            /// </summary>
-            /// <param name="inp">The input port to use for reading.</param>
-            internal CharacterStream(TextReader inp)
-            {
-                this.inp = inp;
-            }
-
-            /// <summary>
-            /// Read a character from the input, bypassing the pushed char.
-            /// </summary>
-            /// <returns>The next character in the stream.</returns>
-            internal int ReadChar()
-            {
-                if (this.isPushedChar)
-                {
-                    ErrorHandlers.IoError("Read bypassed pushed char.");
-                    this.isPushedChar = false;
-                }
-
-                return this.inp.Read();
-            }
-
-            /// <summary>
             /// Push a character back into the input.
             /// </summary>
             /// <param name="ch">The character to push.</param>
             /// <returns>The character that was pushed.</returns>
-            internal int PushChar(int ch)
+            internal void Push(int ch)
             {
                 this.isPushedChar = true;
                 this.pushedChar = ch;
-                return ch;
             }
 
             /// <summary>
-            /// Get a pushed char, if present, or else read one.
+            /// Get a pushed char, if present, or else return -1.
             /// </summary>
-            /// <returns>The next character in the stream.</returns>
-            internal int ReadOrPop()
+            /// <returns>The pushed character.</returns>
+            internal int Pop()
             {
-                return this.isPushedChar ? this.PopChar() : this.inp.Read();
+                if (this.isPushedChar)
+                {
+                    this.isPushedChar = false;
+                    return this.pushedChar;
+                }
+
+                return -1;
             }
 
             /// <summary>
@@ -407,7 +418,7 @@ namespace SimpleScheme
             /// If so, return it.
             /// </summary>
             /// <returns>The pushed character, or -1 if EOF, or -2 if there is no pushed character.</returns>
-            internal int GetPushedChar()
+            internal int Get()
             {
                 if (this.isPushedChar)
                 {
@@ -425,45 +436,12 @@ namespace SimpleScheme
 
             /// <summary>
             /// Take a peek at the next character, without consuming it.
-            /// Either read and save a character, to take a look at an already saved character.
+            /// If there is none, return -1.
             /// </summary>
-            /// <returns>The next character (as a character).</returns>
-            internal int PeekCh()
+            /// <returns>The next character (as an int).</returns>
+            internal int Peek()
             {
-                try
-                {
-                    return this.isPushedChar ? this.pushedChar : this.PushChar(this.inp.Read());
-                }
-                catch (IOException ex)
-                {
-                    ErrorHandlers.Warn("On input, exception: " + ex);
-                    return -1;
-                }
-            }
-
-            /// <summary>
-            /// Close the input port.
-            /// </summary>
-            internal void Close()
-            {
-                try
-                {
-                    this.inp.Close();
-                }
-                catch (IOException ex)
-                {
-                    ErrorHandlers.IoError("IOException on close: " + ex);
-                }
-            }
-
-            /// <summary>
-            /// Get the character that had been pushed.
-            /// </summary>
-            /// <returns>The character that was pushed.</returns>
-            private int PopChar()
-            {
-                this.isPushedChar = false;
-                return this.pushedChar;
+                return this.isPushedChar ? this.pushedChar : -1;
             }
         }
 

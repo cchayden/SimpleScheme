@@ -16,22 +16,10 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the PrimitiveEnvironment class.
         /// </summary>
-        private PrimitiveEnvironment() :
+        public PrimitiveEnvironment() :
             base(NullInterp, Empty)
         {
             this.InstallPrimitives();
-        }
-        #endregion
-
-        #region Static Methods
-        /// <summary>
-        /// Create a new primitive environment.
-        /// This is used to share the primitives among several interpreters.
-        /// </summary>
-        /// <returns>The primitive environment.</returns>
-        public static PrimitiveEnvironment New()
-        {
-            return new PrimitiveEnvironment();
         }
         #endregion
 

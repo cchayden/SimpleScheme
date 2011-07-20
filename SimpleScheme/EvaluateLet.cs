@@ -140,7 +140,7 @@ namespace SimpleScheme
             if (this.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(Closure.New(this.vars, this.body, this.Env), this.inits, this.Env, this.Caller);
+                return EvaluateProc.Call(new Closure(this.vars, this.body, this.Env), this.inits, this.Env, this.Caller);
             }
 
             // named let -- eval the inits in the outer environment
@@ -156,7 +156,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper ApplyNamedLet()
         {
-            Closure fn = Closure.New(this.vars, this.body, this.Env);
+            Closure fn = new Closure(this.vars, this.body, this.Env);
             fn.Env.Define(this.name, fn);
             return fn.Apply(ReturnedExpr, this.Caller.Env, this.Caller);
         }

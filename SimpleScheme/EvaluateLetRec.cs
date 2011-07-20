@@ -148,7 +148,7 @@ namespace SimpleScheme
                 return ContinueHere(this.ApplyProc);
             }
 
-            Closure fun = Closure.New(this.formals, MakeList(First(this.inits)), this.Env);  
+            Closure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);  
             return fun.ApplyWithtEnv(this.Env, ContinueHere(this.BindVarToInit));
         }
 
@@ -182,7 +182,7 @@ namespace SimpleScheme
             }
 
             // apply the fun to the vals and return
-            Closure fun = Closure.New(this.formals, this.body, this.Env);
+            Closure fun = new Closure(this.formals, this.body, this.Env);
             return fun.ApplyWithtEnv(this.Env, this.Caller);
         }
         #endregion

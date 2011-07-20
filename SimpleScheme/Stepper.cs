@@ -275,7 +275,7 @@ namespace SimpleScheme
         /// <param name="parent">The existing environment.</param>
         protected void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
         {
-            this.Env = Environment.New(formals, vals, parent.LexicalParent);
+            this.Env = new Environment(formals, vals, parent.LexicalParent);
         }
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace SimpleScheme
         /// <param name="parent">The lexically enclosing environment.</param>
         protected void PushEnvironment(Obj formals, Obj vals, Environment parent)
         {
-            this.Env = Environment.New(formals, vals, parent);
+            this.Env = new Environment(formals, vals, parent);
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace SimpleScheme
         /// <param name="parent">The lexically enclosing environment.</param>
         protected void PushEmptyEnvironment(Environment parent)
         {
-            this.Env = Environment.NewEmpty(parent);
+            this.Env = new Environment(parent);
         }
 
         /// <summary>

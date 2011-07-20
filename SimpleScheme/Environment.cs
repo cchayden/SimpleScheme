@@ -17,7 +17,7 @@ namespace SimpleScheme
     /// </summary>
     public class Environment : ListPrimitives, IEnvironment
     {
-        #region Fields
+        #region Constants
         /// <summary>
         /// Represents the end of the environment chain.
         /// </summary>
@@ -27,7 +27,9 @@ namespace SimpleScheme
         /// Used for an interpreter with no environment (the primitive environment).
         /// </summary>
         protected const Interpreter NullInterp = null;
+        #endregion
 
+        #region Fields
         /// <summary>
         /// The symbol table for this enviornment.
         /// </summary>
@@ -47,7 +49,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        protected Environment(Interpreter interp, Environment lexicalParent)
+        internal Environment(Interpreter interp, Environment lexicalParent)
         {
             this.Interp = interp;
             this.LexicalParent = lexicalParent;
@@ -59,17 +61,26 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Creates a new empty environment.
+        /// </summary>
+        /// <param name="lexicalParent">The lexically enclosing environment.</param>
+        /// <returns>The new environment.</returns>
+        internal Environment(Environment lexicalParent) : 
+            this(lexicalParent.Interp, lexicalParent)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the Environment class.
         /// Start out with a set of variable bindings and a lexical parent environment.
         /// The initial variable bindings are the formal parameters and the corresponding argument values.
         /// </summary>
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
-        /// <param name="interp">The interpreter, always the parent's interpreter.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        private Environment(Obj formals, Obj vals, Interpreter interp, Environment lexicalParent)
+        internal Environment(Obj formals, Obj vals, Environment lexicalParent)
         {
-            this.Interp = interp;
+            this.Interp = lexicalParent.Interp;
             this.LexicalParent = lexicalParent;
             int count;
             if (!CheckArgCount(formals, vals, out count))
@@ -128,48 +139,6 @@ namespace SimpleScheme
             }
 
             ErrorHandlers.SemanticError("Bad variable in define: " + var);
-        }
-        #endregion
-
-        #region Internal Static Methods
-        /// <summary>
-        /// Creates a new global environment.
-        /// In this case, parent is a primitive environment.
-        /// When other environments are created, they grab the interpreter from their parent, so all environments
-        ///   have the same interpeter, but no one has to search down for it.
-        /// </summary>
-        /// <param name="interp">The interpreter.</param>
-        /// <param name="primEnvironment">The parent environment, a primitive environment.</param>
-        /// <returns>The global environment.</returns>
-        internal static Environment NewGlobal(Interpreter interp, PrimitiveEnvironment primEnvironment)
-        {
-            return new Environment(interp, primEnvironment);
-        }
-
-        /// <summary>
-        /// Creates a new empty environment.
-        /// </summary>
-        /// <param name="parent">The lexically enclosing environment.</param>
-        /// <returns>The new environment.</returns>
-        internal static Environment NewEmpty(Environment parent)
-        {
-            return new Environment(parent.Interp, parent);
-        }
-
-        /// <summary>
-        /// Create a new Environment.
-        /// This is for where there is a new binding context.
-        /// Start out with a set of variable bindings and a parent environment.
-        /// The initial variable bindings are the formal parameters and the corresponding argument values.
-        /// The new environment uses the same interperter as its parent.
-        /// </summary>
-        /// <param name="formals">A list of variable names.</param>
-        /// <param name="vals">The values for these variables.</param>
-        /// <param name="parent">The lexically enclosing environment.</param>
-        /// <returns>The new environment.</returns>
-        internal static Environment New(Obj formals, Obj vals, Environment parent)
-        {
-            return new Environment(formals, vals, parent.Interp, parent);
         }
         #endregion
 

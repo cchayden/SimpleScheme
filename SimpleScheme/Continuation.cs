@@ -22,7 +22,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Continuation class.
         /// </summary>
         /// <param name="step">The continuation to return to when applied.</param>
-        private Continuation(Stepper step)
+        internal Continuation(Stepper step)
         {
             this.step = step.Caller;
         }
@@ -37,18 +37,6 @@ namespace SimpleScheme
         public override string ToString()
         {
             return string.Format("call-with-current-continuation {0}", this.step.Expr);
-        }
-        #endregion
-
-        #region Static Internal Methods
-        /// <summary>
-        /// Create a new continuation.
-        /// </summary>
-        /// <param name="step">The continuation to return to when applied.</param>
-        /// <returns>The continuation.</returns>
-        internal static Continuation New(Stepper step)
-        {
-            return new Continuation(step);
         }
         #endregion
 

@@ -39,10 +39,10 @@ namespace Tests
             using (StringReader reader = new StringReader("abc"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual('a', port.Parser.ReadChar());
-                Assert.AreEqual('b', port.Parser.ReadChar());
-                Assert.AreEqual('c', port.Parser.ReadChar());
-                Assert.AreEqual(InputPort_Accessor.Eof, port.Parser.ReadChar());
+                Assert.AreEqual('a', port.parser.ReadChar(port.inp));
+                Assert.AreEqual('b', port.parser.ReadChar(port.inp));
+                Assert.AreEqual('c', port.parser.ReadChar(port.inp));
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(port.inp));
             }
         }
 
@@ -55,9 +55,9 @@ namespace Tests
             using (StringReader reader = new StringReader("a"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual('a', port.Parser.PeekChar());
-                Assert.AreEqual('a', port.Parser.ReadChar());
-                Assert.AreEqual(InputPort_Accessor.Eof, port.Parser.ReadChar());
+                Assert.AreEqual('a', port.parser.PeekChar(port.inp));
+                Assert.AreEqual('a', port.parser.ReadChar(port.inp));
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(port.inp));
             }
         }
 
@@ -70,10 +70,10 @@ namespace Tests
             using (StringReader reader = new StringReader("a"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual('a', port.Parser.PeekChar());
-                Assert.AreEqual('a', port.Parser.ReadChar());
-                port.Parser.PeekChar();
-                Assert.AreEqual(InputPort_Accessor.Eof, port.Parser.ReadChar());
+                Assert.AreEqual('a', port.parser.PeekChar(port.inp));
+                Assert.AreEqual('a', port.parser.ReadChar(port.inp));
+                port.parser.PeekChar(port.inp);
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(port.inp));
             }
         }
 
@@ -154,15 +154,15 @@ namespace Tests
             using (StringReader reader = new StringReader("#\\stop"))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual('s', accessor.Parser.NextToken());
-                Assert.AreEqual("stop", accessor.Parser.NextToken());
+                Assert.AreEqual('s', accessor.parser.NextToken(reader));
+                Assert.AreEqual("stop", accessor.parser.NextToken(reader));
             }
 
             using (StringReader reader = new StringReader("#\\s top"))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual('s', accessor.Parser.NextToken());
-                Assert.AreEqual("top", accessor.Parser.NextToken());
+                Assert.AreEqual('s', accessor.parser.NextToken(reader));
+                Assert.AreEqual("top", accessor.parser.NextToken(reader));
             }
         }
 
@@ -261,7 +261,7 @@ namespace Tests
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                var actual = accessor.Parser.NextToken();
+                var actual = accessor.parser.NextToken(reader);
                 if (actual is string)
                 {
                     Assert.AreEqual(expected, actual);
@@ -295,7 +295,7 @@ namespace Tests
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual(expected, accessor.Parser.NextToken());
+                Assert.AreEqual(expected, accessor.parser.NextToken(reader));
             }
         }
 
@@ -309,7 +309,7 @@ namespace Tests
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                var actual = accessor.Parser.NextToken() as object[];
+                var actual = accessor.parser.NextToken(reader) as object[];
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Length, actual.Length);
                 for (int i = 0; i < expected.Length; i++)
@@ -329,7 +329,7 @@ namespace Tests
             using (StringReader reader = new StringReader(input))
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual(expected, accessor.Parser.NextToken());
+                Assert.AreEqual(expected, accessor.parser.NextToken(reader));
             }
         }
     }

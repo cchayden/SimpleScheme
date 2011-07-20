@@ -145,7 +145,7 @@ namespace SimpleScheme
                 return ContinueHere(this.ApplyLambda);
             }
 
-            Procedure fun = Closure.New(this.formals, MakeList(First(this.inits)), this.Env);
+            Procedure fun = new Closure(this.formals, MakeList(First(this.inits)), this.Env);
             return fun.Apply(this.vals, this.Env, ContinueHere(this.BindVarToInit));
         }
 
@@ -171,7 +171,7 @@ namespace SimpleScheme
         private Stepper ApplyLambda()
         {
             // apply the fun to the vals
-            Procedure fun = Closure.New(this.formals, this.body, this.Env);
+            Procedure fun = new Closure(this.formals, this.body, this.Env);
             return fun.Apply(this.vals, this.Caller.Env, this.Caller);
         }
         #endregion

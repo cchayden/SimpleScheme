@@ -139,7 +139,7 @@ namespace SimpleScheme
             }
 
             // prepare test proc to execute each time through
-            this.testProc = Closure.New(this.vars, MakeList(test), this.Env);
+            this.testProc = new Closure(this.vars, MakeList(test), this.Env);
 
             // push an empty environment, to hold the iteration variables
             this.PushEmptyEnvironment(this.Env);

@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.IO;
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -17,25 +16,29 @@ namespace SimpleScheme
         /// Marks the end of the input file.
         /// </summary>
         internal const string Eof = "#!EOF";
+
+        /// <summary>
+        /// The input comes from this TextReader.
+        /// </summary>
+        private readonly TextReader inp;
+
+        /// <summary>
+        /// This is used to parse the input.
+        /// It holds a little state: a single character or a single token read-ahead.
+        /// </summary>
+        private readonly Parser parser = new Parser();
         #endregion
 
-        #region Construcors
+        #region Construcor
         /// <summary>
         /// Initializes a new instance of the InputPort class.
+        /// Store the TextReader and initialize the parser.
         /// </summary>
         /// <param name="inp">A text reader.</param>
-        private InputPort(TextReader inp)
+        internal InputPort(TextReader inp)
         {
-            this.Parser = new Parser(inp);
+            this.inp = inp;
         }
-        #endregion
-
-        #region Accessors
-
-        /// <summary>
-        /// Gets the parser.
-        /// </summary>
-        internal Parser Parser { get; private set; }
         #endregion
 
         #region Define Primitives
@@ -79,17 +82,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
-        /// <summary>
-        /// Creates a new InputPort.
-        /// </summary>
-        /// <param name="inp">A text reader</param>
-        /// <returns>A new InputPort.</returns>
-        internal static InputPort New(TextReader inp)
-        {
-            return new InputPort(inp);
-        }
-
+        #region Static Methods
         /// <summary>
         /// Tests the obj against EOF.
         /// </summary>
@@ -126,7 +119,7 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         internal Obj ReadObj()
         {
-            return this.Parser.Read();
+            return this.parser.Read(this.inp);
         }
 
         /// <summary>
@@ -136,7 +129,14 @@ namespace SimpleScheme
         /// <returns>The undefined instance.</returns>
         internal Obj Close()
         {
-            this.Parser.Close();
+            try
+            {
+                this.inp.Close();
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.IoError("IOException on close: " + ex);
+            }
             return Undefined.Instance;
         }
         #endregion
@@ -178,7 +178,7 @@ namespace SimpleScheme
         private static Obj PeekChar(Obj port, Stepper caller)
         {
             InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
-            return p.Parser.PeekChar();
+            return p.parser.PeekChar(p.inp);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace SimpleScheme
         private static Obj Read(Obj port, Stepper caller)
         {
             InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
-            return p.Parser.Read();
+            return p.parser.Read(p.inp);
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace SimpleScheme
         private static Obj ReadChar(Obj port, Stepper caller)
         {
             InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
-            return p.Parser.ReadChar();
+            return p.parser.ReadChar(p.inp);
         }
         #endregion
     }

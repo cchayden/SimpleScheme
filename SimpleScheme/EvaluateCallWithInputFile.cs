@@ -74,7 +74,7 @@ namespace SimpleScheme
         {
             try
             {
-                return InputPort.New(new StreamReader(Printer.AsString(filename, false)));
+                return new InputPort(new StreamReader(Printer.AsString(filename, false)));
             }
             catch (FileNotFoundException)
             {

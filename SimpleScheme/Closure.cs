@@ -25,7 +25,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        protected Closure(Obj formalParameters, Obj body, Environment env)
+        internal Closure(Obj formalParameters, Obj body, Environment env)
         {
             this.FormalParameters = formalParameters;
             this.Env = env;
@@ -64,19 +64,6 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Create a new Closure
-        /// </summary>
-        /// <param name="formalParameters">A list of variable names, to be matched with 
-        ///    values given later.</param>
-        /// <param name="body">The program to execute.</param>
-        /// <param name="env">The environment in which to execute it.</param>
-        /// <returns>An instance of the Closure class.</returns>
-        internal static Closure New(Obj formalParameters, Obj body, Environment env)
-        {
-            return new Closure(formalParameters, body, env);
-        }
-
-        /// <summary>
         /// Actually executes the saved program, with the given arguments matched with the 
         ///   list of variable names saved when the closure was created.
         /// Creates a new environment, linked to the one given (which should be the lexical parent).
@@ -87,7 +74,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         internal override Stepper Apply(Obj args, Environment env, Stepper caller)
         {
-            return EvaluateSequence.Call(this.Body, Environment.New(this.FormalParameters, args, this.Env), caller);
+            return EvaluateSequence.Call(this.Body, new Environment(this.FormalParameters, args, this.Env), caller);
         }
 
         /// <summary>

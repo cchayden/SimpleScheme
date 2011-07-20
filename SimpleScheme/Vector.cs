@@ -37,30 +37,6 @@ namespace SimpleScheme
             return Vec(ErrorHandlers.TypeError(TypePrimitives.VectorName, obj));
         }
 
-        /// <summary>
-        /// Creates the vector from a list of values.
-        /// </summary>
-        /// <param name="objs">A list of values to put in the vector.</param>
-        /// <returns>A vector of the objs.</returns>
-        public static Obj[] New(object objs)
-        {
-            Obj[] vec = new Obj[Length(objs)];
-
-            if (!TypePrimitives.IsPair(objs))
-            {
-                return vec;
-            }
-
-            int i = 0;
-            while (TypePrimitives.IsPair(objs))
-            {
-                vec[i++] = First(objs);
-                objs = Rest(objs);
-            }
-
-            return vec;
-        }
-
         #endregion
 
         #region Define Primitives
@@ -73,12 +49,12 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (args, caller) => New(First(args)), 1)
+                .DefinePrimitive("list->vector", (args, caller) => FromList(First(args)), 1)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (args, caller) => New(First(args), Second(args)), 1, 2)
+                .DefinePrimitive("make-vector", (args, caller) => MakeVector(First(args), Second(args)), 1, 2)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
-                .DefinePrimitive("vector", (args, caller) => New(args), 0, MaxInt)
+                .DefinePrimitive("vector", (args, caller) => FromList(args), 0, MaxInt)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
                 .DefinePrimitive("vector->list", (args, caller) => VectorToList(First(args)), 1)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
@@ -96,22 +72,24 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Create a vector from a length and an optional fill value.
+        /// Creates the vector from a list of values.
         /// </summary>
-        /// <param name="length">The vector length.</param>
-        /// <param name="fill">The value to initialize the vector entries to.</param>
-        /// <returns>A vector of the objs filled with the fill object.</returns>
-        internal static Obj[] New(object length, object fill)
+        /// <param name="objs">A list of values to put in the vector.</param>
+        /// <returns>A vector of the objs.</returns>
+        internal static Obj[] FromList(object objs)
         {
-            Obj[] vec = new object[(int)Number.Num(length)];
-            if (TypePrimitives.IsEmptyList(fill))
+            Obj[] vec = new Obj[Length(objs)];
+
+            if (!TypePrimitives.IsPair(objs))
             {
-                fill = Undefined.Instance;
+                return vec;
             }
 
-            for (int i = 0; i < vec.Length; i++)
+            int i = 0;
+            while (TypePrimitives.IsPair(objs))
             {
-                vec[i] = fill;
+                vec[i++] = First(objs);
+                objs = Rest(objs);
             }
 
             return vec;
@@ -151,6 +129,28 @@ namespace SimpleScheme
         #endregion
 
         #region Private Static Methods
+        /// <summary>
+        /// Create a vector from a length and an optional fill value.
+        /// </summary>
+        /// <param name="length">The vector length.</param>
+        /// <param name="fill">The value to initialize the vector entries to.</param>
+        /// <returns>A vector of the objs filled with the fill object.</returns>
+        private static Obj[] MakeVector(object length, object fill)
+        {
+            Obj[] vec = new object[(int)Number.Num(length)];
+            if (TypePrimitives.IsEmptyList(fill))
+            {
+                fill = Undefined.Instance;
+            }
+
+            for (int i = 0; i < vec.Length; i++)
+            {
+                vec[i] = fill;
+            }
+
+            return vec;
+        }
+
         /// <summary>
         /// Set a vector element.
         /// </summary>
