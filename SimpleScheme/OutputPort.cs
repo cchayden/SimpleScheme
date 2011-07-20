@@ -5,7 +5,6 @@ namespace SimpleScheme
 {
     using System;
     using System.IO;
-    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -15,29 +14,10 @@ namespace SimpleScheme
     {
         #region Constructor
         /// <summary>
-        /// Initializes a new instance of the OutputPort class.
+        /// Prevents a default instance of the OutputPort class from being created.
         /// </summary>
-        /// <param name="outp">The output port to use for writing.</param>
-        private OutputPort(TextWriter outp)
+        private OutputPort()
         {
-            this.Outp = outp;
-        }
-        #endregion
-
-        /// <summary>
-        /// Gets the output port to write to.
-        /// </summary>
-        internal TextWriter Outp { get; private set; }
-
-        #region Internal Static Methods.
-        /// <summary>
-        /// Creates a new OutputPort.
-        /// </summary>
-        /// <param name="outp">The output port to use for writing.</param>
-        /// <returns>The new OutputPort.</returns>
-        internal static OutputPort New(TextWriter outp)
-        {
-            return new OutputPort(outp);
         }
         #endregion
 
@@ -81,61 +61,17 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
-        /// <summary>
-        /// Write the given expression on the curent port, with quoting.
-        /// </summary>
-        /// <param name="expr">The expression to write.</param>
-        internal void Write(Obj expr)
-        {
-            WriteObj(expr, this, true);
-        }
-
-        /// <summary>
-        /// Close the output port.
-        /// </summary>
-        internal void Close()
-        {
-            this.Outp.Close();
-        }
-
-        /// <summary>
-        /// Flush the output port.
-        /// </summary>
-        internal void Flush()
-        {
-            this.Outp.Flush();
-        }
-
-        /// <summary>
-        /// Print the obj on the output port.
-        /// </summary>
-        /// <param name="expr">The obj to print.</param>
-        internal void Print(Obj expr)
-        {
-            this.Outp.Write(expr);
-        }
-
-        /// <summary>
-        /// Print a newline to the output port.
-        /// </summary>
-        internal void Println()
-        {
-            this.Outp.WriteLine();
-        }
-        #endregion
-
         #region Private Static Methods
         /// <summary>
         /// Check that the given object is an output port.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The output port.</returns>
-        private static OutputPort OutPort(Obj obj)
+        private static TextWriter OutPort(Obj obj)
         {
             if (TypePrimitives.IsOutputPort(obj))
             {
-                return (OutputPort)obj;
+                return (TextWriter)obj;
             }
 
             ErrorHandlers.TypeError(TypePrimitives.OutputPortName, obj);
@@ -149,9 +85,9 @@ namespace SimpleScheme
         /// <param name="port">The output port.</param>
         /// <param name="quoted">Whether to quote strings and chars.</param>
         /// <returns>Undefined value.</returns>
-        private static Obj WriteObj(Obj expr, OutputPort port, bool quoted)
+        private static Obj WriteObj(Obj expr, TextWriter port, bool quoted)
         {
-            port.Print(Printer.AsString(expr, quoted));
+            port.Write(Printer.AsString(expr, quoted));
             port.Flush();
             return Undefined.Instance;
         }
@@ -166,7 +102,7 @@ namespace SimpleScheme
         /// <returns>The undefined object.</returns>
         private static Obj Display(Obj expr, Obj port, Stepper caller)
         {
-            OutputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
+            TextWriter p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
             return WriteObj(expr, p, false);
         }
 
@@ -180,7 +116,7 @@ namespace SimpleScheme
         /// <returns>The undefined object.</returns>
         private static Obj Write(Obj expr, Obj port, Stepper caller)
         {
-            OutputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
+            TextWriter p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
             return WriteObj(expr, p, true);
         }
 
@@ -194,7 +130,7 @@ namespace SimpleScheme
         /// <returns>The undefined object.</returns>
         private static Obj WriteChar(Obj expr, Obj port, Stepper caller)
         {
-            OutputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
+            TextWriter p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
             return WriteObj(expr, p, false);
         }
 
@@ -217,7 +153,7 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         private static Obj CloseOutputPort(Obj port, Stepper caller)
         {
-            OutputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
+            TextWriter p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
             p.Close();
             return Undefined.Instance;
         }
@@ -230,8 +166,8 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         private static Obj Newline(Obj port, Stepper caller)
         {
-            OutputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
-            p.Println();
+            TextWriter p = TypePrimitives.IsEmptyList(port) ? caller.CurrentOutputPort : OutPort(port);
+            p.WriteLine();
             p.Flush();
             return Undefined.Instance;
         }

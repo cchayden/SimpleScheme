@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.IO;
     using Obj = System.Object;
 
     /// <summary>
@@ -264,7 +265,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme output port.</returns>
         public static bool IsOutputPort(Obj obj)
         {
-            return obj is OutputPort;
+            return obj is TextWriter;
         }
 
         /// <summary>

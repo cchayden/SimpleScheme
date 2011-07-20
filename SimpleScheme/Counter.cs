@@ -116,7 +116,7 @@ namespace SimpleScheme
         {
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
-            caller.CurrentOutputPort.Outp.WriteLine(sb.ToString());
+            caller.CurrentOutputPort.WriteLine(sb.ToString());
             return Undefined.Instance;
         }
 

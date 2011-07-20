@@ -12,6 +12,15 @@ namespace SimpleScheme
     /// </summary>
     public class Symbol : ListPrimitives
     {
+        #region Constructors
+        /// <summary>
+        /// Prevents a default instance of the Symbol class from being created.
+        /// </summary>
+        private Symbol()
+        {
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Check that the object is a symbol.

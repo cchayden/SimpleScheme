@@ -23,6 +23,15 @@ namespace SimpleScheme
         internal const bool False = false;
         #endregion
 
+        #region Constructors
+        /// <summary>
+        /// Prevents a default instance of the SchemeBoolean class from being created.
+        /// </summary>
+        private SchemeBoolean()
+        {
+        }
+        #endregion
+
         #region Internal Static Methods
         /// <summary>
         /// Equality test for two objs.

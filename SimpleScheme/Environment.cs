@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.Collections.Generic;
+    using System.IO;
     using System.Text;
     using Obj = System.Object;
 
@@ -266,9 +267,9 @@ namespace SimpleScheme
         /// Dump the environment.
         /// </summary>
         /// <param name="port">The port to dump the environment to.</param>
-        internal void DumpEnv(OutputPort port)
+        internal void DumpEnv(TextWriter port)
         {
-            port.Outp.WriteLine(this.Dump(100, 0));
+            port.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>

@@ -11,6 +11,15 @@ namespace SimpleScheme
     /// </summary>
     public class Character : ListPrimitives
     {
+        #region Constructors
+        /// <summary>
+        /// Prevents a default instance of the Character class from being created.
+        /// </summary>
+        private Character()
+        {
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Checks that the object is a character.

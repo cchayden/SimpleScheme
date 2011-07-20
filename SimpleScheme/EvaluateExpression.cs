@@ -48,7 +48,7 @@ namespace SimpleScheme
             ContinueHere(this.InitialStep);
             if (caller.TraceFlag)
             {
-                caller.CurrentOutputPort.Outp.WriteLine("evaluate: {0} {1}", fn, args);
+                caller.CurrentOutputPort.WriteLine("evaluate: {0} {1}", fn, args);
             }
 
             IncrementCounter(counter);

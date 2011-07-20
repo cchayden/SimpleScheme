@@ -13,6 +13,15 @@ namespace SimpleScheme
     /// </summary>
     public sealed class SchemeString : ListPrimitives
     {
+        #region Constructors
+        /// <summary>
+        /// Prevents a default instance of the SchemeString class from being created.
+        /// </summary>
+        private SchemeString()
+        {
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Check that an oject is a scheme string.

@@ -108,7 +108,7 @@ namespace SimpleScheme
         {
             if (Caller.TraceFlag)
             {
-                Caller.CurrentOutputPort.Outp.WriteLine("evaluate-closure: ({0} {1})", this.f.Name, First(ReturnedExpr));
+                Caller.CurrentOutputPort.WriteLine("evaluate-closure: ({0} {1})", this.f.Name, First(ReturnedExpr));
             }
 
             this.PushEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);

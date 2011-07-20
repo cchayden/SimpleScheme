@@ -47,7 +47,7 @@ namespace SimpleScheme
             this.Trace = false;
             this.Count = false;
             this.Input = InputPort.New(reader ?? Console.In);
-            this.Output = OutputPort.New(writer ?? Console.Out);
+            this.Output = writer ?? Console.Out;
             this.PrimEnvironment = primEnvironment ?? PrimitiveEnvironment.New();
 
             this.Counters = new Counter();
@@ -109,7 +109,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal OutputPort Output { get; private set; }
+        internal TextWriter Output { get; private set; }
 
         /// <summary>
         /// Gets the counters collection.
@@ -226,7 +226,7 @@ namespace SimpleScheme
             try
             {
                 Obj expr;
-                this.Output.Print("> ");
+                this.Output.Write("> ");
                 this.Output.Flush();
                 if (InputPort.IsEof(expr = this.Input.ReadObj()))
                 {
@@ -241,7 +241,7 @@ namespace SimpleScheme
                             if (val != Undefined.Instance)
                             {
                                 this.Output.Write(val);
-                                this.Output.Println();
+                                this.Output.WriteLine();
                                 this.Output.Flush();
                             }
                         },
@@ -456,7 +456,7 @@ namespace SimpleScheme
             try
             {
                 Obj expr;
-                this.Output.Print("> ");
+                this.Output.Write("> ");
                 this.Output.Flush();
                 if (InputPort.IsEof(expr = this.Input.ReadObj()))
                 {
@@ -467,7 +467,7 @@ namespace SimpleScheme
                 if (val != Undefined.Instance)
                 {
                     this.Output.Write(val);
-                    this.Output.Println();
+                    this.Output.WriteLine();
                     this.Output.Flush();
                 }
 
@@ -526,7 +526,7 @@ namespace SimpleScheme
         /// <returns>Undefined result.</returns>
         private static Obj Backtrace(Stepper caller)
         {
-            caller.CurrentOutputPort.Outp.WriteLine(caller.StackBacktrace());
+            caller.CurrentOutputPort.WriteLine(caller.StackBacktrace());
             return Undefined.Instance;
         }
         #endregion
@@ -549,7 +549,7 @@ namespace SimpleScheme
                 return;
             }
 
-            step.CurrentOutputPort.Outp.WriteLine("{0}: {1}", info, step.Expr);
+            step.CurrentOutputPort.WriteLine("{0}: {1}", info, step.Expr);
         }
         #endregion
     }

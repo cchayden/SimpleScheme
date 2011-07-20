@@ -25,6 +25,15 @@ namespace SimpleScheme
         internal const double One = 1.0D;
         #endregion
 
+        #region Constructors
+        /// <summary>
+        /// Prevents a default instance of the Number class from being created.
+        /// </summary>
+        private Number()
+        {
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Convert an obj (containing a number) into a double.

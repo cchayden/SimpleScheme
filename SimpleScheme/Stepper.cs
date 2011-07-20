@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.IO;
     using System.Text;
     using Obj = System.Object;
 
@@ -127,7 +128,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the current output port.
         /// </summary>
-        internal OutputPort CurrentOutputPort
+        internal TextWriter CurrentOutputPort
         {
             get { return this.Env.Interp.Output;  }
         }
