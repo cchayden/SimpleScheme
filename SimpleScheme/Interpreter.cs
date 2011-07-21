@@ -21,6 +21,11 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("step");
 
         /// <summary>
+        /// The interactive prompt.
+        /// </summary>
+        private const string Prompt = "> ";
+
+        /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
         private readonly Stepper halted;
@@ -46,11 +51,12 @@ namespace SimpleScheme
         {
             this.Trace = false;
             this.Count = false;
-            this.Input = new InputPort(reader ?? Console.In);
-            this.Output = new OutputPort(writer ?? Console.Out);
+            this.Transcript = new TranscriptLogger(this);
+            this.CurrentInputPort = new InputPort(reader ?? Console.In, this);
+            this.CurrentOutputPort = new OutputPort(writer ?? Console.Out, this);
             this.PrimEnvironment = primEnvironment ?? new PrimitiveEnvironment();
 
-            this.Counters = new Counter();
+            this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
             this.halted = new EvaluatorBase("halted", this.GlobalEnvironment, null);
 
@@ -107,17 +113,17 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the input port.
         /// </summary>
-        internal InputPort Input { get; private set; }
+        internal InputPort CurrentInputPort { get; private set; }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal OutputPort Output { get; private set; }
+        internal OutputPort CurrentOutputPort { get; private set; }
 
         /// <summary>
         /// Gets the counters collection.
         /// </summary>
-        internal Counter Counters { get; private set; }
+        internal Counter CurrentCounters { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
@@ -130,9 +136,9 @@ namespace SimpleScheme
         internal bool Count { get; set; }
 
         /// <summary>
-        /// Make the transcript to this TextWriter.
+        /// Gets the transcript logger.
         /// </summary>
-        internal TextWriter Transcript { get; private set; }
+        internal TranscriptLogger Transcript { get; private set; }
         #endregion
 
         #region Public Methods
@@ -231,14 +237,12 @@ namespace SimpleScheme
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
         public Obj ReadEvalPrint()
         {
-            const string prompt = "> ";
             try
             {
                 Obj expr;
-                this.Output.Write(prompt);
-                this.Output.Flush();
-                this.LogOutput(prompt, this.Output);
-                if (InputPort.IsEof(expr = this.Input.ReadObj()))
+                this.CurrentOutputPort.Write(Prompt);
+                this.CurrentOutputPort.Flush();
+                if (InputPort.IsEof(expr = this.CurrentInputPort.ReadObj()))
                 {
                     return InputPort.Eof;
                 }
@@ -247,9 +251,8 @@ namespace SimpleScheme
                 if (val != Undefined.Instance)
                 {
                     string output = Printer.AsString(val, false);
-                    this.Output.WriteLine(output);
-                    this.Output.Flush();
-                    this.LogOutputLine(output, this.Output);
+                    this.CurrentOutputPort.WriteLine(output);
+                    this.CurrentOutputPort.Flush();
                 }
 
                 return val;
@@ -267,14 +270,12 @@ namespace SimpleScheme
         /// <returns>If end of file, InputPort.Eof, otherwise the IAsyncResult.</returns>
         public IAsyncResult ReadEvalPrintAsync()
         {
-            const string prompt = "> ";
             try
             {
                 Obj expr;
-                this.Output.Write(prompt);
-                this.Output.Flush();
-                this.LogOutput(prompt, this.Output);
-                if (InputPort.IsEof(expr = this.Input.ReadObj()))
+                this.CurrentOutputPort.Write(Prompt);
+                this.CurrentOutputPort.Flush();
+                if (InputPort.IsEof(expr = this.CurrentInputPort.ReadObj()))
                 {
                     return new CompletedAsyncResult<string>(InputPort.Eof);
                 }
@@ -287,9 +288,8 @@ namespace SimpleScheme
                             if (val != Undefined.Instance)
                             {
                                 string output = Printer.AsString(val, false);
-                                this.Output.WriteLine(output);
-                                this.Output.Flush();
-                                this.LogOutputLine(output, this.Output);
+                                this.CurrentOutputPort.WriteLine(output);
+                                this.CurrentOutputPort.Flush();
                             }
                         },
                     null);
@@ -337,82 +337,13 @@ namespace SimpleScheme
             {
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
-                    this.Load(new InputPort(new StreamReader(fs)));
+                    this.Load(new InputPort(new StreamReader(fs), this));
                 }
             }
             catch (IOException)
             {
                 ErrorHandlers.IoError("Can't load " + name);
             }
-        }
-
-        /// <summary>
-        /// Turn on transcripts, writing to the given file.
-        /// </summary>
-        /// <param name="fileName"></param>
-        public void TranscriptOn(Object fileName)
-        {
-            if (this.Transcript != null)
-            {
-                this.Transcript.Close();
-            }
-
-            string name = Printer.AsString(fileName, false);
-            this.Transcript = new StreamWriter(new FileStream(name, FileMode.Create, FileAccess.Write));
-        }
-
-        /// <summary>
-        /// Turn off transcripts, and close the file.
-        /// </summary>
-        public void TranscriptOff()
-        {
-            if (this.Transcript != null)
-            {
-                this.Transcript.Close();
-                this.Transcript = null;
-            }
-        }
-
-        /// <summary>
-        /// Log input to the transcript file.
-        /// Do this only if the transcript is on, and the port is the current input port.
-        /// </summary>
-        /// <param name="str">The input to log.</param>
-        /// <param name="port">The port that it came from.</param>
-        public void LogInput(string str, InputPort port)
-        {
-            if (this.Transcript == null || port != this.Input)
-            {
-                return;
-            }
-
-            this.Transcript.Write(str);
-        }
-
-        /// <summary>
-        /// Log output to the transcript file.
-        /// Do this only if the transcript is on, and the port is the current output port.
-        /// </summary>
-        /// <param name="str">The output to log.</param>
-        /// <param name="port">The port that it was written to.</param>
-        public void LogOutput(string str, OutputPort port)
-        {
-            if (this.Transcript == null || port != this.Output)
-            {
-                return;
-            }
-
-            this.Transcript.Write(str);
-        }
-
-        public void LogOutputLine(string str, OutputPort port)
-        {
-            if (this.Transcript == null || port != this.Output)
-            {
-                return;
-            }
-
-            this.Transcript.WriteLine(str);
         }
 
         /// <summary>
@@ -449,7 +380,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                this.Load(new InputPort(reader));
+                this.Load(new InputPort(reader, this));
             }
         }
 
@@ -462,7 +393,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                return this.ReadEval(new InputPort(reader));
+                return this.ReadEval(new InputPort(reader, this));
             }
         }
         #endregion
@@ -572,7 +503,7 @@ namespace SimpleScheme
         {
             if (this.Count)
             {
-                this.Counters.Increment(counterId);
+                this.CurrentCounters.Increment(counterId);
             }
         }
         #endregion
@@ -586,7 +517,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static Obj SetTrace(Stepper caller, bool flag)
         {
-            caller.TraceFlag = flag;
+            caller.Interp.Trace = flag;
             return Undefined.Instance;
         }
 
@@ -598,7 +529,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static Obj SetCount(Stepper caller, bool flag)
         {
-            caller.CountFlag = flag;
+            caller.Interp.Count = flag;
             return Undefined.Instance;
         }
 
@@ -609,7 +540,7 @@ namespace SimpleScheme
         /// <returns>Undefined result.</returns>
         private static Obj Backtrace(Stepper caller)
         {
-            caller.CurrentOutputPort.WriteLine(caller.StackBacktrace());
+            caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
             return Undefined.Instance;
         }
         #endregion
@@ -632,7 +563,7 @@ namespace SimpleScheme
                 return;
             }
 
-            step.CurrentOutputPort.WriteLine(String.Format("{0}: {1}", info, step.Expr));
+            step.Interp.CurrentOutputPort.WriteLine(String.Format("{0}: {1}", info, step.Expr));
         }
         #endregion
     }

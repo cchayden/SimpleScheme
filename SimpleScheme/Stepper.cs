@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.IO;
     using System.Text;
     using Obj = System.Object;
 
@@ -75,11 +74,22 @@ namespace SimpleScheme
         #endregion
 
         #region Accessors
+
         /// <summary>
         /// Gets the stepper name, used for tracing and counters.
         /// Each subclass must implement.
         /// </summary>
         internal abstract string Name { get; }
+
+        /// <summary>
+        /// Gets the interpreter.
+        /// This contains the global interpretation state, such as the current ports, trace flags,
+        ///   and counters.
+        /// </summary>
+        internal Interpreter Interp
+        {
+            get { return this.Env.Interp; }
+        }
 
         /// <summary>
         /// Gets the expression being evaluated.  
@@ -115,48 +125,6 @@ namespace SimpleScheme
         internal Stepper CallerCaller
         {
             get { return this.caller.caller; }
-        }
-
-        /// <summary>
-        /// Gets the current input port.
-        /// </summary>
-        internal InputPort CurrentInputPort
-        {
-            get { return this.Env.Interp.Input;  }
-        }
-
-        /// <summary>
-        /// Gets the current output port.
-        /// </summary>
-        internal OutputPort CurrentOutputPort
-        {
-            get { return this.Env.Interp.Output;  }
-        }
-
-        /// <summary>
-        /// Gets the current counters class.
-        /// </summary>
-        internal Counter CurrentCounters
-        {
-            get { return this.Env.Interp.Counters; }
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to trace.
-        /// </summary>
-        internal bool TraceFlag
-        {
-            get { return this.Env.Interp.Trace; }
-            set { this.Env.Interp.Trace = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to count instructions.
-        /// </summary>
-        internal bool CountFlag
-        {
-            get { return this.Env.Interp.Count; }
-            set { this.Env.Interp.Count = value; }
         }
         #endregion
 
@@ -253,52 +221,6 @@ namespace SimpleScheme
             {
                 this.Env.Interp.IncrementCounter(counterIdent);
             }
-        }
-
-        /// <summary>
-        /// Load the given file.
-        /// </summary>
-        /// <param name="filename">The file to load.</param>
-        internal void LoadFile(Obj filename)
-        {
-            this.Env.Interp.LoadFile(filename);
-        }
-
-        /// <summary>
-        /// Turn the transcript on.
-        /// </summary>
-        /// <param name="filename">Write the transcript to this file.</param>
-        internal void TranscriptOn(Obj filename)
-        {
-            this.Env.Interp.TranscriptOn(filename);
-        }
-
-        /// <summary>
-        /// Turn the transcript off.
-        /// </summary>
-        internal void TranscriptOff()
-        {
-            this.Env.Interp.TranscriptOff();
-        }
-
-        /// <summary>
-        /// Log input to the transcript file.
-        /// </summary>
-        /// <param name="str">The input to log.</param>
-        /// <param name="port">The port that it came from.</param>
-        internal void LogInput(string str, InputPort port)
-        {
-            this.Env.Interp.LogInput(str, port);
-        }
-
-        /// <summary>
-        /// Log output to the transcript file.
-        /// </summary>
-        /// <param name="str">The output to log.</param>
-        /// <param name="port">The port that it was written to.</param>
-        internal void LogOutput(string str, OutputPort port)
-        {
-            this.Env.Interp.LogOutput(str, port);
         }
         #endregion
 

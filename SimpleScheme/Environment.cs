@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Collections.Generic;
-    using System.IO;
     using System.Text;
     using Obj = System.Object;
 
@@ -236,10 +235,10 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
-        /// <param name="caller">The calling stepper.  Used to find the current output port.
-        internal void DumpEnv(Stepper caller)
+        /// <param name="interp">The interpreter.  Used to find the current output port.</param>
+        internal void DumpEnv(Interpreter interp)
         {
-            caller.CurrentOutputPort.WriteLine(this.Dump(100, 0));
+            interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>

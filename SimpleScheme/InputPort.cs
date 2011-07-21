@@ -24,9 +24,15 @@ namespace SimpleScheme
 
         /// <summary>
         /// This is used to parse the input.
-        /// It holds a little state: a single character or a single token read-ahead.
+        /// It holds state: a single character or a single token read-ahead, as well
+        ///   as a transcript logger.
         /// </summary>
-        private readonly Parser parser = new Parser();
+        private readonly Parser parser;
+
+        /// <summary>
+        /// The logger
+        /// </summary>
+        private readonly TranscriptLogger transcript;
         #endregion
 
         #region Construcor
@@ -35,9 +41,12 @@ namespace SimpleScheme
         /// Store the TextReader and initialize the parser.
         /// </summary>
         /// <param name="inp">A text reader.</param>
-        internal InputPort(TextReader inp)
+        /// <param name="interp">The interpreter.</param>
+        internal InputPort(TextReader inp, Interpreter interp)
         {
             this.inp = inp;
+            this.transcript = interp.Transcript;
+            this.parser = new Parser(this, this.inp, this.transcript);
         }
         #endregion
 
@@ -59,28 +68,28 @@ namespace SimpleScheme
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive("call-with-input-file", (args, caller) => EvaluateCallWithInputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (args, caller) => CloseInputPort(List.First(args), caller), 1)
+                .DefinePrimitive("close-input-port", (args, caller) => CloseInputPort(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
-                .DefinePrimitive("current-input-port", (args, caller) => caller.CurrentInputPort, 0)
+                .DefinePrimitive("current-input-port", (args, caller) => caller.Interp.CurrentInputPort, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
                 .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsInputPort(List.First(args))), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (args, caller) => LoadFile(List.First(args), caller), 1)
+                .DefinePrimitive("load", (args, caller) => LoadFile(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
-                .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(List.First(args)), 1)
+                .DefinePrimitive("open-input-file", (args, caller) => EvaluateCallWithInputFile.OpenInputFile(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (args, caller) => PeekChar(List.First(args), caller), 0, 1)
+                .DefinePrimitive("peek-char", (args, caller) => PeekChar(List.First(args), caller.Interp), 0, 1)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (args, caller) => Read(List.First(args), caller), 0, 1)
+                .DefinePrimitive("read", (args, caller) => Read(List.First(args), caller.Interp), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (args, caller) => ReadChar(List.First(args), caller), 0, 1)
+                .DefinePrimitive("read-char", (args, caller) => ReadChar(List.First(args), caller.Interp), 0, 1)
                 //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
-                .DefinePrimitive("transcript-on", (args, caller) => TranscriptOn(List.First(args), caller), 1)
+                .DefinePrimitive("transcript-on", (args, caller) => TranscriptOn(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.4">(transcript-off)</r4rs>
-                .DefinePrimitive("transcript-off", (args, caller) => TranscriptOff(caller), 0);
+                .DefinePrimitive("transcript-off", (args, caller) => TranscriptOff(caller.Interp), 0);
         }
         #endregion
 
@@ -121,7 +130,7 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         internal Obj ReadObj()
         {
-            return this.parser.Read(this.inp);
+            return this.parser.Read();
         }
 
         /// <summary>
@@ -142,20 +151,28 @@ namespace SimpleScheme
         #endregion
 
         #region Private Static Methods
-        private static InputPort Port(Obj port, Stepper caller)
+        /// <summary>
+        /// Determine the port object to use with the InputPort primitives.
+        /// The port is optional: if supplied, it is the port to use.
+        /// Otherwise, the current input port is used instead.
+        /// </summary>
+        /// <param name="port">The port to use, if supplied.</param>
+        /// <param name="interp">The interpreter, from which the current input port can be obtained.</param>
+        /// <returns>The port to use.</returns>
+        private static InputPort Port(Obj port, Interpreter interp)
         {
-            return TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
+            return TypePrimitives.IsEmptyList(port) ? interp.CurrentInputPort : InPort(port);
         }
 
         /// <summary>
         /// Load a file given the filename.
         /// </summary>
         /// <param name="filename">The file to load from.</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>Undefined object.</returns>
-        private static object LoadFile(Obj filename, Stepper caller)
+        private static object LoadFile(Obj filename, Interpreter interp)
         {
-            caller.LoadFile(filename);
+            interp.LoadFile(filename);
             return Undefined.Instance;
         }
 
@@ -163,22 +180,22 @@ namespace SimpleScheme
         /// Turn the transcript on.
         /// </summary>
         /// <param name="filename">The file to write to.</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>Undefined object.</returns>
-        private static object TranscriptOn(Obj filename, Stepper caller)
+        private static object TranscriptOn(Obj filename, Interpreter interp)
         {
-            caller.TranscriptOn(filename);
+            interp.Transcript.TranscriptOn(filename);
             return Undefined.Instance;
         }
 
         /// <summary>
         /// Turn the transcript off.
         /// </summary>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>Undefined object.</returns>
-        private static object TranscriptOff(Stepper caller)
+        private static object TranscriptOff(Interpreter interp)
         {
-            caller.TranscriptOff();
+            interp.Transcript.TranscriptOff();
             return Undefined.Instance;
         }
 
@@ -187,12 +204,11 @@ namespace SimpleScheme
         /// If none given, closes the default input port.
         /// </summary>
         /// <param name="port">The port to close.</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>Undefined obect.</returns>
-        private static Obj CloseInputPort(Obj port, Stepper caller)
+        private static Obj CloseInputPort(Obj port, Interpreter interp)
         {
-            InputPort p = Port(port, caller);
-            p.Close();
+            Port(port, interp).Close();
             return Undefined.Instance;
         }
 
@@ -201,12 +217,12 @@ namespace SimpleScheme
         /// If none given, uses the default input port.
         /// </summary>
         /// <param name="port">The port to use.</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>The character in the input.</returns>
-        private static Obj PeekChar(Obj port, Stepper caller)
+        private static Obj PeekChar(Obj port, Interpreter interp)
         {
-            InputPort p = Port(port, caller);
-            return p.parser.PeekChar(p.inp);
+            InputPort p = Port(port, interp);
+            return p.parser.PeekChar();
         }
 
         /// <summary>
@@ -214,12 +230,12 @@ namespace SimpleScheme
         /// If none given, uses the default input port.
         /// </summary>
         /// <param name="port">The port to use.</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>The expression read.</returns>
-        private static Obj Read(Obj port, Stepper caller)
+        private static Obj Read(Obj port, Interpreter interp)
         {
-            InputPort p = Port(port, caller);
-            return p.parser.Read(p.inp);
+            InputPort p = Port(port, interp);
+            return p.parser.Read();
         }
 
         /// <summary>
@@ -227,12 +243,12 @@ namespace SimpleScheme
         /// If none given, uses the default input port.
         /// </summary>
         /// <param name="port">The port to use.</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>The character read.</returns>
-        private static Obj ReadChar(Obj port, Stepper caller)
+        private static Obj ReadChar(Obj port, Interpreter interp)
         {
-            InputPort p = Port(port, caller);
-            return p.parser.ReadChar(p.inp);
+            InputPort p = Port(port, interp);
+            return p.parser.ReadChar();
         }
         #endregion
     }

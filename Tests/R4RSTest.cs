@@ -1336,7 +1336,7 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(str))
             {
-                InputPort_Accessor inp = new InputPort_Accessor(reader);
+                InputPort_Accessor inp = new InputPort_Accessor(reader, this.interpreter);
                 Obj last = EmptyList_Accessor.Instance;
                 while (true)
                 {

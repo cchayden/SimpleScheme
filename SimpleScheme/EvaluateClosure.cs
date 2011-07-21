@@ -106,9 +106,9 @@ namespace SimpleScheme
         /// <returns>The next step to evaluate the closure.</returns>
         private Stepper EvalBodyInEnvironmentStep()
         {
-            if (Caller.TraceFlag)
+            if (Caller.Interp.Trace)
             {
-                Caller.CurrentOutputPort.WriteLine(String.Format("evaluate-closure: ({0} {1})", this.f.Name, List.First(ReturnedExpr)));
+                Caller.Interp.CurrentOutputPort.WriteLine(String.Format("evaluate-closure: ({0} {1})", this.f.Name, List.First(ReturnedExpr)));
             }
 
             this.PushEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);

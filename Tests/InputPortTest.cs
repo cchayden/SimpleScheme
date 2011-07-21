@@ -16,10 +16,18 @@ namespace Tests
     public class InputPortTest
     {
         /// <summary>
-        /// Gets or sets the test context which provides
-        /// information about and functionality for the current test run.
+        /// A scheme interpreter, created for each test.
         /// </summary>
-        public TestContext TestContext { get; set; }
+        private Interpreter interpreter;
+
+        /// <summary>
+        /// Initialize each test.
+        /// </summary>
+        [TestInitialize]
+        public void MyTestInitialize()
+        {
+            this.interpreter = Interpreter.New();
+        }
 
         /// <summary>
         /// A test for IsEof
@@ -38,11 +46,11 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual('a', port.parser.ReadChar(port.inp));
-                Assert.AreEqual('b', port.parser.ReadChar(port.inp));
-                Assert.AreEqual('c', port.parser.ReadChar(port.inp));
-                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(port.inp));
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual('a', port.parser.ReadChar());
+                Assert.AreEqual('b', port.parser.ReadChar());
+                Assert.AreEqual('c', port.parser.ReadChar());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar());
             }
         }
 
@@ -54,10 +62,10 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("a"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual('a', port.parser.PeekChar(port.inp));
-                Assert.AreEqual('a', port.parser.ReadChar(port.inp));
-                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(port.inp));
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual('a', port.parser.PeekChar());
+                Assert.AreEqual('a', port.parser.ReadChar());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar());
             }
         }
 
@@ -69,11 +77,11 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("a"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
-                Assert.AreEqual('a', port.parser.PeekChar(port.inp));
-                Assert.AreEqual('a', port.parser.ReadChar(port.inp));
-                port.parser.PeekChar(port.inp);
-                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(port.inp));
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual('a', port.parser.PeekChar());
+                Assert.AreEqual('a', port.parser.ReadChar());
+                port.parser.PeekChar();
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar());
             }
         }
 
@@ -84,64 +92,64 @@ namespace Tests
         [DeploymentItem("SimpleScheme.dll")]
         public void NextTokenTest()
         {
-            TestNextToken("   abc", "abc");
-            TestNextToken("abc   ", "abc");
-            TestNextToken("abc def", "abc");
-            TestNextToken(string.Empty, InputPort_Accessor.Eof);
-            TestNextToken("abc(", "abc");
-            TestNextToken("abc)", "abc");
-            TestNextToken("abc'", "abc");
-            TestNextToken("abc;", "abc");
-            TestNextToken("abc,", "abc");
-            TestNextToken("abc`", "abc");
-            TestNextToken(@"abc""", "abc");
-            TestNextToken("0", 0.0);
-            TestNextToken("1", 1.0);
-            TestNextToken("1.0", 1.0);
-            TestNextToken("123456789", 123456789.0);
-            TestNextToken(".5", 0.5);
-            TestNextToken("+1", 1.0);
-            TestNextToken("-1", -1.0);
-            TestNextToken("+abc", "+abc");
-            TestNextToken("-abc", "-abc");
-            TestNextToken(".abc", ".abc");
-            TestNextToken("1abc", "1abc");
-            TestNextToken("(abc", "(");
-            TestNextToken("(abc", "(");
-            TestNextToken(")abc", ")");
-            TestNextToken("'abc", "'");
-            TestNextToken("`abc", "`");
-            TestNextToken(",abc", ",");
-            TestNextToken(",@abc", ",@");
-            TestNextToken(";abc", InputPort_Accessor.Eof);
-            TestNextToken(";\nabc", "abc");
-            TestNextToken(@"""abc def""", "abc def");
-            TestNextToken(@"""abc", "abc");
-            TestNextToken(@"""abc\d""", "abcd");
-            TestNextToken(@"""abc\""d""", @"abc""d");
-            TestNextToken("#t", true);
-            TestNextToken("#T", true);
-            TestNextToken("#f", false);
-            TestNextToken("#F", false);
-            TestNextToken("#e10", 10.0);
-            TestNextToken("#i10", 10.0);
-            TestNextToken("#d10", 10.0);
-            TestNextToken("#d 10", 10.0);
-            TestNextToken("#b10", 10.0);
-            TestNextToken("#o10", 10.0);
-            TestNextToken("#x10", 10.0);
-            TestNextToken("#z10", 10.0);
-            TestNextToken("#\\ ", " ");
-            TestNextToken("#\\space", " ");
-            TestNextToken("#\\Space", " ");
-            TestNextToken("#\\SPACE", " ");
-            TestNextToken("#\\newline", "\n");
-            TestNextToken("#\\Newline", "\n");
-            TestNextToken("#\\stop", "s");
-            TestNextToken("#\\nop", "n");
-            TestNextToken("#\\quit", "q");
+            this.TestNextToken("   abc", "abc");
+            this.TestNextToken("abc   ", "abc");
+            this.TestNextToken("abc def", "abc");
+            this.TestNextToken(string.Empty, InputPort_Accessor.Eof);
+            this.TestNextToken("abc(", "abc");
+            this.TestNextToken("abc)", "abc");
+            this.TestNextToken("abc'", "abc");
+            this.TestNextToken("abc;", "abc");
+            this.TestNextToken("abc,", "abc");
+            this.TestNextToken("abc`", "abc");
+            this.TestNextToken(@"abc""", "abc");
+            this.TestNextToken("0", 0.0);
+            this.TestNextToken("1", 1.0);
+            this.TestNextToken("1.0", 1.0);
+            this.TestNextToken("123456789", 123456789.0);
+            this.TestNextToken(".5", 0.5);
+            this.TestNextToken("+1", 1.0);
+            this.TestNextToken("-1", -1.0);
+            this.TestNextToken("+abc", "+abc");
+            this.TestNextToken("-abc", "-abc");
+            this.TestNextToken(".abc", ".abc");
+            this.TestNextToken("1abc", "1abc");
+            this.TestNextToken("(abc", "(");
+            this.TestNextToken("(abc", "(");
+            this.TestNextToken(")abc", ")");
+            this.TestNextToken("'abc", "'");
+            this.TestNextToken("`abc", "`");
+            this.TestNextToken(",abc", ",");
+            this.TestNextToken(",@abc", ",@");
+            this.TestNextToken(";abc", InputPort_Accessor.Eof);
+            this.TestNextToken(";\nabc", "abc");
+            this.TestNextToken(@"""abc def""", "abc def");
+            this.TestNextToken(@"""abc", "abc");
+            this.TestNextToken(@"""abc\d""", "abcd");
+            this.TestNextToken(@"""abc\""d""", @"abc""d");
+            this.TestNextToken("#t", true);
+            this.TestNextToken("#T", true);
+            this.TestNextToken("#f", false);
+            this.TestNextToken("#F", false);
+            this.TestNextToken("#e10", 10.0);
+            this.TestNextToken("#i10", 10.0);
+            this.TestNextToken("#d10", 10.0);
+            this.TestNextToken("#d 10", 10.0);
+            this.TestNextToken("#b10", 10.0);
+            this.TestNextToken("#o10", 10.0);
+            this.TestNextToken("#x10", 10.0);
+            this.TestNextToken("#z10", 10.0);
+            this.TestNextToken("#\\ ", " ");
+            this.TestNextToken("#\\space", " ");
+            this.TestNextToken("#\\Space", " ");
+            this.TestNextToken("#\\SPACE", " ");
+            this.TestNextToken("#\\newline", "\n");
+            this.TestNextToken("#\\Newline", "\n");
+            this.TestNextToken("#\\stop", "s");
+            this.TestNextToken("#\\nop", "n");
+            this.TestNextToken("#\\quit", "q");
             var expected = new Obj[] { "a", "b", "c" };
-            TestNextToken("#( a b c)", expected);
+            this.TestNextToken("#( a b c)", expected);
         }
 
         /// <summary>
@@ -153,16 +161,16 @@ namespace Tests
         {
             using (StringReader reader = new StringReader("#\\stop"))
             {
-                InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual('s', accessor.parser.NextToken(reader));
-                Assert.AreEqual("stop", accessor.parser.NextToken(reader));
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual('s', accessor.parser.NextToken());
+                Assert.AreEqual("stop", accessor.parser.NextToken());
             }
 
             using (StringReader reader = new StringReader("#\\s top"))
             {
-                InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual('s', accessor.parser.NextToken(reader));
-                Assert.AreEqual("top", accessor.parser.NextToken(reader));
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual('s', accessor.parser.NextToken());
+                Assert.AreEqual("top", accessor.parser.NextToken());
             }
         }
 
@@ -174,19 +182,19 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(string.Empty))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 Assert.AreEqual(InputPort_Accessor.Eof, port.ReadObj());
             }
 
             using (StringReader reader = new StringReader("abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 Assert.AreEqual("abc", port.ReadObj());
             }
 
             using (StringReader reader = new StringReader("(1 2 3)"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual(1.0, List.First(actual));
                 Assert.AreEqual(2.0, List.Second(actual));
@@ -195,7 +203,7 @@ namespace Tests
 
             using (StringReader reader = new StringReader("('a 'b 'c)"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("quote", List.First(List.First(actual)));
                 Assert.AreEqual("a", List.Second(List.First(actual)));
@@ -206,21 +214,21 @@ namespace Tests
 
             using (StringReader reader = new StringReader(")abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("abc", actual);
             }
 
             using (StringReader reader = new StringReader(". abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("abc", actual);
             }
 
             using (StringReader reader = new StringReader("'abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("quote", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
@@ -228,7 +236,7 @@ namespace Tests
 
             using (StringReader reader = new StringReader("`abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("quasiquote", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
@@ -236,7 +244,7 @@ namespace Tests
 
             using (StringReader reader = new StringReader(",abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("unquote", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
@@ -244,7 +252,7 @@ namespace Tests
 
             using (StringReader reader = new StringReader(",@abc"))
             {
-                InputPort_Accessor port = new InputPort_Accessor(reader);
+                InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 var actual = port.ReadObj();
                 Assert.AreEqual("unquote-splicing", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
@@ -256,12 +264,12 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected token</param>
-        private static void TestNextToken(string input, string expected)
+        private void TestNextToken(string input, string expected)
         {
             using (StringReader reader = new StringReader(input))
             {
-                InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                var actual = accessor.parser.NextToken(reader);
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, this.interpreter);
+                var actual = accessor.parser.NextToken();
                 if (actual is string)
                 {
                     Assert.AreEqual(expected, actual);
@@ -290,12 +298,12 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
-        private static void TestNextToken(string input, double expected)
+        private void TestNextToken(string input, double expected)
         {
             using (StringReader reader = new StringReader(input))
             {
-                InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual(expected, accessor.parser.NextToken(reader));
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual(expected, accessor.parser.NextToken());
             }
         }
 
@@ -304,12 +312,12 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
-        private static void TestNextToken(string input, Obj[] expected)
+        private void TestNextToken(string input, Obj[] expected)
         {
             using (StringReader reader = new StringReader(input))
             {
-                InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                var actual = accessor.parser.NextToken(reader) as object[];
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, this.interpreter);
+                var actual = accessor.parser.NextToken() as object[];
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Length, actual.Length);
                 for (int i = 0; i < expected.Length; i++)
@@ -324,12 +332,12 @@ namespace Tests
         /// </summary>
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
-        private static void TestNextToken(string input, bool expected)
+        private void TestNextToken(string input, bool expected)
         {
             using (StringReader reader = new StringReader(input))
             {
-                InputPort_Accessor accessor = new InputPort_Accessor(reader);
-                Assert.AreEqual(expected, accessor.parser.NextToken(reader));
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, this.interpreter);
+                Assert.AreEqual(expected, accessor.parser.NextToken());
             }
         }
     }

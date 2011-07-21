@@ -59,13 +59,13 @@ namespace SimpleScheme
         {
             env
                 //// (dump-counters)
-                .DefinePrimitive("dump-counters", (args, caller) => caller.CurrentCounters.DumpCounters(caller), 0)
+                .DefinePrimitive("dump-counters", (args, caller) => caller.Interp.CurrentCounters.DumpCounters(caller), 0)
                 //// (get-counters)
-                .DefinePrimitive("get-counters", (args, caller) => caller.CurrentCounters.GetCounters(), 0)
+                .DefinePrimitive("get-counters", (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
-                .DefinePrimitive("get-counter", (args, caller) => caller.CurrentCounters.GetCounter(List.First(args)), 1)
+                .DefinePrimitive("get-counter", (args, caller) => caller.Interp.CurrentCounters.GetCounter(List.First(args)), 1)
                 //// (reset-counters)
-                .DefinePrimitive("reset-counters", (args, caller) => caller.CurrentCounters.ResetCounters(), 0);
+                .DefinePrimitive("reset-counters", (args, caller) => caller.Interp.CurrentCounters.ResetCounters(), 0);
         }
         #endregion
 
@@ -116,7 +116,7 @@ namespace SimpleScheme
         {
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
-            caller.CurrentOutputPort.WriteLine(sb.ToString());
+            caller.Interp.CurrentOutputPort.WriteLine(sb.ToString());
             return Undefined.Instance;
         }
 

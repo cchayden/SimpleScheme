@@ -69,12 +69,13 @@ namespace SimpleScheme
         /// Open a file for output.
         /// </summary>
         /// <param name="filename">The filename.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>The output port, used for writing.</returns>
-        internal static OutputPort OpenOutputFile(Obj filename)
+        internal static OutputPort OpenOutputFile(Obj filename, Interpreter interp)
         {
             try
             {
-                return new OutputPort(new StreamWriter(Printer.AsString(filename, false)));
+                return new OutputPort(new StreamWriter(Printer.AsString(filename, false)), interp);
             }
             catch (FileNotFoundException)
             {
@@ -97,7 +98,7 @@ namespace SimpleScheme
         /// continues to the next step.</returns>
         private Stepper InitialStep()
         {
-            this.port = OpenOutputFile(List.First(Expr));
+            this.port = OpenOutputFile(List.First(Expr), Caller.Interp);
             return Procedure.Proc(List.Second(Expr)).Apply(List.New(this.port), this.Env, ContinueHere(this.CloseStep));
         }
 

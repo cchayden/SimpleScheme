@@ -18,10 +18,18 @@ namespace Tests
     public class SchemeUtilsTest
     {
         /// <summary>
-        /// Gets or sets the test context which provides
-        /// information about and functionality for the current test run.
+        /// A scheme interpreter, created for each test.
         /// </summary>
-        public TestContext TestContext { get; set; }
+        private Interpreter interpreter;
+
+        /// <summary>
+        /// Initialize each test.
+        /// </summary>
+        [TestInitialize]
+        public void MyTestInitialize()
+        {
+            this.interpreter = Interpreter.New();
+        }
 
         /// <summary>
         /// A test for Chr
@@ -437,7 +445,7 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                var outp = new OutputPort(writer);
+                var outp = new OutputPort(writer, this.interpreter);
                 OutputPort_Accessor.WriteObj("abc", outp);
                 Assert.AreEqual("abc", writer.ToString());
             }
@@ -457,8 +465,8 @@ namespace Tests
             Assert.AreEqual("number", TypePrimitives_Accessor.TypeName(1.0d));
             Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new[] { 'a', 'b', 'c' }));
             Assert.AreEqual("procedure", TypePrimitives_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
-            Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(new InputPort_Accessor(new StringReader(""))));
-            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(new OutputPort(new StringWriter())));
+            Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(new InputPort_Accessor(new StringReader(string.Empty), this.interpreter)));
+            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(new OutputPort(new StringWriter(), this.interpreter)));
             Assert.AreEqual("empty list", TypePrimitives_Accessor.TypeName(EmptyList_Accessor.Instance));
         }
 

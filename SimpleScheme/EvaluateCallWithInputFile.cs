@@ -69,12 +69,13 @@ namespace SimpleScheme
         /// Open a file for input.
         /// </summary>
         /// <param name="filename">The filename of the file to open.</param>
+        /// <param name="interp">The interpreter.</param>
         /// <returns>The input port, used for reading.</returns>
-        internal static InputPort OpenInputFile(Obj filename)
+        internal static InputPort OpenInputFile(Obj filename, Interpreter interp)
         {
             try
             {
-                return new InputPort(new StreamReader(Printer.AsString(filename, false)));
+                return new InputPort(new StreamReader(Printer.AsString(filename, false)), interp);
             }
             catch (FileNotFoundException)
             {
@@ -94,7 +95,7 @@ namespace SimpleScheme
         /// <returns>The next step, or else if the result is available, continue on to the next step.</returns>
         private Stepper InitialStep()
         {
-            this.port = OpenInputFile(List.First(Expr));
+            this.port = OpenInputFile(List.First(Expr), Caller.Interp);
             return Procedure.Proc(List.Second(Expr)).Apply(List.New(this.port), this.Env, ContinueHere(this.CloseStep));
         }
 
