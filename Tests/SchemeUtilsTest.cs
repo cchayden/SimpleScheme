@@ -437,8 +437,8 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                var actual = OutputPort_Accessor.WriteObj("abc", writer, false);
-                Assert.AreEqual(Undefined.Instance, actual);
+                var outp = new OutputPort(writer);
+                OutputPort_Accessor.WriteObj("abc", outp);
                 Assert.AreEqual("abc", writer.ToString());
             }
         }
@@ -458,7 +458,7 @@ namespace Tests
             Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new[] { 'a', 'b', 'c' }));
             Assert.AreEqual("procedure", TypePrimitives_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
             Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(new InputPort_Accessor(new StringReader(""))));
-            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(new StringWriter()));
+            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(new OutputPort(new StringWriter())));
             Assert.AreEqual("empty list", TypePrimitives_Accessor.TypeName(EmptyList_Accessor.Instance));
         }
 

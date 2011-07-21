@@ -52,8 +52,6 @@ namespace SimpleScheme
             //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
             //// <r4rs section="6.10.2">(char-ready?)</r4rs>
             //// <r4rs section="6.10.2">(char-ready? <port>)</r4rs>
-            //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
-            //// <r4rs section="6.10.4">(transcript-off)</r4rs>
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
@@ -78,7 +76,11 @@ namespace SimpleScheme
                 .DefinePrimitive("read", (args, caller) => Read(List.First(args), caller), 0, 1)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (args, caller) => ReadChar(List.First(args), caller), 0, 1);
+                .DefinePrimitive("read-char", (args, caller) => ReadChar(List.First(args), caller), 0, 1)
+                //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
+                .DefinePrimitive("transcript-on", (args, caller) => TranscriptOn(List.First(args), caller), 1)
+                //// <r4rs section="6.10.4">(transcript-off)</r4rs>
+                .DefinePrimitive("transcript-off", (args, caller) => TranscriptOff(caller), 0);
         }
         #endregion
 
@@ -126,8 +128,7 @@ namespace SimpleScheme
         /// Close the input port.
         /// Closes the stream used by the parser.
         /// </summary>
-        /// <returns>The undefined instance.</returns>
-        internal Obj Close()
+        internal void Close()
         {
             try
             {
@@ -137,22 +138,47 @@ namespace SimpleScheme
             {
                 ErrorHandlers.IoError("IOException on close: " + ex);
             }
-
-            return Undefined.Instance;
         }
         #endregion
 
         #region Private Static Methods
+        private static InputPort Port(Obj port, Stepper caller)
+        {
+            return TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
+        }
 
         /// <summary>
         /// Load a file given the filename.
         /// </summary>
         /// <param name="filename">The file to load from.</param>
         /// <param name="caller">The calling stepper.</param>
-        /// <returns>The next step to execute.</returns>
-        private static object LoadFile(object filename, Stepper caller)
+        /// <returns>Undefined object.</returns>
+        private static object LoadFile(Obj filename, Stepper caller)
         {
             caller.LoadFile(filename);
+            return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Turn the transcript on.
+        /// </summary>
+        /// <param name="filename">The file to write to.</param>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>Undefined object.</returns>
+        private static object TranscriptOn(Obj filename, Stepper caller)
+        {
+            caller.TranscriptOn(filename);
+            return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Turn the transcript off.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <returns>Undefined object.</returns>
+        private static object TranscriptOff(Stepper caller)
+        {
+            caller.TranscriptOff();
             return Undefined.Instance;
         }
 
@@ -165,8 +191,9 @@ namespace SimpleScheme
         /// <returns>Undefined obect.</returns>
         private static Obj CloseInputPort(Obj port, Stepper caller)
         {
-            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
-            return p.Close();
+            InputPort p = Port(port, caller);
+            p.Close();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -178,7 +205,7 @@ namespace SimpleScheme
         /// <returns>The character in the input.</returns>
         private static Obj PeekChar(Obj port, Stepper caller)
         {
-            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = Port(port, caller);
             return p.parser.PeekChar(p.inp);
         }
 
@@ -191,7 +218,7 @@ namespace SimpleScheme
         /// <returns>The expression read.</returns>
         private static Obj Read(Obj port, Stepper caller)
         {
-            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = Port(port, caller);
             return p.parser.Read(p.inp);
         }
 
@@ -204,7 +231,7 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private static Obj ReadChar(Obj port, Stepper caller)
         {
-            InputPort p = TypePrimitives.IsEmptyList(port) ? caller.CurrentInputPort : InPort(port);
+            InputPort p = Port(port, caller);
             return p.parser.ReadChar(p.inp);
         }
         #endregion

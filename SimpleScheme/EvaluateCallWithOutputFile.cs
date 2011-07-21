@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// <summary>
         /// The output port to use during evaluation.
         /// </summary>
-        private TextWriter port;
+        private OutputPort port;
         #endregion
 
         #region Constructor
@@ -70,20 +70,22 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="filename">The filename.</param>
         /// <returns>The output port, used for writing.</returns>
-        internal static TextWriter OpenOutputFile(Obj filename)
+        internal static OutputPort OpenOutputFile(Obj filename)
         {
             try
             {
-                return new StreamWriter(Printer.AsString(filename, false));
+                return new OutputPort(new StreamWriter(Printer.AsString(filename, false)));
             }
             catch (FileNotFoundException)
             {
-                return (TextWriter)ErrorHandlers.IoError("No such file: " + Printer.AsString(filename));
+                ErrorHandlers.IoError("No such file: " + Printer.AsString(filename));
             }
             catch (IOException ex)
             {
-                return (TextWriter)ErrorHandlers.IoError("IOException: " + ex.Message);
+                ErrorHandlers.IoError("IOException: " + ex.Message);
             }
+
+            return null;
         }
         #endregion
 

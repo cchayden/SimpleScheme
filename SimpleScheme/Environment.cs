@@ -236,10 +236,10 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
-        /// <param name="port">The port to dump the environment to.</param>
-        internal void DumpEnv(TextWriter port)
+        /// <param name="caller">The calling stepper.  Used to find the current output port.
+        internal void DumpEnv(Stepper caller)
         {
-            port.WriteLine(this.Dump(100, 0));
+            caller.CurrentOutputPort.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>

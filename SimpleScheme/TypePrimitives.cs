@@ -285,7 +285,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme output port.</returns>
         public static bool IsOutputPort(Obj obj)
         {
-            return obj is TextWriter;
+            return obj is OutputPort;
         }
 
         /// <summary>
