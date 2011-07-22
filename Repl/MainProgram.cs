@@ -73,7 +73,7 @@ namespace Repl
         /// </summary>
         private void RunSimple()
         {
-            Interpreter.New(this.files)
+            new Interpreter(this.files)
                 .ReadEvalPrintLoop();
         }
 
@@ -84,7 +84,7 @@ namespace Repl
         private void RunExplicit()
         {
             IPrimitiveEnvironment primEnvironment = new PrimitiveEnvironment();
-            Interpreter.New(true, primEnvironment, this.files, Console.In, Console.Out)
+            new Interpreter(true, primEnvironment, this.files, Console.In, Console.Out)
                 .ReadEvalPrintLoop();
         }
 
@@ -93,7 +93,7 @@ namespace Repl
         /// </summary>
         private void RunResults()
         {
-            IInterpreter interp = Interpreter.New(this.files);
+            IInterpreter interp = new Interpreter(this.files);
             Obj res = interp.ReadEvalPrintLoop();
             Console.WriteLine(res);
         }
@@ -103,7 +103,7 @@ namespace Repl
         /// </summary>
         private void RunCustom()
         {
-            IInterpreter interp = Interpreter.New();
+            IInterpreter interp = new Interpreter();
 
             // define a variable in the global environment
             interp.GlobalEnv.Define("x", 10);
@@ -126,7 +126,7 @@ namespace Repl
         /// </summary>
         private void RunAsync()
         {
-            Obj res = Interpreter.New(this.files)
+            Obj res = new Interpreter(this.files)
                 .ReadEvalPrintAsync();
             Console.ReadLine();   // from the expression entered
             Console.ReadLine();   // waits here while operation completes

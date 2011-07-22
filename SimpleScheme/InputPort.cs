@@ -4,6 +4,8 @@
 namespace SimpleScheme
 {
     using System.IO;
+    using System.Text;
+
     using Obj = System.Object;
 
     /// <summary>
@@ -16,11 +18,6 @@ namespace SimpleScheme
         /// Marks the end of the input file.
         /// </summary>
         internal const string Eof = "#!EOF";
-
-        /// <summary>
-        /// The input comes from this TextReader.
-        /// </summary>
-        private readonly TextReader inp;
 
         /// <summary>
         /// This is used to parse the input.
@@ -44,9 +41,8 @@ namespace SimpleScheme
         /// <param name="interp">The interpreter.</param>
         internal InputPort(TextReader inp, Interpreter interp)
         {
-            this.inp = inp;
             this.transcript = interp.Transcript;
-            this.parser = new Parser(this, this.inp, this.transcript);
+            this.parser = new Parser(inp);
         }
         #endregion
 
@@ -130,7 +126,10 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         internal Obj ReadObj()
         {
-            return this.parser.Read();
+            StringBuilder sb = new StringBuilder();
+            Obj expr = this.parser.ReadExpr(sb);
+            this.transcript.LogInputLine(sb.ToString().Trim(), this);
+            return expr;
         }
 
         /// <summary>
@@ -139,14 +138,7 @@ namespace SimpleScheme
         /// </summary>
         internal void Close()
         {
-            try
-            {
-                this.inp.Close();
-            }
-            catch (IOException ex)
-            {
-                ErrorHandlers.IoError("IOException on close: " + ex);
-            }
+            this.parser.Close();
         }
         #endregion
 
@@ -234,8 +226,11 @@ namespace SimpleScheme
         /// <returns>The expression read.</returns>
         private static Obj Read(Obj port, Interpreter interp)
         {
+            StringBuilder sb = new StringBuilder();
             InputPort p = Port(port, interp);
-            return p.parser.Read();
+            Obj expr = p.parser.ReadExpr(sb);
+            interp.Transcript.LogInputLine(sb.ToString().Trim(), p);
+            return expr;
         }
 
         /// <summary>
@@ -247,8 +242,11 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private static Obj ReadChar(Obj port, Interpreter interp)
         {
+            StringBuilder sb = new StringBuilder();
             InputPort p = Port(port, interp);
-            return p.parser.ReadChar();
+            Obj expr = p.parser.ReadChar(sb);
+            interp.Transcript.LogInputLine(sb.ToString().Trim(), p);
+            return expr;
         }
         #endregion
     }

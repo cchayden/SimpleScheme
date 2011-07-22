@@ -37,6 +37,16 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Accessors
+        /// <summary>
+        /// Gets the newline string associated with the port.
+        /// </summary>
+        private string NewLine
+        {
+            get { return this.outp.NewLine; }
+        }
+        #endregion
+
         #region Define Primitives
         /// <summary>
         /// Define the output primitives.
@@ -84,9 +94,8 @@ namespace SimpleScheme
         /// <param name="str">The string to write.</param>
         internal void WriteLine(string str)
         {
-            string output = str + this.outp.NewLine;
-            this.outp.Write(output);
-            this.transcript.LogOutputLine("=> " + output, this);
+            this.outp.Write(str + this.NewLine);
+            this.transcript.LogOutputLine("=> " + str, this);
         }
 
         /// <summary>
@@ -94,8 +103,8 @@ namespace SimpleScheme
         /// </summary>
         internal void WriteLine()
         {
-            this.outp.Write(this.outp.NewLine);
-            this.transcript.LogOutputLine(this.outp.NewLine, this);
+            this.outp.Write(this.NewLine);
+            this.transcript.LogOutputLine(this.NewLine, this);
         }
 
         /// <summary>
@@ -246,7 +255,7 @@ namespace SimpleScheme
         private static Obj Newline(Obj port, Interpreter interp)
         {
             OutputPort p = Port(port, interp);
-            WriteObj(p.outp.NewLine, p);
+            WriteObj(p.NewLine, p);
             return Undefined.Instance;
         }
 

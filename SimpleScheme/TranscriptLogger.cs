@@ -74,6 +74,15 @@ namespace SimpleScheme
             this.transcriptWriter.Write(str);
         }
 
+        internal void LogInputLine(string str, InputPort port)
+        {
+            if (this.transcriptWriter == null || port != this.interp.CurrentInputPort)
+            {
+                return;
+            }
+
+            this.transcriptWriter.WriteLine(str);
+        }
         /// <summary>
         /// Log output to the transcript file.
         /// Do this only if the transcript is on, and the port is the current output port.

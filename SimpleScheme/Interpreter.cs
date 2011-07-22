@@ -80,6 +80,42 @@ namespace SimpleScheme
                 Console.WriteLine("Caught exception {0}", ex.Message);
             }
         }
+
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Create a new interpeter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
+        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
+        /// <param name="files">The files to read.</param>
+        /// <param name="reader">The input reader.</param>
+        /// <param name="writer">The output writer.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public Interpreter(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer) :
+            this(loadStandardMacros, primEnvironment as PrimitiveEnvironment, files, reader, writer)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Create a new interpreter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public Interpreter(IEnumerable<string> files) :
+            this(true, null, files, null, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Interpreter class.
+        /// Create a new interpreter with standard macros and no files to load.
+        /// </summary>
+        /// <returns>A scheme interpreter</returns>
+        public Interpreter() :
+            this(true, null, null, null, null)
+        {
+        }
         #endregion
 
         #region Accessors
@@ -143,62 +179,27 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Create a new interpeter with a given set of files to run initially.
-        /// </summary>
-        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
-        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
-        /// <param name="files">The files to read.</param>
-        /// <param name="reader">The input reader.</param>
-        /// <param name="writer">The output writer.</param>
-        /// <returns>A scheme interpreter.</returns>
-        public static Interpreter New(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
-        {
-            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? new PrimitiveEnvironment();
-            return new Interpreter(loadStandardMacros, primEnv, files, reader, writer);
-        }
-
-        /// <summary>
-        /// Create a new interpeter with a given set of files to run initially.
-        /// </summary>
-        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
-        /// <returns>A scheme interpreter.</returns>
-        public static Interpreter New(IPrimitiveEnvironment primEnvironment)
-        {
-            PrimitiveEnvironment primEnv = primEnvironment as PrimitiveEnvironment ?? new PrimitiveEnvironment();
-            return new Interpreter(true, primEnv, null, null, null);
-        }
-
-        /// <summary>
-        /// Create a new interpeter with a given set of files to run initially.
-        /// </summary>
-        /// <param name="files">The files to read.</param>
-        /// <returns>A scheme interpreter.</returns>
-        public static Interpreter New(IEnumerable<string> files)
-        {
-            return new Interpreter(true, null, files, null, null);
-        }
-
-        /// <summary>
-        /// Create a new interpreter with standard macros and no files to load.
-        /// </summary>
-        /// <returns>A scheme interpreter</returns>
-        public static Interpreter New()
-        {
-            return new Interpreter(true, null, null, null, null);
-        }
-
-        /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
+        /// Catch any exceptions that may happen.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
         public Obj Eval(Obj expr)
         {
-            return this.Eval(expr, this.GlobalEnvironment);
+            try
+            {
+                return this.UnsafeEval(expr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
         }
 
         /// <summary>
-        /// Begin an asynchronous evaluation
+        /// Begin an asynchronous evaluation.
+        /// Catch any exceptions that might happen.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="cb">Call this when evaluation is complete.</param>
@@ -206,29 +207,33 @@ namespace SimpleScheme
         /// <returns>Async result, used to monitor progress.</returns>
         public IAsyncResult BeginEval(Obj expr, AsyncCallback cb, object state)
         {
-            this.asyncResult = new AsyncResult<object>(cb, state);
-            Obj res = this.Eval(expr, this.GlobalEnvironment);
-            if (res == Stepper.Suspended)
+            try
             {
-                return this.asyncResult;
+                return UnsafeBeginEval(expr, cb, state);
             }
-
-            if (!this.asyncResult.IsCompleted)
+            catch (Exception ex)
             {
-                this.asyncResult.SetAsCompleted(res, true);
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return null;
             }
-
-            return this.asyncResult;
         }
-
         /// <summary>
         /// End asynchronous evaluation and get the result.
+        /// Catch any exceptions that might happen.
         /// </summary>
         /// <param name="ar">Async result from callback.</param>
         /// <returns>The expression value.</returns>
         public object EndEval(IAsyncResult ar)
         {
-            return ((AsyncResult<object>)ar).EndInvoke();
+            try
+            {
+                return this.UnsafeEndEval(ar);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return null;
+            }
         }
 
         /// <summary>
@@ -247,7 +252,7 @@ namespace SimpleScheme
                     return InputPort.Eof;
                 }
 
-                Obj val = this.Eval(expr);
+                Obj val = this.UnsafeEval(expr);
                 if (val != Undefined.Instance)
                 {
                     string output = Printer.AsString(val, false);
@@ -280,11 +285,11 @@ namespace SimpleScheme
                     return new CompletedAsyncResult<string>(InputPort.Eof);
                 }
 
-                return this.BeginEval(
+                return this.UnsafeBeginEval(
                     expr,
                     ar =>
                         {
-                            object val = this.EndEval(ar);
+                            object val = this.UnsafeEndEval(ar);
                             if (val != Undefined.Instance)
                             {
                                 string output = Printer.AsString(val, false);
@@ -332,9 +337,10 @@ namespace SimpleScheme
         /// <param name="fileName">The filename.</param>
         public void LoadFile(Obj fileName)
         {
-            string name = Printer.AsString(fileName, false);
+            string name = "-- bad file name";
             try
             {
+                name = Printer.AsString(fileName, false);
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
                     this.Load(new InputPort(new StreamReader(fs), this));
@@ -361,8 +367,7 @@ namespace SimpleScheme
                     return InputPort.Eof;
                 }
 
-                Obj val = this.Eval(expr);
-                return val;
+                return this.UnsafeEval(expr);
             }
             catch (Exception ex)
             {
@@ -378,9 +383,16 @@ namespace SimpleScheme
         /// <param name="str">The string to read and evaluate.</param>
         public void LoadString(string str)
         {
-            using (StringReader reader = new StringReader(str))
+            try
             {
-                this.Load(new InputPort(reader, this));
+                using (StringReader reader = new StringReader(str))
+                {
+                    this.Load(new InputPort(reader, this));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
             }
         }
 
@@ -391,31 +403,74 @@ namespace SimpleScheme
         /// <returns>The evaluation result.</returns>
         public Obj EvalString(string str)
         {
-            using (StringReader reader = new StringReader(str))
+            try
             {
-                return this.ReadEval(new InputPort(reader, this));
+                using (StringReader reader = new StringReader(str))
+                {
+                    return this.UnsafeReadEval(new InputPort(reader, this));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
             }
         }
         #endregion
 
-        #region Define Primitives
+        #region Private Methods
         /// <summary>
-        /// Define the counter primitives.
+        /// Evaluate an expression (expressed as a list) in the global environment.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <returns>The result of the evaluation.</returns>
+        private Obj UnsafeEval(Obj expr)
         {
-            env
-                //// (trace-on)
-                .DefinePrimitive("trace-on", (args, caller) => SetTrace(caller, true), 0)
-                //// (trace-off)
-                .DefinePrimitive("trace-off", (args, caller) => SetTrace(caller, false), 0)
-                //// (counters-on)
-                .DefinePrimitive("counters-on", (args, caller) => SetCount(caller, true), 0)
-                //// (counters-off)
-                .DefinePrimitive("counters-off", (args, caller) => SetCount(caller, false), 0)
-                //// (backtrace)
-                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
+            return this.Eval(expr, this.GlobalEnvironment);
+        }
+
+        /// <summary>
+        /// Begin an asynchronous evaluation
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="cb">Call this when evaluation is complete.</param>
+        /// <param name="state">Pass this through for the callback function.</param>
+        /// <returns>Async result, used to monitor progress.</returns>
+        private IAsyncResult UnsafeBeginEval(Obj expr, AsyncCallback cb, object state)
+        {
+            this.asyncResult = new AsyncResult<object>(cb, state);
+            Obj res = this.Eval(expr, this.GlobalEnvironment);
+            if (res == Stepper.Suspended)
+            {
+                return this.asyncResult;
+            }
+
+            if (!this.asyncResult.IsCompleted)
+            {
+                this.asyncResult.SetAsCompleted(res, true);
+            }
+
+            return this.asyncResult;
+        }
+
+        /// <summary>
+        /// End asynchronous evaluation and get the result.
+        /// </summary>
+        /// <param name="ar">Async result from callback.</param>
+        /// <returns>The expression value.</returns>
+        private object UnsafeEndEval(IAsyncResult ar)
+        {
+            return ((AsyncResult<object>)ar).EndInvoke();
+        }
+
+        /// <summary>
+        /// Read from the given port and evaluate the expression.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The result of the evaluation.</returns>
+        private Obj UnsafeReadEval(InputPort inp)
+        {
+            return this.ReadEval(inp);
         }
         #endregion
 
@@ -429,7 +484,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         internal Obj Eval(Obj expr, Environment env)
         {
-            return this.EvalStep(EvaluateExpression.Call(expr, env, this.halted));
+            return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
 
         /// <summary>
@@ -438,7 +493,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended stepper.</returns>
-        internal Obj EvalStep(Stepper step)
+        internal Obj EvalSteps(Stepper step)
         {
             while (true)
             {
@@ -508,6 +563,27 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Define Primitives
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        {
+            env
+                //// (trace-on)
+                .DefinePrimitive("trace-on", (args, caller) => SetTraceFlag(caller, true), 0)
+                //// (trace-off)
+                .DefinePrimitive("trace-off", (args, caller) => SetTraceFlag(caller, false), 0)
+                //// (counters-on)
+                .DefinePrimitive("counters-on", (args, caller) => SetCountFlag(caller, true), 0)
+                //// (counters-off)
+                .DefinePrimitive("counters-off", (args, caller) => SetCountFlag(caller, false), 0)
+                //// (backtrace)
+                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
+        }
+        #endregion
+
         #region Private Static Methods
         /// <summary>
         /// Sets tracing on or off.
@@ -515,7 +591,7 @@ namespace SimpleScheme
         /// <param name="caller">The calling stepper.</param>
         /// <param name="flag">The new trace state.</param>
         /// <returns>Undefined object.</returns>
-        private static Obj SetTrace(Stepper caller, bool flag)
+        private static Obj SetTraceFlag(Stepper caller, bool flag)
         {
             caller.Interp.Trace = flag;
             return Undefined.Instance;
@@ -527,7 +603,7 @@ namespace SimpleScheme
         /// <param name="caller">The calling stepper.</param>
         /// <param name="flag">The new count state.</param>
         /// <returns>Undefined object.</returns>
-        private static Obj SetCount(Stepper caller, bool flag)
+        private static Obj SetCountFlag(Stepper caller, bool flag)
         {
             caller.Interp.Count = flag;
             return Undefined.Instance;

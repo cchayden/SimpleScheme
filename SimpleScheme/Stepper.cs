@@ -191,7 +191,7 @@ namespace SimpleScheme
         /// <returns>The return value of the evaluation (or halted or suspended).</returns>
         internal Obj EvalStep()
         {
-            return this.Env.Interp.EvalStep(this);
+            return this.Env.Interp.EvalSteps(this);
         }
 
         /// <summary>

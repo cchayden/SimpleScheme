@@ -24,11 +24,6 @@ namespace SimpleScheme
         private readonly TokenStream tokStream = new TokenStream();
 
         /// <summary>
-        /// The input port that is supplying the input.
-        /// </summary>
-        private readonly InputPort input;
-
-        /// <summary>
         /// The TextReader we are reading from to get the input.
         /// </summary>
         private readonly TextReader inp;
@@ -36,69 +31,30 @@ namespace SimpleScheme
         /// <summary>
         /// Used to make a transcript of the input.
         /// </summary>
-        private readonly TranscriptLogger logger;
+        private StringBuilder logger;
         #endregion
 
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Parser class.
         /// </summary>
-        /// <param name="input">The input port we are reading from.</param>
         /// <param name="inp">The input TextReader we are reading from.</param>
-        /// <param name="logger">Makes a transcript of the input.</param>
-        internal Parser(InputPort input, TextReader inp, TranscriptLogger logger)
+        internal Parser(TextReader inp)
         {
-            this.input = input;
             this.inp = inp;
-            this.logger = logger;
         }
         #endregion
 
         #region Internal Methods
         /// <summary>
-        /// Read a whole expression.
-        /// Handles parentheses and the various kinds of quote syntax shortcuts.
-        /// Warns about extra right parentheses and dots.
+        /// Read a complete expression.
         /// </summary>
-        /// <returns>The expression as a list.</returns>
-        internal Obj Read()
+        /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
+        /// <returns>The expression that was read.</returns>
+        internal Obj ReadExpr(StringBuilder sb)
         {
-            try
-            {
-                object token = this.NextToken();
-
-                switch (token as string)
-                {
-                    case "(":
-                        {
-                            Obj tail = this.ReadTail(false);
-                            this.logger.LogInput("\r\n", this.input);
-                            return tail;
-                        }
-
-                    case ")":
-                        ErrorHandlers.Warn("Extra ) ignored.");
-                        return this.Read();
-                    case ".":
-                        ErrorHandlers.Warn("Extra . ignored.");
-                        return this.Read();
-                    case "'": 
-                        return List.New("quote", this.Read());
-                    case "`":
-                        return List.New("quasiquote", this.Read());
-                    case ",": 
-                        return List.New("unquote", this.Read());
-                    case ",@": 
-                        return List.New("unquote-splicing", this.Read());
-                    default:
-                        return token;
-                }
-            }
-            catch (IOException ex)
-            {
-                ErrorHandlers.Warn("On input, exception:" + ex);
-                return InputPort.Eof;
-            }
+            this.logger = sb;
+            return this.Read();
         }
 
         /// <summary>
@@ -107,7 +63,7 @@ namespace SimpleScheme
         /// <returns>The next character (as a scheme character).</returns>
         internal Obj PeekChar()
         {
-            int p = this.PeekCh();
+            int p = this.Peek();
             if (p == -1)
             {
                 return InputPort.Eof;
@@ -120,9 +76,11 @@ namespace SimpleScheme
         /// Read a character from the input port.
         /// Gets a pushed character, if present.
         /// </summary>
+        /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The character read, or EOF.</returns>
-        internal object ReadChar()
+        internal object ReadChar(StringBuilder sb)
         {
+            this.logger = sb;
             try
             {
                 int ch = this.charStream.Get();
@@ -144,16 +102,84 @@ namespace SimpleScheme
                 return InputPort.Eof;
             }
         }
+
+        /// <summary>
+        /// Close the input port.
+        /// </summary>
+        internal void Close()
+        {
+            try
+            {
+                this.inp.Close();
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.IoError("IOException on close: " + ex);
+            }
+
+        }
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Read a whole expression.
+        /// Handles parentheses and the various kinds of quote syntax shortcuts.
+        /// Warns about extra right parentheses and dots.
+        /// </summary>
+        /// <returns>The expression as a list.</returns>
+        private Obj Read()
+        {
+            try
+            {
+                object token = this.NextToken();
+
+                switch (token as string)
+                {
+                    case "(":
+                        token = this.ReadTail(false);
+                        break;
+
+                    case ")":
+                        ErrorHandlers.Warn("Extra ) ignored.");
+                        token = this.Read();
+                        break;
+                    case ".":
+                        ErrorHandlers.Warn("Extra . ignored.");
+                        token = this.Read();
+                        break;
+                    case "'": 
+                        token = List.New("quote", this.Read());
+                        break;
+                    case "`":
+                        token = List.New("quasiquote", this.Read());
+                        break;
+                    case ",": 
+                        token = List.New("unquote", this.Read());
+                        break;
+                    case ",@": 
+                        token = List.New("unquote-splicing", this.Read());
+                        break;
+                    default:
+                        break;
+                }
+
+                return token;
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.Warn("On input, exception:" + ex);
+                return InputPort.Eof;
+            }
+        }
+
         /// <summary>
         /// Peek into the input stream, and return the next character to be read.
         /// The character is saved, so that the next read will see it.
         /// If the input stream is closed, return -1.
         /// </summary>
         /// <returns>The next character in the stream.</returns>
-        private int PeekCh()
+        private int Peek()
         {
             int ch = this.charStream.Peek();
             if (ch != -1)
@@ -187,7 +213,12 @@ namespace SimpleScheme
             }
 
             ch = this.inp.Read();
-            this.logger.LogInput(new string((char)ch, 1), this.input);
+
+            if (logger != null)
+            {
+                logger.Append((char)ch);
+            }
+
             return ch;
         }
 
@@ -205,7 +236,11 @@ namespace SimpleScheme
             }
 
             ch = this.inp.Read();
-            this.logger.LogInput(new string((char)ch, 1), this.input);
+            if (logger != null)
+            {
+                logger.Append((char)ch);
+            }
+
             return ch;
         }
 

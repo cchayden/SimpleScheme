@@ -26,7 +26,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.interpreter = Interpreter.New();
+            this.interpreter = new Interpreter();
         }
 
         /// <summary>
@@ -47,10 +47,10 @@ namespace Tests
             using (StringReader reader = new StringReader("abc"))
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
-                Assert.AreEqual('a', port.parser.ReadChar());
-                Assert.AreEqual('b', port.parser.ReadChar());
-                Assert.AreEqual('c', port.parser.ReadChar());
-                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar());
+                Assert.AreEqual('a', port.parser.ReadChar(null));
+                Assert.AreEqual('b', port.parser.ReadChar(null));
+                Assert.AreEqual('c', port.parser.ReadChar(null));
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(null));
             }
         }
 
@@ -64,8 +64,8 @@ namespace Tests
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 Assert.AreEqual('a', port.parser.PeekChar());
-                Assert.AreEqual('a', port.parser.ReadChar());
-                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar());
+                Assert.AreEqual('a', port.parser.ReadChar(null));
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(null));
             }
         }
 
@@ -79,9 +79,9 @@ namespace Tests
             {
                 InputPort_Accessor port = new InputPort_Accessor(reader, this.interpreter);
                 Assert.AreEqual('a', port.parser.PeekChar());
-                Assert.AreEqual('a', port.parser.ReadChar());
+                Assert.AreEqual('a', port.parser.ReadChar(null));
                 port.parser.PeekChar();
-                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar());
+                Assert.AreEqual(InputPort_Accessor.Eof, port.parser.ReadChar(null));
             }
         }
 

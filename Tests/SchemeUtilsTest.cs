@@ -28,7 +28,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.interpreter = Interpreter.New();
+            this.interpreter = new Interpreter();
         }
 
         /// <summary>
