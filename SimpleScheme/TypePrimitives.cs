@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.IO;
     using Obj = System.Object;
 
     /// <summary>
@@ -73,6 +72,36 @@ namespace SimpleScheme
             new TypeNameEntry(obj => IsEmptyList(obj), "empty list"),
         };
 
+        /// <summary>
+        /// Table of entries used to map an evaluator to a name.
+        /// These are the classes that correspond to scheme's special forms
+        /// </summary>
+        private static readonly TypeNameEntry[] evaluatorNames = 
+        {
+            new TypeNameEntry(obj => obj is EvaluateAnd, EvaluateAnd.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateCallWithInputFile, EvaluateCallWithInputFile.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateCallWithOutputFile, EvaluateCallWithOutputFile.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateCase, EvaluateCase.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateClosure, EvaluateClosure.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateCond, EvaluateCond.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateContinuation, EvaluateContinuation.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateDefine, EvaluateDefine.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateDo, EvaluateDo.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateExpandMacro, EvaluateExpandMacro.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateExpression, EvaluateExpression.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateIf, EvaluateIf.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateLet, EvaluateLet.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateLetRec, EvaluateLetRec.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateLetStar, EvaluateLetStar.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateList, EvaluateList.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateMap, EvaluateMap.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateOr, EvaluateOr.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateProc, EvaluateProc.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateProcQuoted, EvaluateProcQuoted.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateSequence, EvaluateSequence.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateSet, EvaluateSet.StepperName),
+            new TypeNameEntry(obj => obj is EvaluateTime, EvaluateTime.StepperName)
+        };
         #region Scheme Builtin Type Name Accessors
         /// <summary>
         /// Gets the printable name of the scheme symbol type.
@@ -321,13 +350,13 @@ namespace SimpleScheme
 
         /// <summary>
         /// Find the scheme type name for a given object.
-        /// Used to format error messages.
         /// </summary>
         /// <param name="obj">The object to use.</param>
+        /// <param name="table">The lookup table.</param>
         /// <returns>The scheme type name.</returns>
-        internal static string TypeName(Obj obj)
+        private static string LookupName(Obj obj, TypeNameEntry[] table)
         {
-            foreach (var entry in typeNames)
+            foreach (var entry in table)
             {
                 if (entry.TypePredicate(obj))
                 {
@@ -336,6 +365,28 @@ namespace SimpleScheme
             }
 
             return obj.GetType().ToString();
+        }
+
+        /// <summary>
+        /// Find the scheme type name for a given object.
+        /// Used to format error messages.
+        /// </summary>
+        /// <param name="obj">The object to use.</param>
+        /// <returns>The scheme type name.</returns>
+        internal static string TypeName(Obj obj)
+        {
+            return LookupName(obj, typeNames);
+        }
+
+        /// <summary>
+        /// Find the scheme type name for a given object.
+        /// Used to format trace messages.
+        /// </summary>
+        /// <param name="obj">The object to use.</param>
+        /// <returns>The scheme type name.</returns>
+        internal static string EvaluatorName(Obj obj)
+        {
+            return LookupName(obj, evaluatorNames);
         }
 
         /// <summary>

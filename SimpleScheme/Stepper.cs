@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluates expressions step by step.
     /// </summary>
-    public abstract class Stepper
+    public class Stepper
     {
         #region Fields
         /// <summary>
@@ -17,16 +17,6 @@ namespace SimpleScheme
         ///   needs to be delayed but is not complete.
         /// </summary>
         internal static readonly Stepper Suspended = new EvaluatorBase("suspended");
-
-        /// <summary>
-        /// The name of the stepper, used for counters and tracing.
-        /// </summary>
-        private const string StepperName = "evaluate";
-
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counterId = Counter.Create(StepperName);
 
         /// <summary>
         /// Gets the caller that execution returns to when this is done.
@@ -48,6 +38,7 @@ namespace SimpleScheme
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Stepper class.
+        /// This class is not instantiated itself, but only derived classes.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluator environment.</param>
@@ -58,8 +49,6 @@ namespace SimpleScheme
             this.Expr = expr;
             this.Env = env;
             this.traced = false;
-
-            this.IncrementCounter(counterId);
         }
         #endregion
 
@@ -74,13 +63,6 @@ namespace SimpleScheme
         #endregion
 
         #region Accessors
-
-        /// <summary>
-        /// Gets the stepper name, used for tracing and counters.
-        /// Each subclass must implement.
-        /// </summary>
-        internal abstract string Name { get; }
-
         /// <summary>
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
@@ -161,7 +143,7 @@ namespace SimpleScheme
             }
 
             this.traced = true;
-            return this.Name;
+            return TypePrimitives.EvaluatorName(this);
         }
 
         /// <summary>
@@ -311,7 +293,7 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         private void DumpStep(StringBuilder buf)
         {
-            buf.AppendFormat("Step {0}\n", this.Name);
+            buf.AppendFormat("Step {0}\n", TypePrimitives.EvaluatorName(this));
             string exp = TypePrimitives.IsEmptyList(this.Expr) ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)

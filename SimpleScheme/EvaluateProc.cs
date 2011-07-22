@@ -15,7 +15,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "evaluate-proc";
+        internal const string StepperName = "evaluate-proc";
 
         /// <summary>
         /// The proc or primitive to apply.
@@ -42,16 +42,6 @@ namespace SimpleScheme
             this.fn = fn;
             ContinueHere(this.EvalArgsStep);
             IncrementCounter(counter);
-        }
-        #endregion
-
-        #region Accessors
-        /// <summary>
-        /// Gets the name of the stepper.
-        /// </summary>
-        internal override string Name
-        {
-            get { return StepperName; }
         }
         #endregion
 

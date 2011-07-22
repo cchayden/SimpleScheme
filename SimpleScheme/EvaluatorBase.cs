@@ -34,15 +34,5 @@ namespace SimpleScheme
         {
         }
         #endregion
-
-        #region Accessors
-        /// <summary>
-        /// Gets the name of the stepper.
-        /// </summary>
-        internal override string Name
-        {
-            get { return "base"; }
-        }
-        #endregion
     }
 }

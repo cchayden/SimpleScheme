@@ -20,7 +20,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "evaluate-closure";
+        internal const string StepperName = "evaluate-closure";
 
         /// <summary>
         /// The counter id.
@@ -45,16 +45,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Fields
-        /// <summary>
-        /// Gets the name of the stepper.
-        /// </summary>
-        internal override string Name
-        {
-            get { return StepperName; }
-        }
-        #endregion
-
         #region Public Static Methods
         /// <summary>
         /// Calls a closure evaluator
@@ -73,7 +63,7 @@ namespace SimpleScheme
         #region Internal Methods
         /// <summary>
         /// Trace information for the step.
-        /// Print the closure name in addition to args
+        /// Print the closure name.
         /// </summary>
         /// <returns>Info to print for the trace.</returns>
         internal override string TraceInfo()
@@ -83,7 +73,7 @@ namespace SimpleScheme
                 return null;
             }
 
-            return this.Name + " {" + this.f.Name + "}";
+            return TypePrimitives.EvaluatorName(this) + " {" + this.f.Name + "}";
         }
         #endregion
 

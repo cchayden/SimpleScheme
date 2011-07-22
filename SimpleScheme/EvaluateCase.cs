@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        private const string StepperName = "evaluate-case";
+        internal const string StepperName = "evaluate-case";
 
         /// <summary>
         /// The counter id.
@@ -58,16 +58,6 @@ namespace SimpleScheme
         {
             ContinueHere(this.EvaluateKeyStep);
             IncrementCounter(counter);
-        }
-        #endregion
-
-        #region Accessors
-        /// <summary>
-        /// Gets the name of the stepper.
-        /// </summary>
-        internal override string Name
-        {
-            get { return StepperName; }
         }
         #endregion
 
