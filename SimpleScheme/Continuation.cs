@@ -41,16 +41,16 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+
         /// <summary>
         /// Execute the continuation.
         /// Transfers execution to the step saved when the continuation was created.
         /// The environment in effect at that time is also restored.
         /// </summary>
         /// <param name="args">The value to return.</param>
-        /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(Obj args, Environment env, Stepper caller)
+        internal override Stepper Apply(object args, Stepper caller)
         {
             return Stepper.TransferToStep(this.step, List.First(args), this.step.Env);
         }

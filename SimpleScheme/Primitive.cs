@@ -99,10 +99,9 @@ namespace SimpleScheme
         ///   in ReturnedResult and returning to the caller.
         /// </summary>
         /// <param name="args">The arguments to the primitive.</param>
-        /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">The calling Stepper.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(Obj args, Environment env, Stepper caller)
+        internal override Stepper Apply(object args, Stepper caller)
         {
             // First check the number of arguments
             int numArgs = List.Length(args);

@@ -80,7 +80,7 @@ namespace SimpleScheme
         /// <returns>The result, or the next step to obtain it.</returns>
         protected Stepper ApplyStep()
         {
-            return this.fn.Apply(ReturnedExpr, this.Env, this.Caller);
+            return this.fn.Apply(ReturnedExpr, this.Caller);
         }
         #endregion
 

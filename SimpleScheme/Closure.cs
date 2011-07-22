@@ -64,30 +64,32 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
-        /// Actually executes the saved program, with the given arguments matched with the 
-        ///   list of variable names saved when the closure was created.
-        /// Creates a new environment, linked to the one given (which should be the lexical parent).
-        /// </summary>
-        /// <param name="args">The values to be matched with the variable names.</param>
-        /// <param name="env">The base environment to evaluate in.</param>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(Obj args, Environment env, Stepper caller)
-        {
-            return EvaluateSequence.Call(this.Body, new Environment(this.FormalParameters, args, this.Env), caller);
-        }
-
-        /// <summary>
-        /// Actually executes the saved program, with the given arguments matched with the 
-        ///   list of variable names saved when the closure was created.
+        /// Actually executes the saved program
         /// Uses the given environment rather than creating a new one.
+        /// The arguments have already been bound to the formal parameters.
+        /// If there is only one expression in the body, just evaluate it, otherwise evaluate the sequence.
         /// </summary>
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
         internal Stepper ApplyWithtEnv(Environment env, Stepper caller)
         {
-            return EvaluateSequence.Call(this.Body, env, caller);
+            return TypePrimitives.IsEmptyList(List.Rest(this.Body)) ? 
+                EvaluateExpression.Call(List.First(this.Body), env, caller) : 
+                EvaluateSequence.Call(this.Body, env, caller);
+        }
+
+        /// <summary>
+        /// Actually executes the saved program, with the given arguments bound with the 
+        ///   formal parameters of the closure.
+        /// Creates a new environment, linked to the encironment of the closure itself (which should be the lexical parent).
+        /// </summary>
+        /// <param name="args">The values to be matched with the variable names.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>The next step to execute.</returns>
+        internal override Stepper Apply(object args, Stepper caller)
+        {
+            return this.ApplyWithtEnv(new Environment(this.FormalParameters, args, this.Env), caller);
         }
 
         /// <summary>
@@ -97,7 +99,14 @@ namespace SimpleScheme
         /// <returns>String representing the closure.</returns>
         protected string ToString(string tag)
         {
-            return string.Format("({0} {1} {2})", tag, this.FormalParameters, this.Body);
+            // trim enclosing parentheses off body, to match the definition
+            string body = this.Body.ToString();
+            if (body.StartsWith("(") && body.EndsWith(")"))
+            {
+                body = body.Substring(1, body.Length - 2).Trim();
+            }
+
+            return string.Format("({0} {1} {2})", tag, this.FormalParameters, body);
         }
         #endregion
     }

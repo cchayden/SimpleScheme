@@ -101,8 +101,7 @@ namespace SimpleScheme
                 Caller.Interp.CurrentOutputPort.WriteLine(String.Format("evaluate-closure: ({0} {1})", this.f.Name, List.First(ReturnedExpr)));
             }
 
-            this.PushEnvironment(this.f.FormalParameters, ReturnedExpr, this.f.Env);
-            return this.f.ApplyWithtEnv(this.Env, this.Caller);
+            return this.f.Apply(ReturnedExpr, this.Caller);
         }
         #endregion
     }

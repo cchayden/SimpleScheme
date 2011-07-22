@@ -49,7 +49,7 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => Proc(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller.Env, caller), 2, MaxInt)
+                .DefinePrimitive("apply", (args, caller) => Proc(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(List.First(args), caller), 1)
                 .DefinePrimitive("call/cc", (args, caller) => CallCc(List.First(args), caller), 1)
@@ -89,20 +89,20 @@ namespace SimpleScheme
         /// <returns>The result of applying the proc.</returns>
         internal static Obj Force(Obj promise, Stepper caller)
         {
-            return !TypePrimitives.IsProcedure(promise) ? promise : Proc(promise).Apply(null, caller.Env, caller);
+            return !TypePrimitives.IsProcedure(promise) ? promise : Proc(promise).Apply(null, caller);
         }
         #endregion
 
         #region Public Methods
+
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// </summary>
         /// <param name="args">The arguments to the procedure, which have 
         ///   been evaluated.</param>
-        /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to run after the application.</returns>
-        internal abstract Stepper Apply(Obj args, Environment env, Stepper caller);
+        internal abstract Stepper Apply(object args, Stepper caller);
 
         /// <summary>
         /// Assign the procedure name.  If the name is still the default, assign it 
@@ -163,8 +163,9 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private static Obj CallCc(Obj expr, Stepper caller)
         {
+            Procedure proc = Proc(expr);
             return Proc(expr).Apply(
-                List.New(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller.Env, caller);
+                List.New(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller);
         }
         #endregion
     }

@@ -79,10 +79,10 @@ namespace Tests
             this.Run("SimpleScheme.Undefined", "letrec", "((lambda (fun)(fun 0)) letrec)");
 
             this.Run("True", "lambda", "(procedure? lambda)");
-            this.Run("(lambda 0 ())", "lambda", "((lambda (fun)(fun 0)) lambda)");
+            this.Run("(lambda 0 )", "lambda", "((lambda (fun)(fun 0)) lambda)");
 
             this.Run("True", "macro", "(procedure? macro)");
-            this.Run("(macro 0 ())", "lambda", "((lambda (fun)(fun 0)) macro)");
+            this.Run("(macro 0 )", "lambda", "((lambda (fun)(fun 0)) macro)");
 
             this.Run("True", "quote", "(procedure? quote)");
             this.Run("0", "quote", "((lambda (fun)(fun 0)) quote)");

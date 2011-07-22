@@ -73,6 +73,7 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -80,10 +81,9 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <param name="env">The environment for the application.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to excute.</returns>
-        internal override Stepper Apply(object args, Environment env, Stepper caller)
+        internal override Stepper Apply(object args, Stepper caller)
         {
             object target;
             object[] argArray;
