@@ -163,7 +163,6 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private static Obj CallCc(Obj expr, Stepper caller)
         {
-            Procedure proc = Proc(expr);
             return Proc(expr).Apply(
                 List.New(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller);
         }
