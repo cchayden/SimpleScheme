@@ -20,9 +20,9 @@ namespace SimpleScheme
         /// Used where we need a list to start with, the first cell is normally trimmed off later.
         /// </summary>
         /// <returns>A list whose first cell is null.</returns>
-        public static Pair NewEmpty()
+        public static Pair New()
         {
-            return new Pair(EmptyList.Instance, EmptyList.Instance);
+            return new Pair();
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair New(Obj a)
         {
-            return new Pair(a, EmptyList.Instance);
+            return new Pair(a);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair New(Obj a, Obj b)
         {
-            return new Pair(a, new Pair(b, EmptyList.Instance));
+            return new Pair(a, new Pair(b));
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair New(Obj a, Obj b, Obj c)
         {
-            return new Pair(a, new Pair(b, new Pair(c, EmptyList.Instance)));
+            return new Pair(a, new Pair(b, new Pair(c)));
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair New(Obj a, Obj b, Obj c, Obj d)
         {
-            return new Pair(a, new Pair(b, new Pair(c, new Pair(d, EmptyList.Instance))));
+            return new Pair(a, new Pair(b, new Pair(c, new Pair(d))));
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace SimpleScheme
             // More than one arg:
             // Copy all but last into a list.
             // Then splice in the last.
-            Pair result = NewEmpty();
+            Pair result = New();
             Pair accum = result;
             Obj expr = args;
 
@@ -188,6 +188,23 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Create a list containing objs in the given list in the reverse order.
+        /// </summary>
+        /// <param name="x">The list to reverse.</param>
+        /// <returns>The reversed list.</returns>
+        internal static Obj Reverse(Obj x)
+        {
+            Obj result = EmptyList.Instance;
+            while (TypePrimitives.IsPair(x))
+            {
+                result = Cons(First(x), result);
+                x = Rest(x);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Traverse the given list, applying the given function to all elements.
         /// Create a list of the results.
         /// This is purely iterative.
@@ -197,7 +214,7 @@ namespace SimpleScheme
         /// <returns>A list made up of the function results of each input element.  Could be the empty list.</returns>
         internal static Obj MapFun(Func<object, object> fun, Obj expr)
         {
-            Pair result = NewEmpty();
+            Pair result = New();
             Pair accum = result;
 
             // Iterate down the list, taking the function and building a list of the results.
@@ -353,23 +370,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create a list containing objs in the given list in the reverse order.
-        /// </summary>
-        /// <param name="x">The list to reverse.</param>
-        /// <returns>The reversed list.</returns>
-        private static Obj Reverse(Obj x)
-        {
-            Obj result = EmptyList.Instance;
-            while (TypePrimitives.IsPair(x))
-            {
-                result = Cons(First(x), result);
-                x = Rest(x);
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Append a list of lists, making one longer list.
         /// The appending only goes one level deep.
         /// The very last list is not copied, but is instead shared.
@@ -383,7 +383,7 @@ namespace SimpleScheme
                 return EmptyList.Instance;
             }
 
-            Pair result = NewEmpty();
+            Pair result = New();
             Pair accum = result;
 
             while (!TypePrimitives.IsEmptyList(Rest(args)))

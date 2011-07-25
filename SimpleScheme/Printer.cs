@@ -328,8 +328,7 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         private static void ContinuationAsString(Obj obj, bool quoted, StringBuilder buf)
         {
-            buf.Append("continuation: ");
-            buf.Append(obj.ToString());
+            buf.Append("<continuation>");
         }
 
         /// <summary>

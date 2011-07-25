@@ -33,7 +33,7 @@ namespace SimpleScheme
         private EvaluateSet(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -56,21 +56,23 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the second expression (rhs).
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Code to evaluate the second expression.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            return EvaluateExpression.Call(List.Second(Expr), this.Env, ContinueHere(this.SetStep));
+            return EvaluateExpression.Call(List.Second(s.Expr), s.Env, s.ContinueHere(SetStep));
         }
 
         /// <summary>
         /// Back here after evaluation.  Assign the result to the variable in the environment
         ///   named by the first part of the expression.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Returns to caller.</returns>
-        private Stepper SetStep()
+        private static Stepper SetStep(Stepper s)
         {
-            this.Env.Set(List.First(Expr), ReturnedExpr);
-            return ReturnUndefined();
+            s.Env.Set(List.First(s.Expr), s.ReturnedExpr);
+            return s.ReturnUndefined();
         }
         #endregion
     }

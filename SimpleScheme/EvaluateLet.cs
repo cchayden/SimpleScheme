@@ -63,7 +63,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.name = null;
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -91,50 +91,52 @@ namespace SimpleScheme
         /// For a normal let, evaluate this lambda.
         /// For a named let, construct the additional lambda to bind to the name.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continues by evaluating the constructed lambda.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(Expr))
+            EvaluateLet step = (EvaluateLet)s;
+            if (TypePrimitives.IsEmptyList(s.Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for let");
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(Expr))
+            if (!TypePrimitives.IsPair(s.Expr))
             {
-                ErrorHandlers.SemanticError("Bad arg list for let: " + Expr);
-                return ReturnUndefined();
+                ErrorHandlers.SemanticError("Bad arg list for let: " + s.Expr);
+                return s.ReturnUndefined();
             }
 
-            if (TypePrimitives.IsSymbol(List.First(Expr)))
+            if (TypePrimitives.IsSymbol(List.First(s.Expr)))
             {
                 // named let
-                this.name = Symbol.Sym(List.First(Expr));
-                this.bindings = List.Second(Expr);
-                this.body = List.Rest(List.Rest(Expr));
+                step.name = Symbol.Sym(List.First(s.Expr));
+                step.bindings = List.Second(s.Expr);
+                step.body = List.Rest(List.Rest(s.Expr));
             }
             else
             {
-                this.bindings = List.First(Expr);
-                this.body = List.Rest(Expr);
+                step.bindings = List.First(s.Expr);
+                step.body = List.Rest(s.Expr);
             }
 
-            if (TypePrimitives.IsEmptyList(this.body))
+            if (TypePrimitives.IsEmptyList(step.body))
             {
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            this.vars = List.MapFun(List.First, List.New(this.bindings));
-            this.inits = List.MapFun(List.Second, List.New(this.bindings));
+            step.vars = List.MapFun(List.First, List.New(step.bindings));
+            step.inits = List.MapFun(List.Second, List.New(step.bindings));
 
-            if (this.name == null)
+            if (step.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(new Closure(this.vars, this.body, this.Env), this.inits, this.Env, this.Caller);
+                return EvaluateProc.Call(new Closure(step.vars, step.body, s.Env), step.inits, s.Env, s.Caller);
             }
 
             // named let -- eval the inits in the outer environment
-            return EvaluateList.Call(this.inits, this.Env, ContinueHere(this.ApplyNamedLet));
+            return EvaluateList.Call(step.inits, s.Env, s.ContinueHere(ApplyNamedLetStep));
         }
 
         /// <summary>
@@ -143,12 +145,14 @@ namespace SimpleScheme
         ///   of the closure.
         /// Then apply the closure.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step to execute.</returns>
-        private Stepper ApplyNamedLet()
+        private static Stepper ApplyNamedLetStep(Stepper s)
         {
-            Closure fn = new Closure(this.vars, this.body, this.Env);
-            fn.Env.Define(this.name, fn);
-            return fn.Apply(ReturnedExpr, this.Caller);
+            EvaluateLet step = (EvaluateLet)s;
+            Closure fn = new Closure(step.vars, step.body, s.Env);
+            fn.Env.Define(step.name, fn);
+            return fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion
     }

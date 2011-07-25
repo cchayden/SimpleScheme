@@ -39,7 +39,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.fn = fn;
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -63,19 +63,22 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the macro to the expression.  
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The first step to evaluate to macro.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            return this.fn.Apply(Expr, ContinueHere(this.ExpandStep));
+            EvaluateExpandMacro step = (EvaluateExpandMacro)s;
+            return step.fn.Apply(s.Expr, s.ContinueHere(ExpandStep));
         }
 
         /// <summary>
         /// Back here after macro is expanded.  Evaluate the result.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Return to caller with the expanded macro.</returns>
-        private Stepper ExpandStep()
+        private static Stepper ExpandStep(Stepper s)
         {
-            return EvaluateExpression.Call(ReturnedExpr, this.Env, this.Caller);
+            return EvaluateExpression.Call(s.ReturnedExpr, s.Env, s.Caller);
         }
         #endregion
     }

@@ -350,25 +350,6 @@ namespace SimpleScheme
 
         /// <summary>
         /// Find the scheme type name for a given object.
-        /// </summary>
-        /// <param name="obj">The object to use.</param>
-        /// <param name="table">The lookup table.</param>
-        /// <returns>The scheme type name.</returns>
-        private static string LookupName(Obj obj, TypeNameEntry[] table)
-        {
-            foreach (var entry in table)
-            {
-                if (entry.TypePredicate(obj))
-                {
-                    return entry.Name;
-                }
-            }
-
-            return obj.GetType().ToString();
-        }
-
-        /// <summary>
-        /// Find the scheme type name for a given object.
         /// Used to format error messages.
         /// </summary>
         /// <param name="obj">The object to use.</param>
@@ -418,6 +399,25 @@ namespace SimpleScheme
             }
 
             return Type.GetType(typeName);
+        }
+
+        /// <summary>
+        /// Find the scheme type name for a given object.
+        /// </summary>
+        /// <param name="obj">The object to use.</param>
+        /// <param name="table">The lookup table.</param>
+        /// <returns>The scheme type name.</returns>
+        private static string LookupName(Obj obj, TypeNameEntry[] table)
+        {
+            foreach (var entry in table)
+            {
+                if (entry.TypePredicate(obj))
+                {
+                    return entry.Name;
+                }
+            }
+
+            return obj.GetType().ToString();
         }
 
         /// <summary>

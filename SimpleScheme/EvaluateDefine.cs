@@ -32,7 +32,7 @@ namespace SimpleScheme
         private EvaluateDefine(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -58,26 +58,28 @@ namespace SimpleScheme
         /// This is what would result if we prepend "lambda" and call EvaluateExpression.
         /// In the second case (defun) start by evaluating the body.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continue by evaluating the body of the definition.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            if (TypePrimitives.IsPair(List.First(Expr)))
+            if (TypePrimitives.IsPair(List.First(s.Expr)))
             {
-                this.Env.Define(List.First(List.First(Expr)), new Closure(List.Rest(List.First(Expr)), List.Rest(Expr), this.Env));
-                return ReturnUndefined();
+                s.Env.Define(List.First(List.First(s.Expr)), new Closure(List.Rest(List.First(s.Expr)), List.Rest(s.Expr), s.Env));
+                return s.ReturnUndefined();
             }
 
-            return EvaluateExpression.Call(List.Second(Expr), this.Env, ContinueHere(this.StoreDefine));
+            return EvaluateExpression.Call(List.Second(s.Expr), s.Env, s.ContinueHere(StoreDefineStep));
         }
 
         /// <summary>
         /// Back from defun.  Store the body as the value of the symbol
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution continues in the caller.</returns>
-        private Stepper StoreDefine()
+        private static Stepper StoreDefineStep(Stepper s)
         {
-            this.Env.Define(List.First(Expr), ReturnedExpr);
-            return ReturnUndefined();
+            s.Env.Define(List.First(s.Expr), s.ReturnedExpr);
+            return s.ReturnUndefined();
         }
         #endregion
     }

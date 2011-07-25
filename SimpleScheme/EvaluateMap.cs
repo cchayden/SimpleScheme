@@ -37,17 +37,11 @@ namespace SimpleScheme
         private readonly bool returnResult;
 
         /// <summary>
-        /// The initial value of the result.
-        /// This is either an empty list, or null.
-        /// If null, then no result is returned.
-        /// </summary>
-        private readonly Pair result;
-
-        /// <summary>
         /// Accumulates the returned result.
-        /// The is the end of the list that we are constructing (result).
+        /// The list is constructed in reverse order.
+        /// This happens only if returnResult is true;
         /// </summary>
-        private Pair accum;
+        private Obj result;
 
         /// <summary>
         /// The lists to map.
@@ -58,6 +52,9 @@ namespace SimpleScheme
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateMap class.
+        /// This is used in the "map" primitive, and as part of "for-each".
+        /// Because it is used internally, the evaluator must not use destructive
+        ///   operations on its member variables.
         /// </summary>
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="expr">The expression to evaluate.</param>
@@ -70,12 +67,9 @@ namespace SimpleScheme
             this.proc = proc;
             this.lists = expr;
             this.returnResult = returnResult;
-            if (returnResult)
-            {
-                this.accum = this.result = List.NewEmpty();
-            }
+            this.result = EmptyList.Instance;
 
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -101,58 +95,66 @@ namespace SimpleScheme
         /// Start the map evaluation.
         /// Begin with some error checking then go to nex step.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>If no expression, return to caller.  Otherwise, continue on to next step.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
+            EvaluateMap step = (EvaluateMap)s;
+
             // first check for degenerate cases
-            if (TypePrimitives.IsEmptyList(this.lists))
+            if (TypePrimitives.IsEmptyList(step.lists))
             {
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(this.lists))
+            if (!TypePrimitives.IsPair(step.lists))
             {
-                ErrorHandlers.SemanticError("Bad args for map: " + this.lists);
-                return ReturnUndefined();
+                ErrorHandlers.SemanticError("Bad args for map: " + step.lists);
+                return s.ReturnUndefined();
             }
 
-            return ContinueHere(this.ApplyFunStep);
+            return s.ContinueHere(ApplyFunStep);
         }
 
         /// <summary>
         /// Apply the map function to an element of the list and grab the result.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>If apply recurses, return that stepper.  Otherwise go on to save result.
         /// If we are done, return the collected results.</returns>
-        private Stepper ApplyFunStep()
+        private static Stepper ApplyFunStep(Stepper s)
         {
-            if (TypePrimitives.IsPair(List.First(this.lists)))
+            EvaluateMap step = (EvaluateMap)s;
+            if (TypePrimitives.IsPair(List.First(step.lists)))
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return this.proc.Apply(List.MapFun(List.First, List.New(this.lists)), ContinueHere(this.CollectAndLoopStep));
+                return step.proc.Apply(List.MapFun(List.First, List.New(step.lists)), s.ContinueHere(CollectAndLoopStep));
             }
 
-            // if we are done, just return the result minus the dummy entry
-            return ReturnFromStep(this.returnResult ? List.Rest(this.result) : Undefined.Instance);
+            // if we are done, return the reversed result list
+            return s.ReturnFromStep(step.returnResult ? List.Reverse(step.result) : Undefined.Instance);
         }
 
         /// <summary>
         /// Collect the result of the function application and loop back to do the next one.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continue back in apply fun step.</returns>
-        private Stepper CollectAndLoopStep()
+        private static Stepper CollectAndLoopStep(Stepper s)
         {
+            EvaluateMap step = (EvaluateMap)s;
+
             // back from the evaluation -- save the result and keep going with the rest
-            if (this.returnResult)
+            if (step.returnResult)
             {
-                // Builds a list by tacking new values onto the tail.
-                this.accum = (Pair)(this.accum.Rest = List.New(ReturnedExpr));
+                // Builds a list by tacking new values onto the head.
+                step.result = List.Cons(s.ReturnedExpr, step.result);
             }
 
             // Step down each of the lists
-            this.lists = List.MapFun(List.Rest, List.New(this.lists));
-            return ContinueHere(this.ApplyFunStep);
+            step.lists = List.MapFun(List.Rest, List.New(step.lists));
+            return s.ContinueHere(ApplyFunStep);
         }
         #endregion
     }

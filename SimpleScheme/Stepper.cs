@@ -21,7 +21,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the caller that execution returns to when this is done.
         /// </summary>
-        private readonly Stepper caller;
+        private Stepper caller;
 
         /// <summary>
         /// The program counter.
@@ -57,9 +57,13 @@ namespace SimpleScheme
         /// This is the type for the stepper functions.
         /// It takes no arguments and returns a Stepper.
         /// These values are assigned to the pc.
+        /// Steppers are meant to be static functions only.  This is because if an evaluator
+        ///   instance is bound to the stepper, then it could not clone properly, so continuations
+        ///   would not work.
         /// </summary>
+        /// <param name="s">The stepper to invoke the step on.</param>
         /// <returns>The next step to take.</returns>
-        public delegate Stepper StepperFunction();
+        public delegate Stepper StepperFunction(Stepper s);
         #endregion
 
         #region Accessors
@@ -131,6 +135,42 @@ namespace SimpleScheme
 
         #region Internal Methods
         /// <summary>
+        /// Makes a copy of the step.  Each subclass makes a copy of its own member variables.
+        /// This is needed to support continuations, because the step contains mutable state.  If the state 
+        ///  is changed after the saving of the continuation, then the continuation would not represent the
+        ///  correct state.  
+        /// For this shallow copy to be correct, each stepper must modify ONLY its own variables, not the
+        ///  things to which they point.
+        /// </summary>
+        /// <returns>A copy of the step.</returns>
+        internal Stepper Clone()
+        {
+            return (Stepper)this.MemberwiseClone();
+        }
+
+        /// <summary>
+        /// Makes a copy of the whole chain of evaluation steps, from the current step back to
+        ///   the original step.  This chain is saved as the continuation.  
+        /// The cloned chain is linked up with each other to form a new chain.
+        /// </summary>
+        /// <returns>A copy of the current step.</returns>
+        internal Stepper CloneChain()
+        {
+            Stepper ret = (Stepper)this.MemberwiseClone();
+            Stepper s = ret;
+            while (s.caller != null)
+            {
+                Stepper parent = (Stepper)s.caller.MemberwiseClone();
+                s.caller = parent;
+                s = s.caller;
+            }
+
+            return ret;
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
         /// Trace information for the step.
         /// Do this only once per instance.
         /// </summary>
@@ -149,11 +189,21 @@ namespace SimpleScheme
         /// <summary>
         /// Run the step represented by the PC.
         /// Just execute the stepper function stored in pc.
+        /// The instance is passed to the static function, not wrapped in the delegate.
+        /// The pc is a delegate, and must not be bound to an instance, only to a static function.
+        /// Otherwise, the shallow copy that is used to create a continuation
+        ///   will be bound to the wrong stepper.  Check to make sure this is handled
+        ///   correctly.
         /// </summary>
         /// <returns>The next step to run.</returns>
         internal Stepper RunStep()
         {
-            return this.pc();
+            if (this.pc.Target != null)
+            {
+                ErrorHandlers.InternalError("Step bound to instance: " + this.pc);
+            }
+
+            return this.pc(this);
         }
 
         /// <summary>
@@ -213,7 +263,7 @@ namespace SimpleScheme
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
         /// <param name="parent">The existing environment.</param>
-        protected void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
+        internal void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
         {
             this.Env = new Environment(formals, vals, parent.LexicalParent);
         }
@@ -225,7 +275,7 @@ namespace SimpleScheme
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
         /// <param name="parent">The lexically enclosing environment.</param>
-        protected void PushEnvironment(Obj formals, Obj vals, Environment parent)
+        internal void PushEnvironment(Obj formals, Obj vals, Environment parent)
         {
             this.Env = new Environment(formals, vals, parent);
         }
@@ -234,7 +284,7 @@ namespace SimpleScheme
         /// Push an empty environment.
         /// </summary>
         /// <param name="parent">The lexically enclosing environment.</param>
-        protected void PushEmptyEnvironment(Environment parent)
+        internal void PushEmptyEnvironment(Environment parent)
         {
             this.Env = new Environment(parent);
         }
@@ -244,7 +294,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="nextStep">The new PC value</param>
         /// <returns>The next step to take.</returns>
-        protected Stepper ContinueHere(StepperFunction nextStep)
+        internal Stepper ContinueHere(StepperFunction nextStep)
         {
             this.pc = nextStep;
             return this;
@@ -257,7 +307,7 @@ namespace SimpleScheme
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next step, which is in the caller.</returns>
-        protected Stepper ReturnFromStep(Obj expr, Environment env)
+        internal Stepper ReturnFromStep(Obj expr, Environment env)
         {
             this.caller.ReturnedExpr = expr;
             this.caller.ReturnedEnv = env;
@@ -269,7 +319,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <returns>The next step, which is in the caller.</returns>
-        protected Stepper ReturnFromStep(Obj expr)
+        internal Stepper ReturnFromStep(Obj expr)
         {
             this.caller.ReturnedExpr = expr;
             return this.caller;
@@ -279,7 +329,7 @@ namespace SimpleScheme
         /// Return the undefined result.
         /// </summary>
         /// <returns>The next step, which is in the caller.</returns>
-        protected Stepper ReturnUndefined()
+        internal Stepper ReturnUndefined()
         {
             this.caller.ReturnedExpr = Undefined.Instance;
             return this.caller;

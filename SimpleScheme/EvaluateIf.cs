@@ -36,7 +36,7 @@ namespace SimpleScheme
         private EvaluateIf(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.EvaluateTestStep);
+            ContinueHere(EvaluateTestStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -59,10 +59,11 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private Stepper EvaluateTestStep()
+        private static Stepper EvaluateTestStep(Stepper s)
         {
-            return EvaluateExpression.Call(List.First(Expr), this.Env, ContinueHere(this.EvaluateAlternativeStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(EvaluateAlternativeStep));
         }
 
         /// <summary>
@@ -70,11 +71,13 @@ namespace SimpleScheme
         /// Evaluate and return either the second or third expression.
         /// If there is no thid, the empty list will be evaluated, which is OK.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution continues with the return.</returns>
-        private Stepper EvaluateAlternativeStep()
+        private static Stepper EvaluateAlternativeStep(Stepper s)
         {
-            Obj toEvaluate = SchemeBoolean.Truth(ReturnedExpr) ? List.Second(Expr) : List.Third(Expr);
-            return EvaluateExpression.Call(TypePrimitives.IsEmptyList(toEvaluate) ? Undefined.Instance : toEvaluate, this.Env, this.Caller);
+            Obj toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr) ? List.Second(s.Expr) : List.Third(s.Expr);
+            return EvaluateExpression.Call(
+                TypePrimitives.IsEmptyList(toEvaluate) ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }
         #endregion
     }

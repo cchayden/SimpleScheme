@@ -39,7 +39,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.expressions = expr;
-            ContinueHere(this.EvalExprStep);
+            ContinueHere(EvalExprStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -64,29 +64,33 @@ namespace SimpleScheme
         /// If not, evaluate the next expression.
         /// If we are, evaluate and return the last expr.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper EvalExprStep()
+        private static Stepper EvalExprStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(List.Rest(this.expressions)))
+            EvaluateSequence step = (EvaluateSequence)s;
+            if (TypePrimitives.IsEmptyList(List.Rest(step.expressions)))
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
                 // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
                 //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(List.First(this.expressions), this.Env, this.Caller);
+                return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(this.expressions), this.Env, ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
         /// Comes back here after expression evaluation.  Loop back and evaluate another
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Immediately steps back.</returns>
-        private Stepper LoopStep()
+        private static Stepper LoopStep(Stepper s)
         {
-            this.expressions = List.Rest(this.expressions);
-            return ContinueHere(this.EvalExprStep);
+            EvaluateSequence step = (EvaluateSequence)s;
+            step.expressions = List.Rest(step.expressions);
+            return s.ContinueHere(EvalExprStep);
         }
         #endregion
     }

@@ -95,6 +95,41 @@ namespace Tests
         }
 
         /// <summary>
+        /// A test for call/cc
+        /// The R4RSTest tests do not do a good enough job.
+        /// </summary>
+        [TestMethod]
+        public void CallccTest()
+        {
+            this.Run("100", "call/cc", 
+                @"(define return 0)
+                  (define test (lambda ()
+                       (+ 1 (call/cc (lambda (cont) (set! return cont) 99)))))
+                  (test)"
+            );
+            this.Run("23", "call/cc return", "(return 22)");
+            this.Run("34", "call/cc return", "(return 33)");
+
+            this.Run("SimpleScheme.Undefined", "call/cc seq", @"
+              (define return 0)
+              (define count 0)
+              (define x '(1 2 3 4 5 6 7 8))
+              (define show 
+                (lambda (x) 
+                  (set! count (+ 1 count))
+                  (if (= x 4)
+                       (call/cc (lambda (cont) (set! return cont) 4.5))
+                  x)))
+            ");
+            this.Run("(1 2 3 4.5 5 6 7 8)", "call/cc seq map", "(map show x)");
+            this.Run("8", "call/cc count", "count");
+            this.Run("(1 2 3 22 5 6 7 8)", "call/cc seq return", "(return 22)");
+            this.Run("12", "call/cc count", "count");
+            this.Run("(1 2 3 33 5 6 7 8)", "call/cc seq return", "(return 33)");
+            this.Run("16", "call/cc count", "count");
+        }
+
+        /// <summary>
         /// Run a test and check the result.
         /// </summary>
         /// <param name="expected">The expected result.</param>

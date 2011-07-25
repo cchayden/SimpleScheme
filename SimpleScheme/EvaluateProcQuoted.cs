@@ -35,7 +35,7 @@ namespace SimpleScheme
             : base(fn, expr, env, caller)
         {
             ContinueStep(expr);
-            ContinueHere(this.ApplyStep);
+            ContinueHere(ApplyStep);
             IncrementCounter(counter);
         }
         #endregion

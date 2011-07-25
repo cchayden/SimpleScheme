@@ -40,7 +40,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.tests = expr;
-            ContinueHere(this.EvalTestStep);
+            ContinueHere(EvalTestStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -69,33 +69,37 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Steps to evaluate the expression.</returns>
-        private Stepper EvalTestStep()
+        private static Stepper EvalTestStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(List.Rest(this.tests)))
+            EvaluateOr step = (EvaluateOr)s;
+            if (TypePrimitives.IsEmptyList(List.Rest(step.tests)))
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(List.First(this.tests), this.Env, this.Caller);
+                return EvaluateExpression.Call(List.First(step.tests), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(this.tests), this.Env, ContinueHere(this.LoopStep));
+            return EvaluateExpression.Call(List.First(step.tests), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
         /// If the expression evaluated to true, we are done and we can return the expression value.
         /// Otherwise, step down the list.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The evaluation result, or loops back to evaluate the next item.</returns>
-        private Stepper LoopStep()
+        private static Stepper LoopStep(Stepper s)
         {
-            if (SchemeBoolean.Truth(this.ReturnedExpr))
+            EvaluateOr step = (EvaluateOr)s;
+            if (SchemeBoolean.Truth(s.ReturnedExpr))
             {
-                return ReturnFromStep(this.ReturnedExpr);
+                return s.ReturnFromStep(s.ReturnedExpr);
             }
 
-            this.tests = List.Rest(this.tests);
-            return ContinueHere(this.EvalTestStep);
+            step.tests = List.Rest(step.tests);
+            return s.ContinueHere(EvalTestStep);
         }
         #endregion
     }

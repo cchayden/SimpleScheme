@@ -48,30 +48,23 @@ namespace SimpleScheme
         {
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
         }
         #endregion
 
         #region Protected Methods
-        /// <summary>
-        /// Start by setting up timers and counter.
-        /// </summary>
-        /// <returns>Continue to next step.</returns>
-        protected Stepper InitialStep()
-        {
-            Obj y = List.Second(Expr);
-            this.counter = TypePrimitives.IsEmptyList(y) ? 1 : (int)Number.Num(y);
-            this.i = 0;
-            return ContinueHere(this.Step1);
-        }
 
         /// <summary>
         /// Subclass must provide an implementation.
         /// This evaluates the expression, in a way that is appropriate
         ///   to the function (eval or apply).
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        protected abstract Stepper Step1();
+        protected static Stepper Step1(Stepper s)
+        {
+            return ((EvaluateTimeBase)s).Step1();
+        }
 
         /// <summary>
         /// Back here after expression evaluation.  
@@ -79,22 +72,48 @@ namespace SimpleScheme
         /// If not done, loop back.
         /// Otherwise, calculate elapsed time and mem use.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continue, or else give the timer results.</returns>
-        protected Stepper Step2()
+        protected static Stepper Step2(Stepper s)
         {
-            this.i++;
-            if (this.i < this.counter)
+            EvaluateTimeBase step = (EvaluateTimeBase)s;
+            step.i++;
+            if (step.i < step.counter)
             {
-                return this;
+                return step;
             }
 
-            this.stopwatch.Stop();
-            long time = this.stopwatch.ElapsedMilliseconds;
-            long mem = GC.GetTotalMemory(false) - this.startMem;
-            return ReturnFromStep(
+            step.stopwatch.Stop();
+            long time = step.stopwatch.ElapsedMilliseconds;
+            long mem = GC.GetTotalMemory(false) - step.startMem;
+            return s.ReturnFromStep(
                     List.Cons(
-                        ReturnedExpr, 
+                        s.ReturnedExpr, 
                         List.New(List.New(Number.Num(time), "msec"), List.New(Number.Num(mem), "bytes"))));
+        }
+        #endregion
+
+        #region Protected Methods
+        /// <summary>
+        /// Step1 is defined in the derived classes.
+        /// </summary>
+        /// <returns>The next step to take.</returns>
+        protected abstract Stepper Step1();
+        #endregion
+
+        #region Private Static Methods
+        /// <summary>
+        /// Start by setting up timers and counter.
+        /// </summary>
+        /// <param name="s">The step to evaluate.</param>
+        /// <returns>Continue to next step.</returns>
+        private static Stepper InitialStep(Stepper s)
+        {
+            EvaluateTimeBase step = (EvaluateTimeBase)s;
+            Obj y = List.Second(s.Expr);
+            step.counter = TypePrimitives.IsEmptyList(y) ? 1 : (int)Number.Num(y);
+            step.i = 0;
+            return s.ContinueHere(Step1);
         }
         #endregion
     }

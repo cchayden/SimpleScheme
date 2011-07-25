@@ -62,7 +62,7 @@ namespace SimpleScheme
         private EvaluateLetRec(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -88,58 +88,62 @@ namespace SimpleScheme
         /// Make an environment for evaluating the inits consisting of the vars and 
         ///   an equal number of undefined vals.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continues by evaluating the init list.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(Expr))
+            EvaluateLetRec step = (EvaluateLetRec)s;
+            if (TypePrimitives.IsEmptyList(s.Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(Expr))
+            if (!TypePrimitives.IsPair(s.Expr))
             {
-                ErrorHandlers.SemanticError("Bad arg list for letrec: " + Expr);
-                return ReturnUndefined();
+                ErrorHandlers.SemanticError("Bad arg list for letrec: " + s.Expr);
+                return s.ReturnUndefined();
             }
 
-            Obj bindings = List.First(Expr);
-            this.body = List.Rest(Expr);
+            Obj bindings = List.First(s.Expr);
+            step.body = List.Rest(s.Expr);
 
-            if (TypePrimitives.IsEmptyList(this.body))
+            if (TypePrimitives.IsEmptyList(step.body))
             {
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            this.vars = List.MapFun(List.First, List.New(bindings));
-            this.inits = List.MapFun(List.Second, List.New(bindings));
-            this.formals = this.vars;
+            step.vars = List.MapFun(List.First, List.New(bindings));
+            step.inits = List.MapFun(List.Second, List.New(bindings));
+            step.formals = step.vars;
             Obj initVals = EmptyList.Instance;
-            int n = List.Length(this.vars);
+            int n = List.Length(step.vars);
             for (int i = 0; i < n; i++)
             {
                 initVals = List.Cons(Undefined.Instance, initVals);
             }
 
-            this.vals = new System.Collections.Generic.List<Obj>(n);
+            step.vals = new System.Collections.Generic.List<Obj>(n);
 
-            this.PushEnvironment(this.formals, initVals, this.Env);
-            return ContinueHere(this.EvalInit);
+            s.PushEnvironment(step.formals, initVals, s.Env);
+            return s.ContinueHere(EvalInitStep);
         }
 
         /// <summary>
         /// Evaluate one of the inits in the environment of the vars.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper EvalInit()
+        private static Stepper EvalInitStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(this.inits))
+            EvaluateLetRec step = (EvaluateLetRec)s;
+            if (TypePrimitives.IsEmptyList(step.inits))
             {
-                return ContinueHere(this.ApplyProc);
+                return s.ContinueHere(ApplyProcStep);
             }
 
-            Closure fun = new Closure(this.formals, List.New(List.First(this.inits)), this.Env);  
-            return fun.ApplyWithtEnv(this.Env, ContinueHere(this.BindVarToInit));
+            Closure fun = new Closure(step.formals, List.New(List.First(step.inits)), s.Env);  
+            return fun.ApplyWithtEnv(s.Env, s.ContinueHere(BindVarToInitStep));
         }
 
         /// <summary>
@@ -147,33 +151,38 @@ namespace SimpleScheme
         /// Step down list of vars and inits.
         /// Go back and evaluate another init.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper BindVarToInit()
+        private static Stepper BindVarToInitStep(Stepper s)
         {
-            this.vals.Add(ReturnedExpr);
-            this.vars = List.Rest(this.vars);
-            this.inits = List.Rest(this.inits);
-            return ContinueHere(this.EvalInit);
+            EvaluateLetRec step = (EvaluateLetRec)s;
+            step.vals.Add(s.ReturnedExpr);
+            step.vars = List.Rest(step.vars);
+            step.inits = List.Rest(step.inits);
+            return s.ContinueHere(EvalInitStep);
         }
 
         /// <summary>
         /// Inits evaluated and bound -- execute the proc and return.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution returns to the caller.</returns>
-        private Stepper ApplyProc()
+        private static Stepper ApplyProcStep(Stepper s)
         {
+            EvaluateLetRec step = (EvaluateLetRec)s;
+
             // assign the inits into the env
-            Obj var = this.formals;
-            int n = List.Length(this.formals);
+            Obj var = step.formals;
+            int n = List.Length(step.formals);
             for (int i = 0; i < n; i++)
             {
-                this.Env.Set(List.First(var), this.vals[i]);
+                s.Env.Set(List.First(var), step.vals[i]);
                 var = List.Rest(var);
             }
 
             // apply the fun to the vals and return
-            Closure fun = new Closure(this.formals, this.body, this.Env);
-            return fun.ApplyWithtEnv(this.Env, this.Caller);
+            Closure fun = new Closure(step.formals, step.body, s.Env);
+            return fun.ApplyWithtEnv(s.Env, s.Caller);
         }
         #endregion
     }

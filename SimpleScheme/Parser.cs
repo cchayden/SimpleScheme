@@ -116,7 +116,6 @@ namespace SimpleScheme
             {
                 ErrorHandlers.IoError("IOException on close: " + ex);
             }
-
         }
         #endregion
 
@@ -214,9 +213,9 @@ namespace SimpleScheme
 
             ch = this.inp.Read();
 
-            if (logger != null)
+            if (this.logger != null)
             {
-                logger.Append((char)ch);
+                this.logger.Append((char)ch);
             }
 
             return ch;
@@ -236,9 +235,9 @@ namespace SimpleScheme
             }
 
             ch = this.inp.Read();
-            if (logger != null)
+            if (this.logger != null)
             {
-                logger.Append((char)ch);
+                this.logger.Append((char)ch);
             }
 
             return ch;

@@ -47,7 +47,7 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
-        private Interpreter(bool loadStandardMacros, PrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        public Interpreter(bool loadStandardMacros, PrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
             this.Trace = false;
             this.Count = false;
@@ -209,7 +209,7 @@ namespace SimpleScheme
         {
             try
             {
-                return UnsafeBeginEval(expr, cb, state);
+                return this.UnsafeBeginEval(expr, cb, state);
             }
             catch (Exception ex)
             {
@@ -217,6 +217,7 @@ namespace SimpleScheme
                 return null;
             }
         }
+
         /// <summary>
         /// End asynchronous evaluation and get the result.
         /// Catch any exceptions that might happen.
@@ -418,6 +419,153 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Define Primitives
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        {
+            env
+                //// (trace-on)
+                .DefinePrimitive("trace-on", (args, caller) => SetTraceFlag(caller, true), 0)
+                //// (trace-off)
+                .DefinePrimitive("trace-off", (args, caller) => SetTraceFlag(caller, false), 0)
+                //// (counters-on)
+                .DefinePrimitive("counters-on", (args, caller) => SetCountFlag(caller, true), 0)
+                //// (counters-off)
+                .DefinePrimitive("counters-off", (args, caller) => SetCountFlag(caller, false), 0)
+                //// (backtrace)
+                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Evaluate an expression in an environment.
+        /// Do it by executing a set of steps.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The environment in which to evaluate it.</param>
+        /// <returns>The result of the evaluation.</returns>
+        internal Obj Eval(Obj expr, Environment env)
+        {
+            return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
+        }
+
+        /// <summary>
+        /// Perform steps until evaluation is complete or suspended.
+        /// After suspension, return to this entry point.
+        /// </summary>
+        /// <param name="step">The step to perform first.</param>
+        /// <returns>The evaluation result, or suspended stepper.</returns>
+        internal Obj EvalSteps(Stepper step)
+        {
+            while (true)
+            {
+                if (step == Stepper.Suspended)
+                {
+                    // TODO should this return the async result?
+                    return step;
+                }
+
+                if (step == null)
+                {
+                    return ErrorHandlers.InternalError("PC bad value");
+                }
+
+                if (step.Caller == null)
+                {
+                    if (this.asyncResult != null)
+                    {
+                        this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
+                    }
+
+                    return step.ReturnedExpr;
+                }
+
+                this.TraceStep(step);
+                step.IncrementCounter(counter);
+
+                // run the step and capture the next step
+                step = step.RunStep();
+            }
+        }
+
+        /// <summary>
+        /// Read from the input port and evaluate whatever is there.
+        /// Done for the side effect, not the result.
+        /// Since the result is never tested, asynchronous suspensions do not prevent the rest
+        /// of the file from being loaded.
+        /// </summary>
+        /// <param name="inp">The input port.</param>
+        /// <returns>Undefined instance.</returns>
+        internal Obj Load(InputPort inp)
+        {
+            while (true)
+            {
+                Obj input;
+                if (InputPort.IsEof(input = inp.ReadObj()))
+                {
+                    inp.Close();
+                    return Undefined.Instance;
+                }
+
+                this.Eval(input);
+            }
+        }
+
+        /// <summary>
+        /// Increment the given counter.
+        /// Skip if if counting is turned off.
+        /// </summary>
+        /// <param name="counterId">The counter to increment.</param>
+        internal void IncrementCounter(int counterId)
+        {
+            if (this.Count)
+            {
+                this.CurrentCounters.Increment(counterId);
+            }
+        }
+        #endregion
+
+        #region Private Static Methods
+        /// <summary>
+        /// Sets tracing on or off.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <param name="flag">The new trace state.</param>
+        /// <returns>Undefined object.</returns>
+        private static Obj SetTraceFlag(Stepper caller, bool flag)
+        {
+            caller.Interp.Trace = flag;
+            return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Sets counting on or off.
+        /// </summary>
+        /// <param name="caller">The calling stepper.</param>
+        /// <param name="flag">The new count state.</param>
+        /// <returns>Undefined object.</returns>
+        private static Obj SetCountFlag(Stepper caller, bool flag)
+        {
+            caller.Interp.Count = flag;
+            return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// Display a stack backtrace.
+        /// </summary>
+        /// <param name="caller">The caller.</param>
+        /// <returns>Undefined result.</returns>
+        private static Obj Backtrace(Stepper caller)
+        {
+            caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
+            return Undefined.Instance;
+        }
+        #endregion
+
         #region Private Methods
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
@@ -471,153 +619,6 @@ namespace SimpleScheme
         private Obj UnsafeReadEval(InputPort inp)
         {
             return this.ReadEval(inp);
-        }
-        #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Evaluate an expression in an environment.
-        /// Do it by executing a set of steps.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The environment in which to evaluate it.</param>
-        /// <returns>The result of the evaluation.</returns>
-        internal Obj Eval(Obj expr, Environment env)
-        {
-            return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
-        }
-
-        /// <summary>
-        /// Perform steps until evaluation is complete or suspended.
-        /// After suspension, return to this entry point.
-        /// </summary>
-        /// <param name="step">The step to perform first.</param>
-        /// <returns>The evaluation result, or suspended stepper.</returns>
-        internal Obj EvalSteps(Stepper step)
-        {
-            while (true)
-            {
-                if (step == Stepper.Suspended)
-                {
-                    // TODO should this return the async result?
-                    return step;
-                }
-
-                if (step == this.halted)
-                {
-                    if (this.asyncResult != null)
-                    {
-                        this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
-                    }
-
-                    return this.halted.ReturnedExpr;
-                }
-
-                if (step == null)
-                {
-                    return ErrorHandlers.InternalError("PC bad value");
-                }
-
-                this.TraceStep(step);
-                step.IncrementCounter(counter);
-
-                // run the step and capture the next step
-                step = step.RunStep();
-            }
-        }
-
-        /// <summary>
-        /// Read from the input port and evaluate whatever is there.
-        /// Done for the side effect, not the result.
-        /// Since the result is never tested, asynchronous suspensions do not prevent the rest
-        /// of the file from being loaded.
-        /// </summary>
-        /// <param name="inp">The input port.</param>
-        /// <returns>Undefined instance.</returns>
-        internal Obj Load(InputPort inp)
-        {
-            while (true)
-            {
-                Obj input;
-                if (InputPort.IsEof(input = inp.ReadObj()))
-                {
-                    inp.Close();
-                    return Undefined.Instance;
-                }
-
-                this.Eval(input);
-            }
-        }
-
-        /// <summary>
-        /// Increment the given counter.
-        /// Skip if if counting is turned off.
-        /// </summary>
-        /// <param name="counterId">The counter to increment.</param>
-        internal void IncrementCounter(int counterId)
-        {
-            if (this.Count)
-            {
-                this.CurrentCounters.Increment(counterId);
-            }
-        }
-        #endregion
-
-        #region Define Primitives
-        /// <summary>
-        /// Define the counter primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
-        {
-            env
-                //// (trace-on)
-                .DefinePrimitive("trace-on", (args, caller) => SetTraceFlag(caller, true), 0)
-                //// (trace-off)
-                .DefinePrimitive("trace-off", (args, caller) => SetTraceFlag(caller, false), 0)
-                //// (counters-on)
-                .DefinePrimitive("counters-on", (args, caller) => SetCountFlag(caller, true), 0)
-                //// (counters-off)
-                .DefinePrimitive("counters-off", (args, caller) => SetCountFlag(caller, false), 0)
-                //// (backtrace)
-                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
-        }
-        #endregion
-
-        #region Private Static Methods
-        /// <summary>
-        /// Sets tracing on or off.
-        /// </summary>
-        /// <param name="caller">The calling stepper.</param>
-        /// <param name="flag">The new trace state.</param>
-        /// <returns>Undefined object.</returns>
-        private static Obj SetTraceFlag(Stepper caller, bool flag)
-        {
-            caller.Interp.Trace = flag;
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Sets counting on or off.
-        /// </summary>
-        /// <param name="caller">The calling stepper.</param>
-        /// <param name="flag">The new count state.</param>
-        /// <returns>Undefined object.</returns>
-        private static Obj SetCountFlag(Stepper caller, bool flag)
-        {
-            caller.Interp.Count = flag;
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Display a stack backtrace.
-        /// </summary>
-        /// <param name="caller">The caller.</param>
-        /// <returns>Undefined result.</returns>
-        private static Obj Backtrace(Stepper caller)
-        {
-            caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
-            return Undefined.Instance;
         }
         #endregion
 

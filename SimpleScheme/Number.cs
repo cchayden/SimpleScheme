@@ -68,8 +68,6 @@ namespace SimpleScheme
 
             const int MaxInt = int.MaxValue;
             env
-                //// <r4rs section="6.5.5">(= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("=", (args, caller) => NumCompare(args, '='), 2, MaxInt)
                 //// <r4rs section="6.5.5">(* <z1> ...)</r4rs>
                 .DefinePrimitive("*", (args, caller) => NumCompute(args, '*', 1.0), 0, MaxInt)
                 //// <r4rs section="6.5.5">(+ <z1> ...)</r4rs>

@@ -40,7 +40,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.fn = fn;
-            ContinueHere(this.EvalArgsStep);
+            ContinueHere(EvalArgsStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -77,10 +77,12 @@ namespace SimpleScheme
         /// Back here after args have been evaluated.  
         /// Apply the proc to the evaluated args.  
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The result, or the next step to obtain it.</returns>
-        protected Stepper ApplyStep()
+        protected static Stepper ApplyStep(Stepper s)
         {
-            return this.fn.Apply(ReturnedExpr, this.Caller);
+            EvaluateProc step = (EvaluateProc)s;
+            return step.fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion
 
@@ -88,10 +90,11 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating all the arguments.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Next action to evaluate the args.</returns>
-        private Stepper EvalArgsStep()
+        private static Stepper EvalArgsStep(Stepper s)
         {
-            return EvaluateList.Call(Expr, this.Env, ContinueHere(this.ApplyStep));
+            return EvaluateList.Call(s.Expr, s.Env, s.ContinueHere(ApplyStep));
         }
         #endregion
     }

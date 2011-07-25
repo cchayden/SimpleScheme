@@ -68,7 +68,7 @@ namespace SimpleScheme
         private EvaluateLetStar(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -93,50 +93,54 @@ namespace SimpleScheme
         /// Then test for named let.  
         /// Grab bindings, body, vars, and inits.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continues by evaluating the init list.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(Expr))
+            EvaluateLetStar step = (EvaluateLetStar)s;
+            if (TypePrimitives.IsEmptyList(s.Expr))
             {
                 ErrorHandlers.SemanticError("No arguments arguments for let*");
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(Expr))
+            if (!TypePrimitives.IsPair(s.Expr))
             {
-                ErrorHandlers.SemanticError("Bad arg list for let*: " + Expr);
-                return ReturnUndefined();
+                ErrorHandlers.SemanticError("Bad arg list for let*: " + s.Expr);
+                return s.ReturnUndefined();
             }
 
-            this.bindings = List.First(Expr);
-            this.body = List.Rest(Expr);
+            step.bindings = List.First(s.Expr);
+            step.body = List.Rest(s.Expr);
 
-            if (TypePrimitives.IsEmptyList(this.body))
+            if (TypePrimitives.IsEmptyList(step.body))
             {
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            this.vars = List.MapFun(List.First, List.New(this.bindings));
-            this.inits = List.MapFun(List.Second, List.New(this.bindings));
-            this.formals = EmptyList.Instance;
-            this.vals = EmptyList.Instance;
-            return ContinueHere(this.EvalInit);
+            step.vars = List.MapFun(List.First, List.New(step.bindings));
+            step.inits = List.MapFun(List.Second, List.New(step.bindings));
+            step.formals = EmptyList.Instance;
+            step.vals = EmptyList.Instance;
+            return s.ContinueHere(EvalInitStep);
         }
 
         /// <summary>
         /// Evaluate one of the inits.
         /// Do it in an environment made up of the previously evaluated inits bound to their vars.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper EvalInit()
+        private static Stepper EvalInitStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(this.inits))
+            EvaluateLetStar step = (EvaluateLetStar)s;
+            if (TypePrimitives.IsEmptyList(step.inits))
             {
-                return ContinueHere(this.ApplyLambda);
+                return s.ContinueHere(ApplyLambdaStep);
             }
 
-            Procedure fun = new Closure(this.formals, List.New(List.First(this.inits)), this.Env);
-            return fun.Apply(this.vals, ContinueHere(this.BindVarToInit));
+            Procedure fun = new Closure(step.formals, List.New(List.First(step.inits)), s.Env);
+            return fun.Apply(step.vals, s.ContinueHere(BindVarToInitStep));
         }
 
         /// <summary>
@@ -144,25 +148,30 @@ namespace SimpleScheme
         /// Step down list of vars and inits.
         /// Go back and evaluate another init.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper BindVarToInit()
+        private static Stepper BindVarToInitStep(Stepper s)
         {
-            this.formals = List.Cons(List.First(this.vars), this.formals);
-            this.vals = List.Cons(ReturnedExpr, this.vals);
-            this.vars = List.Rest(this.vars);
-            this.inits = List.Rest(this.inits);
-            return ContinueHere(this.EvalInit);
+            EvaluateLetStar step = (EvaluateLetStar)s;
+            step.formals = List.Cons(List.First(step.vars), step.formals);
+            step.vals = List.Cons(s.ReturnedExpr, step.vals);
+            step.vars = List.Rest(step.vars);
+            step.inits = List.Rest(step.inits);
+            return s.ContinueHere(EvalInitStep);
         }
 
         /// <summary>
         /// Inits evaluated and bound -- execute the proc.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution continues with evaluation of the body of the let.</returns>
-        private Stepper ApplyLambda()
+        private static Stepper ApplyLambdaStep(Stepper s)
         {
+            EvaluateLetStar step = (EvaluateLetStar)s;
+
             // apply the fun to the vals
-            Closure fun = new Closure(this.formals, this.body, this.Env);
-            return fun.Apply(this.vals, this.Caller);
+            Closure fun = new Closure(step.formals, step.body, s.Env);
+            return fun.Apply(step.vals, s.Caller);
         }
         #endregion
     }

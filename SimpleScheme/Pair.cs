@@ -23,6 +23,18 @@ namespace SimpleScheme
             this.First = first;
             this.Rest = rest;
         }
+
+        internal Pair(Obj first)
+        {
+            this.First = first;
+            this.Rest = EmptyList.Instance;
+        }
+
+        internal Pair()
+        {
+            this.First = EmptyList.Instance;
+            this.Rest = EmptyList.Instance;
+        }
         #endregion
 
         #region Accessors

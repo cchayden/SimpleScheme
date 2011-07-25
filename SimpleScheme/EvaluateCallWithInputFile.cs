@@ -38,7 +38,7 @@ namespace SimpleScheme
         private EvaluateCallWithInputFile(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -82,25 +82,29 @@ namespace SimpleScheme
         /// <summary>
         /// Open the input file and apply the proc.  
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step, or else if the result is available, continue on to the next step.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            this.port = OpenInputFile(List.First(Expr), Caller.Interp);
-            return Procedure.Proc(List.Second(Expr)).Apply(List.New(this.port), ContinueHere(this.CloseStep));
+            EvaluateCallWithInputFile step = (EvaluateCallWithInputFile)s;
+            step.port = OpenInputFile(List.First(s.Expr), s.Caller.Interp);
+            return Procedure.Proc(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
         }
 
         /// <summary>
         /// Evaluation is complete: close the file and return the result.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The evaluation result.</returns>
-        private Stepper CloseStep()
+        private static Stepper CloseStep(Stepper s)
         {
-            if (this.port != null)
+            EvaluateCallWithInputFile step = (EvaluateCallWithInputFile)s;
+            if (step.port != null)
             {
-                this.port.Close();
+                step.port.Close();
             }
 
-            return ReturnFromStep(this.ReturnedExpr);
+            return s.ReturnFromStep(s.ReturnedExpr);
         }
         #endregion
     }

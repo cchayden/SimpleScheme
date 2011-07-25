@@ -33,7 +33,7 @@ namespace SimpleScheme
         private EvaluateContinuation(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -57,10 +57,11 @@ namespace SimpleScheme
         /// The only step, a continuation returns the saved expression.
         /// The caller that it returns to is really the step to continue from, not the current caller.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The expression.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            return ReturnFromStep(Expr);
+            return s.ReturnFromStep(s.Expr);
         }
         #endregion
     }

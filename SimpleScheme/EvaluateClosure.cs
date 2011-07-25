@@ -13,14 +13,14 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The closure to apply.
-        /// </summary>
-        private readonly Closure f;
-
-        /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
         internal const string StepperName = "evaluate-closure";
+
+        /// <summary>
+        /// The closure to apply.
+        /// </summary>
+        private readonly Closure f;
 
         /// <summary>
         /// The counter id.
@@ -40,7 +40,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.f = f;
-            ContinueHere(this.EvaluateArgsStep);
+            ContinueHere(EvaluateArgsStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -82,10 +82,11 @@ namespace SimpleScheme
         /// Evaluate a closure, in other words execute the function that it defines in the 
         /// appropriate environment.  Start by evaluating the list of expressions.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The result of evaluating the argument list.</returns>
-        private Stepper EvaluateArgsStep()
+        private static Stepper EvaluateArgsStep(Stepper s)
         {
-            return EvaluateList.Call(Expr, this.Env, ContinueHere(this.EvalBodyInEnvironmentStep));
+            return EvaluateList.Call(s.Expr, s.Env, s.ContinueHere(EvalBodyInEnvironmentStep));
         }
 
         /// <summary>
@@ -93,15 +94,18 @@ namespace SimpleScheme
         /// Create a new environment matching the formal parameters up with the evaluated arguments, and link
         ///   back to the caller's environment.  Then evaluate the closure body.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step to evaluate the closure.</returns>
-        private Stepper EvalBodyInEnvironmentStep()
+        private static Stepper EvalBodyInEnvironmentStep(Stepper s)
         {
-            if (Caller.Interp.Trace)
+            EvaluateClosure step = (EvaluateClosure)s;
+            if (s.Caller.Interp.Trace)
             {
-                Caller.Interp.CurrentOutputPort.WriteLine(String.Format("evaluate-closure: ({0} {1})", this.f.Name, List.First(ReturnedExpr)));
+                s.Caller.Interp.CurrentOutputPort.WriteLine(
+                    String.Format("evaluate-closure: ({0} {1})", step.f.Name, List.First(s.ReturnedExpr)));
             }
 
-            return this.f.Apply(ReturnedExpr, this.Caller);
+            return step.f.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion
     }

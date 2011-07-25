@@ -62,7 +62,7 @@ namespace SimpleScheme
         private EvaluateDo(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -99,90 +99,98 @@ namespace SimpleScheme
         /// Then test for named let.  
         /// Grab all the parts of the do statement.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Continues by evaluating the inits.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
-            if (TypePrimitives.IsEmptyList(Expr))
+            EvaluateDo step = (EvaluateDo)s;
+            if (TypePrimitives.IsEmptyList(s.Expr))
             {
                 ErrorHandlers.SemanticError("No body for do");
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(Expr))
+            if (!TypePrimitives.IsPair(s.Expr))
             {
-                ErrorHandlers.SemanticError("Bad arg list for do: " + Expr);
-                return ReturnUndefined();
+                ErrorHandlers.SemanticError("Bad arg list for do: " + s.Expr);
+                return s.ReturnUndefined();
             }
 
-            Obj bindings = List.First(Expr);
-            this.vars = List.MapFun(List.First, List.New(bindings));
+            Obj bindings = List.First(s.Expr);
+            step.vars = List.MapFun(List.First, List.New(bindings));
             Obj inits = List.MapFun(List.Second, List.New(bindings));
-            this.steps = List.MapFun(ThirdOrFirst, List.New(bindings));
+            step.steps = List.MapFun(ThirdOrFirst, List.New(bindings));
 
-            Obj test = List.First(List.Second(Expr));
-            this.exprs = List.Rest(List.Second(Expr));
-            this.commands = List.Rest(List.Rest(Expr));
+            Obj test = List.First(List.Second(s.Expr));
+            step.exprs = List.Rest(List.Second(s.Expr));
+            step.commands = List.Rest(List.Rest(s.Expr));
 
             if (TypePrimitives.IsEmptyList(test))
             {
-                return ReturnUndefined();
+                return s.ReturnUndefined();
             }
 
             // prepare test proc to execute each time through
-            this.testProc = new Closure(this.vars, List.New(test), this.Env);
+            step.testProc = new Closure(step.vars, List.New(test), s.Env);
 
             // push an empty environment, to hold the iteration variables
-            this.PushEmptyEnvironment(this.Env);
+            s.PushEmptyEnvironment(s.Env);
 
             // First evaluare inits.
-            return EvaluateList.Call(inits, this.Env, ContinueHere(this.TestStep));
+            return EvaluateList.Call(inits, s.Env, s.ContinueHere(TestStep));
         }
 
         /// <summary>
         /// Evaluate the test expr in the environment containing the variables with their new values.
         /// These are the init values or the step values.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step, which tests the result.</returns>
-        private Stepper TestStep()
+        private static Stepper TestStep(Stepper s)
         {
-            this.ReplaceEnvironment(this.vars, ReturnedExpr, this.Env);
-            return this.testProc.ApplyWithtEnv(this.Env, ContinueHere(this.IterateStep));
+            EvaluateDo step = (EvaluateDo)s;
+            s.ReplaceEnvironment(step.vars, s.ReturnedExpr, s.Env);
+            return step.testProc.ApplyWithtEnv(s.Env, step.ContinueHere(IterateStep));
         }
 
         /// <summary>
         /// Iterate: if test is true, eval the exprs and return.
         /// Otherwise, evaluate the commands.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper IterateStep()
+        private static Stepper IterateStep(Stepper s)
         {
-            if (SchemeBoolean.Truth(ReturnedExpr))
+            EvaluateDo step = (EvaluateDo)s;
+            if (SchemeBoolean.Truth(step.ReturnedExpr))
             {
                 // test is true
                 // Evaluate exprs and return the value of the last
                 //   in the environment of the vars.
                 // If no exprs, unspecified.
-                if (TypePrimitives.IsEmptyList(this.exprs))
+                if (TypePrimitives.IsEmptyList(step.exprs))
                 {
-                    return ReturnUndefined();
+                    return step.ReturnUndefined();
                 }
 
-                return EvaluateSequence.Call(this.exprs, this.Env, this.Caller);
+                return EvaluateSequence.Call(step.exprs, step.Env, step.Caller);
             }
             
             // test is false
             // evaluate the steps in the environment of the vars
             // bind to fresh copies of the vars
-            return EvaluateList.Call(this.commands, this.Env, ContinueHere(this.LoopStep));
+            return EvaluateList.Call(step.commands, step.Env, step.ContinueHere(LoopStep));
         }
 
         /// <summary>
         /// Evaluate the step expressions.  
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
-        private Stepper LoopStep()
+        private static Stepper LoopStep(Stepper s)
         {
-            return EvaluateList.Call(this.steps, this.Env, ContinueHere(this.TestStep));
+            EvaluateDo step = (EvaluateDo)s;
+            return EvaluateList.Call(step.steps, step.Env, step.ContinueHere(TestStep));
         }
         #endregion
     }

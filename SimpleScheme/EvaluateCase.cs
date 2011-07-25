@@ -56,7 +56,7 @@ namespace SimpleScheme
         private EvaluateCase(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(this.EvaluateKeyStep);
+            ContinueHere(EvaluateKeyStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -79,21 +79,25 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private Stepper EvaluateKeyStep()
+        private static Stepper EvaluateKeyStep(Stepper s)
         {
-            this.clauses = List.Rest(Expr);
-            return EvaluateExpression.Call(List.First(Expr), this.Env, ContinueHere(this.AssignKey));
+            EvaluateCase step = (EvaluateCase)s;
+            step.clauses = List.Rest(s.Expr);
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(AssignKeyStep));
         }
 
         /// <summary>
         /// Grab the evaluated key and go to the test loop.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step: check clause.</returns>
-        private Stepper AssignKey()
+        private static Stepper AssignKeyStep(Stepper s)
         {
-            this.keyVal = ReturnedExpr;
-            return ContinueHere(this.CheckClauseStep);
+            EvaluateCase step = (EvaluateCase)s;
+            step.keyVal = s.ReturnedExpr;
+            return s.ContinueHere(CheckClauseStep);
         }
 
         /// <summary>
@@ -102,43 +106,45 @@ namespace SimpleScheme
         /// If no clauses left, return empty list.
         /// If clause matches, start evaluating expressions.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The steps to test che clauses.</returns>
-        private Stepper CheckClauseStep()
+        private static Stepper CheckClauseStep(Stepper s)
         {
-            while (!TypePrimitives.IsEmptyList(this.clauses))
+            EvaluateCase step = (EvaluateCase)s;
+            while (!TypePrimitives.IsEmptyList(step.clauses))
             {
-                Obj clause = List.First(this.clauses);
+                Obj clause = List.First(step.clauses);
                 if (!TypePrimitives.IsPair(clause))
                 {
                     return (Stepper)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
 
                 Obj data = List.First(clause);
-                this.exprList = List.Rest(clause);
+                step.exprList = List.Rest(clause);
 
                 // look for else datum
                 if (TypePrimitives.IsSymbol(data) && Symbol.Sym(data) == "else")
                 {
-                    return this.EvalExpr();
+                    return step.EvalExpr();
                 }
 
                 // look for a match within the list of datum items
                 while (TypePrimitives.IsPair(data))
                 {
-                    if (SchemeBoolean.Eqv(this.keyVal, List.First(data)))
+                    if (SchemeBoolean.Eqv(step.keyVal, List.First(data)))
                     {
-                        return this.EvalExpr();
+                        return step.EvalExpr();
                     }
 
                     data = List.Rest(data);
                 }
 
                 // didn't find a match -- look at the next clause
-               this.clauses = List.Rest(this.clauses);
+               step.clauses = List.Rest(step.clauses);
             }
 
             // no clauses matched -- unspecified
-            return ReturnUndefined();
+            return s.ReturnUndefined();
         }
 
         /// <summary>

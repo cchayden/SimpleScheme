@@ -45,7 +45,7 @@ namespace SimpleScheme
         {
             this.args = args;
 
-            ContinueHere(this.InitialStep);
+            ContinueHere(InitialStep);
             if (caller.Interp.Trace)
             {
                 caller.Interp.CurrentOutputPort.WriteLine(String.Format("evaluate: {0} {1}", fn, args));
@@ -249,22 +249,25 @@ namespace SimpleScheme
         /// The special forms have their own evaluators.
         /// Otherwise, evaluate the first argument (the proc) in preparation for a call.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next thing to do.</returns>
-        private Stepper InitialStep()
+        private static Stepper InitialStep(Stepper s)
         {
+            EvaluateExpression step = (EvaluateExpression)s;
+
             // defined as macro for now
             //// <r4rs section="4.2.6">(quasiquote <template>)</r4rs>
             //// <r4rs section="4.2.5">(delay <expression>)</r4rs>
 
             // Look for one of the special forms. 
-            switch (this.Expr as string)
+            switch (s.Expr as string)
             {
                 case "begin":
                     // Evaluate begin by evaluating all the items in order, 
                     //   and returning the last.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateSequence.Call(this.args, this.Env, this.Caller);
+                    return EvaluateSequence.Call(step.args, s.Env, s.Caller);
 
                 case "define":
                     // Define is a shortcut for lambda.
@@ -272,98 +275,102 @@ namespace SimpleScheme
                     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                    return EvaluateDefine.Call(this.args, this.Env, this.Caller);
+                    return EvaluateDefine.Call(step.args, s.Env, s.Caller);
 
                 case "set!":
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
                     //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                    return EvaluateSet.Call(this.args, this.Env, ContinueHere(this.ReturnValueAndEnvStep));
+                    return EvaluateSet.Call(step.args, s.Env, s.ContinueHere(ReturnValueAndEnvStep));
 
                 case "if":
                     // Eval an if expression by evaluating the first clause, 
                     //    and then returning either the second or third.
                     //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-                    return EvaluateIf.Call(this.args, this.Env, this.Caller);
+                    return EvaluateIf.Call(step.args, s.Env, s.Caller);
 
                 case "case":
                     //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                     //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-                    return EvaluateCase.Call(this.args, this.Env, this.Caller);
+                    return EvaluateCase.Call(step.args, s.Env, s.Caller);
 
                 case "or":
                     //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-                    return EvaluateOr.Call(this.args, this.Env, this.Caller);
+                    return EvaluateOr.Call(step.args, s.Env, s.Caller);
 
                 case "and":
                     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-                    return EvaluateAnd.Call(this.args, this.Env, this.Caller);
+                    return EvaluateAnd.Call(step.args, s.Env, s.Caller);
 
                 case "cond":
                     //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                    return EvaluateCond.Call(this.args, this.Env, this.Caller);
+                    return EvaluateCond.Call(step.args, s.Env, s.Caller);
 
                 case "let":
                     //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLet.Call(this.args, this.Env, this.Caller);
+                    return EvaluateLet.Call(step.args, s.Env, s.Caller);
 
                 case "let*":
                     //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetStar.Call(this.args, this.Env, this.Caller);
+                    return EvaluateLetStar.Call(step.args, s.Env, s.Caller);
 
                 case "letrec":
                     //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                    return EvaluateLetRec.Call(this.args, this.Env, this.Caller);
+                    return EvaluateLetRec.Call(step.args, s.Env, s.Caller);
 
                 case "do":
                     //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                     ////                           ...)
                     ////                           (<test> <expression> ...)
                     ////                         <command> ...)</r4rs>
-                    return EvaluateDo.Call(this.args, this.Env, this.Caller);
+                    return EvaluateDo.Call(step.args, s.Env, s.Caller);
 
                 case "time":
-                    return EvaluateTime.Call(this.args, this.Env, this.Caller);
+                    return EvaluateTime.Call(step.args, s.Env, s.Caller);
             }
 
             // If we get here, it wasn't one of the special forms.  
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
             //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            return Call(this.Expr, this.Env, ContinueHere(this.ApplyProcStep));
+            return Call(s.Expr, s.Env, s.ContinueHere(ApplyProcStep));
         }
 
         /// <summary>
         /// Come here after evaluating the first expression, the proc.
         /// Handle the proc: macro, closure, or function call.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The next thing to do.</returns>
-        private Stepper ApplyProcStep()
+        private static Stepper ApplyProcStep(Stepper s)
         {
+            EvaluateExpression step = (EvaluateExpression)s;
+
             // Come here after evaluating fn
-            return Procedure.Proc(ReturnedExpr).Evaluate(this.args, this.Env, this.Caller);
+            return Procedure.Proc(s.ReturnedExpr).Evaluate(step.args, s.Env, s.Caller);
         }
 
         /// <summary>
         /// Here after an evaluation that should return a value.
         /// </summary>
+        /// <param name="s">The step to evaluate.</param>
         /// <returns>The evaluation result.</returns>
-        private Stepper ReturnValueAndEnvStep()
+        private static Stepper ReturnValueAndEnvStep(Stepper s)
         {
             // Assign return value and return to caller.
-            return ReturnFromStep(this.ReturnedExpr, this.ReturnedEnv);
+            return s.ReturnFromStep(s.ReturnedExpr, s.ReturnedEnv);
         }
         #endregion
     }
