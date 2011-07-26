@@ -19,11 +19,6 @@ namespace SimpleScheme
         internal static readonly Stepper Suspended = new EvaluatorBase("suspended");
 
         /// <summary>
-        /// Gets the caller that execution returns to when this is done.
-        /// </summary>
-        private Stepper caller;
-
-        /// <summary>
         /// The program counter.
         /// Contains the function to execute next.
         /// </summary>
@@ -45,7 +40,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller evaluator.</param>
         protected Stepper(Obj expr, Environment env, Stepper caller)
         {
-            this.caller = caller;
+            this.Caller = caller;
             this.Expr = expr;
             this.Env = env;
             this.traced = false;
@@ -100,17 +95,14 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the caller of this stepper.
         /// </summary>
-        internal Stepper Caller
-        {
-            get { return this.caller; }
-        }
+        internal Stepper Caller { get; private set; }
 
         /// <summary>
         /// Gets the caller's caller.
         /// </summary>
         internal Stepper CallerCaller
         {
-            get { return this.caller.caller; }
+            get { return this.Caller.Caller; }
         }
         #endregion
 
@@ -158,11 +150,11 @@ namespace SimpleScheme
         {
             Stepper ret = (Stepper)this.MemberwiseClone();
             Stepper s = ret;
-            while (s.caller != null)
+            while (s.Caller != null)
             {
-                Stepper parent = (Stepper)s.caller.MemberwiseClone();
-                s.caller = parent;
-                s = s.caller;
+                Stepper parent = (Stepper)s.Caller.MemberwiseClone();
+                s.Caller = parent;
+                s = s.Caller;
             }
 
             return ret;
@@ -232,12 +224,12 @@ namespace SimpleScheme
         /// <returns>A backtrace of the stepper call stack.</returns>
         internal string StackBacktrace()
         {
-            Stepper step = this.caller;    // skip backtrace itself
+            Stepper step = this.Caller;    // skip backtrace itself
             StringBuilder sb = new StringBuilder();
             while (step != null)
             {
                 step.DumpStep(sb);
-                step = step.caller;
+                step = step.Caller;
             }
 
             return sb.ToString();
@@ -309,9 +301,9 @@ namespace SimpleScheme
         /// <returns>The next step, which is in the caller.</returns>
         internal Stepper ReturnFromStep(Obj expr, Environment env)
         {
-            this.caller.ReturnedExpr = expr;
-            this.caller.ReturnedEnv = env;
-            return this.caller;
+            this.Caller.ReturnedExpr = expr;
+            this.Caller.ReturnedEnv = env;
+            return this.Caller;
         }
 
         /// <summary>
@@ -321,8 +313,8 @@ namespace SimpleScheme
         /// <returns>The next step, which is in the caller.</returns>
         internal Stepper ReturnFromStep(Obj expr)
         {
-            this.caller.ReturnedExpr = expr;
-            return this.caller;
+            this.Caller.ReturnedExpr = expr;
+            return this.Caller;
         }
 
         /// <summary>
@@ -331,8 +323,8 @@ namespace SimpleScheme
         /// <returns>The next step, which is in the caller.</returns>
         internal Stepper ReturnUndefined()
         {
-            this.caller.ReturnedExpr = Undefined.Instance;
-            return this.caller;
+            this.Caller.ReturnedExpr = Undefined.Instance;
+            return this.Caller;
         }
         #endregion
 

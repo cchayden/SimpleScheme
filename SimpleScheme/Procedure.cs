@@ -49,7 +49,7 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => Proc(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller), 2, MaxInt)
+                .DefinePrimitive("apply", (args, caller) => ApplyPrimitive(List.First(args), List.Rest(args), caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(List.First(args), caller), 1)
                 .DefinePrimitive("call/cc", (args, caller) => CallCc(List.First(args), caller), 1)
@@ -93,8 +93,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-
+        #region Internal Methods
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// </summary>
@@ -153,18 +152,23 @@ namespace SimpleScheme
         #endregion
 
         #region Private Methods
+        private static Stepper ApplyPrimitive(Obj proc, Obj args, Stepper caller)
+        {
+            return Proc(proc).Apply(List.ListStar(args), caller);
+        }
+
         /// <summary>
         /// Perform the call/cc primitive.
         /// Create a continuation that captures the caller's environment and returns to the caller.
-        /// The continuation itself is a sequence that evaluates the expr in the caller's environment and returns to the caller.
+        /// The continuation itself is a sequence that evaluates the proc in the caller's environment and returns to the caller.
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="proc">The expression to evaluate.</param>
         /// <param name="caller">The calling stepper.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private static Obj CallCc(Obj expr, Stepper caller)
+        private static Obj CallCc(Obj proc, Stepper caller)
         {
-            return Proc(expr).Apply(
-                List.New(new Continuation(EvaluateContinuation.Call(expr, caller.Env, caller))), caller);
+            return Proc(proc).Apply(
+                List.New(new Continuation(EvaluateContinuation.Call(proc, caller.Env, caller))), caller);
         }
         #endregion
     }
