@@ -67,6 +67,22 @@ namespace SimpleScheme
 
         #region Accessors
         /// <summary>
+        /// Gets a value indicating whether the stepper is halted.
+        /// </summary>
+        public bool IsHalted
+        {
+            get { return this.Expr as string == Halted; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the stepper is suspended.
+        /// </summary>
+        public bool IsSuspended
+        {
+            get { return this.Expr as string == Suspended; }
+        }
+
+        /// <summary>
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
@@ -107,22 +123,6 @@ namespace SimpleScheme
         internal Stepper CallerCaller
         {
             get { return this.Caller.Caller; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the stepper is halted.
-        /// </summary>
-        internal bool IsHalted
-        {
-            get { return this.Expr as string == Halted; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the stepper is suspended.
-        /// </summary>
-        internal bool IsSuspended
-        {
-            get { return this.Expr as string == Suspended; }
         }
         #endregion
 
