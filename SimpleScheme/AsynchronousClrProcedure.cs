@@ -14,6 +14,12 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class AsynchronousClrProcedure : ClrProcedure
     {
+        /// <summary>
+        /// The suspended stepper is used to indicate suspension, when stepping
+        ///   needs to be delayed but is not complete.
+        /// </summary>
+        private static readonly Stepper Suspended = Stepper.NewSuspended();
+
         #region Fields
         /// <summary>
         /// The method info for the EndXXX method.
@@ -111,7 +117,7 @@ namespace SimpleScheme
             }
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return Stepper.Suspended;
+            return Suspended;
         }
         #endregion
 

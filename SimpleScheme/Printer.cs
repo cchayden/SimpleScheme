@@ -400,9 +400,10 @@ namespace SimpleScheme
         /// <param name="buf">The buffer to accumulate the string into.</param>
         private static void StepperAsString(Obj obj, bool quoted, StringBuilder buf)
         {
+            Stepper stepper = (Stepper)obj;
             if (quoted)
             {
-                buf.Append(obj == Stepper.Suspended ? "<suspended>" : "<stepper>");
+                buf.Append(stepper.IsSuspended ? "<suspended>" : "<stepper>");
             }
         }
 

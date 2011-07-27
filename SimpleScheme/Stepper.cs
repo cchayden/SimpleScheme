@@ -11,13 +11,17 @@ namespace SimpleScheme
     /// </summary>
     public class Stepper
     {
-        #region Fields
         /// <summary>
-        /// The suspended stepper is used to indicate suspension, when stepping
-        ///   needs to be delayed but is not complete.
+        /// The expr in a halted stepper.
         /// </summary>
-        internal static readonly Stepper Suspended = new EvaluatorBase("suspended");
+        private const string Halted = "*halted*";
 
+        /// <summary>
+        /// The expr in a suspended stepper.
+        /// </summary>
+        private const string Suspended = "*suspended*";
+
+        #region Fields
         /// <summary>
         /// The program counter.
         /// Contains the function to execute next.
@@ -104,9 +108,46 @@ namespace SimpleScheme
         {
             get { return this.Caller.Caller; }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether the stepper is halted.
+        /// </summary>
+        internal bool IsHalted
+        {
+            get { return this.Expr as string == Halted; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the stepper is suspended.
+        /// </summary>
+        internal bool IsSuspended
+        {
+            get { return this.Expr as string == Suspended; }
+        }
         #endregion
 
         #region Internal Static Methods
+        /// <summary>
+        /// Create a new stepper in the halted state.  This is used as the base evaluator, and contains
+        ///   the given environment, which should be the global environment.
+        /// </summary>
+        /// <param name="env">The global environment.</param>
+        /// <returns>A halted stepper.</returns>
+        internal static Stepper NewHalted(Environment env)
+        {
+            return new Stepper(Halted, env, null);
+        }
+
+        /// <summary>
+        /// Create a new stepper in the suspended state.  
+        /// It is used to indicate that an evaluation has suspended rather than returning a value.
+        /// </summary>
+        /// <returns>A suspended stepper.</returns>
+        internal static Stepper NewSuspended()
+        {
+            return new Stepper(Suspended, null, null);
+        }
+
         /// <summary>
         /// Transfer to a given stepper.  
         /// This can be used to return fram an evaluator.

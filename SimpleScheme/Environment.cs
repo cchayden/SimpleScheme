@@ -128,11 +128,14 @@ namespace SimpleScheme
         {
             if (TypePrimitives.IsSymbol(var))
             {
-                this.symbolTable.Add(var, val);
-
-                if (TypePrimitives.IsProcedure(val))
+                lock (this)
                 {
-                    Procedure.Proc(val).SetName(var.ToString());
+                    this.symbolTable.Add(var, val);
+
+                    if (TypePrimitives.IsProcedure(val))
+                    {
+                        Procedure.Proc(val).SetName(var.ToString());
+                    }
                 }
 
                 return;
@@ -156,16 +159,19 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            while (env != Empty)
+            lock (this)
             {
-                Obj val;
-                if (env.symbolTable.Lookup(symbol, out val))
+                while (env != Empty)
                 {
-                    return val;
-                }
+                    Obj val;
+                    if (env.symbolTable.Lookup(symbol, out val))
+                    {
+                        return val;
+                    }
 
-                // if we have not found anything yet, look in the parent
-                env = env.LexicalParent;
+                    // if we have not found anything yet, look in the parent
+                    env = env.LexicalParent;
+                }
             }
 
             return ErrorHandlers.SemanticError("Unbound variable: " + symbol);
@@ -192,15 +198,18 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            while (env != Empty)
+            lock (this)
             {
-                if (env.symbolTable.Update(symbol, val))
+                while (env != Empty)
                 {
-                    return val;
-                }
+                    if (env.symbolTable.Update(symbol, val))
+                    {
+                        return val;
+                    }
 
-                // if we have not found anything yet, look in the parent
-                env = env.LexicalParent;
+                    // if we have not found anything yet, look in the parent
+                    env = env.LexicalParent;
+                }
             }
 
             return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
@@ -217,16 +226,19 @@ namespace SimpleScheme
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
-            while (env != Empty && levels > 0)
+            lock (this)
             {
-                env.symbolTable.Dump(indent, sb);
-                levels--;
-                if (levels > 0)
+                while (env != Empty && levels > 0)
                 {
-                    sb.Append("-----\n");
-                }
+                    env.symbolTable.Dump(indent, sb);
+                    levels--;
+                    if (levels > 0)
+                    {
+                        sb.Append("-----\n");
+                    }
 
-                env = env.LexicalParent;
+                    env = env.LexicalParent;
+                }
             }
 
             return sb.ToString();

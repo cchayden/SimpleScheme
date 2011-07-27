@@ -25,6 +25,25 @@ namespace SimpleScheme
         IPrimitiveEnvironment PrimEnv { get; }
 
         /// <summary>
+        /// Enter the Read-Eval-Print loop.
+        /// </summary>
+        /// <returns>The value of the last expression (before EOF).</returns>
+        object ReadEvalPrintLoop();
+
+        /// <summary>
+        /// Load a file and evaluate the expressions in it.
+        /// </summary>
+        /// <param name="fileName">The file to load.</param>
+        void LoadFile(object fileName);
+
+        /// <summary>
+        /// Read a single expression from the input port.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The object that was read.</returns>
+        object Read(InputPort inp);
+
+        /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
@@ -46,18 +65,6 @@ namespace SimpleScheme
         /// <param name="ar">The async results, used to get the evaluation result.</param>
         /// <returns>The evaluation result.</returns>
         object EndEval(IAsyncResult ar);
-
-        /// <summary>
-        /// Enter the Read-Eval-Print loop.
-        /// </summary>
-        /// <returns>The value of the last expression (before EOF).</returns>
-        object ReadEvalPrintLoop();
-
-        /// <summary>
-        /// Load a file and evaluate the expressions in it.
-        /// </summary>
-        /// <param name="fileName">The file to load.</param>
-        void LoadFile(object fileName);
 
         /// <summary>
         /// Read from the given input port and evaluate the expression.

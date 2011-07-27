@@ -58,7 +58,7 @@ namespace SimpleScheme
 
             this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
-            this.halted = new EvaluatorBase("halted", this.GlobalEnvironment, null);
+            this.halted = Stepper.NewHalted(this.GlobalEnvironment);
 
             try
             {
@@ -354,6 +354,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Read a single expression from the input port.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The object that was read.</returns>
+        public Obj Read(InputPort inp)
+        {
+            return inp.ReadObj();
+        }
+
+        /// <summary>
         /// Read from the given port and evaluate the expression.
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
@@ -463,18 +473,18 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (step == Stepper.Suspended)
-                {
-                    // TODO should this return the async result?
-                    return step;
-                }
-
                 if (step == null)
                 {
                     return ErrorHandlers.InternalError("PC bad value");
                 }
 
-                if (step.Caller == null)
+                if (step.IsSuspended)
+                {
+                    // TODO should this return the async result?
+                    return step;
+                }
+
+                if (step.IsHalted)
                 {
                     if (this.asyncResult != null)
                     {
@@ -588,7 +598,7 @@ namespace SimpleScheme
         {
             this.asyncResult = new AsyncResult<object>(cb, state);
             Obj res = this.Eval(expr, this.GlobalEnvironment);
-            if (res == Stepper.Suspended)
+            if (res is Stepper && ((Stepper)res).IsSuspended)
             {
                 return this.asyncResult;
             }
