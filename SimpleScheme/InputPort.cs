@@ -17,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// Marks the end of the input file.
         /// </summary>
-        internal const string Eof = "#!EOF";
+        public const string Eof = "#!EOF";
 
         /// <summary>
         /// The printable name of the scheme input port type.
@@ -46,7 +46,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">A text reader.</param>
         /// <param name="interp">The interpreter.</param>
-        internal InputPort(TextReader inp, Interpreter interp)
+        public InputPort(TextReader inp, Interpreter interp)
         {
             this.transcript = interp.Transcript;
             this.parser = new Parser(inp);
@@ -70,7 +70,7 @@ namespace SimpleScheme
         /// Define the input primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
@@ -108,13 +108,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Tests the obj against EOF.
         /// </summary>
         /// <param name="x">The obj to test.</param>
         /// <returns>True if the obj is EOF.</returns>
-        internal static bool IsEof(Obj x)
+        public static bool IsEof(Obj x)
         {
             return x as string == Eof;
         }
@@ -124,7 +124,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>An input port.</returns>
-        internal static InputPort AsInputPort(Obj obj)
+        public static InputPort AsInputPort(Obj obj)
         {
             if (IsInputPort(obj))
             {
@@ -136,14 +136,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// Read a complete scheme expression and parse it.
         /// Return the result.
         /// The result can be a list, or it could be a string (representing a symbol).
         /// </summary>
         /// <returns>The object that was read.</returns>
-        internal Obj ReadObj()
+        public Obj ReadObj()
         {
             StringBuilder sb = new StringBuilder();
             Obj expr = this.parser.ReadExpr(sb);
@@ -155,7 +155,7 @@ namespace SimpleScheme
         /// Close the input port.
         /// Closes the stream used by the parser.
         /// </summary>
-        internal void Close()
+        public void Close()
         {
             this.parser.Close();
         }
@@ -273,7 +273,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the input port to the string builder.
@@ -281,7 +281,7 @@ namespace SimpleScheme
         /// <param name="port">The input port (not used).</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this InputPort port, bool quoted, StringBuilder buf)
+        public static void AsString(this InputPort port, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

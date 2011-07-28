@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// Apply a proc to args without evaluation.
     /// Used to evaluate cond expressions.
     /// </summary>
-    internal sealed class EvaluateProcQuoted : EvaluateProc
+    public sealed class EvaluateProcQuoted : EvaluateProc
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal new const string StepperName = "evaluate-proc-quoted";
+        public new const string StepperName = "evaluate-proc-quoted";
 
         /// <summary>
         /// The counter id.
@@ -40,7 +40,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call apply proc evaluator.
         /// </summary>
@@ -49,7 +49,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        internal static new Stepper Call(Procedure fn, Obj expr, Environment env, Stepper caller)
+        public static new Stepper Call(Procedure fn, Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateProcQuoted(fn, expr, env, caller);
         }

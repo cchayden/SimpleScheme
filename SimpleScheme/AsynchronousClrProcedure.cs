@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Handles asynchronous CLR method calls.
     /// Call returns suspended, then on completion resumes execution.
     /// </summary>
-    internal sealed class AsynchronousClrProcedure : ClrProcedure
+    public sealed class AsynchronousClrProcedure : ClrProcedure
     {
         /// <summary>
         /// The suspended stepper is used to indicate suspension, when stepping
@@ -77,7 +77,7 @@ namespace SimpleScheme
         /// Define the async clr procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static new void DefinePrimitives(PrimitiveEnvironment env)
+        public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -90,8 +90,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
-
+        #region Public Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -101,7 +100,7 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(object args, Stepper caller)
         {
             Obj target;
             Obj[] argArray;
@@ -182,7 +181,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
             /// <param name="caller">The caller stepper to resume.</param>
-            internal AsyncState(object invokedObject, Stepper caller)
+            public AsyncState(object invokedObject, Stepper caller)
             {
                 this.InvokedObject = invokedObject;
                 this.Caller = caller;
@@ -191,12 +190,12 @@ namespace SimpleScheme
             /// <summary>
             /// Gets the object to invoke the end method on.
             /// </summary>
-            internal object InvokedObject { get; private set; }
+            public object InvokedObject { get; private set; }
 
             /// <summary>
             /// Gets the caller stepper to resume.
             /// </summary>
-            internal Stepper Caller { get; private set; }
+            public Stepper Caller { get; private set; }
         }
         #endregion
     }

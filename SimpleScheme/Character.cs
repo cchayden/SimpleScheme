@@ -54,7 +54,7 @@ namespace SimpleScheme
         /// Define the character primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
@@ -98,7 +98,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Compares two characters.
         /// </summary>
@@ -107,7 +107,7 @@ namespace SimpleScheme
         /// <param name="ci">If true, make the comparison case insensitive.</param>
         /// <returns>Negative if x is before y, positive if x is after y, 
         /// or 0 if they are the same.</returns>
-        internal static int ChrCompare(Obj x, Obj y, bool ci)
+        public static int ChrCompare(Obj x, Obj y, bool ci)
         {
             char xc = AsCharacter(x);
             char yc = AsCharacter(y);
@@ -125,7 +125,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the character to the string builder.
@@ -133,7 +133,7 @@ namespace SimpleScheme
         /// <param name="c">The character.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this char c, bool quoted, StringBuilder buf)
+        public static void AsString(this char c, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

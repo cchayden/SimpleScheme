@@ -12,13 +12,13 @@ namespace SimpleScheme
     //// <r4rs section="4.2.2">(letrec<bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    internal sealed class EvaluateLetRec : Stepper
+    public sealed class EvaluateLetRec : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-letrec";
+        public const string StepperName = "evaluate-letrec";
 
         /// <summary>
         /// The counter id.
@@ -67,7 +67,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call letrec evaluator.
         /// </summary>
@@ -75,7 +75,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateLetRec(expr, env, caller);
         }

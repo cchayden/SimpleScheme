@@ -13,13 +13,13 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    internal sealed class EvaluateLet : Stepper
+    public sealed class EvaluateLet : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-let";
+        public const string StepperName = "evaluate-let";
 
         /// <summary>
         /// The counter id.
@@ -68,7 +68,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call let evaluator.
         /// </summary>
@@ -76,7 +76,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateLet(expr, env, caller);
         }

@@ -12,13 +12,13 @@ namespace SimpleScheme
     /// </summary>
     //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-    internal sealed class EvaluateIf : Stepper
+    public sealed class EvaluateIf : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-if";
+        public const string StepperName = "evaluate-if";
 
         /// <summary>
         /// The counter id.
@@ -41,7 +41,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
@@ -49,7 +49,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateIf(expr, env, caller);
         }

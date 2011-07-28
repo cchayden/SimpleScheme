@@ -106,14 +106,14 @@ namespace SimpleScheme
         };
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Find the scheme type name for a given object.
         /// Used to format error messages.
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>The scheme type name.</returns>
-        internal static string TypeName(Obj obj)
+        public static string TypeName(Obj obj)
         {
             return LookupName(obj, typeNames);
         }
@@ -124,7 +124,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>The scheme type name.</returns>
-        internal static string EvaluatorName(Obj obj)
+        public static string EvaluatorName(Obj obj)
         {
             return LookupName(obj, evaluatorNames);
         }
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="arg">A Type or a type name.</param>
         /// <returns>The type corresponding to the name.</returns>
-        internal static Type ToClass(Obj arg)
+        public static Type ToClass(Obj arg)
         {
             if (arg is Type)
             {
@@ -182,7 +182,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Structs
+        #region Private Structs
         /// <summary>
         /// Table entry for type name mapper.
         /// </summary>

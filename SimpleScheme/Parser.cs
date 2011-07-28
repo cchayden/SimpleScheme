@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// <summary>
     /// Parse scheme expressions.
     /// </summary>
-    internal class Parser
+    public class Parser
     {
         #region Fields
         /// <summary>
@@ -39,19 +39,19 @@ namespace SimpleScheme
         /// Initializes a new instance of the Parser class.
         /// </summary>
         /// <param name="inp">The input TextReader we are reading from.</param>
-        internal Parser(TextReader inp)
+        public Parser(TextReader inp)
         {
             this.inp = inp;
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// Read a complete expression.
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The expression that was read.</returns>
-        internal Obj ReadExpr(StringBuilder sb)
+        public Obj ReadExpr(StringBuilder sb)
         {
             this.logger = sb;
             return this.Read();
@@ -61,7 +61,7 @@ namespace SimpleScheme
         /// Take a peek at the next character, without consuming it.
         /// </summary>
         /// <returns>The next character (as a scheme character).</returns>
-        internal Obj PeekChar()
+        public Obj PeekChar()
         {
             int p = this.Peek();
             if (p == -1)
@@ -78,7 +78,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The character read, or EOF.</returns>
-        internal object ReadChar(StringBuilder sb)
+        public object ReadChar(StringBuilder sb)
         {
             this.logger = sb;
             try
@@ -106,7 +106,7 @@ namespace SimpleScheme
         /// <summary>
         /// Close the input port.
         /// </summary>
-        internal void Close()
+        public void Close()
         {
             try
             {
@@ -120,7 +120,6 @@ namespace SimpleScheme
         #endregion
 
         #region Private Methods
-
         /// <summary>
         /// Read a whole expression.
         /// Handles parentheses and the various kinds of quote syntax shortcuts.
@@ -248,7 +247,7 @@ namespace SimpleScheme
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
         /// <returns>the next token.</returns>
-        private object NextToken()
+        public object NextToken()
         {
             // See if we should re-use a pushed token or character
             object token = this.tokStream.GetPushedToken();
@@ -467,7 +466,7 @@ namespace SimpleScheme
             /// Push a character back into the input.
             /// </summary>
             /// <param name="ch">The character to push.</param>
-            internal void Push(int ch)
+            public void Push(int ch)
             {
                 this.isPushedChar = true;
                 this.pushedChar = ch;
@@ -477,7 +476,7 @@ namespace SimpleScheme
             /// Get a pushed char, if present, or else return -1.
             /// </summary>
             /// <returns>The pushed character.</returns>
-            internal int Pop()
+            public int Pop()
             {
                 if (this.isPushedChar)
                 {
@@ -493,7 +492,7 @@ namespace SimpleScheme
             /// If so, return it.
             /// </summary>
             /// <returns>The pushed character, or -1 if EOF, or -2 if there is no pushed character.</returns>
-            internal int Get()
+            public int Get()
             {
                 if (this.isPushedChar)
                 {
@@ -514,7 +513,7 @@ namespace SimpleScheme
             /// If there is none, return -1.
             /// </summary>
             /// <returns>The next character (as an int).</returns>
-            internal int Peek()
+            public int Peek()
             {
                 return this.isPushedChar ? this.pushedChar : -1;
             }
@@ -539,7 +538,7 @@ namespace SimpleScheme
             /// Push the token back on the input.
             /// </summary>
             /// <param name="token">The token to push.</param>
-            internal void PushToken(object token)
+            public void PushToken(object token)
             {
                 this.isPushedToken = true;
                 this.pushedToken = token;
@@ -550,7 +549,7 @@ namespace SimpleScheme
             /// If not, return null.
             /// </summary>
             /// <returns>The pushed token, if available, otherwise null.</returns>
-            internal object GetPushedToken()
+            public object GetPushedToken()
             {
                 return this.isPushedToken ? this.PopToken() : null;
             }

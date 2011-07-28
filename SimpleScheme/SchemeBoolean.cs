@@ -15,12 +15,12 @@ namespace SimpleScheme
         /// <summary>
         /// Define the true value.
         /// </summary>
-        internal const bool True = true;
+        public const bool True = true;
 
         /// <summary>
         /// Define the false value.
         /// </summary>
-        internal const bool False = false;
+        public const bool False = false;
         #endregion
 
         #region Public Static Methods
@@ -33,9 +33,7 @@ namespace SimpleScheme
         {
             return obj is bool;
         }
-        #endregion
 
-        #region Internal Static Methods
         /// <summary>
         /// Equality test for two objs.
         /// Two objs are equal if they:
@@ -47,7 +45,7 @@ namespace SimpleScheme
         /// <param name="obj1">One member to test.</param>
         /// <param name="obj2">The other member to test.</param>
         /// <returns>True if the objs are equal.</returns>
-        internal static bool Equal(Obj obj1, Obj obj2)
+        public static bool Equal(Obj obj1, Obj obj2)
         {
             // both empty list
             if (EmptyList.IsEmptyList(obj1) || EmptyList.IsEmptyList(obj2))
@@ -87,7 +85,7 @@ namespace SimpleScheme
         /// <param name="obj1">The first obj.</param>
         /// <param name="obj2">The second obj.</param>
         /// <returns>True if they are equivalent.</returns>
-        internal static bool Eqv(Obj obj1, Obj obj2)
+        public static bool Eqv(Obj obj1, Obj obj2)
         {
             return obj1 == obj2 || 
                 (obj1 is bool && obj1.Equals(obj2)) || 
@@ -102,7 +100,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The obj to test.</param>
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
-        internal static bool IsFalse(Obj value)
+        public static bool IsFalse(Obj value)
         {
             return IsBoolean(value) && (bool)value == false;
         }
@@ -113,7 +111,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The obj to test.</param>
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
-        internal static bool IsTrue(Obj value)
+        public static bool IsTrue(Obj value)
         {
             return IsBoolean(value) && (bool)value;
         }
@@ -124,7 +122,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The obj to test.</param>
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        internal static bool Truth(Obj obj)
+        public static bool Truth(Obj obj)
         {
             return !IsFalse(obj);
         }
@@ -135,7 +133,7 @@ namespace SimpleScheme
         /// Define the boolean primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
@@ -157,7 +155,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the boolean to the string builder.
@@ -165,7 +163,7 @@ namespace SimpleScheme
         /// <param name="value">The boolean value.</param>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this bool value, bool quoted, StringBuilder buf)
+        public static void AsString(this bool value, bool quoted, StringBuilder buf)
         {
             buf.Append(value ? "#t" : "#f");
         }

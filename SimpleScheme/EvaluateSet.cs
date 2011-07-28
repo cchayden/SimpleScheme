@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// Evaluate a set! expression.
     /// </summary>
     //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
-    internal sealed class EvaluateSet : Stepper
+    public sealed class EvaluateSet : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-set";
+        public const string StepperName = "evaluate-set";
 
         /// <summary>
         /// The counter id.
@@ -38,7 +38,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Calls a set evaluator.
         /// </summary>
@@ -46,7 +46,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateSet(expr, env, caller);
         }

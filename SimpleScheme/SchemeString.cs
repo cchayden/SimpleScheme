@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// Define the string primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = Int32.MaxValue;
             env
@@ -111,14 +111,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Creates a scheme string from a length and fill character.
         /// </summary>
         /// <param name="length">The length of the string to make.</param>
         /// <param name="fill">If present, the character to fill the string with.</param>
         /// <returns>The new scheme string.</returns>
-        internal static char[] MakeString(Obj length, Obj fill)
+        public static char[] MakeString(Obj length, Obj fill)
         {
             char c = EmptyList.IsEmptyList(fill) ? (char)0 : Character.AsCharacter(fill);
             return new string(c, (int)Number.Num(length)).ToCharArray();
@@ -129,7 +129,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="buf">A string builder containing the string value.</param>
         /// <returns>The new scheme string.</returns>
-        internal static char[] MakeString(StringBuilder buf)
+        public static char[] MakeString(StringBuilder buf)
         {
             return buf.ToString().ToCharArray();
         }
@@ -139,7 +139,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The existing scheme string.</param>
         /// <returns>A copy of the scheme string.</returns>
-        internal static char[] MakeString(char[] str)
+        public static char[] MakeString(char[] str)
         {
             return new string(str).ToCharArray();
         }
@@ -150,7 +150,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The symbol to convert.</param>
         /// <returns>The scheme string.</returns>
-        internal static char[] MakeString(Obj str)
+        public static char[] MakeString(Obj str)
         {
             return Symbol.AsSymbol(str).ToCharArray();
         }
@@ -160,7 +160,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The string to measure.</param>
         /// <returns>The string length.</returns>
-        internal static int StringLength(char[] str)
+        public static int StringLength(char[] str)
         {
             return str.Length;
         }
@@ -171,7 +171,7 @@ namespace SimpleScheme
         /// <param name="obj1">The first object (must be a scheme string..</param>
         /// <param name="obj2">The second object.</param>
         /// <returns>True if the strings are equal.</returns>
-        internal static bool Equal(Obj obj1, Obj obj2)
+        public static bool Equal(Obj obj1, Obj obj2)
         {
             if (!IsString(obj2))
             {
@@ -203,7 +203,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="chars">The obj that is a list of chars.</param>
         /// <returns>The caracter array made up of the chars.</returns>
-        internal static char[] ListToString(Obj chars)
+        public static char[] ListToString(Obj chars)
         {
             StringBuilder str = new StringBuilder();
             while (Pair.IsPair(chars))
@@ -398,7 +398,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the string to the string builder.
@@ -406,7 +406,7 @@ namespace SimpleScheme
         /// <param name="str">The string.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this char[] str, bool quoted, StringBuilder buf)
+        public static void AsString(this char[] str, bool quoted, StringBuilder buf)
         {
             if (! quoted)
             {

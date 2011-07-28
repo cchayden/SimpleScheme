@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a call-with-output-file expressions
     /// </summary>
-    internal sealed class EvaluateCallWithOutputFile : Stepper
+    public sealed class EvaluateCallWithOutputFile : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-call-with-output-file";
+        public const string StepperName = "evaluate-call-with-output-file";
 
         /// <summary>
         /// The counter id.
@@ -43,14 +43,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Create an evaluator with output file.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        internal static Stepper Call(Obj expr, Stepper caller)
+        public static Stepper Call(Obj expr, Stepper caller)
         {
             return new EvaluateCallWithOutputFile(expr, caller.Env, caller);
         }
@@ -61,7 +61,7 @@ namespace SimpleScheme
         /// <param name="filename">The filename.</param>
         /// <param name="interp">The interpreter.</param>
         /// <returns>The output port, used for writing.</returns>
-        internal static OutputPort OpenOutputFile(Obj filename, Interpreter interp)
+        public static OutputPort OpenOutputFile(Obj filename, Interpreter interp)
         {
             try
             {

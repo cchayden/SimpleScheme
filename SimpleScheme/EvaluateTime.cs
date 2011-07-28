@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    internal sealed class EvaluateTime : EvaluateTimeBase
+    public sealed class EvaluateTime : EvaluateTimeBase
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-time";
+        public const string StepperName = "evaluate-time";
 
         /// <summary>
         /// The counter id.
@@ -37,7 +37,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call a timed evaluator.
         /// </summary>
@@ -45,7 +45,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateTime(expr, env, caller);
         }

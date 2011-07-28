@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
-        internal Pair(Obj first, Obj rest)
+        public Pair(Obj first, Obj rest)
         {
             this.First = first;
             this.Rest = rest;
@@ -30,7 +30,7 @@ namespace SimpleScheme
         /// Make a one-element list.
         /// </summary>
         /// <param name="first">The first object.</param>
-        internal Pair(Obj first)
+        public Pair(Obj first)
         {
             this.First = first;
             this.Rest = EmptyList.Instance;
@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Pair class.
         /// Make an empty list.
         /// </summary>
-        internal Pair()
+        public Pair()
         {
             this.First = EmptyList.Instance;
             this.Rest = EmptyList.Instance;
@@ -51,15 +51,15 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets the first obj of the pair.
         /// </summary>
-        internal Obj First { get; set; }
+        public Obj First { get; set; }
 
         /// <summary>
         /// Gets or sets the rest of the objs in the list.
         /// </summary>
-        internal Obj Rest { get; set; }
+        public Obj Rest { get; set; }
         #endregion
 
-        #region Public Methods
+        #region Public Static Methods
         /// <summary>
         /// Tests whether to given object is a scheme pair.
         /// </summary>
@@ -71,22 +71,11 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Turn the pair into a string for display.
-        /// </summary>
-        /// <returns>A string representing the pair.</returns>
-        public override string ToString()
-        {
-            return Printer.AsString(this, true);
-        }
-        #endregion
-
-        #region Internal Static Methods
-        /// <summary>
         /// Convert an object into a pair.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a pair.</returns>
-        internal static Pair AsPair(Obj obj)
+        public static Pair AsPair(Obj obj)
         {
             return (Pair)obj;
         }
@@ -99,7 +88,7 @@ namespace SimpleScheme
         /// <param name="obj1">The first object (must be a pair).</param>
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both pairs and all elements are equal.</returns>
-        internal static bool Equal(Obj obj1, Obj obj2)
+        public static bool Equal(Obj obj1, Obj obj2)
         {
             if (!IsPair(obj2))
             {
@@ -129,12 +118,23 @@ namespace SimpleScheme
             }
         }
         #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Turn the pair into a string for display.
+        /// </summary>
+        /// <returns>A string representing the pair.</returns>
+        public override string ToString()
+        {
+            return Printer.AsString(this, true);
+        }
+        #endregion
     }
 
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the pair to the string builder.
@@ -145,7 +145,7 @@ namespace SimpleScheme
         /// <param name="pair">The pair to print.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Pair pair, bool quoted, StringBuilder buf)
+        public static void AsString(this Pair pair, bool quoted, StringBuilder buf)
         {
             if (Pair.IsPair(List.Rest(pair)) && 
                 EmptyList.IsEmptyList(List.Rest(List.Rest(pair))))

@@ -11,13 +11,13 @@ namespace SimpleScheme
     /// The main evaluator for expressions.
     /// </summary>
    //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-    internal sealed class EvaluateExpression : Stepper
+    public sealed class EvaluateExpression : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-expression";
+        public const string StepperName = "evaluate-expression";
 
         /// <summary>
         /// The counter id.
@@ -63,7 +63,7 @@ namespace SimpleScheme
         /// Ususlly these constructs are not handled as primitives, but are instead
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -125,7 +125,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// First check for a form that does not need to create an evaluator.  If it is one of these,
         ///   just return the answer.  Otherwise create an EvaluateExpression to handle it.
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.

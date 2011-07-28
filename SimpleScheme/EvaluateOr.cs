@@ -10,13 +10,13 @@ namespace SimpleScheme
     /// If a value is not #f then return it.  Otherwise return the last value.
     /// </summary>
     //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-    internal sealed class EvaluateOr : Stepper
+    public sealed class EvaluateOr : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-or";
+        public const string StepperName = "evaluate-or";
 
         /// <summary>
         /// The counter id.
@@ -45,7 +45,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Calls an or evaluator.
         /// </summary>
@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The or evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (EmptyList.IsEmptyList(expr))

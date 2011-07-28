@@ -87,7 +87,7 @@ namespace SimpleScheme
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
         /// </summary>
-        internal Interpreter Interp
+        public Interpreter Interp
         {
             get { return this.Env.Interp; }
         }
@@ -95,32 +95,32 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the expression being evaluated.  
         /// </summary>
-        internal Obj Expr { get; private set; }
+        public Obj Expr { get; private set; }
 
         /// <summary>
         /// Gets the returned expression from the last call.
         /// </summary>
-        internal Obj ReturnedExpr { get; private set; }
+        public Obj ReturnedExpr { get; private set; }
 
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
         /// </summary>
-        internal Environment Env { get; private set; }
+        public Environment Env { get; private set; }
 
         /// <summary>
         /// Gets the returned environment from the last call.
         /// </summary>
-        internal Environment ReturnedEnv { get; private set; }
+        public Environment ReturnedEnv { get; private set; }
 
         /// <summary>
         /// Gets the caller of this stepper.
         /// </summary>
-        internal Stepper Caller { get; private set; }
+        public Stepper Caller { get; private set; }
 
         /// <summary>
         /// Gets the caller's caller.
         /// </summary>
-        internal Stepper CallerCaller
+        public Stepper CallerCaller
         {
             get { return this.Caller.Caller; }
         }
@@ -136,15 +136,13 @@ namespace SimpleScheme
         {
             return obj is Stepper;
         }
-        #endregion
 
-        #region Internal Static Methods
         /// <summary>
         /// Convert object to stepper.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a stepper.</returns>
-        internal static Stepper AsStepper(Obj obj)
+        public static Stepper AsStepper(Obj obj)
         {
             return (Stepper)obj;
         }
@@ -155,7 +153,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="env">The global environment.</param>
         /// <returns>A halted stepper.</returns>
-        internal static Stepper NewHalted(Environment env)
+        public static Stepper NewHalted(Environment env)
         {
             return new Stepper(Halted, env, null);
         }
@@ -165,7 +163,7 @@ namespace SimpleScheme
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
         /// </summary>
         /// <returns>A suspended stepper.</returns>
-        internal static Stepper NewSuspended()
+        public static Stepper NewSuspended()
         {
             return new Stepper(Suspended, null, null);
         }
@@ -180,7 +178,7 @@ namespace SimpleScheme
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next step.  This is in the caller for return.</returns>
-        internal static Stepper TransferToStep(Stepper nextStep, Obj expr, Environment env)
+        public static Stepper TransferToStep(Stepper nextStep, Obj expr, Environment env)
         {
             nextStep.ReturnedExpr = expr;
             nextStep.ReturnedEnv = env;
@@ -188,7 +186,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// Makes a copy of the step.  Each subclass makes a copy of its own member variables.
         /// This is needed to support continuations, because the step contains mutable state.  If the state 
@@ -198,7 +196,7 @@ namespace SimpleScheme
         ///  things to which they point.
         /// </summary>
         /// <returns>A copy of the step.</returns>
-        internal Stepper Clone()
+        public Stepper Clone()
         {
             return (Stepper)this.MemberwiseClone();
         }
@@ -209,7 +207,7 @@ namespace SimpleScheme
         /// The cloned chain is linked up with each other to form a new chain.
         /// </summary>
         /// <returns>A copy of the current step.</returns>
-        internal Stepper CloneChain()
+        public Stepper CloneChain()
         {
             Stepper ret = (Stepper)this.MemberwiseClone();
             Stepper s = ret;
@@ -222,15 +220,13 @@ namespace SimpleScheme
 
             return ret;
         }
-        #endregion
 
-        #region Internal Methods
         /// <summary>
         /// Trace information for the step.
         /// Do this only once per instance.
         /// </summary>
         /// <returns>Info to print for the trace.</returns>
-        internal virtual string TraceInfo()
+        public virtual string TraceInfo()
         {
             if (this.traced)
             {
@@ -251,7 +247,7 @@ namespace SimpleScheme
         ///   correctly.
         /// </summary>
         /// <returns>The next step to run.</returns>
-        internal Stepper RunStep()
+        public Stepper RunStep()
         {
             if (this.pc.Target != null)
             {
@@ -266,7 +262,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The new expr value.</param>
         /// <returns>The next step, which is this stepper.</returns>
-        internal Stepper ContinueStep(Obj expr)
+        public Stepper ContinueStep(Obj expr)
         {
             this.ReturnedExpr = expr;
             return this;
@@ -276,7 +272,7 @@ namespace SimpleScheme
         /// Call the interpreter in the environment to start evaluating steps.
         /// </summary>
         /// <returns>The return value of the evaluation (or halted or suspended).</returns>
-        internal Obj EvalStep()
+        public Obj EvalStep()
         {
             return this.Env.Interp.EvalSteps(this);
         }
@@ -285,7 +281,7 @@ namespace SimpleScheme
         /// Create a stack backtrace
         /// </summary>
         /// <returns>A backtrace of the stepper call stack.</returns>
-        internal string StackBacktrace()
+        public string StackBacktrace()
         {
             Stepper step = this.Caller;    // skip backtrace itself
             StringBuilder sb = new StringBuilder();
@@ -302,7 +298,7 @@ namespace SimpleScheme
         /// Increment the given counter.
         /// </summary>
         /// <param name="counterIdent">The counter id</param>
-        internal void IncrementCounter(int counterIdent)
+        public void IncrementCounter(int counterIdent)
         {
             if (this.Env != null)
             {
@@ -318,7 +314,7 @@ namespace SimpleScheme
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
         /// <param name="parent">The existing environment.</param>
-        internal void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
+        public void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
         {
             this.Env = new Environment(formals, vals, parent.LexicalParent);
         }
@@ -330,7 +326,7 @@ namespace SimpleScheme
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
         /// <param name="parent">The lexically enclosing environment.</param>
-        internal void PushEnvironment(Obj formals, Obj vals, Environment parent)
+        public void PushEnvironment(Obj formals, Obj vals, Environment parent)
         {
             this.Env = new Environment(formals, vals, parent);
         }
@@ -339,7 +335,7 @@ namespace SimpleScheme
         /// Push an empty environment.
         /// </summary>
         /// <param name="parent">The lexically enclosing environment.</param>
-        internal void PushEmptyEnvironment(Environment parent)
+        public void PushEmptyEnvironment(Environment parent)
         {
             this.Env = new Environment(parent);
         }
@@ -349,7 +345,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="nextStep">The new PC value</param>
         /// <returns>The next step to take.</returns>
-        internal Stepper ContinueHere(StepperFunction nextStep)
+        public Stepper ContinueHere(StepperFunction nextStep)
         {
             this.pc = nextStep;
             return this;
@@ -362,7 +358,7 @@ namespace SimpleScheme
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next step, which is in the caller.</returns>
-        internal Stepper ReturnFromStep(Obj expr, Environment env)
+        public Stepper ReturnFromStep(Obj expr, Environment env)
         {
             this.Caller.ReturnedExpr = expr;
             this.Caller.ReturnedEnv = env;
@@ -374,7 +370,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The value to save as the returned value.</param>
         /// <returns>The next step, which is in the caller.</returns>
-        internal Stepper ReturnFromStep(Obj expr)
+        public Stepper ReturnFromStep(Obj expr)
         {
             this.Caller.ReturnedExpr = expr;
             return this.Caller;
@@ -384,7 +380,7 @@ namespace SimpleScheme
         /// Return the undefined result.
         /// </summary>
         /// <returns>The next step, which is in the caller.</returns>
-        internal Stepper ReturnUndefined()
+        public Stepper ReturnUndefined()
         {
             this.Caller.ReturnedExpr = Undefined.Instance;
             return this.Caller;
@@ -412,7 +408,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the stepper to the string builder.
@@ -420,7 +416,7 @@ namespace SimpleScheme
         /// <param name="stepper">The stepper.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Stepper stepper, bool quoted, StringBuilder buf)
+        public static void AsString(this Stepper stepper, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

@@ -17,7 +17,7 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
     //// <r4rs section="4.1.4">formals: <variable></r4rs>
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-    internal class Closure : Procedure
+    public class Closure : Procedure
     {
         #region Constructor
         /// <summary>
@@ -27,7 +27,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        internal Closure(Obj formalParameters, Obj body, Environment env)
+        public Closure(Obj formalParameters, Obj body, Environment env)
         {
             this.FormalParameters = formalParameters;
             this.Env = env;
@@ -39,17 +39,17 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a list of variable names, to be matched with values later.
         /// </summary>
-        internal Obj FormalParameters { get; private set; }
+        public Obj FormalParameters { get; private set; }
 
         /// <summary>
         /// Gets the program to execute.
         /// </summary>
-        internal Obj Body { get; private set; }
+        public Obj Body { get; private set; }
 
         /// <summary>
         /// Gets the environment in which to execute.
         /// </summary>
-        internal Environment Env { get; private set; }
+        public Environment Env { get; private set; }
         #endregion
 
         #region Public Static Methods
@@ -76,13 +76,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Convert object to closure.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a closure.</returns>
-        internal static Closure AsClosure(Obj obj)
+        public static Closure AsClosure(Obj obj)
         {
             return (Closure)obj;
         }
@@ -96,7 +96,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        internal Stepper ApplyWithtEnv(Environment env, Stepper caller)
+        public Stepper ApplyWithtEnv(Environment env, Stepper caller)
         {
             return EmptyList.IsEmptyList(List.Rest(this.Body)) ? 
                 EvaluateExpression.Call(List.First(this.Body), env, caller) : 
@@ -111,7 +111,7 @@ namespace SimpleScheme
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(object args, Stepper caller)
         {
             return this.ApplyWithtEnv(new Environment(this.FormalParameters, args, this.Env), caller);
         }
@@ -138,7 +138,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the closure to the string builder.
@@ -146,7 +146,7 @@ namespace SimpleScheme
         /// <param name="closure">The closure.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Closure closure, bool quoted, StringBuilder buf)
+        public static void AsString(this Closure closure, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

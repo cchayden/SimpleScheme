@@ -37,15 +37,13 @@ namespace SimpleScheme
         {
             return obj is Undefined;
         }
-        #endregion
 
-        #region Internal Methods
         /// <summary>
         /// Convert object to undefined object.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as an undefined object.</returns>
-        internal static Undefined AsUndefined(Obj obj)
+        public static Undefined AsUndefined(Obj obj)
         {
             return (Undefined)obj;
         }
@@ -55,7 +53,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the undefined object to the string builder.
@@ -65,7 +63,7 @@ namespace SimpleScheme
         /// <param name="undef">The undefined object (not used).</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Undefined undef, bool quoted, StringBuilder buf)
+        public static void AsString(this Undefined undef, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

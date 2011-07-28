@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// <summary>
     /// Executes a function provided in the CLR.
     /// </summary>
-    internal abstract class ClrProcedure : Procedure
+    public abstract class ClrProcedure : Procedure
     {
         #region Constructor
         /// <summary>
@@ -70,7 +70,7 @@ namespace SimpleScheme
         /// Define the clr procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static new void DefinePrimitives(PrimitiveEnvironment env)
+        public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// (class <class-name>)

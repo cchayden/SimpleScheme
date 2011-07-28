@@ -73,7 +73,7 @@ namespace SimpleScheme
         /// Define the symbol primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
@@ -87,7 +87,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the symbol to the string builder.
@@ -95,7 +95,7 @@ namespace SimpleScheme
         /// <param name="sym">The symbol.</param>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this string sym, bool quoted, StringBuilder buf)
+        public static void AsString(this string sym, bool quoted, StringBuilder buf)
         {
             buf.Append(sym);
         }

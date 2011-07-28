@@ -12,13 +12,13 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-    internal sealed class EvaluateCond : Stepper
+    public sealed class EvaluateCond : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-cond";
+        public const string StepperName = "evaluate-cond";
 
         /// <summary>
         /// The counter id.
@@ -57,7 +57,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Calls a cond evaluator.
         /// </summary>
@@ -65,7 +65,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (EmptyList.IsEmptyList(expr))

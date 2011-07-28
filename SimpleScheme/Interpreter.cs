@@ -139,42 +139,63 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the global environment for the interpreter.
         /// </summary>
-        internal Environment GlobalEnvironment { get; private set; }
+        public Environment GlobalEnvironment { get; private set; }
 
         /// <summary>
         /// Gets the rimitive environment for the interpreter.
         /// </summary>
-        internal PrimitiveEnvironment PrimEnvironment { get; private set; }
+        public PrimitiveEnvironment PrimEnvironment { get; private set; }
 
         /// <summary>
         /// Gets the input port.
         /// </summary>
-        internal InputPort CurrentInputPort { get; private set; }
+        public InputPort CurrentInputPort { get; private set; }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal OutputPort CurrentOutputPort { get; private set; }
+        public OutputPort CurrentOutputPort { get; private set; }
 
         /// <summary>
         /// Gets the counters collection.
         /// </summary>
-        internal Counter CurrentCounters { get; private set; }
+        public Counter CurrentCounters { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
         /// </summary>
-        internal bool Trace { get; set; }
+        public bool Trace { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to count.
         /// </summary>
-        internal bool Count { get; set; }
+        public bool Count { get; set; }
 
         /// <summary>
         /// Gets the transcript logger.
         /// </summary>
-        internal TranscriptLogger Transcript { get; private set; }
+        public TranscriptLogger Transcript { get; private set; }
+        #endregion
+
+        #region Define Primitives
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(PrimitiveEnvironment env)
+        {
+            env
+                //// (trace-on)
+                .DefinePrimitive("trace-on", (args, caller) => SetTraceFlag(caller, true), 0)
+                //// (trace-off)
+                .DefinePrimitive("trace-off", (args, caller) => SetTraceFlag(caller, false), 0)
+                //// (counters-on)
+                .DefinePrimitive("counters-on", (args, caller) => SetCountFlag(caller, true), 0)
+                //// (counters-off)
+                .DefinePrimitive("counters-off", (args, caller) => SetCountFlag(caller, false), 0)
+                //// (backtrace)
+                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
+        }
         #endregion
 
         #region Public Methods
@@ -429,28 +450,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the counter primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
-        {
-            env
-                //// (trace-on)
-                .DefinePrimitive("trace-on", (args, caller) => SetTraceFlag(caller, true), 0)
-                //// (trace-off)
-                .DefinePrimitive("trace-off", (args, caller) => SetTraceFlag(caller, false), 0)
-                //// (counters-on)
-                .DefinePrimitive("counters-on", (args, caller) => SetCountFlag(caller, true), 0)
-                //// (counters-off)
-                .DefinePrimitive("counters-off", (args, caller) => SetCountFlag(caller, false), 0)
-                //// (backtrace)
-                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
-        }
-        #endregion
-
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// Evaluate an expression in an environment.
         /// Do it by executing a set of steps.
@@ -458,7 +458,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        internal Obj Eval(Obj expr, Environment env)
+        public Obj Eval(Obj expr, Environment env)
         {
             return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
@@ -469,7 +469,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended stepper.</returns>
-        internal Obj EvalSteps(Stepper step)
+        public Obj EvalSteps(Stepper step)
         {
             while (true)
             {
@@ -510,7 +510,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port.</param>
         /// <returns>Undefined instance.</returns>
-        internal Obj Load(InputPort inp)
+        public Obj Load(InputPort inp)
         {
             while (true)
             {
@@ -530,7 +530,7 @@ namespace SimpleScheme
         /// Skip if if counting is turned off.
         /// </summary>
         /// <param name="counterId">The counter to increment.</param>
-        internal void IncrementCounter(int counterId)
+        public void IncrementCounter(int counterId)
         {
             if (this.Count)
             {

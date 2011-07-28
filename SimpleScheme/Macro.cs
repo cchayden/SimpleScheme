@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Represents a macro definition.
     /// It is just a closure with a different ToString.
     /// </summary>
-    internal sealed class Macro : Closure
+    public sealed class Macro : Closure
     {
         #region Constructor
         /// <summary>
@@ -19,13 +19,13 @@ namespace SimpleScheme
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        internal Macro(Obj parms, Obj body, Environment env)
+        public Macro(Obj parms, Obj body, Environment env)
             : base(parms, body, env)
         {
         }
         #endregion
 
-        #region Public Methods
+        #region Public Static Methods
         /// <summary>
         /// Tests whether to given object is a scheme macro.
         /// </summary>
@@ -37,6 +37,18 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Convert object to macro.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a macro.</returns>
+        public static Macro AsMacro(Obj obj)
+        {
+            return (Macro)obj;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
         /// Display the macro as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
         /// </summary>
@@ -46,24 +58,12 @@ namespace SimpleScheme
             return this.ToString("macro");
         }
         #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Convert object to macro.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a macro.</returns>
-        internal static Macro AsMacro(Obj obj)
-        {
-            return (Macro)obj;
-        }
-        #endregion
     }
 
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the macro to the string builder.
@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// <param name="macro">The macro.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Macro macro, bool quoted, StringBuilder buf)
+        public static void AsString(this Macro macro, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

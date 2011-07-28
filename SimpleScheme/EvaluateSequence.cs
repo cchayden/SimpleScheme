@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-    internal sealed class EvaluateSequence : Stepper
+    public sealed class EvaluateSequence : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-sequence";
+        public const string StepperName = "evaluate-sequence";
 
         /// <summary>
         /// The counter id.
@@ -44,7 +44,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
@@ -52,7 +52,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateSequence(expr, env, caller);
         }

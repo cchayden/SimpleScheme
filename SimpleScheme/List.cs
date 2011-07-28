@@ -153,7 +153,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">The obj to make into a list.</param>
         /// <returns>The items appended.</returns>
-        internal static Obj ListStar(Obj args)
+        public static Obj ListStar(Obj args)
         {
             // only one arg -- take it
             if (EmptyList.IsEmptyList(Rest(args)))
@@ -192,7 +192,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The list to reverse.</param>
         /// <returns>The reversed list.</returns>
-        internal static Obj Reverse(Obj x)
+        public static Obj Reverse(Obj x)
         {
             Obj result = EmptyList.Instance;
             while (Pair.IsPair(x))
@@ -212,7 +212,7 @@ namespace SimpleScheme
         /// <param name="fun">The function to apply to each elment.</param>
         /// <param name="expr">The list to process.</param>
         /// <returns>A list made up of the function results of each input element.  Could be the empty list.</returns>
-        internal static Obj MapFun(Func<object, object> fun, Obj expr)
+        public static Obj MapFun(Func<object, object> fun, Obj expr)
         {
             Pair result = New();
             Pair accum = result;
@@ -234,7 +234,7 @@ namespace SimpleScheme
         /// Define the list primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = Int32.MaxValue;
             env

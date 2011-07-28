@@ -72,7 +72,7 @@ namespace SimpleScheme
         /// Define the output primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
@@ -107,13 +107,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Static Methods
         /// <summary>
         /// Check that the given object is an output port.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The output port.</returns>
-        internal static OutputPort AsOutputPort(Obj obj)
+        public static OutputPort AsOutputPort(Obj obj)
         {
             if (IsOutputPort(obj))
             {
@@ -128,7 +128,7 @@ namespace SimpleScheme
         /// Write a string to the output port, followed by a newline.
         /// </summary>
         /// <param name="str">The string to write.</param>
-        internal void WriteLine(string str)
+        public void WriteLine(string str)
         {
             this.outp.Write(str + this.NewLine);
             this.transcript.LogOutputLine("=> " + str, this);
@@ -137,7 +137,7 @@ namespace SimpleScheme
         /// <summary>
         /// Write a newline to the output port.
         /// </summary>
-        internal void WriteLine()
+        public void WriteLine()
         {
             this.outp.Write(this.NewLine);
             this.transcript.LogOutputLine(this.NewLine, this);
@@ -147,7 +147,7 @@ namespace SimpleScheme
         /// Write a string to the output port, NOT followed by a newline.
         /// </summary>
         /// <param name="str">The string to write.</param>
-        internal void Write(string str)
+        public void Write(string str)
         {
             this.outp.Write(str);
             this.transcript.LogOutput(str, this);
@@ -156,7 +156,7 @@ namespace SimpleScheme
         /// <summary>
         /// Close the output port.
         /// </summary>
-        internal void Close()
+        public void Close()
         {
             this.outp.Close();
         }
@@ -164,7 +164,7 @@ namespace SimpleScheme
         /// <summary>
         /// Flush the output waiting on the output port.
         /// </summary>
-        internal void Flush()
+        public void Flush()
         {
             this.outp.Flush();
         }
@@ -297,7 +297,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the output port to the string builder.
@@ -305,7 +305,7 @@ namespace SimpleScheme
         /// <param name="port">The output port (not used).</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this OutputPort port, bool quoted, StringBuilder buf)
+        public static void AsString(this OutputPort port, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

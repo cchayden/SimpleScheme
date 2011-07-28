@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    internal class EmptyList
+    public class EmptyList
     {
         #region Constants
         /// <summary>
@@ -50,7 +50,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as an empty list.</returns>
-        internal static EmptyList AsEmptyList(Obj obj)
+        public static EmptyList AsEmptyList(Obj obj)
         {
             return (EmptyList)obj;
         }
@@ -60,7 +60,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the empty list to the string builder.
@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// <param name="lst">The empty list (not used).</param>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this EmptyList lst, bool quoted, StringBuilder buf)
+        public static void AsString(this EmptyList lst, bool quoted, StringBuilder buf)
         {
             buf.Append("()");
         }

@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a closure
     /// </summary>
-    internal sealed class EvaluateClosure : Stepper
+    public sealed class EvaluateClosure : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-closure";
+        public const string StepperName = "evaluate-closure";
 
         /// <summary>
         /// The closure to apply.
@@ -54,19 +54,19 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The closure evaluator..</returns>
-        internal static Stepper Call(Closure f, Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Closure f, Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateClosure(f, expr, env, caller);
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// Trace information for the step.
         /// Print the closure name.
         /// </summary>
         /// <returns>Info to print for the trace.</returns>
-        internal override string TraceInfo()
+        public override string TraceInfo()
         {
             if (base.TraceInfo() == null)
             {

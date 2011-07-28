@@ -26,7 +26,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the TranscriptLogger class.
         /// </summary>
         /// <param name="interp">The interpreter using the logger.</param>
-        internal TranscriptLogger(Interpreter interp)
+        public TranscriptLogger(Interpreter interp)
         {
             this.interp = interp;
         }
@@ -64,7 +64,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The input to log.</param>
         /// <param name="port">The port that it came from.</param>
-        internal void LogInput(string str, InputPort port)
+        public void LogInput(string str, InputPort port)
         {
             if (this.transcriptWriter == null || port != this.interp.CurrentInputPort)
             {
@@ -74,7 +74,7 @@ namespace SimpleScheme
             this.transcriptWriter.Write(str);
         }
 
-        internal void LogInputLine(string str, InputPort port)
+        public void LogInputLine(string str, InputPort port)
         {
             if (this.transcriptWriter == null || port != this.interp.CurrentInputPort)
             {
@@ -89,7 +89,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The output to log.</param>
         /// <param name="port">The port that it was written to.</param>
-        internal void LogOutput(string str, OutputPort port)
+        public void LogOutput(string str, OutputPort port)
         {
             if (this.transcriptWriter == null || port != this.interp.CurrentOutputPort)
             {
@@ -105,7 +105,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The output to log.</param>
         /// <param name="port">The port that it was written to.</param>
-        internal void LogOutputLine(string str, OutputPort port)
+        public void LogOutputLine(string str, OutputPort port)
         {
             if (this.transcriptWriter == null || port != this.interp.CurrentOutputPort)
             {

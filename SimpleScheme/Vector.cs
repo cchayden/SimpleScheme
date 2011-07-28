@@ -61,7 +61,7 @@ namespace SimpleScheme
         /// Define the vector primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -87,13 +87,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Creates the vector from a list of values.
         /// </summary>
         /// <param name="objs">A list of values to put in the vector.</param>
         /// <returns>A vector of the objs.</returns>
-        internal static Obj[] FromList(object objs)
+        public static Obj[] FromList(object objs)
         {
             Obj[] vec = new Obj[List.Length(objs)];
 
@@ -119,7 +119,7 @@ namespace SimpleScheme
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both vectors of equal length and 
         /// all elements are equal.</returns>
-        internal static bool Equal(Obj obj1, Obj obj2)
+        public static bool Equal(Obj obj1, Obj obj2)
         {
             if (!IsVector(obj2))
             {
@@ -222,7 +222,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the vector to the string builder.
@@ -230,7 +230,7 @@ namespace SimpleScheme
         /// <param name="vec">The vector.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Obj[] vec, bool quoted, StringBuilder buf)
+        public static void AsString(this Obj[] vec, bool quoted, StringBuilder buf)
         {
             buf.Append("#(");
             if (vec.Length > 0)

@@ -10,13 +10,13 @@ namespace SimpleScheme
     /// If a value is #f then return it.  Otherwise return the last value.
     /// </summary>
     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-    internal sealed class EvaluateAnd : Stepper
+    public sealed class EvaluateAnd : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-and";
+        public const string StepperName = "evaluate-and";
 
         /// <summary>
         /// The counter id.
@@ -45,7 +45,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
             if (EmptyList.IsEmptyList(expr))

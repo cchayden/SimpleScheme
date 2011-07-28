@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// Evaluate a continuation
     /// Capture the value to return and supply a step to resume.
     /// </summary>
-    internal sealed class EvaluateContinuation : Stepper
+    public sealed class EvaluateContinuation : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-continuation";
+        public const string StepperName = "evaluate-continuation";
 
         /// <summary>
         /// The counter id.
@@ -38,7 +38,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call a continuation evaluator.
         /// </summary>
@@ -46,7 +46,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The continuation evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateContinuation(expr, env, caller);            
         }

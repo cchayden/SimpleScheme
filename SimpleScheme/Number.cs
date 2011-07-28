@@ -17,12 +17,12 @@ namespace SimpleScheme
         /// <summary>
         /// Define the zero obj.
         /// </summary>
-        internal const double Zero = 0.0D;
+        public const double Zero = 0.0D;
 
         /// <summary>
         /// Define the one obj.
         /// </summary>
-        internal const double One = 1.0D;
+        public const double One = 1.0D;
 
         /// <summary>
         /// The printable name of the scheme number type.
@@ -67,7 +67,7 @@ namespace SimpleScheme
         /// Define the numeric primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             // not implemented
             //// <r4rs section="6.5.5">(numerator <q>)</r4rs>
@@ -479,7 +479,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the number to the string builder.
@@ -487,7 +487,7 @@ namespace SimpleScheme
         /// <param name="d">The number.</param>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this double d, bool quoted, StringBuilder buf)
+        public static void AsString(this double d, bool quoted, StringBuilder buf)
         {
             if (Math.Round(d) == d)
             {

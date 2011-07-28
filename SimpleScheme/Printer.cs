@@ -63,16 +63,14 @@ namespace SimpleScheme
             AsString(x, quoted, buf);
             return buf.ToString();
         }
-        #endregion
 
-        #region Internal Static Methods
         /// <summary>
         /// Convert an obj into a string representation.
         /// </summary>
         /// <param name="x">The obj to convert.</param>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        internal static void AsString(Obj x, bool quoted, StringBuilder buf)
+        public static void AsString(Obj x, bool quoted, StringBuilder buf)
         {
             // see if we can find it in the table
             foreach (var entry in asStringEntries)

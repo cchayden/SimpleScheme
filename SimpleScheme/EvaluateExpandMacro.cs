@@ -8,13 +8,13 @@ namespace SimpleScheme
     /// <summary>
     /// Expand a macro.
     /// </summary>
-    internal sealed class EvaluateExpandMacro : Stepper
+    public sealed class EvaluateExpandMacro : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-expand-macro";
+        public const string StepperName = "evaluate-expand-macro";
 
         /// <summary>
         /// The macro to expand.
@@ -44,7 +44,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call an expand evaluator.
         /// </summary>
@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        internal static Stepper Call(Macro fn, Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Macro fn, Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateExpandMacro(fn, expr, env, caller);
         }

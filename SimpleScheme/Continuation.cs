@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Represents a continuation.
     /// </summary>
-    internal sealed class Continuation : Procedure
+    public sealed class Continuation : Procedure
     {
         #region Fields
         /// <summary>
@@ -27,7 +27,7 @@ namespace SimpleScheme
         ///   clone necessary.
         /// </summary>
         /// <param name="step">The continuation to return to when applied.</param>
-        internal Continuation(Stepper step)
+        public Continuation(Stepper step)
         {
             this.step = step.Caller.CloneChain(); 
         }
@@ -45,6 +45,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Convert an object to a continuation.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The continuation.</returns>
+        public static Continuation AsContinuation(Obj obj)
+        {
+            return (Continuation)obj;
+        }
+
+        /// <summary>
         /// Display the continuation as a string.  
         /// Displays the body, as it has been processed by the reader.
         /// </summary>
@@ -52,18 +62,6 @@ namespace SimpleScheme
         public override string ToString()
         {
             return string.Empty;
-        }
-        #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Convert an object to a continuation.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The continuation.</returns>
-        internal static Continuation AsContinuation(Obj obj)
-        {
-            return (Continuation)obj;
         }
 
         /// <summary>
@@ -76,7 +74,7 @@ namespace SimpleScheme
         /// <param name="args">The value to return.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(object args, Stepper caller)
         {
             return Stepper.TransferToStep(this.step.CloneChain(), List.First(args), this.step.Env);
         }
@@ -86,7 +84,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the continuation to the string builder.
@@ -94,7 +92,7 @@ namespace SimpleScheme
         /// <param name="cont">The continuation (not used).</param>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Continuation cont, bool quoted, StringBuilder buf)
+        public static void AsString(this Continuation cont, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

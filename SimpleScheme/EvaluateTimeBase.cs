@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    internal abstract class EvaluateTimeBase : Stepper
+    public abstract class EvaluateTimeBase : Stepper
     {
         #region Fields
         /// <summary>

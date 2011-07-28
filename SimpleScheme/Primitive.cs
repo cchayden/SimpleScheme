@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "primitive";
+        public const string StepperName = "primitive";
 
         /// <summary>
         /// The counter id.
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <param name="operation">The code to carry out the operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
-        internal Primitive(Op operation, int minArgs, int maxArgs)
+        public Primitive(Op operation, int minArgs, int maxArgs)
         {
             this.operation = operation;
             this.minArgs = minArgs;
@@ -76,7 +76,7 @@ namespace SimpleScheme
         public delegate Obj Op(Obj args, Stepper caller);
         #endregion
 
-        #region Public Methods
+        #region Public Static Methods
         /// <summary>
         /// Tests whether to given object is a scheme primitive.
         /// </summary>
@@ -88,24 +88,24 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Convert an object to a primitive.
+        /// </summary>
+        /// <param name="obj">The primitive as an object.</param>
+        /// <returns>The primitive.</returns>
+        public static Primitive AsPrimitive(Obj obj)
+        {
+            return (Primitive)obj;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
         /// The string form of a proc is its name in curly brackets.
         /// </summary>
         /// <returns>The name of the proc.</returns>
         public override string ToString()
         {
             return "{" + this.ProcedureName + "}";
-        }
-        #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Convert an object to a primitive.
-        /// </summary>
-        /// <param name="obj">The primitive as an object.</param>
-        /// <returns>The primitive.</returns>
-        internal static Primitive AsPrimitive(Obj obj)
-        {
-            return (Primitive)obj;
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the primitive.</param>
         /// <param name="caller">The calling Stepper.</param>
         /// <returns>The next step to execute.</returns>
-        internal override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(object args, Stepper caller)
         {
             // First check the number of arguments
             int numArgs = List.Length(args);
@@ -158,7 +158,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the primitive to the string builder.
@@ -166,7 +166,7 @@ namespace SimpleScheme
         /// <param name="prim">The primitive.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Primitive prim, bool quoted, StringBuilder buf)
+        public static void AsString(this Primitive prim, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

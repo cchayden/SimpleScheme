@@ -40,7 +40,7 @@ namespace SimpleScheme
         #region Accessors
         /// <summary>
         /// Gets or sets all Procedures have a name.  It can be set only by the subclass.
-        /// Can't figure out how to make this internal rather than public.
+        /// Can't figure out how to make this public rather than public.
         /// </summary>
         public string ProcedureName { get; protected set; }
         #endregion
@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// Define the procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = Int32.MaxValue;
             env
@@ -84,13 +84,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Check that the given object is a procedure.
         /// </summary>
         /// <param name="x">The obj to test.</param>
         /// <returns>The procedure.</returns>
-        internal static Procedure AsProcedure(Obj x)
+        public static Procedure AsProcedure(Obj x)
         {
             if (IsProcedure(x))
             {
@@ -106,13 +106,13 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        internal static Obj Force(Obj promise, Stepper caller)
+        public static Obj Force(Obj promise, Stepper caller)
         {
             return !IsProcedure(promise) ? promise : AsProcedure(promise).Apply(null, caller);
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// </summary>
@@ -120,14 +120,14 @@ namespace SimpleScheme
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to run after the application.</returns>
-        internal abstract Stepper Apply(object args, Stepper caller);
+        public abstract Stepper Apply(object args, Stepper caller);
 
         /// <summary>
         /// Assign the procedure name.  If the name is still the default, assign it 
         ///    the name given in the argument.
         /// </summary>
         /// <param name="name">The name to assign it.</param>
-        internal void SetName(string name)
+        public void SetName(string name)
         {
             if (this.ProcedureName == AnonymousProc)
             {
@@ -143,7 +143,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next step toexecute.</returns>
-        internal Stepper Evaluate(Obj args, Environment env, Stepper caller)
+        public Stepper Evaluate(Obj args, Environment env, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
             if (Macro.IsMacro(this))
@@ -204,7 +204,7 @@ namespace SimpleScheme
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
-    internal static partial class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Write the procedure to the string builder.
@@ -212,7 +212,7 @@ namespace SimpleScheme
         /// <param name="proc">The procedure (not used).</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        internal static void AsString(this Procedure proc, bool quoted, StringBuilder buf)
+        public static void AsString(this Procedure proc, bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

@@ -8,13 +8,13 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a define expression.
     /// </summary>
-    internal sealed class EvaluateDefine : Stepper
+    public sealed class EvaluateDefine : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-define";
+        public const string StepperName = "evaluate-define";
 
         /// <summary>
         /// The counter id.
@@ -37,7 +37,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Call a define evaluator.
         /// </summary>
@@ -45,7 +45,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             return new EvaluateDefine(expr, env, caller);
         }

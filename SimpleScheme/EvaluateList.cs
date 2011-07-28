@@ -11,13 +11,13 @@ namespace SimpleScheme
     /// This is an iterative, rather than a recursive one.
     /// </summary>
     //// <r4rs section="6.3">(list <obj> ...)</r4rs>
-    internal sealed class EvaluateList : Stepper
+    public sealed class EvaluateList : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        internal const string StepperName = "evaluate-list";
+        public const string StepperName = "evaluate-list";
 
         /// <summary>
         /// The counter id.
@@ -61,7 +61,7 @@ namespace SimpleScheme
 
         #endregion
 
-        #region Internal Static Methods
+        #region Public Static Methods
         /// <summary>
         /// Create a list evaluator.
         /// </summary>
@@ -69,7 +69,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        internal static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // first check for degenerate cases
             if (EmptyList.IsEmptyList(expr))

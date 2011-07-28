@@ -32,7 +32,7 @@ namespace SimpleScheme
         /// Define the error primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment env)
+        public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -49,7 +49,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static object Error(string message)
+        public static object Error(string message)
         {
             Console.Error.WriteLine("**** ERROR: " + message);
             throw new SchemeException(message);
@@ -64,7 +64,7 @@ namespace SimpleScheme
         /// <param name="expected">The expected type.</param>
         /// <param name="got">The actual value.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static object TypeError(string expected, object got)
+        public static object TypeError(string expected, object got)
         {
             string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), Printer.AsString(got));
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
@@ -79,7 +79,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static object IoError(string message)
+        public static object IoError(string message)
         {
             Console.Error.WriteLine("**** I/O ERROR: {0}", message);
             throw new SchemeIoException(message);
@@ -88,12 +88,12 @@ namespace SimpleScheme
         /// <summary>
         /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
-        /// These are internal errors, and should never happen.
+        /// These are public errors, and should never happen.
         /// </summary>
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static object InternalError(string message)
+        public static object InternalError(string message)
         {
             Console.Error.WriteLine("**** INTERNAL ERROR: {0}", message);
             throw new SchemeInternalException(message);
@@ -107,7 +107,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static object ClrError(string message)
+        public static object ClrError(string message)
         {
             Console.Error.WriteLine("**** CLR ERROR: {0}", message);
             throw new SchemeClrException(message);
@@ -121,7 +121,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static object SemanticError(string message)
+        public static object SemanticError(string message)
         {
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
@@ -138,7 +138,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the ErrorHandlers.SchemeException class.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            internal SchemeException(string message) 
+            public SchemeException(string message) 
                 : base(message)
             {
             }
@@ -156,7 +156,7 @@ namespace SimpleScheme
             /// and it is some other type.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            internal SchemeTypeException(string message) 
+            public SchemeTypeException(string message) 
                 : base(message)
             {
             }
@@ -172,7 +172,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the ErrorHandlers.SchemeIoException class.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            internal SchemeIoException(string message) 
+            public SchemeIoException(string message) 
                 : base(message)
             {
             }
@@ -188,7 +188,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the ErrorHandlers.SchemeInternalException class.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            internal SchemeInternalException(string message) 
+            public SchemeInternalException(string message) 
                 : base(message)
             {
             }
@@ -204,7 +204,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the ErrorHandlers.SchemeSemanticException class.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            internal SchemeSemanticException(string message) 
+            public SchemeSemanticException(string message) 
                 : base(message)
             {
             }
@@ -220,7 +220,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the ErrorHandlers.SchemeClrException class.
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
-            internal SchemeClrException(string message) 
+            public SchemeClrException(string message) 
                 : base(message)
             {
             }

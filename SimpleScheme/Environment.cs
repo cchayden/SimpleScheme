@@ -48,7 +48,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="interp">The interpreter.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        internal Environment(Interpreter interp, Environment lexicalParent)
+        public Environment(Interpreter interp, Environment lexicalParent)
         {
             this.Interp = interp;
             this.LexicalParent = lexicalParent;
@@ -65,7 +65,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="lexicalParent">The lexically enclosing environment.</param>
         /// <returns>The new environment.</returns>
-        internal Environment(Environment lexicalParent) : 
+        public Environment(Environment lexicalParent) : 
             this(lexicalParent.Interp, lexicalParent)
         {
         }
@@ -78,7 +78,7 @@ namespace SimpleScheme
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        internal Environment(Obj formals, Obj vals, Environment lexicalParent)
+        public Environment(Obj formals, Obj vals, Environment lexicalParent)
         {
             this.Interp = lexicalParent.Interp;
             this.LexicalParent = lexicalParent;
@@ -100,12 +100,12 @@ namespace SimpleScheme
         ///   lexical parent, so that it can be accessed directly.
         /// This field is written only in the constructor -- it is never modified.
         /// </summary>
-        internal Interpreter Interp { get; private set; }
+        public Interpreter Interp { get; private set; }
 
         /// <summary>
         /// Gets the lexical parent environment.
         /// </summary>
-        internal Environment LexicalParent { get; private set; }
+        public Environment LexicalParent { get; private set; }
         #endregion
 
         #region Public Methods
@@ -143,9 +143,7 @@ namespace SimpleScheme
 
             ErrorHandlers.SemanticError("Bad variable in define: " + var);
         }
-        #endregion
 
-        #region Internal Methods
         /// <summary>
         /// Look up a symbol in the environment.
         /// This is the single most expensive operation in the whole interpreter.
@@ -153,7 +151,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        internal Obj Lookup(Obj obj)
+        public Obj Lookup(Obj obj)
         {
             string symbol = Symbol.AsSymbol(obj);
             Environment env = this;
@@ -187,7 +185,7 @@ namespace SimpleScheme
         /// <param name="var">The variable name.</param>
         /// <param name="val">The new value for the variable.</param>
         /// <returns>The value that the variable was set to.</returns>
-        internal Obj Set(Obj var, Obj val)
+        public Obj Set(Obj var, Obj val)
         {
             if (!Symbol.IsSymbol(var))
             {
@@ -222,7 +220,7 @@ namespace SimpleScheme
         /// <param name="levels">The number of levels to show.</param>
         /// <param name="indent">The number of characters to indent.</param>
         /// <returns>The environment stack, as a string.</returns>
-        internal string Dump(int levels, int indent)
+        public string Dump(int levels, int indent)
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
@@ -248,7 +246,7 @@ namespace SimpleScheme
         /// Dump the environment.
         /// </summary>
         /// <param name="interp">The interpreter.  Used to find the current output port.</param>
-        internal void DumpEnv(Interpreter interp)
+        public void DumpEnv(Interpreter interp)
         {
             interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
         }
@@ -257,7 +255,7 @@ namespace SimpleScheme
         /// Dump the top level environment.
         /// </summary>
         /// <returns>The environment, as a string.</returns>
-        internal string Dump()
+        public string Dump()
         {
             return this.Dump(1, 0);
         }
@@ -317,7 +315,7 @@ namespace SimpleScheme
             /// Initializes a new instance of the Environment.SymbolTable class.
             /// </summary>
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
-            internal SymbolTable(int count)
+            public SymbolTable(int count)
             {
                 this.symbolTable = new Dictionary<string, Obj>(count);
             }
@@ -328,7 +326,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to look up.</param>
             /// <param name="val">Its returned value.</param>
             /// <returns>True if found in the symbol table, false if not found.</returns>
-            internal bool Lookup(string symbol, out Obj val)
+            public bool Lookup(string symbol, out Obj val)
             {
                 if (this.symbolTable.TryGetValue(symbol, out val))
                 {
@@ -343,7 +341,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            internal void Add(Obj symbol, Obj val)
+            public void Add(Obj symbol, Obj val)
             {
                 this.symbolTable[Symbol.AsSymbol(symbol)] = val;
             }
@@ -354,7 +352,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            internal void AddList(Obj symbols, Obj vals)
+            public void AddList(Obj symbols, Obj vals)
             {
                 while (!EmptyList.IsEmptyList(symbols))
                 {
@@ -384,7 +382,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
             /// <returns>True if the value was found and stored, false if not found.</returns>
-            internal bool Update(string symbol, Obj val)
+            public bool Update(string symbol, Obj val)
             {
                 if (this.symbolTable.ContainsKey(symbol))
                 {
@@ -400,7 +398,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="indent">The number of characters to indent.</param>
             /// <param name="sb">A string builder to write the dump into.</param>
-            internal void Dump(int indent, StringBuilder sb)
+            public void Dump(int indent, StringBuilder sb)
             {
                 string initial = new string(' ', indent);
                 foreach (var key in this.symbolTable.Keys)
