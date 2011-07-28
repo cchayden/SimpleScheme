@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -11,6 +12,13 @@ namespace SimpleScheme
     /// </summary>
     public class Vector
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the vector type.
+        /// </summary>
+        private const string Name = "vector";
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Prevents a default instance of the Vector class from being created.
@@ -22,18 +30,28 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Tests whether to given object is a scheme vector.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme vector.</returns>
+        public static bool IsVector(Obj obj)
+        {
+            return obj is Obj[];
+        }
+
+        /// <summary>
         /// Check that an object is a vector.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme vector.</returns>
-        public static Obj[] Vec(object obj)
+        public static Obj[] AsVector(Obj obj)
         {
-            if (TypePrimitives.IsVector(obj)) 
+            if (IsVector(obj)) 
             {
                 return (Obj[])obj;
             }
 
-            return Vec(ErrorHandlers.TypeError(TypePrimitives.VectorName, obj));
+            return AsVector(ErrorHandlers.TypeError(Name, obj));
         }
 
         #endregion
@@ -59,13 +77,13 @@ namespace SimpleScheme
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
                 .DefinePrimitive("vector-fill", (args, caller) => VectorFill(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (args, caller) => Number.Num(Vec(List.First(args)).Length), 1)
+                .DefinePrimitive("vector-length", (args, caller) => Number.Num(AsVector(List.First(args)).Length), 1)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (args, caller) => Vec(List.First(args))[(int)Number.Num(List.Second(args))], 2)
+                .DefinePrimitive("vector-ref", (args, caller) => AsVector(List.First(args))[(int)Number.Num(List.Second(args))], 2)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
                 .DefinePrimitive("vector-set!", (args, caller) => VectorSet(List.First(args), List.Second(args), List.Third(args)), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsVector(List.First(args))), 1);
+                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(IsVector(List.First(args))), 1);
         }
         #endregion
 
@@ -79,13 +97,13 @@ namespace SimpleScheme
         {
             Obj[] vec = new Obj[List.Length(objs)];
 
-            if (!TypePrimitives.IsPair(objs))
+            if (!Pair.IsPair(objs))
             {
                 return vec;
             }
 
             int i = 0;
-            while (TypePrimitives.IsPair(objs))
+            while (Pair.IsPair(objs))
             {
                 vec[i++] = List.First(objs);
                 objs = List.Rest(objs);
@@ -103,7 +121,7 @@ namespace SimpleScheme
         /// all elements are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!TypePrimitives.IsVector(obj2))
+            if (!IsVector(obj2))
             {
                 return false;
             }
@@ -137,7 +155,7 @@ namespace SimpleScheme
         private static Obj[] MakeVector(object length, object fill)
         {
             Obj[] vec = new object[(int)Number.Num(length)];
-            if (TypePrimitives.IsEmptyList(fill))
+            if (EmptyList.IsEmptyList(fill))
             {
                 fill = Undefined.Instance;
             }
@@ -159,7 +177,7 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         private static Obj VectorSet(object vector, object k, object obj)
         {
-            Vec(vector)[(int)Number.Num(k)] = obj;
+            AsVector(vector)[(int)Number.Num(k)] = obj;
             return Undefined.Instance;
         }
 
@@ -171,7 +189,7 @@ namespace SimpleScheme
         /// <returns>The vector as a list.</returns>
         private static Obj VectorToList(object vector)
         {
-            Obj[] vec = Vec(vector);
+            Obj[] vec = AsVector(vector);
             Obj result = EmptyList.Instance;
             for (int i = vec.Length - 1; i >= 0; i--)
             {
@@ -189,7 +207,7 @@ namespace SimpleScheme
         /// <returns>Return value is unspecified.</returns>
         private static Obj VectorFill(Obj vector, object fill)
         {
-            Obj[] vec = Vec(vector);
+            Obj[] vec = AsVector(vector);
             for (int i = 0; i < vec.Length; i++)
             {
                 vec[i] = fill;
@@ -199,5 +217,34 @@ namespace SimpleScheme
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the vector to the string builder.
+        /// </summary>
+        /// <param name="vec">The vector.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Obj[] vec, bool quoted, StringBuilder buf)
+        {
+            buf.Append("#(");
+            if (vec.Length > 0)
+            {
+                foreach (Obj v in vec)
+                {
+                    Printer.AsString(v, quoted, buf);
+                    buf.Append(' ');
+                }
+
+                buf.Remove(buf.Length - 1, 1);
+            }
+
+            buf.Append(')');
+        }
     }
 }

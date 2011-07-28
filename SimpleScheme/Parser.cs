@@ -69,7 +69,7 @@ namespace SimpleScheme
                 return InputPort.Eof;
             }
 
-            return Character.Chr((char)p);
+            return Character.AsCharacter((char)p);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace SimpleScheme
                     return InputPort.Eof;
                 }
 
-                return Character.Chr((char)ch);
+                return Character.AsCharacter((char)ch);
             }
             catch (IOException ex)
             {
@@ -340,25 +340,25 @@ namespace SimpleScheme
                                 token = this.NextToken();
                                 if (token is string && (token as string).Length == 1)
                                 {
-                                    return Character.Chr((char)ch);
+                                    return Character.AsCharacter((char)ch);
                                 }
 
                                 switch (token as string)
                                 {
                                     case "space":
-                                        return Character.Chr(' ');
+                                        return Character.AsCharacter(' ');
                                     case "newline":
-                                        return Character.Chr('\n');
+                                        return Character.AsCharacter('\n');
                                     default:
                                         // this isn't really right
                                         // #\<char> is required to have delimiter after char
                                         ErrorHandlers.Warn("#\\<char> must be followed by delimiter");
                                         this.tokStream.PushToken(token);
-                                        return Character.Chr((char)ch);
+                                        return Character.AsCharacter((char)ch);
                                 }
                             }
 
-                            return Character.Chr((char)ch);
+                            return Character.AsCharacter((char)ch);
 
                         case 'e':
                         case 'i':
@@ -503,7 +503,7 @@ namespace SimpleScheme
                         return -1;
                     }
 
-                    return Character.Chr((char)this.pushedChar);
+                    return Character.AsCharacter((char)this.pushedChar);
                 }
 
                 return -2;

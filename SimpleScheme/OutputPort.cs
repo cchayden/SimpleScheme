@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.IO;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -12,6 +13,13 @@ namespace SimpleScheme
     /// </summary>
     public class OutputPort
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the scheme output port type.
+        /// </summary>
+        private const string Name = "output port";
+        #endregion
+
         #region Fields
         /// <summary>
         /// All output goes to this TextWriter.
@@ -47,6 +55,18 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme output port.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme output port.</returns>
+        public static bool IsOutputPort(Obj obj)
+        {
+            return obj is OutputPort;
+        }
+        #endregion
+
         #region Define Primitives
         /// <summary>
         /// Define the output primitives.
@@ -73,7 +93,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
                 .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsOutputPort(List.First(args))), 1)
+                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(IsOutputPort(List.First(args))), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
                 .DefinePrimitive("write", (args, caller) => Write(List.First(args), List.Second(args), caller.Interp), 1, 2)
@@ -88,6 +108,22 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+        /// <summary>
+        /// Check that the given object is an output port.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The output port.</returns>
+        internal static OutputPort AsOutputPort(Obj obj)
+        {
+            if (IsOutputPort(obj))
+            {
+                return (OutputPort)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
+        }
+
         /// <summary>
         /// Write a string to the output port, followed by a newline.
         /// </summary>
@@ -136,22 +172,6 @@ namespace SimpleScheme
 
         #region Private Static Methods
         /// <summary>
-        /// Check that the given object is an output port.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The output port.</returns>
-        private static OutputPort OutPort(Obj obj)
-        {
-            if (TypePrimitives.IsOutputPort(obj))
-            {
-                return (OutputPort)obj;
-            }
-
-            ErrorHandlers.TypeError(TypePrimitives.OutputPortName, obj);
-            return null;
-        }
-
-        /// <summary>
         /// Determine the port object to use with the OutputPort primitives.
         /// The port is optional: if supplied, it is the port to use.
         /// Otherwise, the current output port is used instead.
@@ -161,7 +181,7 @@ namespace SimpleScheme
         /// <returns>The port to use.</returns>
         private static OutputPort Port(Obj port, Interpreter interp)
         {
-            return TypePrimitives.IsEmptyList(port) ? interp.CurrentOutputPort : OutPort(port);
+            return EmptyList.IsEmptyList(port) ? interp.CurrentOutputPort : AsOutputPort(port);
         }
 
         /// <summary>
@@ -272,5 +292,25 @@ namespace SimpleScheme
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the output port to the string builder.
+        /// </summary>
+        /// <param name="port">The output port (not used).</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this OutputPort port, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<output port>");
+            }
+        }
     }
 }

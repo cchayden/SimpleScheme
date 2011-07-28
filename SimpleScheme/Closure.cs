@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -50,6 +52,18 @@ namespace SimpleScheme
         internal Environment Env { get; private set; }
         #endregion
 
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme closure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme closure.</returns>
+        public static bool IsClosure(Obj obj)
+        {
+            return obj is Closure;
+        }
+        #endregion
+
         #region Public Methods
         /// <summary>
         /// Display the closure as a string.  
@@ -64,6 +78,16 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
+        /// Convert object to closure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a closure.</returns>
+        internal static Closure AsClosure(Obj obj)
+        {
+            return (Closure)obj;
+        }
+
+        /// <summary>
         /// Actually executes the saved program
         /// Uses the given environment rather than creating a new one.
         /// The arguments have already been bound to the formal parameters.
@@ -74,7 +98,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         internal Stepper ApplyWithtEnv(Environment env, Stepper caller)
         {
-            return TypePrimitives.IsEmptyList(List.Rest(this.Body)) ? 
+            return EmptyList.IsEmptyList(List.Rest(this.Body)) ? 
                 EvaluateExpression.Call(List.First(this.Body), env, caller) : 
                 EvaluateSequence.Call(this.Body, env, caller);
         }
@@ -106,8 +130,29 @@ namespace SimpleScheme
                 body = body.Substring(1, body.Length - 2).Trim();
             }
 
-            return string.Format("({0} {1} {2})", tag, this.FormalParameters, body);
+            return String.Format("({0} {1} {2})", tag, this.FormalParameters, body);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the closure to the string builder.
+        /// </summary>
+        /// <param name="closure">The closure.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Closure closure, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("closure: ");
+                buf.Append(closure.ToString());
+            }
+        }
     }
 }

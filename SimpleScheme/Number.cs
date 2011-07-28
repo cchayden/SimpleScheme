@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -22,27 +23,42 @@ namespace SimpleScheme
         /// Define the one obj.
         /// </summary>
         internal const double One = 1.0D;
+
+        /// <summary>
+        /// The printable name of the scheme number type.
+        /// </summary>
+        private const string Name = "number";
         #endregion
 
         #region Public Static Methods
         /// <summary>
+        /// Tests whether to given object is a scheme number.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme number.</returns>
+        public static bool IsNumber(Obj obj)
+        {
+            return obj is double || obj is float || obj is long || obj is int || obj is byte;
+        }
+
+        /// <summary>
         /// Convert an obj (containing a number) into a double.
         /// </summary>
-        /// <param name="x">The obj to convert.</param>
+        /// <param name="obj">The obj to convert.</param>
         /// <returns>The double contained in the obj.</returns>
-        public static double Num(Obj x)
+        public static double Num(Obj obj)
         {
-            if (TypePrimitives.IsNumber(x))
+            if (obj is double)
             {
-                return (double)x;
+                return (double)obj;
             }
 
-            if (x is byte || x is int || x is long || x is float)
+            if (obj is byte || obj is int || obj is long || obj is float)
             {
-                return Convert.ToDouble(x);
+                return Convert.ToDouble(obj);
             }
 
-            return Num(ErrorHandlers.TypeError(TypePrimitives.NumberName, x));
+            return Num(ErrorHandlers.TypeError(Name, obj));
         }
         #endregion
 
@@ -103,7 +119,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(atan <y> <x>)</r4rs>
                 .DefinePrimitive("atan", (args, caller) => Num(Math.Atan(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(complex? <obj>)</r4rs>
-                .DefinePrimitive("complex?", (args, caller) => IsNumber(List.First(args)), 1)
+                .DefinePrimitive("complex?", (args, caller) => IsSchemeNumber(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(cos <z>)</r4rs>
                 .DefinePrimitive("cos", (args, caller) => Num(Math.Cos(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(even? <n>)</r4rs>
@@ -115,15 +131,15 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(expt <z>)</r4rs>
                 .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (args, caller) => TypePrimitives.IsEmptyList(args) ? Zero : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (args, caller) => EmptyList.IsEmptyList(args) ? Zero : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(List.First(args))), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
-                .DefinePrimitive("integer->char", (args, caller) => Character.Chr((char)(int)Num(List.First(args))), 1)
+                .DefinePrimitive("integer->char", (args, caller) => Character.AsCharacter((char)(int)Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (args, caller) => TypePrimitives.IsEmptyList(args) ? One : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (args, caller) => EmptyList.IsEmptyList(args) ? One : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
@@ -176,7 +192,7 @@ namespace SimpleScheme
         {
             long gcd = 0;
 
-            while (TypePrimitives.IsPair(args))
+            while (Pair.IsPair(args))
             {
                 gcd = Gcd2(Math.Abs((long)Num(List.First(args))), gcd);
                 args = List.Rest(args);
@@ -203,7 +219,7 @@ namespace SimpleScheme
         /// <returns>True if the number is exact.</returns>
         private static bool IsExact(Obj x)
         {
-            if (!TypePrimitives.IsNumber(x))
+            if (!IsNumber(x))
             {
                 return false;
             }
@@ -217,10 +233,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The number to test.</param>
         /// <returns>True if it is a number.</returns>
-        private static bool IsNumber(Obj x)
+        private static bool IsSchemeNumber(Obj x)
         {
-            return SchemeBoolean.Truth(x is byte || x is int || x is long ||
-                                       x is float || x is double);
+            return SchemeBoolean.Truth(IsNumber(x));
         }
 
         /// <summary>
@@ -232,7 +247,7 @@ namespace SimpleScheme
         {
             long lcm = 1;
 
-            while (TypePrimitives.IsPair(args))
+            while (Pair.IsPair(args))
             {
                 long n = Math.Abs((long)Num(List.First(args)));
                 long g = Gcd2(n, lcm);
@@ -252,7 +267,7 @@ namespace SimpleScheme
         /// <returns>A string version of the number.</returns>
         private static Obj NumberToString(Obj x, Obj y)
         {
-            int numberBase = TypePrimitives.IsNumber(y) ? (int)Num(y) : 10;
+            int numberBase = IsNumber(y) ? (int)Num(y) : 10;
             if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
             {
                 return Convert.ToString((long)Num(x), numberBase).ToCharArray();
@@ -271,7 +286,7 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         private static Obj NumCompare(Obj args, char op)
         {
-            while (TypePrimitives.IsPair(List.Rest(args)))
+            while (Pair.IsPair(List.Rest(args)))
             {
                 double x = Num(List.First(args));
                 args = List.Rest(args);
@@ -341,7 +356,7 @@ namespace SimpleScheme
         /// with the starting value.</returns>
         private static Obj NumCompute(Obj args, char op, double result)
         {
-            if (TypePrimitives.IsEmptyList(args))
+            if (EmptyList.IsEmptyList(args))
             {
                 // If there are no numbers, apply a unary operation on the starting value.
                 switch (op)
@@ -357,7 +372,7 @@ namespace SimpleScheme
                 }
             }
 
-            while (TypePrimitives.IsPair(args))
+            while (Pair.IsPair(args))
             {
                 double x = Num(List.First(args));
                 switch (op)
@@ -459,5 +474,29 @@ namespace SimpleScheme
             return Num(d < 0.0D ? Math.Ceiling(d) : Math.Floor(d));
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the number to the string builder.
+        /// </summary>
+        /// <param name="d">The number.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this double d, bool quoted, StringBuilder buf)
+        {
+            if (Math.Round(d) == d)
+            {
+                buf.Append((long)d);
+            }
+            else
+            {
+                buf.Append(d);
+            }
+        }
     }
 }

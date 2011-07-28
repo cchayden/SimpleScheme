@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -76,6 +77,15 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme primitive.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme primitive.</returns>
+        public static bool IsPrimitive(Obj obj)
+        {
+            return obj is Primitive;
+        }
 
         /// <summary>
         /// The string form of a proc is its name in curly brackets.
@@ -83,11 +93,21 @@ namespace SimpleScheme
         /// <returns>The name of the proc.</returns>
         public override string ToString()
         {
-            return "{" + this.Name + "}";
+            return "{" + this.ProcedureName + "}";
         }
         #endregion
 
         #region Internal Methods
+        /// <summary>
+        /// Convert an object to a primitive.
+        /// </summary>
+        /// <param name="obj">The primitive as an object.</param>
+        /// <returns>The primitive.</returns>
+        internal static Primitive AsPrimitive(Obj obj)
+        {
+            return (Primitive)obj;
+        }
+
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
         /// As a convenience for primitives, they are allowed to return either
@@ -108,13 +128,13 @@ namespace SimpleScheme
             if (numArgs < this.minArgs)
             {
                 return (Stepper)ErrorHandlers.SemanticError("Primitive: too few args, " + numArgs + ", for " +
-                             this.Name + ": " + args);
+                             this.ProcedureName + ": " + args);
             }
 
             if (numArgs > this.maxArgs)
             {
                 return (Stepper)ErrorHandlers.SemanticError("Primitive: too many args, " + numArgs + ", for " +
-                             this.Name + ": " + args);
+                             this.ProcedureName + ": " + args);
             }
 
             caller.IncrementCounter(counter);
@@ -133,5 +153,26 @@ namespace SimpleScheme
             return caller.ContinueStep(res);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the primitive to the string builder.
+        /// </summary>
+        /// <param name="prim">The primitive.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Primitive prim, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("primitive: ");
+                buf.Append(prim.ToString());
+            }
+        }
     }
 }

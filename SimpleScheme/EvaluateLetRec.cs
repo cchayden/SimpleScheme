@@ -93,13 +93,13 @@ namespace SimpleScheme
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateLetRec step = (EvaluateLetRec)s;
-            if (TypePrimitives.IsEmptyList(s.Expr))
+            if (EmptyList.IsEmptyList(s.Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
                 return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(s.Expr))
+            if (!Pair.IsPair(s.Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for letrec: " + s.Expr);
                 return s.ReturnUndefined();
@@ -108,7 +108,7 @@ namespace SimpleScheme
             Obj bindings = List.First(s.Expr);
             step.body = List.Rest(s.Expr);
 
-            if (TypePrimitives.IsEmptyList(step.body))
+            if (EmptyList.IsEmptyList(step.body))
             {
                 return s.ReturnUndefined();
             }
@@ -137,7 +137,7 @@ namespace SimpleScheme
         private static Stepper EvalInitStep(Stepper s)
         {
             EvaluateLetRec step = (EvaluateLetRec)s;
-            if (TypePrimitives.IsEmptyList(step.inits))
+            if (EmptyList.IsEmptyList(step.inits))
             {
                 return s.ContinueHere(ApplyProcStep);
             }

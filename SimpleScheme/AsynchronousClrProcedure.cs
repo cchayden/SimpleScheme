@@ -67,7 +67,7 @@ namespace SimpleScheme
             }
             catch (MissingMethodException)
             {
-                ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.Name);
+                ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.ProcedureName);
             }
         }
         #endregion

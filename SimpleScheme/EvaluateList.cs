@@ -72,12 +72,12 @@ namespace SimpleScheme
         internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // first check for degenerate cases
-            if (TypePrimitives.IsEmptyList(expr))
+            if (EmptyList.IsEmptyList(expr))
             {
                 return caller.ContinueStep(EmptyList.Instance);
             }
 
-            if (!TypePrimitives.IsPair(expr))
+            if (!Pair.IsPair(expr))
             {
                 ErrorHandlers.SemanticError("Bad args for list: " + expr);
                 return caller.ContinueStep(Undefined.Instance);
@@ -115,14 +115,14 @@ namespace SimpleScheme
             step.result = List.Cons(s.ReturnedExpr, step.result);
             step.objs = List.Rest(step.objs);
 
-            if (TypePrimitives.IsPair(step.objs))
+            if (Pair.IsPair(step.objs))
             {
                 // Come back to this step, so don't assign PC for better performance.
                 return EvaluateExpression.Call(List.First(step.objs), s.Env, s);
             }
 
             // We are done.  Reverse the list and return it.
-            if (TypePrimitives.IsEmptyList(step.result) || TypePrimitives.IsEmptyList(List.Rest(step.result)))
+            if (EmptyList.IsEmptyList(step.result) || EmptyList.IsEmptyList(List.Rest(step.result)))
             {
                 return s.ReturnFromStep(step.result);
             }

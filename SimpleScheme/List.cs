@@ -94,7 +94,7 @@ namespace SimpleScheme
         public static int Length(Obj list)
         {
             int len = 0;
-            while (TypePrimitives.IsPair(list))
+            while (Pair.IsPair(list))
             {
                 len++;
                 list = Rest(list);
@@ -110,7 +110,7 @@ namespace SimpleScheme
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static Obj First(Obj list)
         {
-            return TypePrimitives.IsPair(list) ? ((Pair)list).First : EmptyList.Instance;
+            return Pair.IsPair(list) ? ((Pair)list).First : EmptyList.Instance;
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static Obj Rest(Obj list)
         {
-            return TypePrimitives.IsPair(list) ? ((Pair)list).Rest : EmptyList.Instance;
+            return Pair.IsPair(list) ? ((Pair)list).Rest : EmptyList.Instance;
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace SimpleScheme
         internal static Obj ListStar(Obj args)
         {
             // only one arg -- take it
-            if (TypePrimitives.IsEmptyList(Rest(args)))
+            if (EmptyList.IsEmptyList(Rest(args)))
             {
                 return First(args);
             }
@@ -169,7 +169,7 @@ namespace SimpleScheme
             Obj expr = args;
 
             // Iterate down the list, building a list of the results.
-            while (!TypePrimitives.IsEmptyList(Rest(expr)))
+            while (!EmptyList.IsEmptyList(Rest(expr)))
             {
                 accum = (Pair)(accum.Rest = New(First(expr)));
                 expr = Rest(expr);
@@ -178,7 +178,7 @@ namespace SimpleScheme
             // Splice on the last arg
             // First, check that the last arg is a list.
             Obj rest = First(expr);
-            if (!TypePrimitives.IsPair(rest))
+            if (!Pair.IsPair(rest))
             {
                 ErrorHandlers.Error("ListStar: last argument is not a list: " + args);
             }
@@ -195,7 +195,7 @@ namespace SimpleScheme
         internal static Obj Reverse(Obj x)
         {
             Obj result = EmptyList.Instance;
-            while (TypePrimitives.IsPair(x))
+            while (Pair.IsPair(x))
             {
                 result = Cons(First(x), result);
                 x = Rest(x);
@@ -219,7 +219,7 @@ namespace SimpleScheme
 
             // Iterate down the list, taking the function and building a list of the results.
             expr = First(expr);
-            while (TypePrimitives.IsPair(expr))
+            while (Pair.IsPair(expr))
             {
                 accum = (Pair)(accum.Rest = New(fun(First(expr))));
                 expr = Rest(expr);
@@ -278,7 +278,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
                 .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), 'm', 'v'), 2)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsPair(First(args))), 1)
+                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.IsPair(First(args))), 1)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
                 .DefinePrimitive("reverse", (args, caller) => Reverse(First(args)), 1)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
@@ -343,7 +343,7 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         private static Obj SetFirst(Obj x, Obj y)
         {
-            if (TypePrimitives.IsPair(x))
+            if (Pair.IsPair(x))
             {
                 ((Pair)x).First = y;
                 return Undefined.Instance;
@@ -360,7 +360,7 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         private static Obj SetRest(Obj x, Obj y)
         {
-            if (TypePrimitives.IsPair(x))
+            if (Pair.IsPair(x))
             {
                 ((Pair)x).Rest = y;
                 return Undefined.Instance;
@@ -378,7 +378,7 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static Obj Append(Obj args)
         {
-            if (TypePrimitives.IsEmptyList(args))
+            if (EmptyList.IsEmptyList(args))
             {
                 return EmptyList.Instance;
             }
@@ -386,7 +386,7 @@ namespace SimpleScheme
             Pair result = New();
             Pair accum = result;
 
-            while (!TypePrimitives.IsEmptyList(Rest(args)))
+            while (!EmptyList.IsEmptyList(Rest(args)))
             {
                 accum = Append(accum, First(args));
                 args = Rest(args);
@@ -407,7 +407,7 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, Obj toCopy)
         {
-            while (!TypePrimitives.IsEmptyList(toCopy))
+            while (!EmptyList.IsEmptyList(toCopy))
             {
                 tail.Rest = New(First(toCopy));
                 toCopy = Rest(toCopy);
@@ -426,12 +426,12 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (TypePrimitives.IsEmptyList(x))
+                if (EmptyList.IsEmptyList(x))
                 {
                     return true;
                 }
 
-                if (!TypePrimitives.IsPair(x))
+                if (!Pair.IsPair(x))
                 {
                     return false;
                 }
@@ -489,7 +489,7 @@ namespace SimpleScheme
         /// <returns>The results that wer found.</returns>
         private static Obj MemberAssoc(Obj obj, Obj list, char m, char eq)
         {
-            while (TypePrimitives.IsPair(list))
+            while (Pair.IsPair(list))
             {
                 Obj target = m == 'm' ? First(list) : First(First(list));
                 bool found;

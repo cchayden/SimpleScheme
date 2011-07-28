@@ -111,10 +111,10 @@ namespace SimpleScheme
         private static Stepper CheckClauseStep(Stepper s)
         {
             EvaluateCase step = (EvaluateCase)s;
-            while (!TypePrimitives.IsEmptyList(step.clauses))
+            while (!EmptyList.IsEmptyList(step.clauses))
             {
                 Obj clause = List.First(step.clauses);
-                if (!TypePrimitives.IsPair(clause))
+                if (!Pair.IsPair(clause))
                 {
                     return (Stepper)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
@@ -123,13 +123,13 @@ namespace SimpleScheme
                 step.exprList = List.Rest(clause);
 
                 // look for else datum
-                if (TypePrimitives.IsSymbol(data) && Symbol.Sym(data) == "else")
+                if (Symbol.IsSymbol(data) && Symbol.AsSymbol(data) == "else")
                 {
                     return step.EvalExpr();
                 }
 
                 // look for a match within the list of datum items
-                while (TypePrimitives.IsPair(data))
+                while (Pair.IsPair(data))
                 {
                     if (SchemeBoolean.Eqv(step.keyVal, List.First(data)))
                     {
@@ -153,7 +153,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private Stepper EvalExpr()
         {
-            if (TypePrimitives.IsEmptyList(this.exprList))
+            if (EmptyList.IsEmptyList(this.exprList))
             {
                 // if no expressions, return key value
                 return ReturnFromStep(this.keyVal);

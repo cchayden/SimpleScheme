@@ -13,11 +13,24 @@ namespace SimpleScheme
     /// </summary>
     public static class SchemeString
     {
-        #region Constructors
-
+        #region Constants
+        /// <summary>
+        /// The printable name of the scheme string type.
+        /// </summary>
+        private const string Name = "string";
         #endregion
 
         #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme string.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme string.</returns>
+        public static bool IsString(Obj obj)
+        {
+            return obj is char[];
+        }
+
         /// <summary>
         /// Check that an oject is a scheme string.
         /// </summary>
@@ -25,12 +38,12 @@ namespace SimpleScheme
         /// <returns>The scheme string.</returns>
         public static char[] Str(Obj obj)
         {
-            if (TypePrimitives.IsString(obj))
+            if (IsString(obj))
             {
                 return (char[])obj;
             }
 
-            return Str(ErrorHandlers.TypeError(TypePrimitives.StringName, obj));
+            return Str(ErrorHandlers.TypeError(Name, obj));
         }
 
         #endregion
@@ -42,7 +55,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to define the primitives into.</param>
         internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
-            const int MaxInt = int.MaxValue;
+            const int MaxInt = Int32.MaxValue;
             env
                 //// <r4rs section="6.7">(list->string <chars>)</r4rs>
                 .DefinePrimitive("list->string", (args, caller) => ListToString(List.First(args)), 1)
@@ -76,7 +89,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string-length <string>)</r4rs>
                 .DefinePrimitive("string-length", (args, caller) => StringLength(Str(List.First(args))), 1)
                 //// <r4rs section="6.7">(string-ref <string> <k>)</r4rs>
-                .DefinePrimitive("string-ref", (args, caller) => Character.Chr(Str(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
+                .DefinePrimitive("string-ref", (args, caller) => Character.AsCharacter(Str(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
                 //// <r4rs section="6.7">(string-set! <string> <k> <char>)</r4rs>
                 .DefinePrimitive("string-set!", (args, caller) => StringSet(List.First(args), List.Second(args), List.Third(args)), 3)
                 //// <r4rs section="6.7">(string<=? <string1> <string2>)</r4rs>
@@ -90,7 +103,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
                 .DefinePrimitive("string>?", (args, caller) => SchemeBoolean.Truth(StringCompare(List.First(args), List.Second(args), false) > 0), 2)
                 //// <r4rs section="6.7">(string? <obj>)</r4rs>
-                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsString(List.First(args))), 1)
+                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(IsString(List.First(args))), 1)
                 //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
                 .DefinePrimitive("substring", (args, caller) => Substr(List.First(args), List.Second(args), List.Third(args)), 3)
                 //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
@@ -107,7 +120,7 @@ namespace SimpleScheme
         /// <returns>The new scheme string.</returns>
         internal static char[] MakeString(Obj length, Obj fill)
         {
-            char c = TypePrimitives.IsEmptyList(fill) ? (char)0 : Character.Chr(fill);
+            char c = EmptyList.IsEmptyList(fill) ? (char)0 : Character.AsCharacter(fill);
             return new string(c, (int)Number.Num(length)).ToCharArray();
         }
 
@@ -139,7 +152,7 @@ namespace SimpleScheme
         /// <returns>The scheme string.</returns>
         internal static char[] MakeString(Obj str)
         {
-            return Symbol.Sym(str).ToCharArray();
+            return Symbol.AsSymbol(str).ToCharArray();
         }
 
         /// <summary>
@@ -160,7 +173,7 @@ namespace SimpleScheme
         /// <returns>True if the strings are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!TypePrimitives.IsString(obj2))
+            if (!IsString(obj2))
             {
                 return false;
             }
@@ -193,9 +206,9 @@ namespace SimpleScheme
         internal static char[] ListToString(Obj chars)
         {
             StringBuilder str = new StringBuilder();
-            while (TypePrimitives.IsPair(chars))
+            while (Pair.IsPair(chars))
             {
-                str.Append(Character.Chr(List.First(chars)));
+                str.Append(Character.AsCharacter(List.First(chars)));
                 chars = List.Rest(chars);
             }
 
@@ -245,7 +258,7 @@ namespace SimpleScheme
             for (int i = 0; i < len; i++)
             {
                 diff = ci
-                           ? char.ToLower(xstr[i]) - char.ToLower(ystr[i])
+                           ? Char.ToLower(xstr[i]) - Char.ToLower(ystr[i])
                            : xstr[i] - ystr[i];
                 if (diff != 0)
                 {
@@ -267,7 +280,7 @@ namespace SimpleScheme
             char[] str = Str(s);
             for (int i = str.Length - 1; i >= 0; i--)
             {
-                result = List.Cons(Character.Chr(str[i]), result);
+                result = List.Cons(Character.AsCharacter(str[i]), result);
             }
 
             return result;
@@ -282,7 +295,7 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         private static Obj StringSet(object str, object index, object chr)
         {
-            Str(str)[(int)Number.Num(index)] = Character.Chr(chr);
+            Str(str)[(int)Number.Num(index)] = Character.AsCharacter(chr);
             return Undefined.Instance;
         }
 
@@ -307,7 +320,7 @@ namespace SimpleScheme
             char[] ss = Str(str);
             for (int i = 0; i < ss.Length; i++)
             {
-                ss[i] = Character.Chr(fill);
+                ss[i] = Character.AsCharacter(fill);
             }
 
             return Undefined.Instance;
@@ -323,7 +336,7 @@ namespace SimpleScheme
         {
             StringBuilder result = new StringBuilder();
 
-            while (TypePrimitives.IsPair(args))
+            while (Pair.IsPair(args))
             {
                 result.Append(Printer.AsString(List.First(args), false));
                 args = List.Rest(args);
@@ -343,7 +356,7 @@ namespace SimpleScheme
         /// positive if first is greater.</returns>
         private static int StringCompare(Obj x, Obj y, bool ci)
         {
-            if (TypePrimitives.IsString(x) && TypePrimitives.IsString(y))
+            if (IsString(x) && IsString(y))
             {
                 return Compare((char[])x, (char[])y, ci);
             }
@@ -363,11 +376,11 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         private static Obj StringToNumber(object x, object y)
         {
-            int numberBase = TypePrimitives.IsNumber(y) ? (int)Number.Num(y) : 10;
+            int numberBase = Number.IsNumber(y) ? (int)Number.Num(y) : 10;
             try
             {
                 return numberBase == 10
-                           ? double.Parse(Printer.AsString(x, false))
+                           ? Double.Parse(Printer.AsString(x, false))
                            : Number.Num(Convert.ToInt64(Printer.AsString(x, false), numberBase));
             }
             catch (FormatException)
@@ -380,5 +393,43 @@ namespace SimpleScheme
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the string to the string builder.
+        /// </summary>
+        /// <param name="str">The string.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this char[] str, bool quoted, StringBuilder buf)
+        {
+            if (! quoted)
+            {
+                buf.Append(str);
+                return;
+            }
+
+            buf.Append('"');
+
+            if (str != null)
+            {
+                foreach (char c in str)
+                {
+                    if (c == '"')
+                    {
+                        buf.Append('\\');
+                    }
+
+                    buf.Append(c);
+                }
+            }
+
+            buf.Append('"');
+        }
     }
 }

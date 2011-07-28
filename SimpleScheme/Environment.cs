@@ -126,15 +126,15 @@ namespace SimpleScheme
         /// <param name="val">This is the value of that variable.</param>
         public void Define(Obj var, Obj val)
         {
-            if (TypePrimitives.IsSymbol(var))
+            if (Symbol.IsSymbol(var))
             {
                 lock (this)
                 {
                     this.symbolTable.Add(var, val);
 
-                    if (TypePrimitives.IsProcedure(val))
+                    if (Procedure.IsProcedure(val))
                     {
-                        Procedure.Proc(val).SetName(var.ToString());
+                        Procedure.AsProcedure(val).SetName(var.ToString());
                     }
                 }
 
@@ -155,7 +155,7 @@ namespace SimpleScheme
         /// <returns>The value bound to the variable.</returns>
         internal Obj Lookup(Obj obj)
         {
-            string symbol = Symbol.Sym(obj);
+            string symbol = Symbol.AsSymbol(obj);
             Environment env = this;
 
             // search down the chain of environments for a definition
@@ -189,12 +189,12 @@ namespace SimpleScheme
         /// <returns>The value that the variable was set to.</returns>
         internal Obj Set(Obj var, Obj val)
         {
-            if (!TypePrimitives.IsSymbol(var))
+            if (!Symbol.IsSymbol(var))
             {
                 return ErrorHandlers.SemanticError("Attempt to set a non-symbol: " + Printer.AsString(var));
             }
 
-            string symbol = Symbol.Sym(var);
+            string symbol = Symbol.AsSymbol(var);
             Environment env = this;
 
             // search down the chain of environments for a definition
@@ -281,12 +281,12 @@ namespace SimpleScheme
             while (true)
             {
                 // (vars is empty && vals is empty) || vars is empty ==> vars is empty 
-                if (TypePrimitives.IsEmptyList(vars))
+                if (EmptyList.IsEmptyList(vars))
                 {
                     return true;
                 }
 
-                if (!TypePrimitives.IsPair(vars) || !TypePrimitives.IsPair(vals))
+                if (!Pair.IsPair(vars) || !Pair.IsPair(vals))
                 {
                     return false;
                 }
@@ -345,7 +345,7 @@ namespace SimpleScheme
             /// <param name="val">The value.</param>
             internal void Add(Obj symbol, Obj val)
             {
-                this.symbolTable[Symbol.Sym(symbol)] = val;
+                this.symbolTable[Symbol.AsSymbol(symbol)] = val;
             }
 
             /// <summary>
@@ -356,16 +356,16 @@ namespace SimpleScheme
             /// <param name="vals">The list of values.</param>
             internal void AddList(Obj symbols, Obj vals)
             {
-                while (!TypePrimitives.IsEmptyList(symbols))
+                while (!EmptyList.IsEmptyList(symbols))
                 {
-                    if (TypePrimitives.IsSymbol(symbols))
+                    if (Symbol.IsSymbol(symbols))
                     {
                         this.Add(symbols, vals);
                     }
                     else
                     {
                         Obj symbol = List.First(symbols);
-                        if (!TypePrimitives.IsSymbol(symbol))
+                        if (!Symbol.IsSymbol(symbol))
                         {
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }

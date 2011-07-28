@@ -91,7 +91,7 @@ namespace SimpleScheme
         {
             EvaluateCallWithOutputFile step = (EvaluateCallWithOutputFile)s;
             step.port = OpenOutputFile(List.First(s.Expr), s.Caller.Interp);
-            return Procedure.Proc(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
+            return Procedure.AsProcedure(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
         }
 
         /// <summary>

@@ -77,7 +77,7 @@ namespace SimpleScheme
         {
             Obj toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr) ? List.Second(s.Expr) : List.Third(s.Expr);
             return EvaluateExpression.Call(
-                TypePrimitives.IsEmptyList(toEvaluate) ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
+                EmptyList.IsEmptyList(toEvaluate) ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }
         #endregion
     }

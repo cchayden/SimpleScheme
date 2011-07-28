@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
     using Obj = System.Object;
 
     /// <summary>
@@ -22,7 +23,9 @@ namespace SimpleScheme
         /// In primitiveTypes, the full type name.
         /// </summary>
         private const int Full = 1;
+        #endregion
 
+        #region Private Static Tables
         /// <summary>
         /// The primitive types that can be used as args for Clr methods.
         /// Both bare and array versions of each of these are defined.
@@ -51,7 +54,6 @@ namespace SimpleScheme
             new[] { "float[]", "System.Single[]" }, 
             new[] { "double[]", "System.Double[]" }, 
         };
-        #endregion
 
         /// <summary>
         /// Table of entries used to map the type to a name.
@@ -59,17 +61,17 @@ namespace SimpleScheme
         /// </summary>
         private static readonly TypeNameEntry[] typeNames = 
         {
-            new TypeNameEntry(obj => IsBoolean(obj), "boolean"),
-            new TypeNameEntry(obj => IsSymbol(obj), "symbol"),
-            new TypeNameEntry(obj => IsCharacter(obj), "character"),
-            new TypeNameEntry(obj => IsVector(obj), "vector"),
-            new TypeNameEntry(obj => IsPair(obj), "pair"),
-            new TypeNameEntry(obj => IsNumber(obj), "number"),
-            new TypeNameEntry(obj => IsString(obj), "string"),
-            new TypeNameEntry(obj => IsProcedure(obj), "procedure"),
-            new TypeNameEntry(obj => IsInputPort(obj), "input port"),
-            new TypeNameEntry(obj => IsOutputPort(obj), "output port"),
-            new TypeNameEntry(obj => IsEmptyList(obj), "empty list"),
+            new TypeNameEntry(obj => SchemeBoolean.IsBoolean(obj), "boolean"),
+            new TypeNameEntry(obj => Symbol.IsSymbol(obj), "symbol"),
+            new TypeNameEntry(obj => Character.IsCharacter(obj), "character"),
+            new TypeNameEntry(obj => Vector.IsVector(obj), "vector"),
+            new TypeNameEntry(obj => Pair.IsPair(obj), "pair"),
+            new TypeNameEntry(obj => Number.IsNumber(obj), "number"),
+            new TypeNameEntry(obj => SchemeString.IsString(obj), "string"),
+            new TypeNameEntry(obj => Procedure.IsProcedure(obj), "procedure"),
+            new TypeNameEntry(obj => InputPort.IsInputPort(obj), "input port"),
+            new TypeNameEntry(obj => OutputPort.IsOutputPort(obj), "output port"),
+            new TypeNameEntry(obj => EmptyList.IsEmptyList(obj), "empty list"),
         };
 
         /// <summary>
@@ -102,252 +104,9 @@ namespace SimpleScheme
             new TypeNameEntry(obj => obj is EvaluateSet, EvaluateSet.StepperName),
             new TypeNameEntry(obj => obj is EvaluateTime, EvaluateTime.StepperName)
         };
-        #region Scheme Builtin Type Name Accessors
-        /// <summary>
-        /// Gets the printable name of the scheme symbol type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string SymbolName
-        {
-            get { return "symbol"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme character type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string CharacterName
-        {
-            get { return "character"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme vector type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string VectorName
-        {
-            get { return "vector"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme number type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string NumberName
-        {
-            get { return "number"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme string type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string StringName
-        {
-            get { return "string"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme procedure type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string ProcedureName
-        {
-            get { return "procedure"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme boolean type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string InputPortName
-        {
-            get { return "input port"; }
-        }
-
-        /// <summary>
-        /// Gets the printable name of the scheme boolean type.
-        /// </summary>
-        /// <returns>The type name.</returns>
-        internal static string OutputPortName
-        {
-            get { return "output port"; }
-        }
         #endregion
 
-        #region Scheme Builtin Type Predicates
-        /// <summary>
-        /// Tests whether to given object is a scheme boolean.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme boolean.</returns>
-        public static bool IsBoolean(Obj obj)
-        {
-            return obj is bool;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme symbol.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme symbol.</returns>
-        public static bool IsSymbol(Obj obj)
-        {
-            return obj is string;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme character.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme character.</returns>
-        public static bool IsCharacter(Obj obj)
-        {
-            return obj is char;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme vector.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme vector.</returns>
-        public static bool IsVector(Obj obj)
-        {
-            return obj is Obj[];
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme pair.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme pair.</returns>
-        public static bool IsPair(Obj obj)
-        {
-            return obj is Pair;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme number.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme number.</returns>
-        public static bool IsNumber(Obj obj)
-        {
-            return obj is double;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme string.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme string.</returns>
-        public static bool IsString(Obj obj)
-        {
-            return obj is char[];
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme primitive.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme primitive.</returns>
-        public static bool IsPrimitive(Obj obj)
-        {
-            return obj is Primitive;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme procedure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme procedure.</returns>
-        public static bool IsProcedure(Obj obj)
-        {
-            return obj is Procedure;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme continuation.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme continuation.</returns>
-        public static bool IsContinuation(Obj obj)
-        {
-            return obj is Continuation;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme closure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme closure.</returns>
-        public static bool IsClosure(Obj obj)
-        {
-            return obj is Closure;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme macro.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme macro.</returns>
-        public static bool IsMacro(Obj obj)
-        {
-            return obj is Macro;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme input port.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme input port.</returns>
-        public static bool IsInputPort(Obj obj)
-        {
-            return obj is InputPort;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme output port.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme output port.</returns>
-        public static bool IsOutputPort(Obj obj)
-        {
-            return obj is OutputPort;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme empty list.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme empty list.</returns>
-        public static bool IsEmptyList(Obj obj)
-        {
-            return obj is EmptyList;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme stepper.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme stepper.</returns>
-        public static bool IsStepper(Obj obj)
-        {
-            return obj is Stepper;
-        }
-
-        /// <summary>
-        /// Tests whether to given object is a scheme undefined object.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme undefined object.</returns>
-        public static bool IsUndefined(Obj obj)
-        {
-            return obj is Undefined;
-        }
-        #endregion
-
+        #region Internal Static Methods
         /// <summary>
         /// Find the scheme type name for a given object.
         /// Used to format error messages.
@@ -400,14 +159,16 @@ namespace SimpleScheme
 
             return Type.GetType(typeName);
         }
+        #endregion
 
+        #region Private Static Methods
         /// <summary>
         /// Find the scheme type name for a given object.
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <param name="table">The lookup table.</param>
         /// <returns>The scheme type name.</returns>
-        private static string LookupName(Obj obj, TypeNameEntry[] table)
+        private static string LookupName(Obj obj, IEnumerable<TypeNameEntry> table)
         {
             foreach (var entry in table)
             {
@@ -419,7 +180,9 @@ namespace SimpleScheme
 
             return obj.GetType().ToString();
         }
+        #endregion
 
+        #region Internal Structs
         /// <summary>
         /// Table entry for type name mapper.
         /// </summary>
@@ -446,5 +209,6 @@ namespace SimpleScheme
                 this.Name = name;
             }
         }
+        #endregion
     }
 }

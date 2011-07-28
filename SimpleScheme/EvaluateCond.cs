@@ -68,7 +68,7 @@ namespace SimpleScheme
         internal static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (TypePrimitives.IsEmptyList(expr))
+            if (EmptyList.IsEmptyList(expr))
             {
                 return caller.ContinueStep(SchemeBoolean.False);
             }
@@ -116,7 +116,7 @@ namespace SimpleScheme
             }
 
             step.clauses = List.Rest(step.clauses);
-            if (TypePrimitives.IsEmptyList(step.clauses))
+            if (EmptyList.IsEmptyList(step.clauses))
             {
                 return s.ReturnUndefined();
             }
@@ -134,7 +134,7 @@ namespace SimpleScheme
         private static Stepper EvalConsequentStep(Stepper s)
         {
             EvaluateCond step = (EvaluateCond)s;
-            if (TypePrimitives.IsEmptyList(List.Rest(step.clause)))
+            if (EmptyList.IsEmptyList(List.Rest(step.clause)))
             {
                 // no consequent: return the test as the result
                 return s.ReturnFromStep(step.test);
@@ -158,7 +158,7 @@ namespace SimpleScheme
         private static Stepper ApplyRecipientStep(Stepper s)
         {
             EvaluateCond step = (EvaluateCond)s;
-            return EvaluateProcQuoted.Call(Procedure.Proc(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);
+            return EvaluateProcQuoted.Call(Procedure.AsProcedure(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);
         }
         #endregion
     }

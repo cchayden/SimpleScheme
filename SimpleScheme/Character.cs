@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -11,20 +12,40 @@ namespace SimpleScheme
     /// </summary>
     public static class Character
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the scheme character type.
+        /// </summary>
+        private const string Name = "character";
+        #endregion
+
+        #region Accessors
+        #endregion
+
         #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme character.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme character.</returns>
+        public static bool IsCharacter(Obj obj)
+        {
+            return obj is char;
+        }
+
         /// <summary>
         /// Checks that the object is a character.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The character.</returns>
-        public static char Chr(Obj obj)
+        public static char AsCharacter(Obj obj)
         {
-            if (TypePrimitives.IsCharacter(obj))
+            if (IsCharacter(obj))
             {
                 return (char)obj;
             }
 
-            return Chr(ErrorHandlers.TypeError(TypePrimitives.CharacterName, obj));
+            return AsCharacter(ErrorHandlers.TypeError(Name, obj));
         }
         #endregion
 
@@ -37,9 +58,9 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
-                .DefinePrimitive("char->integer", (args, caller) => (double)Chr(List.First(args)), 1)
+                .DefinePrimitive("char->integer", (args, caller) => (double)AsCharacter(List.First(args)), 1)
                 //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
-                .DefinePrimitive("char-alphabetic?", (args, caller) => SchemeBoolean.Truth(char.IsLetter(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-alphabetic?", (args, caller) => SchemeBoolean.Truth(char.IsLetter(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
                 .DefinePrimitive("char-ci<=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) <= 0), 2)
                 //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
@@ -51,17 +72,17 @@ namespace SimpleScheme
                 //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
                 .DefinePrimitive("char-ci>?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) > 0), 2)
                 //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
-                .DefinePrimitive("char-downcase", (args, caller) => Chr(char.ToLower(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-downcase", (args, caller) => AsCharacter(char.ToLower(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
-                .DefinePrimitive("char-lower-case?", (args, caller) => SchemeBoolean.Truth(char.IsLower(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-lower-case?", (args, caller) => SchemeBoolean.Truth(char.IsLower(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
-                .DefinePrimitive("char-numeric?", (args, caller) => SchemeBoolean.Truth(char.IsDigit(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-numeric?", (args, caller) => SchemeBoolean.Truth(char.IsDigit(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
-                .DefinePrimitive("char-upcase", (args, caller) => Chr(char.ToUpper(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-upcase", (args, caller) => AsCharacter(char.ToUpper(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
-                .DefinePrimitive("char-upper-case?", (args, caller) => SchemeBoolean.Truth(char.IsUpper(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-upper-case?", (args, caller) => SchemeBoolean.Truth(char.IsUpper(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
-                .DefinePrimitive("char-whitespace?", (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(Chr(List.First(args)))), 1)
+                .DefinePrimitive("char-whitespace?", (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(AsCharacter(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
                 .DefinePrimitive("char<=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) <= 0), 2)
                 //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
@@ -73,7 +94,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
                 .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) > 0), 2)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
-                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsCharacter(List.First(args))), 1);
+                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(IsCharacter(List.First(args))), 1);
         }
         #endregion
 
@@ -88,8 +109,8 @@ namespace SimpleScheme
         /// or 0 if they are the same.</returns>
         internal static int ChrCompare(Obj x, Obj y, bool ci)
         {
-            char xc = Chr(x);
-            char yc = Chr(y);
+            char xc = AsCharacter(x);
+            char yc = AsCharacter(y);
             if (ci)
             {
                 xc = char.ToLower(xc);
@@ -99,5 +120,34 @@ namespace SimpleScheme
             return xc - yc;
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the character to the string builder.
+        /// </summary>
+        /// <param name="c">The character.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this char c, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("#\\");
+            }
+
+            if (c == ' ')
+            {
+                buf.Append("space");
+            }
+            else
+            {
+                buf.Append(c);
+            }
+        }
     }
 }

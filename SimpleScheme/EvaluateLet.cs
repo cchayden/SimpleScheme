@@ -96,22 +96,22 @@ namespace SimpleScheme
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateLet step = (EvaluateLet)s;
-            if (TypePrimitives.IsEmptyList(s.Expr))
+            if (EmptyList.IsEmptyList(s.Expr))
             {
                 ErrorHandlers.SemanticError("No arguments for let");
                 return s.ReturnUndefined();
             }
 
-            if (!TypePrimitives.IsPair(s.Expr))
+            if (!Pair.IsPair(s.Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let: " + s.Expr);
                 return s.ReturnUndefined();
             }
 
-            if (TypePrimitives.IsSymbol(List.First(s.Expr)))
+            if (Symbol.IsSymbol(List.First(s.Expr)))
             {
                 // named let
-                step.name = Symbol.Sym(List.First(s.Expr));
+                step.name = Symbol.AsSymbol(List.First(s.Expr));
                 step.bindings = List.Second(s.Expr);
                 step.body = List.Rest(List.Rest(s.Expr));
             }
@@ -121,7 +121,7 @@ namespace SimpleScheme
                 step.body = List.Rest(s.Expr);
             }
 
-            if (TypePrimitives.IsEmptyList(step.body))
+            if (EmptyList.IsEmptyList(step.body))
             {
                 return s.ReturnUndefined();
             }

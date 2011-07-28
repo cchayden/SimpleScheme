@@ -88,7 +88,7 @@ namespace SimpleScheme
         {
             EvaluateCallWithInputFile step = (EvaluateCallWithInputFile)s;
             step.port = OpenInputFile(List.First(s.Expr), s.Caller.Interp);
-            return Procedure.Proc(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
+            return Procedure.AsProcedure(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
         }
 
         /// <summary>

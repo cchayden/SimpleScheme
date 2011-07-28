@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -13,6 +15,11 @@ namespace SimpleScheme
     public abstract class Procedure
     {
         #region Constants
+        /// <summary>
+        /// The printable name of the procedure type.
+        /// </summary>
+        private const string Name = "procedure";
+
         /// <summary>
         /// The default name of a procedure.
         /// </summary>
@@ -26,7 +33,7 @@ namespace SimpleScheme
         /// </summary>
         protected Procedure()
         {
-            this.Name = AnonymousProc;
+            this.ProcedureName = AnonymousProc;
         }
         #endregion
 
@@ -35,7 +42,19 @@ namespace SimpleScheme
         /// Gets or sets all Procedures have a name.  It can be set only by the subclass.
         /// Can't figure out how to make this internal rather than public.
         /// </summary>
-        public string Name { get; protected set; }
+        public string ProcedureName { get; protected set; }
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme procedure.</returns>
+        public static bool IsProcedure(Obj obj)
+        {
+            return obj is Procedure;
+        }
         #endregion
 
         #region Define Primitives
@@ -45,7 +64,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to define the primitives into.</param>
         internal static void DefinePrimitives(PrimitiveEnvironment env)
         {
-            const int MaxInt = int.MaxValue;
+            const int MaxInt = Int32.MaxValue;
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
@@ -57,11 +76,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(Proc(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(AsProcedure(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(Proc(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(AsProcedure(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsProcedure(List.First(args))), 1);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(IsProcedure(List.First(args))), 1);
         }
         #endregion
 
@@ -71,14 +90,14 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The obj to test.</param>
         /// <returns>The procedure.</returns>
-        internal static Procedure Proc(Obj x)
+        internal static Procedure AsProcedure(Obj x)
         {
-            if (TypePrimitives.IsProcedure(x))
+            if (IsProcedure(x))
             {
                 return (Procedure)x;
             }
 
-            return Proc(ErrorHandlers.TypeError(TypePrimitives.ProcedureName, x));
+            return AsProcedure(ErrorHandlers.TypeError(Name, x));
         }
 
         /// <summary>
@@ -89,7 +108,7 @@ namespace SimpleScheme
         /// <returns>The result of applying the proc.</returns>
         internal static Obj Force(Obj promise, Stepper caller)
         {
-            return !TypePrimitives.IsProcedure(promise) ? promise : Proc(promise).Apply(null, caller);
+            return !IsProcedure(promise) ? promise : AsProcedure(promise).Apply(null, caller);
         }
         #endregion
 
@@ -110,9 +129,9 @@ namespace SimpleScheme
         /// <param name="name">The name to assign it.</param>
         internal void SetName(string name)
         {
-            if (this.Name == AnonymousProc)
+            if (this.ProcedureName == AnonymousProc)
             {
-                this.Name = name;
+                this.ProcedureName = name;
             }
         }
 
@@ -127,7 +146,7 @@ namespace SimpleScheme
         internal Stepper Evaluate(Obj args, Environment env, Stepper caller)
         {
             // If the function is a macro, expand it and then continue.
-            if (TypePrimitives.IsMacro(this))
+            if (Macro.IsMacro(this))
             {
                 return EvaluateExpandMacro.Call((Macro)this, args, env, caller);
             }
@@ -137,7 +156,7 @@ namespace SimpleScheme
             //   2 arguments evaluated in the original environment
             //   3 the closure's environment
             // Then continue evaluating the closure body in this new environment
-            if (TypePrimitives.IsClosure(this))
+            if (Closure.IsClosure(this))
             {
                 // CLOSURE CALL -- capture the environment and evaluate the body
                 return EvaluateClosure.Call((Closure)this, args, env, caller);
@@ -152,9 +171,18 @@ namespace SimpleScheme
         #endregion
 
         #region Private Methods
+        /// <summary>
+        /// Apply the given primitive to the args.
+        /// The args have NOT been evaluated, since primitives may not want this.
+        /// The proc HAS been evaluated.
+        /// </summary>
+        /// <param name="proc">The procedure to apply.</param>
+        /// <param name="args">The (unevaluated) arguments.</param>
+        /// <param name="caller">The calling stepper.  Return to this when done.</param>
+        /// <returns>The stepper to run next.</returns>
         private static Stepper ApplyPrimitive(Obj proc, Obj args, Stepper caller)
         {
-            return Proc(proc).Apply(List.ListStar(args), caller);
+            return AsProcedure(proc).Apply(List.ListStar(args), caller);
         }
 
         /// <summary>
@@ -167,9 +195,29 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private static Obj CallCc(Obj proc, Stepper caller)
         {
-            return Proc(proc).Apply(
+            return AsProcedure(proc).Apply(
                 List.New(new Continuation(EvaluateContinuation.Call(proc, caller.Env, caller))), caller);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the procedure to the string builder.
+        /// </summary>
+        /// <param name="proc">The procedure (not used).</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Procedure proc, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<procedure>");
+            }
+        }
     }
 }

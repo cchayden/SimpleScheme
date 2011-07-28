@@ -111,7 +111,7 @@ namespace SimpleScheme
         {
             EvaluateTimeBase step = (EvaluateTimeBase)s;
             Obj y = List.Second(s.Expr);
-            step.counter = TypePrimitives.IsEmptyList(y) ? 1 : (int)Number.Num(y);
+            step.counter = EmptyList.IsEmptyList(y) ? 1 : (int)Number.Num(y);
             step.i = 0;
             return s.ContinueHere(Step1);
         }

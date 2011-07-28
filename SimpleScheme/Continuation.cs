@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -34,6 +35,16 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Tests whether to given object is a scheme continuation.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme continuation.</returns>
+        public static bool IsContinuation(Obj obj)
+        {
+            return obj is Continuation;
+        }
+
+        /// <summary>
         /// Display the continuation as a string.  
         /// Displays the body, as it has been processed by the reader.
         /// </summary>
@@ -45,6 +56,15 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+        /// <summary>
+        /// Convert an object to a continuation.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The continuation.</returns>
+        internal static Continuation AsContinuation(Obj obj)
+        {
+            return (Continuation)obj;
+        }
 
         /// <summary>
         /// Execute the continuation.
@@ -61,5 +81,25 @@ namespace SimpleScheme
             return Stepper.TransferToStep(this.step.CloneChain(), List.First(args), this.step.Env);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the continuation to the string builder.
+        /// </summary>
+        /// <param name="cont">The continuation (not used).</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Continuation cont, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<continuation>");
+            }
+        }
     }
 }

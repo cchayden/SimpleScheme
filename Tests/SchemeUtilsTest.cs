@@ -37,8 +37,8 @@ namespace Tests
         [TestMethod]
         public void ChrTest()
         {
-            Assert.AreEqual('a', Character.Chr('a'));
-            AssertEx.Throws(() => Character.Chr(0));
+            Assert.AreEqual('a', Character.AsCharacter('a'));
+            AssertEx.Throws(() => Character.AsCharacter(0));
         }
 
         /// <summary>
@@ -397,8 +397,8 @@ namespace Tests
         [TestMethod]
         public void SymTest()
         {
-            Assert.AreEqual("abc", Symbol.Sym("abc"));
-            AssertEx.Throws(() => Symbol.Sym(1));
+            Assert.AreEqual("abc", Symbol.AsSymbol("abc"));
+            AssertEx.Throws(() => Symbol.AsSymbol(1));
         }
 
         /// <summary>
@@ -408,10 +408,10 @@ namespace Tests
         public void VecTest()
         {
             var test = new Obj[] { 1, 2 };
-            Assert.AreEqual(2, Vector.Vec(test).Length);
-            Assert.AreEqual(1, Vector.Vec(test)[0]);
-            Assert.AreEqual(2, Vector.Vec(test)[1]);
-            AssertEx.Throws(() => Vector.Vec(1));
+            Assert.AreEqual(2, Vector.AsVector(test).Length);
+            Assert.AreEqual(1, Vector.AsVector(test)[0]);
+            Assert.AreEqual(2, Vector.AsVector(test)[1]);
+            AssertEx.Throws(() => Vector.AsVector(1));
         }
 
         /// <summary>

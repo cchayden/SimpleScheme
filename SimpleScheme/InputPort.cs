@@ -13,12 +13,19 @@ namespace SimpleScheme
     /// </summary>
     public sealed class InputPort
     {
-        #region Fields
+        #region Constants
         /// <summary>
         /// Marks the end of the input file.
         /// </summary>
         internal const string Eof = "#!EOF";
 
+        /// <summary>
+        /// The printable name of the scheme input port type.
+        /// </summary>
+        private const string Name = "input port";
+        #endregion
+
+        #region Fields
         /// <summary>
         /// This is used to parse the input.
         /// It holds state: a single character or a single token read-ahead, as well
@@ -46,6 +53,18 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme input port.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme input port.</returns>
+        public static bool IsInputPort(Obj obj)
+        {
+            return obj is InputPort;
+        }
+        #endregion
+
         #region Define Primitives
         /// <summary>
         /// Define the input primitives.
@@ -68,7 +87,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive("current-input-port", (args, caller) => caller.Interp.CurrentInputPort, 0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsInputPort(List.First(args))), 1)
+                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(IsInputPort(List.First(args))), 1)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
                 .DefinePrimitive("load", (args, caller) => LoadFile(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
@@ -105,14 +124,14 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>An input port.</returns>
-        internal static InputPort InPort(Obj obj)
+        internal static InputPort AsInputPort(Obj obj)
         {
-            if (TypePrimitives.IsInputPort(obj))
+            if (IsInputPort(obj))
             {
                 return (InputPort)obj;
             }
 
-            ErrorHandlers.TypeError(TypePrimitives.InputPortName, obj);
+            ErrorHandlers.TypeError(Name, obj);
             return null;
         }
         #endregion
@@ -153,7 +172,7 @@ namespace SimpleScheme
         /// <returns>The port to use.</returns>
         private static InputPort Port(Obj port, Interpreter interp)
         {
-            return TypePrimitives.IsEmptyList(port) ? interp.CurrentInputPort : InPort(port);
+            return EmptyList.IsEmptyList(port) ? interp.CurrentInputPort : AsInputPort(port);
         }
 
         /// <summary>
@@ -249,5 +268,25 @@ namespace SimpleScheme
             return expr;
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the input port to the string builder.
+        /// </summary>
+        /// <param name="port">The input port (not used).</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this InputPort port, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<input port>");
+            }
+        }
     }
 }

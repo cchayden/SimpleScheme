@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -22,8 +23,16 @@ namespace SimpleScheme
         internal const bool False = false;
         #endregion
 
-        #region Constructors
-
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme boolean.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme boolean.</returns>
+        public static bool IsBoolean(Obj obj)
+        {
+            return obj is bool;
+        }
         #endregion
 
         #region Internal Static Methods
@@ -41,24 +50,24 @@ namespace SimpleScheme
         internal static bool Equal(Obj obj1, Obj obj2)
         {
             // both empty list
-            if (TypePrimitives.IsEmptyList(obj1) || TypePrimitives.IsEmptyList(obj2))
+            if (EmptyList.IsEmptyList(obj1) || EmptyList.IsEmptyList(obj2))
             {
                 return obj1 == obj2;
             }
 
             // test strings
-            if (TypePrimitives.IsString(obj1))
+            if (SchemeString.IsString(obj1))
             {
                 return SchemeString.Equal(obj1, obj2);
             }
 
             // test vectors
-            if (TypePrimitives.IsVector(obj1))
+            if (Vector.IsVector(obj1))
             {
                 return Vector.Equal(obj1, obj2);
             }
 
-            if (TypePrimitives.IsPair(obj1))
+            if (Pair.IsPair(obj1))
             {
                 return Pair.Equal(obj1, obj2);
             }
@@ -95,7 +104,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         internal static bool IsFalse(Obj value)
         {
-            return TypePrimitives.IsBoolean(value) && (bool)value == false;
+            return IsBoolean(value) && (bool)value == false;
         }
 
         /// <summary>
@@ -106,7 +115,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
         internal static bool IsTrue(Obj value)
         {
-            return TypePrimitives.IsBoolean(value) && (bool)value;
+            return IsBoolean(value) && (bool)value;
         }
 
         /// <summary>
@@ -130,7 +139,7 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(TypePrimitives.IsBoolean(List.First(args))), 1)
+                .DefinePrimitive("boolean?", (args, caller) => Truth(IsBoolean(List.First(args))), 1)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
@@ -138,10 +147,27 @@ namespace SimpleScheme
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(TypePrimitives.IsBoolean(List.First(args)) && (bool)List.First(args) == false), 1)
+                .DefinePrimitive("not", (args, caller) => Truth(IsBoolean(List.First(args)) && (bool)List.First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(TypePrimitives.IsEmptyList(List.First(args))), 1);
+                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.IsEmptyList(List.First(args))), 1);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the boolean to the string builder.
+        /// </summary>
+        /// <param name="value">The boolean value.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this bool value, bool quoted, StringBuilder buf)
+        {
+            buf.Append(value ? "#t" : "#f");
+        }
     }
 }

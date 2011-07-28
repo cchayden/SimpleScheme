@@ -126,7 +126,29 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a scheme stepper.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme stepper.</returns>
+        public static bool IsStepper(Obj obj)
+        {
+            return obj is Stepper;
+        }
+        #endregion
+
         #region Internal Static Methods
+        /// <summary>
+        /// Convert object to stepper.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a stepper.</returns>
+        internal static Stepper AsStepper(Obj obj)
+        {
+            return (Stepper)obj;
+        }
+
         /// <summary>
         /// Create a new stepper in the halted state.  This is used as the base evaluator, and contains
         ///   the given environment, which should be the global environment.
@@ -377,7 +399,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder buf)
         {
             buf.AppendFormat("Step {0}\n", TypePrimitives.EvaluatorName(this));
-            string exp = TypePrimitives.IsEmptyList(this.Expr) ? "()" : this.Expr.ToString();
+            string exp = EmptyList.IsEmptyList(this.Expr) ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {
@@ -385,5 +407,25 @@ namespace SimpleScheme
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the stepper to the string builder.
+        /// </summary>
+        /// <param name="stepper">The stepper.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Stepper stepper, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(stepper.IsSuspended ? "<suspended>" : "<stepper>");
+            }
+        }
     }
 }

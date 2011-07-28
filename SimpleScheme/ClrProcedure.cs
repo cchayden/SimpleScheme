@@ -28,7 +28,7 @@ namespace SimpleScheme
         {
             this.ClassName = Printer.AsString(targetClassName, false);
             this.MethodName = Printer.AsString(methodName, false);
-            this.Name = this.ClassName + "." + this.MethodName;
+            this.ProcedureName = this.ClassName + "." + this.MethodName;
         }
         #endregion
 
@@ -61,7 +61,7 @@ namespace SimpleScheme
         /// <returns>The string form of the continuation.</returns>
         public override string ToString()
         {
-            return string.Format("ClrProcedure {0}", this.Name);
+            return string.Format("ClrProcedure {0}", this.ProcedureName);
         }
         #endregion
 
@@ -94,7 +94,7 @@ namespace SimpleScheme
             int n = List.Length(args);
             List<Type> array = new List<Type>(n);
 
-            while (TypePrimitives.IsPair(args))
+            while (Pair.IsPair(args))
             {
                 array.Add(TypePrimitives.ToClass(List.First(args)));
                 args = List.Rest(args);
@@ -121,14 +121,14 @@ namespace SimpleScheme
             {
                 ErrorHandlers.SemanticError(Math.Abs(diff) + 
                     " too " + (diff > 0 ? "many" : "few") + 
-                    " args to " + Name);
+                    " args to " + ProcedureName);
             }
 
             object[] array = new object[n + additionalN];
 
             int i = 0;
             int a = 0;
-            while (TypePrimitives.IsPair(args))
+            while (Pair.IsPair(args))
             {
                 Obj elem = List.First(args);
                 if (this.ArgClasses[i] == typeof(int))

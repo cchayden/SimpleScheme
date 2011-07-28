@@ -73,7 +73,7 @@ namespace SimpleScheme
                 return null;
             }
 
-            return TypePrimitives.EvaluatorName(this) + " {" + this.f.Name + "}";
+            return TypePrimitives.EvaluatorName(this) + " {" + this.f.ProcedureName + "}";
         }
         #endregion
 
@@ -102,7 +102,7 @@ namespace SimpleScheme
             if (s.Caller.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("evaluate-closure: ({0} {1})", step.f.Name, List.First(s.ReturnedExpr)));
+                    String.Format("evaluate-closure: ({0} {1})", step.f.ProcedureName, List.First(s.ReturnedExpr)));
             }
 
             return step.f.Apply(s.ReturnedExpr, s.Caller);

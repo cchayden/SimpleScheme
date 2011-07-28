@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -11,6 +12,13 @@ namespace SimpleScheme
     /// </summary>
     public class Symbol
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the symbol type.
+        /// </summary>
+        private const string Name = "symbol";
+        #endregion
+
         #region Constructors
         /// <summary>
         /// Prevents a default instance of the Symbol class from being created.
@@ -22,19 +30,29 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Tests whether to given object is a scheme symbol.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme symbol.</returns>
+        public static bool IsSymbol(Obj obj)
+        {
+            return obj is string;
+        }
+
+        /// <summary>
         /// Check that the object is a symbol.
         /// Symbols are represented by .NET strings.
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding symbol.</returns>
-        public static string Sym(Obj x)
+        public static string AsSymbol(Obj x)
         {
-            if (TypePrimitives.IsSymbol(x))
+            if (IsSymbol(x))
             {
                 return (string)x;
             }
 
-            ErrorHandlers.TypeError(TypePrimitives.SymbolName, x);
+            ErrorHandlers.TypeError(Name, x);
             return null;
         }
 
@@ -61,8 +79,25 @@ namespace SimpleScheme
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
                 .DefinePrimitive("string->symbol", (args, caller) => New(List.First(args)), 1)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(TypePrimitives.IsSymbol(List.First(args))), 1);
+                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(IsSymbol(List.First(args))), 1);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the symbol to the string builder.
+        /// </summary>
+        /// <param name="sym">The symbol.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this string sym, bool quoted, StringBuilder buf)
+        {
+            buf.Append(sym);
+        }
     }
 }

@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Text;
     using Obj = System.Object;
 
     /// <summary>
@@ -24,12 +25,21 @@ namespace SimpleScheme
             this.Rest = rest;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
+        /// Make a one-element list.
+        /// </summary>
+        /// <param name="first">The first object.</param>
         internal Pair(Obj first)
         {
             this.First = first;
             this.Rest = EmptyList.Instance;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
+        /// Make an empty list.
+        /// </summary>
         internal Pair()
         {
             this.First = EmptyList.Instance;
@@ -51,6 +61,16 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Tests whether to given object is a scheme pair.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme pair.</returns>
+        public static bool IsPair(Obj obj)
+        {
+            return obj is Pair;
+        }
+
+        /// <summary>
         /// Turn the pair into a string for display.
         /// </summary>
         /// <returns>A string representing the pair.</returns>
@@ -62,6 +82,16 @@ namespace SimpleScheme
 
         #region Internal Static Methods
         /// <summary>
+        /// Convert an object into a pair.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a pair.</returns>
+        internal static Pair AsPair(Obj obj)
+        {
+            return (Pair)obj;
+        }
+
+        /// <summary>
         /// Tests whether two pairs are equal.
         /// The first object must be a pair.
         /// If the list is circulr, this will loop forever.
@@ -71,7 +101,7 @@ namespace SimpleScheme
         /// <returns>True if they are both pairs and all elements are equal.</returns>
         internal static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!TypePrimitives.IsPair(obj2))
+            if (!IsPair(obj2))
             {
                 return false;
             }
@@ -89,7 +119,7 @@ namespace SimpleScheme
                 obj1 = List.Rest(pair1);
                 obj2 = List.Rest(pair2);
 
-                if (!TypePrimitives.IsPair(obj1) || !TypePrimitives.IsPair(obj2))
+                if (!IsPair(obj1) || !IsPair(obj2))
                 {
                     return SchemeBoolean.Equal(obj1, obj2);
                 }
@@ -99,5 +129,95 @@ namespace SimpleScheme
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    internal static partial class Extensions
+    {
+        /// <summary>
+        /// Write the pair to the string builder.
+        /// Handle some special forms separately.
+        /// Otherwise, just iterate down the list printing each element.
+        /// Also, detect and handle improper lists.
+        /// </summary>
+        /// <param name="pair">The pair to print.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        internal static void AsString(this Pair pair, bool quoted, StringBuilder buf)
+        {
+            if (Pair.IsPair(List.Rest(pair)) && 
+                EmptyList.IsEmptyList(List.Rest(List.Rest(pair))))
+            {
+                string special = null;
+
+                // There is just one more thing in the pair.  See if the first thing 
+                //    is one of these special forms.
+                switch (List.First(pair) as string)
+                {
+                    case "quote":
+                        special = "'";
+                        break;
+                    case "quasiquote":
+                        special = "`";
+                        break;
+                    case "unquote":
+                        special = ",";
+                        break;
+                    case "unquote-splicing":
+                        special = ",@";
+                        break;
+                }
+
+                if (special != null)
+                {
+                    // There was a special form, and one more thing.
+                    // Append a special symbol and the remaining thing.
+                    buf.Append(special);
+                    Printer.AsString(List.Second(pair), quoted, buf);
+                    return;
+                }
+            }
+
+            // Normal case -- put out the whole list within parentheses.
+            buf.Append('(');
+            Printer.AsString(List.First(pair), quoted, buf);
+
+            Obj tail = List.Rest(pair);
+
+            int len = 0;
+            while (Pair.IsPair(tail))
+            {
+                buf.Append(' ');
+                Printer.AsString(List.First(tail), quoted, buf);
+                Obj oldTail = tail;
+                tail = List.Rest(tail);
+                len++;
+                if (tail == oldTail)
+                {
+                    // this is a circular structure -- truncate
+                    buf.Append(" ... [circular list]");
+                    tail = EmptyList.Instance;
+                    break;
+                }
+
+                if (len > 1000)
+                {
+                    // maybe this is a circular structure -- truncate
+                    buf.Append(" ... [too long]");
+                    tail = EmptyList.Instance;
+                    break;
+                }
+            }
+
+            if (!EmptyList.IsEmptyList(tail))
+            {
+                buf.Append(" . ");
+                Printer.AsString(tail, quoted, buf);
+            }
+
+            buf.Append(')');
+        }
     }
 }
