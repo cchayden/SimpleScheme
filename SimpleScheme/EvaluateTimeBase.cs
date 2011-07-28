@@ -52,8 +52,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Protected Methods
-
+        #region Protected Static Methods
         /// <summary>
         /// Subclass must provide an implementation.
         /// This evaluates the expression, in a way that is appropriate

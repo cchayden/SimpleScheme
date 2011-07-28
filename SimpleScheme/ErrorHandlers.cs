@@ -128,6 +128,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Exception Class
         /// <summary>
         /// All exceptions thrown by the interpreter are of this class.
         /// </summary>
@@ -143,6 +144,7 @@ namespace SimpleScheme
             {
             }
         }
+        #endregion
 
         /// <summary>
         /// All exceptions thrown by the interpreter are of this class.

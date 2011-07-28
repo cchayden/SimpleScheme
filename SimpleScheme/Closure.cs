@@ -64,6 +64,17 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Static Methods
+        /// <summary>
+        /// Convert object to closure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a closure.</returns>
+        public static Closure AsClosure(Obj obj)
+        {
+            return (Closure)obj;
+        }
+
         #region Public Methods
         /// <summary>
         /// Display the closure as a string.  
@@ -75,17 +86,6 @@ namespace SimpleScheme
             return this.ToString("lambda");
         }
         #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Convert object to closure.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a closure.</returns>
-        public static Closure AsClosure(Obj obj)
-        {
-            return (Closure)obj;
-        }
 
         /// <summary>
         /// Actually executes the saved program
@@ -135,6 +135,7 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extensions
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
@@ -155,4 +156,5 @@ namespace SimpleScheme
             }
         }
     }
+    #endregion
 }

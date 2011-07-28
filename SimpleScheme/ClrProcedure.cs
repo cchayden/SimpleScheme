@@ -54,17 +54,6 @@ namespace SimpleScheme
         protected List<Type> ArgClasses { get; set; }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Display the CLR proc name as a string.  
-        /// </summary>
-        /// <returns>The string form of the continuation.</returns>
-        public override string ToString()
-        {
-            return string.Format("ClrProcedure {0}", this.ProcedureName);
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the clr procedure primitives.
@@ -79,6 +68,17 @@ namespace SimpleScheme
                 .DefinePrimitive("new", (args, caller) => New(List.First(args)), 1)
                 //// (new-array <class-name> <length>)
                 .DefinePrimitive("new-array", (args, caller) => NewArray(List.First(args), List.Second(args)), 2);
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Display the CLR proc name as a string.  
+        /// </summary>
+        /// <returns>The string form of the continuation.</returns>
+        public override string ToString()
+        {
+            return string.Format("ClrProcedure {0}", this.ProcedureName);
         }
         #endregion
 

@@ -395,7 +395,8 @@ namespace SimpleScheme
         #endregion
     }
 
-    /// <summary>
+    #region Extensions
+/// <summary>
     /// Provide common operations as extensions.
     /// </summary>
     public static partial class Extensions
@@ -432,4 +433,5 @@ namespace SimpleScheme
             buf.Append('"');
         }
     }
+    #endregion
 }

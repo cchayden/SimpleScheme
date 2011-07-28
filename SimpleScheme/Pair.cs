@@ -131,6 +131,7 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extensions
     /// <summary>
     /// Provide common operations as extensions.
     /// </summary>
@@ -220,4 +221,5 @@ namespace SimpleScheme
             buf.Append(')');
         }
     }
+    #endregion
 }
