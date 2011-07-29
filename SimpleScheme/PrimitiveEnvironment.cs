@@ -16,10 +16,21 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the PrimitiveEnvironment class.
         /// </summary>
-        public PrimitiveEnvironment() :
+        internal PrimitiveEnvironment() :
             base(NullInterp, Empty)
         {
             this.InstallPrimitives();
+        }
+        #endregion
+
+        #region Factory Methods
+        /// <summary>
+        /// Creates a new primitive environment.
+        /// </summary>
+        /// <returns>A new primitive environment.</returns>
+        public static IPrimitiveEnvironment New()
+        {
+            return new PrimitiveEnvironment();
         }
         #endregion
 

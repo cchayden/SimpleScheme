@@ -51,9 +51,6 @@ namespace Repl
                 case "explicit":
                     main.RunExplicit();
                     break;
-                case "results":
-                    main.RunResults();
-                    break;
                 case "custom":
                     main.RunCustom();
                     break;
@@ -73,7 +70,7 @@ namespace Repl
         /// </summary>
         private void RunSimple()
         {
-            new Interpreter(this.files)
+            Interpreter.New(this.files)
                 .ReadEvalPrintLoop();
         }
 
@@ -83,19 +80,9 @@ namespace Repl
         /// </summary>
         private void RunExplicit()
         {
-            IPrimitiveEnvironment primEnvironment = new PrimitiveEnvironment();
-            new Interpreter(true, primEnvironment, this.files, Console.In, Console.Out)
+            IPrimitiveEnvironment primEnvironment = PrimitiveEnvironment.New();
+            Interpreter.New(true, primEnvironment, this.files, Console.In, Console.Out)
                 .ReadEvalPrintLoop();
-        }
-
-        /// <summary>
-        /// Get result from REPL
-        /// </summary>
-        private void RunResults()
-        {
-            IInterpreter interp = new Interpreter(this.files);
-            Obj res = interp.ReadEvalPrintLoop();
-            Console.WriteLine(res);
         }
 
         /// <summary>
@@ -103,7 +90,7 @@ namespace Repl
         /// </summary>
         private void RunCustom()
         {
-            IInterpreter interp = new Interpreter();
+            IInterpreter interp = Interpreter.New();
 
             // define a variable in the global environment
             interp.GlobalEnv.Define("x", 10);
@@ -112,13 +99,12 @@ namespace Repl
             interp.PrimEnv.DefinePrim("plus-one", (args, caller) => Number.Num(List.First(args)) + 1, 1);
 
             // load a program stored in a string
-            interp.LoadString("(p (plus-one x))");
+            interp.Load("(p (plus-one x))");
 
             // evaluate a program stored in a string
-            Obj res = interp.EvalString("(plus-one x)");
+            Obj res = interp.ReadEval("(plus-one x)");
             Console.WriteLine(res);
-            res = interp.ReadEvalPrintLoop();
-            Console.WriteLine(res);
+            interp.ReadEvalPrintLoop();
         }
 
         /// <summary>
@@ -126,7 +112,7 @@ namespace Repl
         /// </summary>
         private void RunAsync()
         {
-            Obj res = new Interpreter(this.files)
+            Obj res = Interpreter.New(this.files)
                 .ReadEvalPrintAsync();
             Console.ReadLine();   // from the expression entered
             Console.ReadLine();   // waits here while operation completes

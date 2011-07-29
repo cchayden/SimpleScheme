@@ -47,7 +47,7 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
-        public Interpreter(bool loadStandardMacros, PrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        private Interpreter(bool loadStandardMacros, PrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
         {
             this.Trace = false;
             this.Count = false;
@@ -64,7 +64,7 @@ namespace SimpleScheme
             {
                 if (loadStandardMacros)
                 {
-                    this.LoadString(SchemePrimitives.Code);
+                    this.Load(SchemePrimitives.Code);
                 }
 
                 if (files != null)
@@ -83,7 +83,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Initializes a new instance of the Interpreter class.
-        /// Create a new interpeter with a given set of files to run initially.
+        /// Create a new interpeter with a given set of files to run initially, a given environment, and given streams..
         /// </summary>
         /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
         /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
@@ -91,29 +91,8 @@ namespace SimpleScheme
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
         /// <returns>A scheme interpreter.</returns>
-        public Interpreter(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer) :
+        private Interpreter(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer) :
             this(loadStandardMacros, primEnvironment as PrimitiveEnvironment, files, reader, writer)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Create a new interpreter with a given set of files to run initially.
-        /// </summary>
-        /// <param name="files">The files to read.</param>
-        /// <returns>A scheme interpreter.</returns>
-        public Interpreter(IEnumerable<string> files) :
-            this(true, null, files, null, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Interpreter class.
-        /// Create a new interpreter with standard macros and no files to load.
-        /// </summary>
-        /// <returns>A scheme interpreter</returns>
-        public Interpreter() :
-            this(true, null, null, null, null)
         {
         }
         #endregion
@@ -175,6 +154,51 @@ namespace SimpleScheme
         /// Gets the transcript logger.
         /// </summary>
         public TranscriptLogger Transcript { get; private set; }
+        #endregion
+
+        #region Public Factory Methods
+        /// <summary>
+        /// Create a new interpreter with all the default settings.
+        /// </summary>
+        /// <returns>An interpreter.</returns>
+        public static IInterpreter New()
+        {
+            return new Interpreter(true, null, null, null, null);
+        }
+
+        /// <summary>
+        /// Create a new interpreter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static IInterpreter New(IEnumerable<string> files)
+        {
+            return new Interpreter(true, null, files, null, null);
+        }
+
+        /// <summary>
+        /// Create a new interpeter with a given set of files to run initially, a given environment, and given streams..
+        /// </summary>
+        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static IInterpreter New(IPrimitiveEnvironment primEnvironment)
+        {
+            return new Interpreter(true, primEnvironment, null, null, null);
+        }
+
+        /// <summary>
+        /// Create a new interpeter with a given set of files to run initially, a given environment, and given streams..
+        /// </summary>
+        /// <param name="loadStandardMacros">Load standard macros and other primitives.</param>
+        /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
+        /// <param name="files">The files to read.</param>
+        /// <param name="reader">The input reader.</param>
+        /// <param name="writer">The output writer.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static IInterpreter New(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        {
+            return new Interpreter(loadStandardMacros, primEnvironment, files, reader, writer);
+        }
         #endregion
 
         #region Define Primitives
@@ -266,23 +290,7 @@ namespace SimpleScheme
         {
             try
             {
-                Obj expr;
-                this.CurrentOutputPort.Write(Prompt);
-                this.CurrentOutputPort.Flush();
-                if (InputPort.IsEof(expr = this.CurrentInputPort.ReadObj()))
-                {
-                    return InputPort.Eof;
-                }
-
-                Obj val = this.UnsafeEval(expr);
-                if (val != Undefined.Instance)
-                {
-                    string output = Printer.AsString(val, false);
-                    this.CurrentOutputPort.WriteLine(output);
-                    this.CurrentOutputPort.Flush();
-                }
-
-                return val;
+                return this.UnsafeReadEvalPrint();
             }
             catch (Exception ex)
             {
@@ -335,19 +343,15 @@ namespace SimpleScheme
         /// This will then execute both expressions asynchronously.
         /// Catch and discard exceptions.
         /// </summary>
-        /// <returns>The result of the last evaluation.</returns>
-        public Obj ReadEvalPrintLoop()
+        public void ReadEvalPrintLoop()
         {
-            Obj prevExpr = null;
             while (true)
             {
                 Obj expr = this.ReadEvalPrint();
                 if (ReferenceEquals(expr, InputPort.Eof))
                 {
-                    return prevExpr;
+                    return;
                 }
-
-                prevExpr = expr;
             }
         }
 
@@ -355,6 +359,8 @@ namespace SimpleScheme
         /// Load a file.  
         /// Open the file and read it.
         /// Evaluate whatever it contains.
+        /// This may be one or more expressions.
+        /// If any of them are asynchronous, then the evaluation is NOT blocked, but continues on.
         /// </summary>
         /// <param name="fileName">The filename.</param>
         public void LoadFile(Obj fileName)
@@ -375,13 +381,63 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Read from a string and evaluate.
+        /// This is done for the side effects, not the value.
+        /// This may read several expressions.
+        /// </summary>
+        /// <param name="str">The string to read and evaluate.</param>
+        public void Load(string str)
+        {
+            try
+            {
+                using (StringReader reader = new StringReader(str))
+                {
+                    this.Load(new InputPort(reader, this));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Read a single expression from the input port.
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The object that was read.</returns>
         public Obj Read(InputPort inp)
         {
-            return inp.ReadObj();
+            try
+            {
+                return this.UnsafeRead(inp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
+        }
+
+        /// <summary>
+        /// Read an expression from the string and parse it into a Scheme object.
+        /// </summary>
+        /// <param name="str">The string to read.</param>
+        /// <returns>The object that was read</returns>
+        public Obj Read(string str)
+        {
+            try
+            {
+                using (StringReader reader = new StringReader(str))
+                {
+                    return this.UnsafeRead(new InputPort(reader, this));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return Undefined.Instance;
+            }
         }
 
         /// <summary>
@@ -409,31 +465,11 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Read from a string and evaluate.
-        /// This is done for the side effects, not the value.
-        /// </summary>
-        /// <param name="str">The string to read and evaluate.</param>
-        public void LoadString(string str)
-        {
-            try
-            {
-                using (StringReader reader = new StringReader(str))
-                {
-                    this.Load(new InputPort(reader, this));
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Caught exception {0}", ex.Message);
-            }
-        }
-
-        /// <summary>
         /// Evaluate a string and return the result.
         /// </summary>
         /// <param name="str">The program to evaluate.</param>
         /// <returns>The evaluation result.</returns>
-        public Obj EvalString(string str)
+        public Obj ReadEval(string str)
         {
             try
             {
@@ -448,9 +484,28 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
         }
+
+        /// <summary>
+        /// Create a printable representation of the object.
+        /// </summary>
+        /// <param name="obj">The object to print.</param>
+        /// <returns>The string representing the object.</returns>
+        public string Print(Obj obj)
+        {
+            try
+            {
+                return Printer.AsString(obj);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return string.Empty;
+            }
+        }
+
         #endregion
 
-        #region Public Methods
+        #region Public Methods (Not Exposed)
         /// <summary>
         /// Evaluate an expression in an environment.
         /// Do it by executing a set of steps.
@@ -630,6 +685,42 @@ namespace SimpleScheme
         {
             return this.ReadEval(inp);
         }
+
+        /// <summary>
+        /// Read a single expression from the input port.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The object that was read.</returns>
+        private Obj UnsafeRead(InputPort inp)
+        {
+            return inp.ReadObj();
+        }
+
+        /// <summary>
+        /// Read an expression, evaluate it, and print the results.
+        /// </summary>
+        /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
+        private Obj UnsafeReadEvalPrint()
+        {
+            Obj expr;
+            this.CurrentOutputPort.Write(Prompt);
+            this.CurrentOutputPort.Flush();
+            if (InputPort.IsEof(expr = this.CurrentInputPort.ReadObj()))
+            {
+                return InputPort.Eof;
+            }
+
+            Obj val = this.UnsafeEval(expr);
+            if (val != Undefined.Instance)
+            {
+                string output = Printer.AsString(val, false);
+                this.CurrentOutputPort.WriteLine(output);
+                this.CurrentOutputPort.Flush();
+            }
+
+            return val;
+        }
+
         #endregion
 
         #region Private Methods

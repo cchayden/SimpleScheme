@@ -18,7 +18,7 @@ namespace Tests
         /// <summary>
         /// A scheme interpreter, created for each test.
         /// </summary>
-        private Interpreter interpreter;
+        private IInterpreter interpreter;
 
         /// <summary>
         /// The section of R4Rs begin tested.
@@ -37,7 +37,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.interpreter = new Interpreter();
+            this.interpreter = Interpreter.New();
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(str))
             {
-                InputPort_Accessor inp = new InputPort_Accessor(reader, this.interpreter);
+                InputPort_Accessor inp = new InputPort_Accessor(reader, (Interpreter)this.interpreter);
                 Obj last = EmptyList_Accessor.Instance;
                 while (true)
                 {

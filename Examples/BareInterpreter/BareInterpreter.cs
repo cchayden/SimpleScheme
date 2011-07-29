@@ -1,10 +1,10 @@
 ﻿// This is the simplest example of an application embedding the Simple Scheme interpreter.
 using SimpleScheme;
-class Program
+class BareInterpreter
 {
     static void Main()
     {
-        new Interpreter()
+        Interpreter.New()
             .ReadEvalPrintLoop();
     }
 }

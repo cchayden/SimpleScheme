@@ -10,6 +10,7 @@ namespace SimpleScheme
     /// </summary>
     public interface IInterpreter
     {
+        #region Accessors
         /// <summary>
         /// Gets the global environment of the interpreter.
         /// Each interpreter has its own global environment.
@@ -23,18 +24,18 @@ namespace SimpleScheme
         /// The primitive environment is the only one in which primitives can be defined.
         /// </summary>
         IPrimitiveEnvironment PrimEnv { get; }
+        #endregion
 
-        /// <summary>
-        /// Enter the Read-Eval-Print loop.
-        /// </summary>
-        /// <returns>The value of the last expression (before EOF).</returns>
-        object ReadEvalPrintLoop();
+        #region Setup Methods
+        #endregion
 
+        #region Read Methods
         /// <summary>
-        /// Load a file and evaluate the expressions in it.
+        /// Read an expression from the string and parse it into a Scheme object.
         /// </summary>
-        /// <param name="fileName">The file to load.</param>
-        void LoadFile(object fileName);
+        /// <param name="str">The string to read.</param>
+        /// <returns>The object that was read</returns>
+        object Read(string str);
 
         /// <summary>
         /// Read a single expression from the input port.
@@ -42,7 +43,9 @@ namespace SimpleScheme
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The object that was read.</returns>
         object Read(InputPort inp);
+        #endregion
 
+        #region Evaluate Methods
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
         /// </summary>
@@ -65,6 +68,24 @@ namespace SimpleScheme
         /// <param name="ar">The async results, used to get the evaluation result.</param>
         /// <returns>The evaluation result.</returns>
         object EndEval(IAsyncResult ar);
+        #endregion
+
+        #region Print Methods
+        /// <summary>
+        /// Return the scheme object as a string.
+        /// </summary>
+        /// <param name="obj">The object to use.</param>
+        /// <returns>A string representing the object value.</returns>
+        string Print(object obj);
+        #endregion
+
+        #region Read/Eval Methods
+        /// <summary>
+        /// Evaluate the given string.
+        /// </summary>
+        /// <param name="str">The string to evaluate.</param>
+        /// <returns>The value of the evaluated string.</returns>
+        object ReadEval(string str);
 
         /// <summary>
         /// Read from the given input port and evaluate the expression.
@@ -77,13 +98,30 @@ namespace SimpleScheme
         /// Load the program, contained in the given string, and execute it.
         /// </summary>
         /// <param name="str">The program to load.</param>
-        void LoadString(string str);
+        void Load(string str);
+        #endregion
+
+        #region Read/Eval/Print Methods
+        /// <summary>
+        /// Enter the Read-Eval-Print loop.
+        /// </summary>
+        void ReadEvalPrintLoop();
 
         /// <summary>
-        /// Evaluate the given string.
+        /// Read and evaluate an expression, using the async evaluator.
         /// </summary>
-        /// <param name="str">The string to evaluate.</param>
-        /// <returns>The value of the evaluated string.</returns>
-        object EvalString(string str);
+        /// <returns>If end of file, InputPort.Eof, otherwise the IAsyncResult.</returns>
+        IAsyncResult ReadEvalPrintAsync();
+        #endregion
+
+        /// <summary>
+        /// Load a file and evaluate the expressions in it.
+        /// </summary>
+        /// <param name="fileName">The file to load.</param>
+        void LoadFile(object fileName);
+
+
+
+
     }
 }

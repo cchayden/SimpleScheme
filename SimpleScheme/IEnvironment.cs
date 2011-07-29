@@ -3,6 +3,10 @@
 // </copyright>
 namespace SimpleScheme
 {
+    /// <summary>
+    /// The environment interface.
+    /// The only operation available on the interface is to define an object in the environment.
+    /// </summary>
     public interface IEnvironment
     {
         /// <summary>

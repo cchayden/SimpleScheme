@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E3F99E7F-8153-4184-B882-9886E520EFAD}</ProjectGuid>
+    <ProjectGuid>{90800090-A90E-4CFD-83F7-F3389A2A93FC}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BareEvaluation</RootNamespace>
-    <AssemblyName>BareEvaluation</AssemblyName>
+    <RootNamespace>InterpreterState</RootNamespace>
+    <AssemblyName>InterpreterState</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -39,7 +39,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BareEvaluation.cs" />
+    <Compile Include="InterpreterState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

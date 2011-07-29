@@ -39,7 +39,7 @@ namespace Couch
             Console.WriteLine();
 
             // Now the scheme program
-            new Interpreter(new[] { "couch.ss" });
+            Interpreter.New(new[] { "couch.ss" });
         }
     }
 }

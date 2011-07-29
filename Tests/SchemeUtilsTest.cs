@@ -20,7 +20,7 @@ namespace Tests
         /// <summary>
         /// A scheme interpreter, created for each test.
         /// </summary>
-        private Interpreter interpreter;
+        private IInterpreter interpreter;
 
         /// <summary>
         /// Initialize each test.
@@ -28,7 +28,7 @@ namespace Tests
         [TestInitialize]
         public void MyTestInitialize()
         {
-            this.interpreter = new Interpreter();
+            this.interpreter = Interpreter.New();
         }
 
         /// <summary>
@@ -445,7 +445,7 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                var outp = new OutputPort(writer, this.interpreter);
+                var outp = new OutputPort(writer, (Interpreter)this.interpreter);
                 OutputPort_Accessor.WriteObj("abc", outp);
                 Assert.AreEqual("abc", writer.ToString());
             }
@@ -465,8 +465,8 @@ namespace Tests
             Assert.AreEqual("number", TypePrimitives_Accessor.TypeName(1.0d));
             Assert.AreEqual("string", TypePrimitives_Accessor.TypeName(new[] { 'a', 'b', 'c' }));
             Assert.AreEqual("procedure", TypePrimitives_Accessor.TypeName(new Primitive_Accessor((args, caller) => null, 0, 0)));
-            Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(new InputPort_Accessor(new StringReader(string.Empty), this.interpreter)));
-            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(new OutputPort(new StringWriter(), this.interpreter)));
+            Assert.AreEqual("input port", TypePrimitives_Accessor.TypeName(new InputPort_Accessor(new StringReader(string.Empty), (Interpreter)this.interpreter)));
+            Assert.AreEqual("output port", TypePrimitives_Accessor.TypeName(new OutputPort(new StringWriter(), (Interpreter)this.interpreter)));
             Assert.AreEqual("empty list", TypePrimitives_Accessor.TypeName(EmptyList_Accessor.Instance));
         }
 
