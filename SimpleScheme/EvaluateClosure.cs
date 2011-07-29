@@ -73,7 +73,7 @@ namespace SimpleScheme
                 return null;
             }
 
-            return TypePrimitives.EvaluatorName(this) + " {" + this.f.ProcedureName + "}";
+            return TypePrimitives.TypeName(this) + " {" + this.f.ProcedureName + "}";
         }
         #endregion
 

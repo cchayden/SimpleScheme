@@ -97,7 +97,8 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            return AsProcedure(ErrorHandlers.TypeError(Name, x));
+            ErrorHandlers.TypeError(Name, x);
+            return null;
         }
 
         /// <summary>
@@ -115,8 +116,9 @@ namespace SimpleScheme
         #region Public Methods
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
+        /// That is what it means to be a procedure.
         /// </summary>
-        /// <param name="args">The arguments to the procedure, which have 
+        /// <param name="args">The arguments to the procedure, which may or may not have 
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to run after the application.</returns>
@@ -125,6 +127,9 @@ namespace SimpleScheme
         /// <summary>
         /// Assign the procedure name.  If the name is still the default, assign it 
         ///    the name given in the argument.
+        /// This is used to associate names with lambdas.  If a "define" is defining
+        ///   a lambda, then the name field of the lambda is set as a side effect.
+        /// Not all lambdas are defined however, so it may remain anonymous.
         /// </summary>
         /// <param name="name">The name to assign it.</param>
         public void SetName(string name)
@@ -158,12 +163,12 @@ namespace SimpleScheme
             // Then continue evaluating the closure body in this new environment
             if (Closure.IsClosure(this))
             {
-                // CLOSURE CALL -- capture the environment and evaluate the body
+                // Closure call -- capture the environment and evaluate the body
                 return EvaluateClosure.Call((Closure)this, args, env, caller);
             }
 
             // This is a procedure call.
-            // In any other case, the function is a primitive, a continuation, or a ClrProcedure.
+            // It is a primitive, a continuation, or a CLR Procedure.
             // Evaluate the arguments in the environment, then apply the function 
             //    to the arguments.
             return EvaluateProc.Call(this, args, env, caller);

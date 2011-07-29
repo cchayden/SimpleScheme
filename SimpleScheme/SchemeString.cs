@@ -43,7 +43,8 @@ namespace SimpleScheme
                 return (char[])obj;
             }
 
-            return Str(ErrorHandlers.TypeError(Name, obj));
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
         }
 
         #endregion

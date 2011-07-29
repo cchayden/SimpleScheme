@@ -234,7 +234,7 @@ namespace SimpleScheme
             }
 
             this.traced = true;
-            return TypePrimitives.EvaluatorName(this);
+            return TypePrimitives.TypeName(this);
         }
 
         /// <summary>
@@ -394,7 +394,7 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         private void DumpStep(StringBuilder buf)
         {
-            buf.AppendFormat("Step {0}\n", TypePrimitives.EvaluatorName(this));
+            buf.AppendFormat("Step {0}\n", TypePrimitives.TypeName(this));
             string exp = EmptyList.IsEmptyList(this.Expr) ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)

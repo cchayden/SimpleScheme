@@ -4,129 +4,115 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Collections.Generic;
     using Obj = System.Object;
 
     /// <summary>
-    /// Primitive operations on built-in scheme types.
+    /// Generic operations on Obj, for tracing, debugging, and interfacing with the CLR.
+    /// Includes a method that returns "friendly" names for objects of given types.
+    /// Also includes a methat that turns a "friendly" name into a full .NET name.
+    ///
+    /// We could have done this with a couple of Dictionaries, initialized by the various classes, but then
+    ///   it would have been necessary to find an environment to store them.
+    /// If it becomes important to make these extensible, that would be the right way to do it.
     /// </summary>
     public class TypePrimitives
     {
-        #region Constants
-
-        /// <summary>
-        /// In primitiveTypes, the abbreviated type name.
-        /// </summary>
-        private const int Abbrev = 0;
-
-        /// <summary>
-        /// In primitiveTypes, the full type name.
-        /// </summary>
-        private const int Full = 1;
-        #endregion
-
-        #region Private Static Tables
-        /// <summary>
-        /// The primitive types that can be used as args for Clr methods.
-        /// Both bare and array versions of each of these are defined.
-        /// </summary>
-        private static readonly string[][] primitiveTypes = 
-        {
-            // simple types
-            new[] { "boolean", "System.Boolean" },
-            new[] { "char", "System.Char" }, 
-            new[] { "string", "System.String" }, 
-            new[] { "byte", "System.Byte" },
-            new[] { "short", "System.Int16" }, 
-            new[] { "int", "System.Int32" }, 
-            new[] { "long", "System.Int64" }, 
-            new[] { "float", "System.Single" }, 
-            new[] { "double", "System.Double" }, 
-
-            // arrays
-            new[] { "boolean[]", "System.Boolean[]" },
-            new[] { "char[]", "System.Char[]" }, 
-            new[] { "string[]", "System.String[]" }, 
-            new[] { "byte[]", "System.Byte[]" },
-            new[] { "short[]", "System.Int16[]" }, 
-            new[] { "int[]", "System.Int32[]" }, 
-            new[] { "long[]", "System.Int64[]" }, 
-            new[] { "float[]", "System.Single[]" }, 
-            new[] { "double[]", "System.Double[]" }, 
-        };
-
-        /// <summary>
-        /// Table of entries used to map the type to a name.
-        /// These are the classes that correspond to scheme's primitive types.
-        /// </summary>
-        private static readonly TypeNameEntry[] typeNames = 
-        {
-            new TypeNameEntry(obj => SchemeBoolean.IsBoolean(obj), "boolean"),
-            new TypeNameEntry(obj => Symbol.IsSymbol(obj), "symbol"),
-            new TypeNameEntry(obj => Character.IsCharacter(obj), "character"),
-            new TypeNameEntry(obj => Vector.IsVector(obj), "vector"),
-            new TypeNameEntry(obj => Pair.IsPair(obj), "pair"),
-            new TypeNameEntry(obj => Number.IsNumber(obj), "number"),
-            new TypeNameEntry(obj => SchemeString.IsString(obj), "string"),
-            new TypeNameEntry(obj => Procedure.IsProcedure(obj), "procedure"),
-            new TypeNameEntry(obj => InputPort.IsInputPort(obj), "input port"),
-            new TypeNameEntry(obj => OutputPort.IsOutputPort(obj), "output port"),
-            new TypeNameEntry(obj => EmptyList.IsEmptyList(obj), "empty list"),
-        };
-
-        /// <summary>
-        /// Table of entries used to map an evaluator to a name.
-        /// These are the classes that correspond to scheme's special forms
-        /// </summary>
-        private static readonly TypeNameEntry[] evaluatorNames = 
-        {
-            new TypeNameEntry(obj => obj is EvaluateAnd, EvaluateAnd.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateCallWithInputFile, EvaluateCallWithInputFile.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateCallWithOutputFile, EvaluateCallWithOutputFile.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateCase, EvaluateCase.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateClosure, EvaluateClosure.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateCond, EvaluateCond.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateContinuation, EvaluateContinuation.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateDefine, EvaluateDefine.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateDo, EvaluateDo.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateExpandMacro, EvaluateExpandMacro.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateExpression, EvaluateExpression.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateIf, EvaluateIf.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateLet, EvaluateLet.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateLetRec, EvaluateLetRec.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateLetStar, EvaluateLetStar.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateList, EvaluateList.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateMap, EvaluateMap.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateOr, EvaluateOr.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateProc, EvaluateProc.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateProcQuoted, EvaluateProcQuoted.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateSequence, EvaluateSequence.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateSet, EvaluateSet.StepperName),
-            new TypeNameEntry(obj => obj is EvaluateTime, EvaluateTime.StepperName)
-        };
-        #endregion
-
         #region Public Static Methods
         /// <summary>
-        /// Find the scheme type name for a given object.
-        /// Used to format error messages.
+        /// Find the scheme type name or the evaluator name for a given object.
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>The scheme type name.</returns>
         public static string TypeName(Obj obj)
         {
-            return LookupName(obj, typeNames);
-        }
+            if (obj == null)
+            {
+                return "null";
+            }
+            switch(obj.GetType().FullName)
+            {
+                // Names for types implementing Scheme values, used for error messages.
+                case "System.Boolean":
+                    return "boolean";
+                case "System.String":
+                    return "symbol";
+                case "System.Char":
+                    return "character";
+                case "System.Object[]":
+                    return "vector";
+                case "SimpleScheme.Pair":
+                    return "pair";
+                case "System.Byte":
+                case "System.Int32":
+                case "System.Int16":
+                case "System.Int64":
+                case "System.Single": 
+                case "System.Double":
+                    return "number";
+                case "System.Char[]":
+                    return "string";
+                case "SimpleScheme.Procedure":
+                case "SimpleScheme.Primitive":
+                case "SimpleScheme.Closure":
+                case "SimpleScheme.Macro":
+                    return "procedure";
+                case "SimpleScheme.InputPort":
+                    return "input port";
+                case "SimpleScheme.OutputPort":
+                    return "output port";
+                case "SimpleScheme.EmptyList":
+                    return "empty list";
 
-        /// <summary>
-        /// Find the scheme type name for a given object.
-        /// Used to format trace messages.
-        /// </summary>
-        /// <param name="obj">The object to use.</param>
-        /// <returns>The scheme type name.</returns>
-        public static string EvaluatorName(Obj obj)
-        {
-            return LookupName(obj, evaluatorNames);
+                // Evaluator names, used for tracing.
+                case "SimpleScheme.EvaluateAnd":
+                    return EvaluateAnd.StepperName;
+                case "SimpleScheme.EvaluateCallWithInputFile":
+                    return EvaluateCallWithInputFile.StepperName;
+                case "SimpleScheme.EvaluateCallWithOutputFile":
+                    return EvaluateCallWithOutputFile.StepperName;
+                case "SimpleScheme.EvaluateCase":
+                    return EvaluateCase.StepperName;
+                case "SimpleScheme.EvaluateClosure":
+                    return EvaluateClosure.StepperName;
+                case "SimpleScheme.EvaluateCond":
+                    return EvaluateCond.StepperName;
+                case "SimpleScheme.EvaluateContinuation":
+                    return EvaluateContinuation.StepperName;
+                case "SimpleScheme.EvaluateDefine":
+                    return EvaluateDefine.StepperName;
+                case "SimpleScheme.EvaluateDo":
+                    return EvaluateDo.StepperName;
+                case "SimpleScheme.EvaluateExpandMacro":
+                    return EvaluateExpandMacro.StepperName;
+                case "SimpleScheme.EvaluateExpression":
+                    return EvaluateExpression.StepperName;
+                case "SimpleScheme.EvaluateIf":
+                    return EvaluateIf.StepperName;
+                case "SimpleScheme.EvaluateLet":
+                    return EvaluateLet.StepperName;
+                case "SimpleScheme.EvaluateLetRec":
+                    return EvaluateLetRec.StepperName;
+                case "SimpleScheme.EvaluateLetStar":
+                    return EvaluateLetStar.StepperName;
+                case "SimpleScheme.EvaluateList":
+                    return EvaluateList.StepperName;
+                case "SimpleScheme.EvaluateMap":
+                    return EvaluateMap.StepperName;
+                case "SimpleScheme.EvaluateOr":
+                    return EvaluateOr.StepperName;
+                case "SimpleScheme.EvaluateProc":
+                    return EvaluateProc.StepperName;
+                case "SimpleScheme.EvaluateProcQuoted":
+                    return EvaluateProcQuoted.StepperName;
+                case "SimpleScheme.EvaluateSequence":
+                    return EvaluateSequence.StepperName;
+                case "SimpleScheme.EvaluateSet":
+                    return EvaluateSet.StepperName;
+                case "SimpleScheme.EvaluateTime":
+                    return EvaluateTime.StepperName;
+                default:
+                    return obj.GetType().FullName;
+            }
         }
 
         /// <summary>
@@ -143,71 +129,72 @@ namespace SimpleScheme
                 return (Type)arg;
             }
 
-            var typeName = Printer.AsString(arg, false);
-            foreach (var type in primitiveTypes)
+            string abbrev = Printer.AsString(arg, false);
+            string typeName;
+            switch (abbrev)
             {
-                if (typeName == type[Abbrev])
-                {
-                    return Type.GetType(type[Full]);
-                }
-            }
-
-            if (typeName == "void")
-            {
-                return typeof(void);
+                case "boolean":
+                    typeName = "System.Boolean";
+                    break;
+                case "char":
+                    typeName = "System.Char";
+                    break;
+                case "string":
+                    typeName = "System.String";
+                    break;
+                case "byte":
+                    typeName = "System.Byte";
+                    break;
+                case "short":
+                    typeName = "System.Int16";
+                    break;
+                case "int":
+                    typeName = "System.Int32";
+                    break;
+                case "long":
+                    typeName = "System.Int64";
+                    break;
+                case "float":
+                    typeName = "System.Single";
+                    break;
+                case "double":
+                    typeName = "System.Double";
+                    break;
+               case "boolean[]":
+                    typeName = "System.Boolean[]";
+                    break;
+                case "char[]":
+                    typeName = "System.Char[]";
+                    break;
+                case "string[]":
+                    typeName = "System.String[]";
+                    break;
+                case "byte[]":
+                    typeName = "System.Byte[]";
+                    break;
+                case "short[]":
+                    typeName = "System.Int16[]";
+                    break;
+                case "int[]":
+                    typeName = "System.Int32[]";
+                    break;
+                case "long[]":
+                    typeName = "System.Int64[]";
+                    break;
+                case "float[]":
+                    typeName = "System.Single[]";
+                    break;
+                case "double[]":
+                    typeName = "System.Double[]";
+                    break;
+                case "void":
+                    return typeof(void);
+                default:
+                    typeName = abbrev;
+                    break;
             }
 
             return Type.GetType(typeName);
-        }
-        #endregion
-
-        #region Private Static Methods
-        /// <summary>
-        /// Find the scheme type name for a given object.
-        /// </summary>
-        /// <param name="obj">The object to use.</param>
-        /// <param name="table">The lookup table.</param>
-        /// <returns>The scheme type name.</returns>
-        private static string LookupName(Obj obj, IEnumerable<TypeNameEntry> table)
-        {
-            foreach (var entry in table)
-            {
-                if (entry.TypePredicate(obj))
-                {
-                    return entry.Name;
-                }
-            }
-
-            return obj.GetType().ToString();
-        }
-        #endregion
-
-        #region Private Structs
-        /// <summary>
-        /// Table entry for type name mapper.
-        /// </summary>
-        private struct TypeNameEntry
-        {
-            /// <summary>
-            /// The type tester for this entry.
-            /// </summary>
-            public readonly Func<Obj, bool> TypePredicate;
-
-            /// <summary>
-            /// The function that gets the type name.
-            /// </summary>
-            public readonly string Name;
-
-            /// <summary>
-            /// Initializes a new instance of the TypePrimitives.TypeNameEntry struct.
-            /// </summary>
-            /// <param name="typePredicate">Type tester.</param>
-            /// <param name="name">Type name generator.</param>
-            public TypeNameEntry(Func<Obj, bool> typePredicate, string name)
-            {
-                this.TypePredicate = typePredicate;
-                this.Name = name;
-            }
         }
         #endregion
     }

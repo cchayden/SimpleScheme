@@ -9,37 +9,13 @@ namespace SimpleScheme
 
     /// <summary>
     /// In charge of printing values.
-    /// Can print in one of two forms: qupted or unqupted.
+    /// Can print in one of two forms: quoted or unquoted.
+    /// Quoted values are more verbose, and are appropriate for logs or traces.
+    /// Unquoted values are for use internally (for instance to get a filename from either a 
+    ///    string or a symbol.)
     /// </summary>
     public class Printer
     {
-        #region Print Table
-        /// <summary>
-        /// Table of entries used to map the type to a print function.
-        /// These include the scheme types as well as additional implementation types.
-        /// </summary>
-        private static readonly AsStringEntry[] asStringEntries = 
-            {
-                new AsStringEntry(obj => SchemeBoolean.IsBoolean(obj),      (x, quoted, buf) => SchemeBoolean.Truth(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Symbol.IsSymbol(obj),       (x, quoted, buf) => Symbol.AsSymbol(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Character.IsCharacter(obj),    (x, quoted, buf) => Character.AsCharacter(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Vector.IsVector(obj),       (x, quoted, buf) => Vector.AsVector(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Pair.IsPair(obj),         (x, quoted, buf) => Pair.AsPair(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Number.IsNumber(obj),       (x, quoted, buf) => Number.Num(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => SchemeString.IsString(obj),       (x, quoted, buf) => SchemeString.Str(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Primitive.IsPrimitive(obj),    (x, quoted, buf) => Primitive.AsPrimitive(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Continuation.IsContinuation(obj), (x, quoted, buf) => Continuation.AsContinuation(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Macro.IsMacro(obj),        (x, quoted, buf) => Macro.AsMacro(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Closure.IsClosure(obj),      (x, quoted, buf) => Closure.AsClosure(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Procedure.IsProcedure(obj),    (x, quoted, buf) => Procedure.AsProcedure(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => InputPort.IsInputPort(obj),    (x, quoted, buf) => InputPort.AsInputPort(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => OutputPort.IsOutputPort(obj),   (x, quoted, buf) => OutputPort.AsOutputPort(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => EmptyList.IsEmptyList(obj),    (x, quoted, buf) => EmptyList.AsEmptyList(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Stepper.IsStepper(obj),      (x, quoted, buf) => Stepper.AsStepper(x).AsString(quoted, buf)),
-                new AsStringEntry(obj => Undefined.IsUndefined(obj),    (x, quoted, buf) => Undefined.AsUndefined(x).AsString(quoted, buf)),
-            };
-        #endregion
-
         #region Public Static Methods
         /// <summary>
         /// Convert an obj into a string representation.
@@ -66,54 +42,84 @@ namespace SimpleScheme
 
         /// <summary>
         /// Convert an obj into a string representation.
+        /// First gets the actual type, then calls a type-specific routine.
+        /// If not one of the predefined types, use generic ToString.
         /// </summary>
         /// <param name="x">The obj to convert.</param>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
         public static void AsString(Obj x, bool quoted, StringBuilder buf)
         {
-            // see if we can find it in the table
-            foreach (var entry in asStringEntries)
+            if (x == null)
             {
-                if (entry.TypePredicate(x))
-                {
-                    entry.AsStringFun(x, quoted, buf);
+                return;
+            }
+
+            switch (x.GetType().FullName)
+            {
+                // Names for types implementing Scheme values, used for error messages.
+                case "System.Boolean":
+                    SchemeBoolean.Truth(x).AsString(quoted, buf);
                     return;
-                }
+                case "System.String":
+                    Symbol.AsSymbol(x).AsString(quoted, buf);
+                    return;
+                case "System.Char":
+                    Character.AsCharacter(x).AsString(quoted, buf);
+                    return;
+                case "System.Object[]":
+                    Vector.AsVector(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Pair":
+                    Pair.AsPair(x).AsString(quoted, buf);
+                    return;
+                case "System.Byte":
+                case "System.Int32":
+                case "System.Int16":
+                case "System.Int64":
+                case "System.Single": 
+                case "System.Double":
+                    Number.Num(x).AsString(quoted, buf);
+                    return;
+                case "System.Char[]":
+                    SchemeString.Str(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Procedure":
+                    Procedure.AsProcedure(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Primitive":
+                    Primitive.AsPrimitive(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Continuation":
+                    Continuation.AsContinuation(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Closure":
+                    Closure.AsClosure(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Macro":
+                    Macro.AsMacro(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.InputPort":
+                    InputPort.AsInputPort(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.OutputPort":
+                    OutputPort.AsOutputPort(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.EmptyList":
+                    EmptyList.AsEmptyList(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Stepper":
+                    Stepper.AsStepper(x).AsString(quoted, buf);
+                    return;
+                case "SimpleScheme.Undefined":
+                    Undefined.AsUndefined(x).AsString(quoted, buf);
+                    return;
+                default:
+                    // use the built-in ToString if not in the table
+                    buf.Append(x);   
+                    return;
             }
-
-            // use the built-in ToString if not in the table
-            buf.Append(x);    
         }
         #endregion
-
-        #region Print Table Struct
-        /// <summary>
-        /// Table entry for type name mapper.
-        /// </summary>
-        private struct AsStringEntry
-        {
-            /// <summary>
-            /// The type tester for this entry.
-            /// </summary>
-            public readonly Func<object, bool> TypePredicate;
-
-            /// <summary>
-            /// The function that gets the type name.
-            /// </summary>
-            public readonly Action<object, bool, StringBuilder> AsStringFun;
-
-            /// <summary>
-            /// Initializes a new instance of the Printer.AsStringEntry struct.
-            /// </summary>
-            /// <param name="typePredicate">Type tester.</param>
-            /// <param name="asStringFun">Type string generator.</param>
-            public AsStringEntry(Func<object, bool> typePredicate, Action<object, bool, StringBuilder> asStringFun)
-            {
-                this.TypePredicate = typePredicate;
-                this.AsStringFun = asStringFun;
-            }
-        }
-        #endregion
-    }
+     }
 }

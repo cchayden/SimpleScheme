@@ -58,7 +58,8 @@ namespace SimpleScheme
                 return Convert.ToDouble(obj);
             }
 
-            return Num(ErrorHandlers.TypeError(Name, obj));
+            ErrorHandlers.TypeError(Name, obj);
+            return 0.0;
         }
         #endregion
 
@@ -214,6 +215,10 @@ namespace SimpleScheme
 
         /// <summary>
         /// Tests if the number is exact.
+        /// The constant here is 2**53.
+        /// This is because double has 52 bits or precision.
+        /// This isn't the biggest integer, but above this the set of
+        ///   integers has gaps.
         /// </summary>
         /// <param name="x">The number to test.</param>
         /// <returns>True if the number is exact.</returns>
@@ -225,7 +230,7 @@ namespace SimpleScheme
             }
 
             double d = Num(x);
-            return d == Math.Round(d) && Math.Abs(d) < 102962884861573423.0;
+            return d == Math.Round(d) && Math.Abs(d) < 9007199254740992.0;
         }
 
         /// <summary>
