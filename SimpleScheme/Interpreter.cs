@@ -14,7 +14,7 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Interpreter : IInterpreter
     {
-        #region Fields
+        #region Constants
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -24,7 +24,9 @@ namespace SimpleScheme
         /// The interactive prompt.
         /// </summary>
         private const string Prompt = "> ";
+        #endregion
 
+        #region Fields
         /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
@@ -428,10 +430,7 @@ namespace SimpleScheme
         {
             try
             {
-                using (StringReader reader = new StringReader(str))
-                {
-                    return this.UnsafeRead(new InputPort(reader, this));
-                }
+                return UnsafeRead(str);
             }
             catch (Exception ex)
             {
@@ -449,13 +448,7 @@ namespace SimpleScheme
         {
             try
             {
-                Obj expr;
-                if (InputPort.IsEof(expr = inp.ReadObj()))
-                {
-                    return InputPort.Eof;
-                }
-
-                return this.UnsafeEval(expr);
+                return UnsafeEval(UnsafeRead(inp));
             }
             catch (Exception ex)
             {
@@ -469,14 +462,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The program to evaluate.</param>
         /// <returns>The evaluation result.</returns>
-        public Obj ReadEval(string str)
+        public Object ReadEval(string str)
         {
             try
             {
-                using (StringReader reader = new StringReader(str))
-                {
-                    return this.UnsafeReadEval(new InputPort(reader, this));
-                }
+                return this.UnsafeEval(UnsafeRead(str));
             }
             catch (Exception ex)
             {
@@ -535,7 +525,6 @@ namespace SimpleScheme
 
                 if (step.IsSuspended)
                 {
-                    // TODO should this return the async result?
                     return step;
                 }
 
@@ -631,7 +620,30 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Private Methods
+        #region Unsafe Private Methods
+        /// <summary>
+        /// Read a single expression from the input port.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The object that was read.</returns>
+        private Obj UnsafeRead(InputPort inp)
+        {
+            return inp.ReadObj();
+        }
+
+        /// <summary>
+        /// Read a single expression given as a string.
+        /// </summary>
+        /// <param name="str">The string to read from.</param>
+        /// <returns>The object that was read.</returns>
+        private Obj UnsafeRead(string str)
+        {
+            using (StringReader reader = new StringReader(str))
+            {
+                return this.UnsafeRead(new InputPort(reader, this));
+            }
+        }
+
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
         /// </summary>
@@ -677,26 +689,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Read from the given port and evaluate the expression.
-        /// </summary>
-        /// <param name="inp">The input port to read from.</param>
-        /// <returns>The result of the evaluation.</returns>
-        private Obj UnsafeReadEval(InputPort inp)
-        {
-            return this.ReadEval(inp);
-        }
-
-        /// <summary>
-        /// Read a single expression from the input port.
-        /// </summary>
-        /// <param name="inp">The input port to read from.</param>
-        /// <returns>The object that was read.</returns>
-        private Obj UnsafeRead(InputPort inp)
-        {
-            return inp.ReadObj();
-        }
-
-        /// <summary>
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
@@ -720,7 +712,6 @@ namespace SimpleScheme
 
             return val;
         }
-
         #endregion
 
         #region Private Methods

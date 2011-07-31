@@ -72,6 +72,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                 .DefinePrimitive("begin", (args, caller) => new EvaluateExpression("begin", args, caller.Env, caller), 0, MaxInt)
+                .DefinePrimitive("parallel", (args, caller) => new EvaluateExpression("parallel", args, caller.Env, caller), 0, MaxInt)
                 //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
@@ -268,6 +269,14 @@ namespace SimpleScheme
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                     return EvaluateSequence.Call(step.args, s.Env, s.Caller);
+
+                case "parallel":
+                    // Evaluate begin by evaluating all the items in order.
+                    // Return Undefined.
+                    // If any suspend, keep going.
+                    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
+                    //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
+                    return EvaluateParallel.Call(step.args, s.Env, s.Caller);
 
                 case "define":
                     // Define is a shortcut for lambda.

@@ -10,6 +10,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// Handles normal synchronous CLR method calls.
+    /// Immutable class.
     /// </summary>
     public sealed class SynchronousClrProcedure : ClrProcedure
     {
@@ -36,7 +37,7 @@ namespace SimpleScheme
                     this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
                     if (this.MethodInfo == null)
                     {
-                        ErrorHandlers.ClrError("Can't get method: " + this.MethodName);
+                        ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.MethodName);
                     }
                 }
             }

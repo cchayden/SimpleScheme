@@ -106,6 +106,8 @@ namespace SimpleScheme
                     return EvaluateProcQuoted.StepperName;
                 case "SimpleScheme.EvaluateSequence":
                     return EvaluateSequence.StepperName;
+                case "SimpleScheme.EvaluateParallel":
+                    return EvaluateParallel.StepperName;
                 case "SimpleScheme.EvaluateSet":
                     return EvaluateSet.StepperName;
                 case "SimpleScheme.EvaluateTime":

@@ -50,6 +50,7 @@
     <Compile Include="EvaluateLet.cs" />
     <Compile Include="EvaluateLetRec.cs" />
     <Compile Include="EvaluateLetStar.cs" />
+    <Compile Include="EvaluateParallel.cs" />
     <Compile Include="EvaluateProcQuoted.cs" />
     <Compile Include="EvaluateTime.cs" />
     <Compile Include="EvaluateTimeBase.cs" />

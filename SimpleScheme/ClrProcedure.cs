@@ -5,12 +5,13 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Reflection;
     using Obj = System.Object;
 
     /// <summary>
     /// Executes a function provided in the CLR.
+    /// This class is immutable.  All attributes are set in constructors, either in this
+    ///   class or in its subclasses.
     /// </summary>
     public abstract class ClrProcedure : Procedure
     {
@@ -20,13 +21,14 @@ namespace SimpleScheme
         /// This allows calls into CLR methods.
         /// The name of the method and the class that it is found in must be supplied.
         /// Also, a list of the types of the method arguments must be given.
+        /// The className and methodName can be strings or symbols, but symbols are converted to
+        ///   lower case by the reader, so this is not very useful.
         /// </summary>
-        /// <param name="targetClassName">The name of the class containing the method.
-        ///   of the method.</param>
+        /// <param name="className">The name of the class containing the method.</param>
         /// <param name="methodName">The name of the CLR method.</param>
-        protected ClrProcedure(Obj targetClassName, Obj methodName)
+        protected ClrProcedure(Obj className, Obj methodName)
         {
-            this.ClassName = Printer.AsString(targetClassName, false);
+            this.ClassName = Printer.AsString(className, false);
             this.MethodName = Printer.AsString(methodName, false);
             this.ProcedureName = this.ClassName + "." + this.MethodName;
         }
@@ -36,12 +38,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets the name of the class containing the method to invoke.
         /// </summary>
-        protected string ClassName { get; set; }
+        protected string ClassName { get; private set; }
 
         /// <summary>
         /// Gets or sets the name of the method.
         /// </summary>
-        protected string MethodName { get; set; }
+        protected string MethodName { get; private set; }
 
         /// <summary>
         /// Gets or sets information about the CLR method to be called.
@@ -164,110 +166,31 @@ namespace SimpleScheme
         #region Private Static Methods
         /// <summary>
         /// Create a type object.
+        /// Let any exceptions propogate up.
         /// </summary>
         /// <param name="className">The class name.  May have to be assembly-qualified.</param>
         /// <returns>The type object.</returns>
         private static Obj Class(Obj className)
         {
-            try
-            {
-                return Type.GetType(Printer.AsString(className, false));
-            }
-            catch (TypeLoadException)
-            {
-            }
-
-            return Undefined.Instance;
+            return Type.GetType(Printer.AsString(className, false));
         }
 
         /// <summary>
         /// Create a new object instance.
         /// This requires the class to have a default constructor.
         /// The class name must be assembly-qualified, unless it is in a standard assembly.
+        /// These can throw a variety of exceptions.  Let them propogate up and be caught at
+        ///   a higher level.
         /// </summary>
         /// <param name="className">The class name.</param>
         /// <returns>A new instance of the class.</returns>
         private static Obj New(Obj className)
         {
-            try
-            {
-                return CreateInstance(className);
-            }
-            catch (ArgumentNullException)
-            {
-            }
-            catch (ArgumentException)
-            {
-            }
-            catch (BadImageFormatException)
-            {
-            }
-            catch (MissingMethodException)
-            {
-            }
-            catch (FileLoadException)
-            {
-            }
-            catch (FileNotFoundException)
-            {
-            }
-            catch (TargetInvocationException)
-            {
-            }
-
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Create an array of objects.
-        /// </summary>
-        /// <param name="className">The class name of the array elements.</param>
-        /// <param name="len">The array length.</param>
-        /// <returns>An array of the given length.</returns>
-        private static Obj NewArray(Obj className, Obj len)
-        {
-            try
-            {
-                return CreateArrayInstance(className, len);
-            }
-            catch (ArgumentNullException)
-            {
-            }
-            catch (ArgumentException)
-            {
-            }
-            catch (BadImageFormatException)
-            {
-            }
-            catch (MissingMethodException)
-            {
-            }
-            catch (FileLoadException)
-            {
-            }
-            catch (FileNotFoundException)
-            {
-            }
-            catch (TargetInvocationException)
-            {
-            }
-
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Create an instance of the given class.
-        /// It is created using the default constructor.
-        /// </summary>
-        /// <param name="className">This is the class name.  It is either a type or the name 
-        ///    of a type.</param>
-        /// <returns>An instance of the class.</returns>
-        private static object CreateInstance(object className)
-        {
             Type type = TypePrimitives.ToClass(className);
             if (type == null)
             {
-                return ErrorHandlers.ClrError("Type cannot be found: " + Printer.AsString(className, false));
+                ErrorHandlers.ClrError("Type cannot be found: " + Printer.AsString(className, false));
+                return null;
             }
 
             Assembly assembly = type.Assembly;
@@ -275,17 +198,17 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create an array of instances of the given class.
+        /// Create an array of objects.
+        /// These can throw a variety of exceptions.  Let them propogate up and be caught at
+        ///   a higher level.
         /// </summary>
-        /// <param name="className">This is the class name.  It is either a type or the name 
-        ///    of a type.</param>
+        /// <param name="className">The class name of the array elements.</param>
         /// <param name="length">The array length.</param>
-        /// <returns>An array of the class.</returns>
-        private static object CreateArrayInstance(object className, object length)
+        /// <returns>An array of the given length.</returns>
+        private static Obj NewArray(Obj className, Obj length)
         {
             Type type = TypePrimitives.ToClass(className);
-            int len = (int)Number.Num(length);
-            return Array.CreateInstance(type, len);
+            return Array.CreateInstance(type, (int)Number.Num(length));
         }
         #endregion
     }

@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Text;
     using Obj = System.Object;
 
@@ -161,11 +162,15 @@ namespace SimpleScheme
         /// <summary>
         /// Create a new stepper in the suspended state.  
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
+        /// The IAsyncResult is given as the ReturnedExpr of the Stepper.
+        /// The IAsyncResult is not that useful: it only gives info about the suspendded step, not the
+        ///   final result.  There is still no way to get that without calling the async evaluator.
         /// </summary>
+        /// <param name="ar">The async result that is associated with the suspension.</param>
         /// <returns>A suspended stepper.</returns>
-        public static Stepper NewSuspended()
+        public static Stepper NewSuspended(IAsyncResult ar)
         {
-            return new Stepper(Suspended, null, null);
+            return new Stepper(Suspended, null, null) { ReturnedExpr = ar };
         }
 
         /// <summary>

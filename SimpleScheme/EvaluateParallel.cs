@@ -1,4 +1,4 @@
-﻿// <copyright file="EvaluateSequence.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateParallel.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,16 +6,15 @@ namespace SimpleScheme
     using Obj = System.Object;
 
     /// <summary>
-    /// Evaluate a sequence by evaluating each member and returning the last value.
+    /// Evaluate a sequence of exprs in parallel by evaluating each member.
     /// </summary>
-   //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-    public sealed class EvaluateSequence : Stepper
+    public sealed class EvaluateParallel : Stepper
     {
         #region Fields
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-sequence";
+        public const string StepperName = "evaluate-parallel";
 
         /// <summary>
         /// The counter id.
@@ -30,12 +29,12 @@ namespace SimpleScheme
 
         #region Constructor
         /// <summary>
-        /// Initializes a new instance of the EvaluateSequence class.
+        /// Initializes a new instance of the EvaluateParallel class.
         /// </summary>
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSequence(Obj expr, Environment env, Stepper caller)
+        private EvaluateParallel(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
             this.expressions = expr;
@@ -46,39 +45,37 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Call the sequence evaluator.
+        /// Call the parallel evaluator.
         /// </summary>
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>The sequence evaluator.</returns>
+        /// <returns>The parallel evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateSequence(expr, env, caller);
+            return new EvaluateParallel(expr, env, caller);
         }
         #endregion
 
         #region Private Methods
         /// <summary>
-        /// Initial step: to see if we are done.
+        /// Initial step: see if we are done.
         /// If not, evaluate the next expression.
-        /// If we are, evaluate and return the last expr.
+        /// If we are, evaluate and return.
+        /// If the expression suspended, then go on anyway with the next expr.
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step.</returns>
         private static Stepper EvalExprStep(Stepper s)
         {
-            EvaluateSequence step = (EvaluateSequence)s;
-            if (EmptyList.IsEmptyList(List.Rest(step.expressions)))
+            EvaluateParallel step = (EvaluateParallel)s;
+            if (EmptyList.IsEmptyList(step.expressions))
             {
-                // On the last expr in the sequence, return directly to the caller.
-                // This is *crucial* for tail recursion.
-                // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
-                //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.Caller);
+                return s.ReturnFromStep(Undefined.Instance);
             }
 
-            return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+            Stepper res = EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+            return res.IsSuspended ? s.ContinueHere(LoopStep) : res;
         }
 
         /// <summary>
@@ -88,7 +85,7 @@ namespace SimpleScheme
         /// <returns>Immediately steps back.</returns>
         private static Stepper LoopStep(Stepper s)
         {
-            EvaluateSequence step = (EvaluateSequence)s;
+            EvaluateParallel step = (EvaluateParallel)s;
             step.expressions = List.Rest(step.expressions);
             return s.ContinueHere(EvalExprStep);
         }

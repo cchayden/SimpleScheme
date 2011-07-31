@@ -11,15 +11,10 @@ namespace SimpleScheme
     /// <summary>
     /// Handles asynchronous CLR method calls.
     /// Call returns suspended, then on completion resumes execution.
+    /// This class is immutable.
     /// </summary>
     public sealed class AsynchronousClrProcedure : ClrProcedure
     {
-        /// <summary>
-        /// The suspended stepper is used to indicate suspension, when stepping
-        ///   needs to be delayed but is not complete.
-        /// </summary>
-        private static readonly Stepper Suspended = Stepper.NewSuspended();
-
         #region Fields
         /// <summary>
         /// The method info for the EndXXX method.
@@ -38,36 +33,25 @@ namespace SimpleScheme
         private AsynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
             : base(targetClassName, methodName)
         {
-            try
+            this.ArgClasses = this.ClassListBegin(argClassNames);
+            Type cls = TypePrimitives.ToClass(ClassName);
+            if (cls == null)
             {
-                this.ArgClasses = this.ClassListBegin(argClassNames);
-                Type cls = TypePrimitives.ToClass(ClassName);
-                if (cls == null)
-                {
-                    ErrorHandlers.ClrError("Bad class: can't load: " + ClassName);
-                    return;    // actually Error throws an exception
-                }
-
-                this.MethodInfo = cls.GetMethod("Begin" + this.MethodName, this.ArgClasses.ToArray());
-                if (this.MethodInfo == null)
-                {
-                    ErrorHandlers.ClrError("Can't get BeginXXX method: " + this.MethodName);
-                }
-
-                Type[] endClasses = { typeof(IAsyncResult) };
-                this.endMethodInfo = cls.GetMethod("End" + this.MethodName, endClasses);
-                if (this.endMethodInfo == null)
-                {
-                    ErrorHandlers.ClrError("Can't get EndXXX method: " + this.MethodName);
-                }
+                ErrorHandlers.ClrError("Bad class: can't get type: " + ClassName);
+                return; // actually Error throws an exception
             }
-            catch (TypeLoadException)
+
+            this.MethodInfo = cls.GetMethod("Begin" + this.MethodName, this.ArgClasses.ToArray());
+            if (this.MethodInfo == null)
             {
-                ErrorHandlers.ClrError("Bad class: can't load: " + ClassName);
+                ErrorHandlers.ClrError("Can't get BeginXXX method: " + this.MethodName);
             }
-            catch (MissingMethodException)
+
+            Type[] endClasses = { typeof(IAsyncResult) };
+            this.endMethodInfo = cls.GetMethod("End" + this.MethodName, endClasses);
+            if (this.endMethodInfo == null)
             {
-                ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.ProcedureName);
+                ErrorHandlers.ClrError("Can't get EndXXX method: " + this.MethodName);
             }
         }
         #endregion
@@ -116,7 +100,7 @@ namespace SimpleScheme
             }
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return Suspended;
+            return Stepper.NewSuspended(res);
         }
         #endregion
 
