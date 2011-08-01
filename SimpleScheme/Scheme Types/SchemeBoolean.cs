@@ -34,6 +34,19 @@ namespace SimpleScheme
             return obj is bool;
         }
 
+
+        /// <summary>
+        /// Test to see if an obj is true.
+        /// This is true if the obj is not a boolean, or if it is and is true.
+        /// In the other scheme value classes, this method would be called Bool.
+        /// </summary>
+        /// <param name="obj">The obj to test.</param>
+        /// <returns>True if a boolean and true, or else is not a boolean.</returns>
+        public static bool Truth(Obj obj)
+        {
+            return !IsFalse(obj);
+        }
+
         /// <summary>
         /// Equality test for two objs.
         /// Two objs are equal if they:
@@ -114,17 +127,6 @@ namespace SimpleScheme
         public static bool IsTrue(Obj value)
         {
             return IsBoolean(value) && (bool)value;
-        }
-
-        /// <summary>
-        /// Test to see if an obj is true.
-        /// This is true if the obj is not a boolean, or if it is and is true.
-        /// </summary>
-        /// <param name="obj">The obj to test.</param>
-        /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        public static bool Truth(Obj obj)
-        {
-            return !IsFalse(obj);
         }
         #endregion
 

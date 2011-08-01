@@ -31,6 +31,16 @@ namespace SimpleScheme
         {
             return obj is EmptyList;
         }
+
+        /// <summary>
+        /// Convert object to EmptyList.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as an empty list.</returns>
+        public static EmptyList AsEmptyList(Obj obj)
+        {
+            return (EmptyList)obj;
+        }
         #endregion
 
         #region Public Methods
@@ -41,18 +51,6 @@ namespace SimpleScheme
         public override string ToString()
         {
             return "()";
-        }
-        #endregion
-
-        #region Static Methods
-        /// <summary>
-        /// Convert object to EmptyList.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an empty list.</returns>
-        public static EmptyList AsEmptyList(Obj obj)
-        {
-            return (EmptyList)obj;
         }
         #endregion
     }

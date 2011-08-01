@@ -62,9 +62,7 @@ namespace SimpleScheme
         {
             return obj is Closure;
         }
-        #endregion
 
-        #region Public Static Methods
         /// <summary>
         /// Convert object to closure.
         /// </summary>

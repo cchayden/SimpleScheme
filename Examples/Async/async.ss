@@ -1,6 +1,6 @@
 ;; test async clr methods
 
-;; define types
+;; define type names
 (define WebRequest "System.Net.WebRequest, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
 (define WebResponse "System.Net.WebResponse, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")
 (define Stream "System.IO.Stream")
@@ -47,10 +47,11 @@
 		(let* 
           ((buffer (new-array "byte" 256)) 
 		   (len (stream.ReadStream stream buffer 0 256)))
-			(display (string-append len " " uri))(newline)
-			(if (> len 0)
-                 (set! out (cons (decode buffer len) out)))
-			len))  
+		  (display (string-append len " " uri))
+		  (newline)
+		  (if (> len 0)
+              (set! out (cons (decode buffer len) out)))
+		  len))  
     (display (string-append "Uri " uri " : " (resp.GetContentLength resp)))(newline)
     (do ((len 1 (read-buffer)))
         ((= len 0) (string-concat (reverse out))))
