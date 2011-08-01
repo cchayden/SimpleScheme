@@ -151,7 +151,7 @@ namespace SimpleScheme
         {
             EvaluateLet step = (EvaluateLet)s;
             Closure fn = new Closure(step.vars, step.body, s.Env);
-            fn.Env.Define(step.name, fn);
+            fn.Env.UnsafeDefine(step.name, fn);
             return fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion

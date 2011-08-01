@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
@@ -110,6 +111,42 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Add a new definition into the environment.
+        /// If a procedure is being added, set its name.
+        /// </summary>
+        /// <param name="var">This is a variable to add to the environment.</param>
+        /// <param name="val">This is the value of that variable.</param>
+        public void Define(Obj var, Obj val)
+        {
+            try
+            {
+               this.UnsafeDefine(var, val); 
+            }
+            catch (ErrorHandlers.SchemeException)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Look up a symbol in the environment.
+        /// This is the single most expensive operation in the whole interpreter.
+        /// Is there some way to make this faster?
+        /// </summary>
+        /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
+        /// <returns>The value bound to the variable.</returns>
+        public Obj Lookup(Obj var)
+        {
+            try
+            {
+               return this.UnsafeLookup(var); 
+            }
+            catch (ErrorHandlers.SchemeException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// The default way to display environments during debugging.
         /// </summary>
         /// <returns>The environment as a string.</returns>
@@ -124,7 +161,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        public void Define(Obj var, Obj val)
+        public void UnsafeDefine(Obj var, Obj val)
         {
             if (Symbol.IsSymbol(var))
             {
@@ -149,11 +186,11 @@ namespace SimpleScheme
         /// This is the single most expensive operation in the whole interpreter.
         /// Is there some way to make this faster?
         /// </summary>
-        /// <param name="obj">The name of the variable to look up.  Must be a symbol.</param>
+        /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        public Obj Lookup(Obj obj)
+        public Obj UnsafeLookup(Obj var)
         {
-            string symbol = Symbol.AsSymbol(obj);
+            string symbol = Symbol.AsSymbol(var);
             Environment env = this;
 
             // search down the chain of environments for a definition

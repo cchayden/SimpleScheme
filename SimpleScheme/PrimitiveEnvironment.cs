@@ -76,7 +76,7 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public PrimitiveEnvironment DefinePrimitive(Obj name, Primitive.Op operation, int minArgs, int maxArgs)
         {
-            this.Define(name, new Primitive(operation, minArgs, maxArgs));
+            this.UnsafeDefine(name, new Primitive(operation, minArgs, maxArgs));
             return this;
         }
 
@@ -91,7 +91,7 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public PrimitiveEnvironment DefinePrimitive(Obj name, Primitive.Op operation, int numberOfArgs)
         {
-            this.Define(name, new Primitive(operation, numberOfArgs, numberOfArgs));
+            this.UnsafeDefine(name, new Primitive(operation, numberOfArgs, numberOfArgs));
             return this;
         }
         #endregion

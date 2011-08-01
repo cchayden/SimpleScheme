@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Async", "Examples\Async\Asy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clr", "Examples\Clr\Clr.csproj", "{41E49820-F17A-494A-9F76-33C995118A4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlobalState", "Examples\GlobalState\GlobalState.csproj", "{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = SimpleScheme.vsmdi
@@ -214,6 +216,16 @@ Global
 		{41E49820-F17A-494A-9F76-33C995118A4F}.Release|Mixed Platforms.Build.0 = Release|x86
 		{41E49820-F17A-494A-9F76-33C995118A4F}.Release|x86.ActiveCfg = Release|x86
 		{41E49820-F17A-494A-9F76-33C995118A4F}.Release|x86.Build.0 = Release|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Debug|x86.ActiveCfg = Debug|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Debug|x86.Build.0 = Debug|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Release|Any CPU.ActiveCfg = Release|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Release|Mixed Platforms.Build.0 = Release|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Release|x86.ActiveCfg = Release|x86
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -227,5 +239,6 @@ Global
 		{4ED224D5-922E-4B86-AB85-CEB9CC0CF4AE} = {B295EC63-7DCF-44EB-A9DA-6AEECC028814}
 		{07BFA4F9-FC01-4E94-A9C8-59AB95616B7E} = {B295EC63-7DCF-44EB-A9DA-6AEECC028814}
 		{41E49820-F17A-494A-9F76-33C995118A4F} = {B295EC63-7DCF-44EB-A9DA-6AEECC028814}
+		{CEF7B6C2-FB3E-4147-A131-805F08AE90E1} = {B295EC63-7DCF-44EB-A9DA-6AEECC028814}
 	EndGlobalSection
 EndGlobal

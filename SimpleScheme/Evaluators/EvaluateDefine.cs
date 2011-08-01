@@ -64,7 +64,7 @@ namespace SimpleScheme
         {
             if (Pair.IsPair(List.First(s.Expr)))
             {
-                s.Env.Define(List.First(List.First(s.Expr)), new Closure(List.Rest(List.First(s.Expr)), List.Rest(s.Expr), s.Env));
+                s.Env.UnsafeDefine(List.First(List.First(s.Expr)), new Closure(List.Rest(List.First(s.Expr)), List.Rest(s.Expr), s.Env));
                 return s.ReturnUndefined();
             }
 
@@ -78,7 +78,7 @@ namespace SimpleScheme
         /// <returns>Execution continues in the caller.</returns>
         private static Stepper StoreDefineStep(Stepper s)
         {
-            s.Env.Define(List.First(s.Expr), s.ReturnedExpr);
+            s.Env.UnsafeDefine(List.First(s.Expr), s.ReturnedExpr);
             return s.ReturnUndefined();
         }
         #endregion
