@@ -476,6 +476,43 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Read from the given port and evaluate the expression, and return the result
+        /// as a string.
+        /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The result of the evaluation.</returns>
+        public string ReadEvalPrint(InputPort inp)
+        {
+            try
+            {
+                return Printer.AsString(UnsafeEval(UnsafeRead(inp)));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Read and evaluate a string and return the result as a string.
+        /// </summary>
+        /// <param name="str">The program to evaluate.</param>
+        /// <returns>The evaluation result.</returns>
+        public string ReadEvalPrint(string str)
+        {
+            try
+            {
+                return Printer.AsString(this.UnsafeEval(UnsafeRead(str)));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+                return "";
+            }
+        }
+
+        /// <summary>
         /// Create a printable representation of the object.
         /// </summary>
         /// <param name="obj">The object to print.</param>

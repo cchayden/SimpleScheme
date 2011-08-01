@@ -6,9 +6,8 @@ class LoadFile
 {
     static void Main()
     {
-        Console.WriteLine(Interpreter.New(new[] { "double.ss" })
-            .ReadEval("(double 5)"));
+        IInterpreter interp = Interpreter.New(new[] { "double.ss" });
+        Console.WriteLine(interp.Eval(interp.Read("(double 5)")));
         Console.ReadLine();
-
     }
 }

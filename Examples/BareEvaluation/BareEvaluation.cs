@@ -4,8 +4,9 @@ class BareEvaluation
 {
     static void Main()
     {
-        Console.WriteLine(Interpreter.New()
-            .ReadEval("(let ((x 2)) (+ x 3))"));
+        IInterpreter interp = Interpreter.New();
+        Console.WriteLine(interp.Print(interp.Eval(interp.Read("(let ((x 2)) (+ x 3))"))));
+        // ==> 5
         Console.ReadLine();
     }
 }

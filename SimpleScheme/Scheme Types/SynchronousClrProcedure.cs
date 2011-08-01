@@ -61,7 +61,7 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// (methodasync <target-class-name> <method-name> <arg-class-name> ...)
+                //// (method <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method",
                    (args, caller) => new SynchronousClrProcedure(

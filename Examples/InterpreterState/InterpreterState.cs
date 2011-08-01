@@ -6,9 +6,9 @@ class InterpreterState
     static void Main()
     {
         IInterpreter interp = Interpreter.New();
-        interp.ReadEval("(define (double x) (* 2 x))");
-        object res = interp.ReadEval("(double 5)");
-        Console.WriteLine(res);
+        interp.Eval(interp.Read("(define (double x) (* 2 x))"));
+        object res = interp.Eval(interp.Read("(double 5)"));
+        Console.WriteLine(interp.Print(res));   // ==> 10
         Console.ReadLine();
     }
 }

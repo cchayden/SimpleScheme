@@ -172,7 +172,7 @@ namespace SimpleScheme
         /// <returns>The type object.</returns>
         private static Obj Class(Obj className)
         {
-            return Type.GetType(Printer.AsString(className, false));
+            return TypePrimitives.ToClass(className);
         }
 
         /// <summary>

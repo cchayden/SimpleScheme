@@ -103,6 +103,16 @@ namespace SimpleScheme
 
         #region Read/Eval/Print Methods
         /// <summary>
+        /// Read, evaluate, print, and return the result.
+        /// </summary>
+        string ReadEvalPrint(InputPort inp);
+
+        /// <summary>
+        /// Read, evaluate, print, and return the result.
+        /// </summary>
+        string ReadEvalPrint(string str);
+
+        /// <summary>
         /// Enter the Read-Eval-Print loop.
         /// </summary>
         void ReadEvalPrintLoop();
