@@ -173,6 +173,16 @@ namespace SimpleScheme
             //    to the arguments.
             return EvaluateProc.Call(this, args, env, caller);
         }
+
+        /// <summary>
+        /// Display the procedure as a string.
+        /// Since there is nothing to show, at least give the type.
+        /// </summary>
+        /// <returns>The procedure type name.</returns>
+        public override string ToString()
+        {
+            return "<" + Name + ">";
+        }
         #endregion
 
         #region Private Methods
@@ -222,7 +232,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<procedure>");
+                buf.Append(proc.ToString());
             }
         }
     }

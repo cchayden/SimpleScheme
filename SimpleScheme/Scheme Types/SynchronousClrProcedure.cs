@@ -4,6 +4,8 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Text;
+
     using Obj = System.Object;
 
     // TODO write unit tests for static and non-static cases
@@ -14,6 +16,13 @@ namespace SimpleScheme
     /// </summary>
     public sealed class SynchronousClrProcedure : ClrProcedure
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the synchronous clr procedure type.
+        /// </summary>
+        private const string Name = "synchronous clr procedure";
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the SynchronousClrProcedure class.
@@ -49,6 +58,45 @@ namespace SimpleScheme
             {
                 ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.ProcedureName);
             }
+        }
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a synchronous CLR procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a synchronous CLR procedure.</returns>
+        public static bool IsSynchronousClrProcedure(Obj obj)
+        {
+            return obj is SynchronousClrProcedure;
+        }
+
+        /// <summary>
+        /// Convert object to synchronous clr procedure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a synchronous clr procedure.</returns>
+        public static Macro AsSynchronousClrProcedure(Obj obj)
+        {
+            if (IsSynchronousClrProcedure(obj))
+            {
+                return (Macro)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Display the synchronous clr procedure as a string.  
+        /// </summary>
+        /// <returns>The string form of the procedure.</returns>
+        public override string ToString()
+        {
+            return Name;
         }
         #endregion
 
@@ -103,4 +151,27 @@ namespace SimpleScheme
         }
         #endregion
     }
+
+    #region Extensions
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    public static partial class Extensions
+    {
+        /// <summary>
+        /// Write the synchronous clr procedure to the string builder.
+        /// </summary>
+        /// <param name="proc">The synchronous clr procedure.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(this SynchronousClrProcedure proc, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("synchronous procedure: ");
+                buf.Append(proc.ToString());
+            }
+        }
+    }
+    #endregion
 }

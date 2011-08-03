@@ -61,22 +61,22 @@ namespace Tests
             this.Run("'()", "cond", "((lambda (fun)(fun 0)) cond)");
 
             this.Run("True", "define", "(procedure? define)");
-            this.Run("SimpleScheme.Undefined", "define", "((lambda (fun)(fun 'a)) define)");
+            this.Run("<undefined>", "define", "((lambda (fun)(fun 'a)) define)");
 
             this.Run("True", "do", "(procedure? do)");
-            this.Run("SimpleScheme.Undefined", "do", "((lambda (fun)(fun 0)) do)");
+            this.Run("<undefined>", "do", "((lambda (fun)(fun 0)) do)");
 
             this.Run("True", "if", "(procedure? if)");
-            this.Run("SimpleScheme.Undefined", "if", "((lambda (fun)(fun 0)) if)");
+            this.Run("<undefined>", "if", "((lambda (fun)(fun 0)) if)");
 
             this.Run("True", "let", "(procedure? let)");
-            this.Run("SimpleScheme.Undefined", "let", "((lambda (fun)(fun 0)) let)");
+            this.Run("<undefined>", "let", "((lambda (fun)(fun 0)) let)");
 
             this.Run("True", "let*", "(procedure? let*)");
-            this.Run("SimpleScheme.Undefined", "let*", "((lambda (fun)(fun 0)) let*)");
+            this.Run("<undefined>", "let*", "((lambda (fun)(fun 0)) let*)");
 
             this.Run("True", "letrec", "(procedure? letrec)");
-            this.Run("SimpleScheme.Undefined", "letrec", "((lambda (fun)(fun 0)) letrec)");
+            this.Run("<undefined>", "letrec", "((lambda (fun)(fun 0)) letrec)");
 
             this.Run("True", "lambda", "(procedure? lambda)");
             this.Run("(lambda 0 )", "lambda", "((lambda (fun)(fun 0)) lambda)");
@@ -88,7 +88,7 @@ namespace Tests
             this.Run("0", "quote", "((lambda (fun)(fun 0)) quote)");
 
             this.Run("True", "set!", "(procedure? set!)");
-            this.Run("SimpleScheme.Undefined", "set!", "(define x 10)((lambda (fun)(fun 'x 0)) set!)");
+            this.Run("<undefined>", "set!", "(define x 10)((lambda (fun)(fun 'x 0)) set!)");
 
             this.Run("True", "time", "(procedure? time)");
             this.Run("0", "time", "(first ((lambda (fun)(fun 0)) time))");
@@ -110,7 +110,7 @@ namespace Tests
             this.Run("23", "call/cc return", "(return 22)");
             this.Run("34", "call/cc return", "(return 33)");
 
-            this.Run("SimpleScheme.Undefined", "call/cc seq", @"
+            this.Run("<undefined>", "call/cc seq", @"
               (define return 0)
               (define count 0)
               (define x '(1 2 3 4 5 6 7 8))

@@ -12,6 +12,13 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Pair
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the scheme pair type.
+        /// </summary>
+        private const string Name = "pair";
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -77,7 +84,13 @@ namespace SimpleScheme
         /// <returns>The object as a pair.</returns>
         public static Pair AsPair(Obj obj)
         {
-            return (Pair)obj;
+            if (IsPair(obj))
+            {
+                return (Pair)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
         }
 
         /// <summary>

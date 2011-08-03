@@ -12,6 +12,13 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Macro : Closure
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the scheme macro type.
+        /// </summary>
+        private const string Name = "macro";
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Macro class.
@@ -43,7 +50,13 @@ namespace SimpleScheme
         /// <returns>The object as a macro.</returns>
         public static Macro AsMacro(Obj obj)
         {
-            return (Macro)obj;
+            if (IsMacro(obj))
+            {
+                return (Macro)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
         }
         #endregion
 
@@ -55,7 +68,7 @@ namespace SimpleScheme
         /// <returns>The string form of the closure.</returns>
         public override string ToString()
         {
-            return this.ToString("macro");
+            return this.ToString(Name);
         }
         #endregion
     }

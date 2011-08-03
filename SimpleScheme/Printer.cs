@@ -82,7 +82,7 @@ namespace SimpleScheme
                     Number.Num(x).AsString(quoted, buf);
                     return;
                 case "System.Char[]":
-                    SchemeString.Str(x).AsString(quoted, buf);
+                    SchemeString.AsSchemeString(x).AsString(quoted, buf);
                     return;
                 case "SimpleScheme.Procedure":
                     Procedure.AsProcedure(x).AsString(quoted, buf);

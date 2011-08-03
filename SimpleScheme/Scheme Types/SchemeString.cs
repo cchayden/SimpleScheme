@@ -36,7 +36,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme string.</returns>
-        public static char[] Str(Obj obj)
+        public static char[] AsSchemeString(Obj obj)
         {
             if (IsString(obj))
             {
@@ -46,7 +46,6 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(Name, obj);
             return null;
         }
-
         #endregion
 
         #region Define Primitives
@@ -88,9 +87,9 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string-fill! <string> <char>)</r4rs>
                 .DefinePrimitive("string-fill!", (args, caller) => StringFill(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.7">(string-length <string>)</r4rs>
-                .DefinePrimitive("string-length", (args, caller) => StringLength(Str(List.First(args))), 1)
+                .DefinePrimitive("string-length", (args, caller) => StringLength(AsSchemeString(List.First(args))), 1)
                 //// <r4rs section="6.7">(string-ref <string> <k>)</r4rs>
-                .DefinePrimitive("string-ref", (args, caller) => Character.AsCharacter(Str(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
+                .DefinePrimitive("string-ref", (args, caller) => Character.AsCharacter(AsSchemeString(List.First(args))[(int)Number.Num(List.Second(args))]), 2)
                 //// <r4rs section="6.7">(string-set! <string> <k> <char>)</r4rs>
                 .DefinePrimitive("string-set!", (args, caller) => StringSet(List.First(args), List.Second(args), List.Third(args)), 3)
                 //// <r4rs section="6.7">(string<=? <string1> <string2>)</r4rs>
@@ -179,18 +178,19 @@ namespace SimpleScheme
                 return false;
             }
 
-            char[] xstr = (char[])obj1;
-            char[] ystr = (char[])obj2;
+            char[] str1 = (char[])obj1;
+            char[] str2 = (char[])obj2;
+            int len1 = str1.Length;
+            int len2 = str2.Length;
 
-            if (xstr.Length != ystr.Length)
+            if (len1 != len2)
             {
                 return false;
             }
 
-            int len = xstr.Length;
-            for (int i = 0; i < len; i++)
+            for (int i = 0; i < len1; i++)
             {
-                if (xstr[i] != ystr[i])
+                if (str1[i] != str2[i])
                 {
                     return false;
                 }
@@ -233,7 +233,7 @@ namespace SimpleScheme
             char[] newStr = new char[len];
             for (int i = 0; i < len; i++)
             {
-                newStr[i] = Str(str)[startPos + i];
+                newStr[i] = AsSchemeString(str)[startPos + i];
             }
 
             return newStr;
@@ -278,7 +278,7 @@ namespace SimpleScheme
         private static Obj StringToList(object s)
         {
             Obj result = EmptyList.Instance;
-            char[] str = Str(s);
+            char[] str = AsSchemeString(s);
             for (int i = str.Length - 1; i >= 0; i--)
             {
                 result = List.Cons(Character.AsCharacter(str[i]), result);
@@ -296,7 +296,7 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         private static Obj StringSet(object str, object index, object chr)
         {
-            Str(str)[(int)Number.Num(index)] = Character.AsCharacter(chr);
+            AsSchemeString(str)[(int)Number.Num(index)] = Character.AsCharacter(chr);
             return Undefined.Instance;
         }
 
@@ -307,7 +307,7 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static Obj StringCopy(object str)
         {
-            return MakeString(Str(str));
+            return MakeString(AsSchemeString(str));
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static Obj StringFill(object str, object fill)
         {
-            char[] ss = Str(str);
+            char[] ss = AsSchemeString(str);
             for (int i = 0; i < ss.Length; i++)
             {
                 ss[i] = Character.AsCharacter(fill);

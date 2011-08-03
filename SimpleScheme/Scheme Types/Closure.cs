@@ -19,6 +19,13 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
     public class Closure : Procedure
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the closure type.
+        /// </summary>
+        private const string Name = "lambda";
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Closure class.
@@ -81,7 +88,7 @@ namespace SimpleScheme
         /// <returns>The string form of the closure.</returns>
         public override string ToString()
         {
-            return this.ToString("lambda");
+            return this.ToString(Name);
         }
         #endregion
 

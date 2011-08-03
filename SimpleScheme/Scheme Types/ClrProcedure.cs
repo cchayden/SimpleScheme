@@ -6,6 +6,8 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Text;
+
     using Obj = System.Object;
 
     /// <summary>
@@ -15,6 +17,13 @@ namespace SimpleScheme
     /// </summary>
     public abstract class ClrProcedure : Procedure
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the clr procedure type.
+        /// </summary>
+        private const string Name = "clr procedure";
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
@@ -54,6 +63,34 @@ namespace SimpleScheme
         /// Gets or sets the types of the arguments.
         /// </summary>
         protected List<Type> ArgClasses { get; set; }
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Tests whether to given object is a CLR procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a CLR procedure.</returns>
+        public static bool IsClrProcedure(Obj obj)
+        {
+            return obj is ClrProcedure;
+        }
+
+        /// <summary>
+        /// Convert object to clr procedure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a clr procedure.</returns>
+        public static ClrProcedure AsClrProcedure(Obj obj)
+        {
+            if (IsClrProcedure(obj))
+            {
+                return (ClrProcedure)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
+        }
         #endregion
 
         #region Define Primitives
@@ -212,4 +249,27 @@ namespace SimpleScheme
         }
         #endregion
     }
+
+    #region Extensions
+    /// <summary>
+    /// Provide common operations as extensions.
+    /// </summary>
+    public static partial class Extensions
+    {
+        /// <summary>
+        /// Write the clr procedure to the string builder.
+        /// </summary>
+        /// <param name="proc">The clr procedure.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(this ClrProcedure proc, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("clr procedure: ");
+                buf.Append(proc.ToString());
+            }
+        }
+    }
+    #endregion
 }

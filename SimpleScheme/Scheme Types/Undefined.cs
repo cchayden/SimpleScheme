@@ -48,6 +48,18 @@ namespace SimpleScheme
             return (Undefined)obj;
         }
         #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Display the value as a string.
+        /// Since there is nothing to show, at least give the type.
+        /// </summary>
+        /// <returns>The undefined type name.</returns>
+        public override string ToString()
+        {
+            return "<undefined>";
+        }
+        #endregion
     }
 
     #region Extensions
@@ -68,7 +80,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<undefined>");
+                buf.Append(undef.ToString());
             }
         }
     }

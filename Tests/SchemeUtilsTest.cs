@@ -317,7 +317,7 @@ namespace Tests
         [TestMethod]
         public void StrTest()
         {
-            var actual = SchemeString.Str(SchemeString_Accessor.MakeString("abc"));
+            var actual = SchemeString.AsSchemeString(SchemeString_Accessor.MakeString("abc"));
             Assert.AreEqual(3, actual.Length);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);

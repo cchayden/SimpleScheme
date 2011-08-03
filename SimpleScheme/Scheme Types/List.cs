@@ -241,11 +241,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(append <list> ...)</r4rs>
                 .DefinePrimitive("append", (args, caller) => Append(args), 0, MaxInt)
                 //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
-                .DefinePrimitive("assoc", (args, caller) => MemberAssoc(First(args), Second(args), 'a', ' '), 2)
+                .DefinePrimitive("assoc", (args, caller) => MemberAssoc(First(args), Second(args), x => First(x), (x, y) => SchemeBoolean.Equal(x, y)), 2)
                 //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
-                .DefinePrimitive("assq", (args, caller) => MemberAssoc(First(args), Second(args), 'a', 'q'), 2)
+                .DefinePrimitive("assq", (args, caller) => MemberAssoc(First(args), Second(args), x => First(x), (x, y) => x == y), 2)
                 //// <r4rs section="6.3">(assv <obj> <alist>)</r4rs>
-                .DefinePrimitive("assv", (args, caller) => MemberAssoc(First(args), Second(args), 'a', 'v'), 2)
+                .DefinePrimitive("assv", (args, caller) => MemberAssoc(First(args), Second(args), x => First(x), (x, y) => SchemeBoolean.Eqv(x, y)), 2)
                 //// <r4rs section="6.3">(car <pair>)</r4rs>
                 .DefinePrimitive("car", (args, caller) => First(First(args)), 1)
                 //// (first <pair>)
@@ -272,11 +272,11 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(list? <obj>)</r4rs>
                 .DefinePrimitive("list?", (args, caller) => SchemeBoolean.Truth(IsList(First(args))), 1)
                 //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
-                .DefinePrimitive("member", (args, caller) => MemberAssoc(First(args), Second(args), 'm', ' '), 2)
+                .DefinePrimitive("member", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y)), 2)
                 //// <r4rs section="6.3">(memq <obj> <list>)</r4rs>
-                .DefinePrimitive("memq", (args, caller) => MemberAssoc(First(args), Second(args), 'm', 'q'), 2)
+                .DefinePrimitive("memq", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => x == y), 2)
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
-                .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), 'm', 'v'), 2)
+                .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 2)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
                 .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.IsPair(First(args))), 1)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
@@ -316,7 +316,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Define all the combinations of c[ad]+r functions up to four levels.
+        /// Define all the combinations of c([ad]+)r functions up to four levels.
         /// </summary>
         /// <param name="env">The environment to define the functions in.</param>
         /// <param name="access">The access string so far.</param>
@@ -484,37 +484,16 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The obj to search for.</param>
         /// <param name="list">The list to search in.</param>
-        /// <param name="m">If 'm', do member, if 'a' do assoc.</param>
+        /// <param name="sel">Select the target and return method.</param>
         /// <param name="eq">This gives the type of equality test to use.</param>
-        /// <returns>The results that wer found.</returns>
-        private static Obj MemberAssoc(Obj obj, Obj list, char m, char eq)
+        /// <returns>The results that were found.</returns>
+        private static Obj MemberAssoc(Obj obj, Obj list, Func<Obj, Obj> sel, Func<Obj, Obj, bool> eq)
         {
             while (Pair.IsPair(list))
             {
-                Obj target = m == 'm' ? First(list) : First(First(list));
-                bool found;
-                switch (eq)
+                if (eq(sel(First(list)), obj))
                 {
-                    case 'q':
-                        found = target == obj;
-                        break;
-
-                    case 'v':
-                        found = SchemeBoolean.Eqv(target, obj);
-                        break;
-
-                    case ' ':
-                        found = SchemeBoolean.Equal(target, obj);
-                        break;
-
-                    default:
-                        ErrorHandlers.Warn("Internal error: bad option to MemberAssoc: " + eq);
-                        return SchemeBoolean.False;
-                }
-
-                if (found)
-                {
-                    return m == 'm' ? list : First(list);
+                    return sel(list);
                 }
 
                 list = Rest(list);

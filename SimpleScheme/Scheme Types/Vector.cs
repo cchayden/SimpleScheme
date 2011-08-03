@@ -10,22 +10,13 @@ namespace SimpleScheme
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public class Vector
+    public static class Vector
     {
         #region Constants
         /// <summary>
         /// The printable name of the vector type.
         /// </summary>
         private const string Name = "vector";
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Prevents a default instance of the Vector class from being created.
-        /// </summary>
-        private Vector()
-        {
-        }
         #endregion
 
         #region Public Static Methods

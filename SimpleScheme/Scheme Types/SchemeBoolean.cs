@@ -21,6 +21,11 @@ namespace SimpleScheme
         /// Define the false value.
         /// </summary>
         public const bool False = false;
+
+        /// <summary>
+        /// The printable name of the scheme boolean type.
+        /// </summary>
+        private const string Name = "boolean";
         #endregion
 
         #region Public Static Methods
@@ -36,15 +41,19 @@ namespace SimpleScheme
 
 
         /// <summary>
-        /// Test to see if an obj is true.
-        /// This is true if the obj is not a boolean, or if it is and is true.
-        /// In the other scheme value classes, this method would be called Bool.
+        /// Check that an oject is a scheme boolean.
         /// </summary>
-        /// <param name="obj">The obj to test.</param>
-        /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        public static bool Truth(Obj obj)
+        /// <param name="obj">The object.</param>
+        /// <returns>The scheme boolean.</returns>
+        public static bool AsSchemeString(Obj obj)
         {
-            return !IsFalse(obj);
+            if (IsBoolean(obj))
+            {
+                return (bool)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return false;
         }
 
         /// <summary>
@@ -128,6 +137,19 @@ namespace SimpleScheme
         {
             return IsBoolean(value) && (bool)value;
         }
+
+        /// <summary>
+        /// Test to see if an obj is true.
+        /// This is true if the obj is not a boolean, or if it is and is true.
+        /// In the other scheme value classes, this method would be called Bool.
+        /// </summary>
+        /// <param name="obj">The obj to test.</param>
+        /// <returns>True if a boolean and true, or else is not a boolean.</returns>
+        public static bool Truth(Obj obj)
+        {
+            return !IsFalse(obj);
+        }
+
         #endregion
 
         #region Define Primitives

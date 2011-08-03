@@ -10,22 +10,13 @@ namespace SimpleScheme
     /// Handles scheme symbols.
     /// Smybols are represented by .NET strings.
     /// </summary>
-    public class Symbol
+    public static class Symbol
     {
         #region Constants
         /// <summary>
         /// The printable name of the symbol type.
         /// </summary>
         private const string Name = "symbol";
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Prevents a default instance of the Symbol class from being created.
-        /// </summary>
-        private Symbol()
-        {
-        }
         #endregion
 
         #region Public Static Methods
@@ -64,7 +55,7 @@ namespace SimpleScheme
         /// <returns>The symbol.</returns>
         public static string New(Obj obj)
         {
-            return new string(SchemeString.Str(obj));
+            return new string(SchemeString.AsSchemeString(obj));
         }
         #endregion
 

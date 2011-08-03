@@ -63,6 +63,22 @@ namespace SimpleScheme
         {
             return obj is InputPort;
         }
+
+        /// <summary>
+        /// Check that an object is an input port.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>An input port.</returns>
+        public static InputPort AsInputPort(Obj obj)
+        {
+            if (IsInputPort(obj))
+            {
+                return (InputPort)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
+        }
         #endregion
 
         #region Define Primitives
@@ -118,22 +134,6 @@ namespace SimpleScheme
         {
             return x as string == Eof;
         }
-
-        /// <summary>
-        /// Check that an object is an input port.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>An input port.</returns>
-        public static InputPort AsInputPort(Obj obj)
-        {
-            if (IsInputPort(obj))
-            {
-                return (InputPort)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
-        }
         #endregion
 
         #region Public Methods
@@ -158,6 +158,16 @@ namespace SimpleScheme
         public void Close()
         {
             this.parser.Close();
+        }
+
+        /// <summary>
+        /// Display the input port as a string.
+        /// Since there is nothing to show, at least give the type.
+        /// </summary>
+        /// <returns>The input port type name.</returns>
+        public override string ToString()
+        {
+            return "<" + Name + ">";
         }
         #endregion
 
@@ -286,7 +296,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<input port>");
+                buf.Append(port.ToString());
             }
         }
     }

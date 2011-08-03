@@ -65,6 +65,22 @@ namespace SimpleScheme
         {
             return obj is OutputPort;
         }
+
+        /// <summary>
+        /// Check that the given object is an output port.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The output port.</returns>
+        public static OutputPort AsOutputPort(Obj obj)
+        {
+            if (IsOutputPort(obj))
+            {
+                return (OutputPort)obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
+        }
         #endregion
 
         #region Define Primitives
@@ -107,22 +123,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Check that the given object is an output port.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The output port.</returns>
-        public static OutputPort AsOutputPort(Obj obj)
-        {
-            if (IsOutputPort(obj))
-            {
-                return (OutputPort)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
-        }
+        #region Public Methods
 
         /// <summary>
         /// Write a string to the output port, followed by a newline.
@@ -167,6 +168,16 @@ namespace SimpleScheme
         public void Flush()
         {
             this.outp.Flush();
+        }
+
+        /// <summary>
+        /// Display the output port as a string.
+        /// Since there is nothing to show, at least give the type.
+        /// </summary>
+        /// <returns>The output port type name.</returns>
+        public override string ToString()
+        {
+            return "<" + Name +">";
         }
         #endregion
 
@@ -310,7 +321,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<output port>");
+                buf.Append(port.ToString());
             }
         }
     }

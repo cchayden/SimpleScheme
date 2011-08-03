@@ -103,22 +103,22 @@ namespace SimpleScheme
         /// <summary>
         /// Compares two characters.
         /// </summary>
-        /// <param name="x">The first char.</param>
-        /// <param name="y">The second char.</param>
-        /// <param name="ci">If true, make the comparison case insensitive.</param>
+        /// <param name="obj1">The first char.</param>
+        /// <param name="obj2">The second char.</param>
+        /// <param name="caseInsensitive">If true, make the comparison case insensitive.</param>
         /// <returns>Negative if x is before y, positive if x is after y, 
         /// or 0 if they are the same.</returns>
-        public static int ChrCompare(Obj x, Obj y, bool ci)
+        public static int ChrCompare(Obj obj1, Obj obj2, bool caseInsensitive)
         {
-            char xc = AsCharacter(x);
-            char yc = AsCharacter(y);
-            if (ci)
+            char char1 = AsCharacter(obj1);
+            char char2 = AsCharacter(obj2);
+            if (caseInsensitive)
             {
-                xc = char.ToLower(xc);
-                yc = char.ToLower(yc);
+                char1 = char.ToLower(char1);
+                char2 = char.ToLower(char2);
             }
 
-            return xc - yc;
+            return char1 - char2;
         }
         #endregion
     }

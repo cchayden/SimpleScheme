@@ -86,26 +86,26 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.5.5">(* <z1> ...)</r4rs>
-                .DefinePrimitive("*", (args, caller) => NumCompute(args, '*', 1.0), 0, MaxInt)
+                .DefinePrimitive("*", (args, caller) => NumCompute(args, (x, y) => x * y, 1.0), 0, MaxInt)
                 //// <r4rs section="6.5.5">(+ <z1> ...)</r4rs>
-                .DefinePrimitive("+", (args, caller) => NumCompute(args, '+', 0.0), 0, MaxInt)
+                .DefinePrimitive("+", (args, caller) => NumCompute(args, (x, y) => x + y, 0.0), 0, MaxInt)
                 //// <r4rs section="6.5.5">(- <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(- <z>)</r4rs>
-                .DefinePrimitive("-", (args, caller) => NumCompute(List.Rest(args), '-', Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("-", (args, caller) => NumCompute(args, (x, y) => x - y, 0.0), 1, MaxInt)
                 //// <r4rs section="6.5.5">(/ <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z1> <z2> ...)</r4rs>
-                .DefinePrimitive("/", (args, caller) => NumCompute(List.Rest(args), '/', Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("/", (args, caller) => NumCompute(args, (x, y) => x / y, 1.0), 1, MaxInt)
                 //// <r4rs section="6.5.5">(= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("=", (args, caller) => NumCompare(args, '='), 2, MaxInt)
+                .DefinePrimitive("=", (args, caller) => NumCompare(args, (x, y) => x == y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(< <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("<", (args, caller) => NumCompare(args, '<'), 2, MaxInt)
+                .DefinePrimitive("<", (args, caller) => NumCompare(args, (x, y) => x < y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(> <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive(">", (args, caller) => NumCompare(args, '>'), 2, MaxInt)
+                .DefinePrimitive(">", (args, caller) => NumCompare(args, (x, y) => x > y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(<= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("<=", (args, caller) => NumCompare(args, 'L'), 2, MaxInt)
+                .DefinePrimitive("<=", (args, caller) => NumCompare(args, (x, y) => x <= y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(>= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive(">=", (args, caller) => NumCompare(args, 'G'), 2, MaxInt)
+                .DefinePrimitive(">=", (args, caller) => NumCompare(args, (x, y) => x >= y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(abs <x>)</r4rs>
                 .DefinePrimitive("abs", (args, caller) => Num(Math.Abs(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(ceiling <x>)</r4rs>
@@ -144,9 +144,9 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("max", (args, caller) => NumCompute(args, 'X', Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("max", (args, caller) => NumCompute(args, (x, y) => Math.Max(x, y), Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(min? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("min", (args, caller) => NumCompute(args, 'N', Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("min", (args, caller) => NumCompute(args, (x, y) => Math.Min(x, y), Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(module <n1> <n2>)</r4rs>
                 .DefinePrimitive("modulo", (args, caller) => Modulo(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(negative? <x>)</r4rs>
@@ -286,10 +286,10 @@ namespace SimpleScheme
         /// Comparison stops when one of the results yields false.
         /// </summary>
         /// <param name="args">A list of numbers to compare.</param>
-        /// <param name="op">The operation to apply successively to pairs of 
+        /// <param name="comp">The compare operation to apply successively to pairs of 
         ///     adjacent numbers.</param>
         /// <returns>True only if all comparisons are true.</returns>
-        private static Obj NumCompare(Obj args, char op)
+        private static Obj NumCompare(Obj args, Func<double, double, bool> comp)
         {
             while (Pair.IsPair(List.Rest(args)))
             {
@@ -298,51 +298,9 @@ namespace SimpleScheme
 
                 double y = Num(List.First(args));
 
-                switch (op)
+                if (! comp(x, y))
                 {
-                    case '>':
-                        if (!(x > y))
-                        {
-                            return SchemeBoolean.False;
-                        }
-
-                        break;
-
-                    case '<':
-                        if (!(x < y))
-                        {
-                            return SchemeBoolean.False;
-                        }
-
-                        break;
-
-                    case '=':
-                        if (x != y)
-                        {
-                            return SchemeBoolean.False;
-                        }
-
-                        break;
-
-                    case 'L':
-                        if (!(x <= y))
-                        {
-                            return SchemeBoolean.False;
-                        }
-
-                        break;
-
-                    case 'G':
-                        if (!(x >= y))
-                        {
-                            return SchemeBoolean.False;
-                        }
-
-                        break;
-
-                    default:
-                        ErrorHandlers.InternalError("Internal error: bad option to NumCompare: " + op);
-                        break;
+                    return SchemeBoolean.False;
                 }
             }
 
@@ -355,74 +313,37 @@ namespace SimpleScheme
         ///   and also max and min.
         /// </summary>
         /// <param name="args">The list of numbers to operate on.</param>
-        /// <param name="op">The operation to apply</param>
-        /// <param name="result">The starting value.</param>
-        /// <returns>The result of applying the operation to the list, starting 
-        /// with the starting value.</returns>
-        private static Obj NumCompute(Obj args, char op, double result)
+        /// <param name="oper">The operation to apply</param>
+        /// <param name="initial">The initial value of the computation.</param>
+        /// <returns>The final result of the operation.</returns>
+        private static Obj NumCompute(Obj args, Func<double, double, double> oper, double initial)
         {
+            double resultSoFar = initial;
+
+            // If there are no numbers, apply return initial value
             if (EmptyList.IsEmptyList(args))
             {
-                // If there are no numbers, apply a unary operation on the starting value.
-                switch (op)
-                {
-                    case '-':
-                        return Num(0 - result);
-
-                    case '/':
-                        return Num(1 / result);
-
-                    default:
-                        return Num(result);
-                }
+                return resultSoFar;
             }
 
+            double d = Num(List.First(args));
+            if (EmptyList.IsEmptyList(List.Rest(args)))
+            {
+                // If there is one number, apply a unary operation on the value.
+                return oper(resultSoFar, d);
+            }
+
+            resultSoFar = d;
+
+            args = List.Rest(args);
             while (Pair.IsPair(args))
             {
-                double x = Num(List.First(args));
-                switch (op)
-                {
-                    case 'X': // max
-                        if (x > result)
-                        {
-                            result = x;
-                        }
-
-                        break;
-
-                    case 'N': // min
-                        if (x < result)
-                        {
-                            result = x;
-                        }
-
-                        break;
-
-                    case '+':
-                        result += x;
-                        break;
-
-                    case '-':
-                        result -= x;
-                        break;
-
-                    case '*':
-                        result *= x;
-                        break;
-
-                    case '/':
-                        result /= x;
-                        break;
-
-                    default:
-                        ErrorHandlers.InternalError("Internal error: bad option to NumCompute: " + op);
-                        break;
-                }
-
+                d = Num(List.First(args));
+                resultSoFar = oper(resultSoFar, d);
                 args = List.Rest(args);
             }
 
-            return Num(result);
+            return resultSoFar;
         }
 
         /// <summary>
@@ -436,10 +357,10 @@ namespace SimpleScheme
             if (Num(first) == 0.0 && Num(second) < 0.0)
             {
                 // Math.Pow gives infinity for this case
-                return Num(0.0);
+                return 0.0;
             }
 
-            return Num(Math.Pow(Num(first), Num(second)));
+            return Math.Pow(Num(first), Num(second));
         }
 
         /// <summary>
@@ -450,10 +371,10 @@ namespace SimpleScheme
         /// <returns>The first modulo the second.</returns>
         private static Obj Modulo(Obj first, Obj second)
         {
-            long xi = (long)Num(first);
-            long yi = (long)Num(second);
-            long m = xi % yi;
-            return Num(xi * yi > 0 || m == 0 ? m : m + yi);
+            long x = (long)Num(first);
+            long y = (long)Num(second);
+            long m = x % y;
+            return x * y > 0 || m == 0 ? m : m + y;
         }
 
         /// <summary>
@@ -465,7 +386,7 @@ namespace SimpleScheme
         private static Obj Quotient(Obj first, Obj second)
         {
             double d = Num(first) / Num(second);
-            return Num(d > 0 ? Math.Floor(d) : Math.Ceiling(d));
+            return d > 0 ? Math.Floor(d) : Math.Ceiling(d);
         }
 
         /// <summary>
@@ -476,7 +397,7 @@ namespace SimpleScheme
         private static Obj Truncate(Obj x)
         {
             double d = Num(x);
-            return Num(d < 0.0D ? Math.Ceiling(d) : Math.Floor(d));
+            return d < 0.0D ? Math.Ceiling(d) : Math.Floor(d);
         }
         #endregion
     }
@@ -495,7 +416,7 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public static void AsString(this double d, bool quoted, StringBuilder buf)
         {
-            if (Math.Round(d) == d)
+            if (d == Math.Round(d))
             {
                 buf.Append((long)d);
             }
