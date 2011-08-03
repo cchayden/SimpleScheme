@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme character type.
         /// </summary>
-        private const string Name = "character";
+        public const string Name = "character";
         #endregion
 
         #region Accessors

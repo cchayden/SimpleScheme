@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the symbol type.
         /// </summary>
-        private const string Name = "symbol";
+        public const string Name = "symbol";
         #endregion
 
         #region Public Static Methods

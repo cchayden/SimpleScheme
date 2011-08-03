@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme pair type.
         /// </summary>
-        private const string Name = "pair";
+        public const string Name = "pair";
         #endregion
 
         #region Constructor

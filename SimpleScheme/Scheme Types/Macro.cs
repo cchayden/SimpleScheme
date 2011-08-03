@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme macro type.
         /// </summary>
-        private const string Name = "macro";
+        public new const string Name = "macro";
         #endregion
 
         #region Constructor

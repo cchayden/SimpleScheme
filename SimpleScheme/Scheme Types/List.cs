@@ -145,6 +145,42 @@ namespace SimpleScheme
             return Pair.IsPair(list) ? ((Pair)list).Rest : EmptyList.Instance;
         }
 
+        // Destructive list operations
+
+        /// <summary>
+        /// Set the first member of a pair destructively.
+        /// </summary>
+        /// <param name="x">The pair whose first member we want to modify.</param>
+        /// <param name="y">The new value to put into it.</param>
+        /// <returns>The obj that has just been modified.</returns>
+        public static Obj SetFirst(Obj x, Obj y)
+        {
+            if (Pair.IsPair(x))
+            {
+                ((Pair)x).First = y;
+                return Undefined.Instance;
+            }
+
+            return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(x));
+        }
+
+        /// <summary>
+        /// Set the second member of a pair (the rest) destructively.
+        /// </summary>
+        /// <param name="x">The pair whose second member we want to modify.</param>
+        /// <param name="y">The new value to put into it.</param>
+        /// <returns>The obj that has just been modified.</returns>
+        public static Obj SetRest(Obj x, Obj y)
+        {
+            if (Pair.IsPair(x))
+            {
+                ((Pair)x).Rest = y;
+                return Undefined.Instance;
+            }
+
+            return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(x));
+        }
+
         /// <summary>
         /// Create a list made out of all the objs given.
         /// This turns an improper list into a proper list by moving the improper
@@ -331,42 +367,6 @@ namespace SimpleScheme
 
             DefineAccessPrimitives(env, access + "a");
             DefineAccessPrimitives(env, access + "d");
-        }
-
-        // Destructive list operations
-
-        /// <summary>
-        /// Set the first member of a pair destructively.
-        /// </summary>
-        /// <param name="x">The pair whose first member we want to modify.</param>
-        /// <param name="y">The new value to put into it.</param>
-        /// <returns>The obj that has just been modified.</returns>
-        private static Obj SetFirst(Obj x, Obj y)
-        {
-            if (Pair.IsPair(x))
-            {
-                ((Pair)x).First = y;
-                return Undefined.Instance;
-            }
-
-            return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(x));
-        }
-
-        /// <summary>
-        /// Set the second member of a pair (the rest) destructively.
-        /// </summary>
-        /// <param name="x">The pair whose second member we want to modify.</param>
-        /// <param name="y">The new value to put into it.</param>
-        /// <returns>The obj that has just been modified.</returns>
-        private static Obj SetRest(Obj x, Obj y)
-        {
-            if (Pair.IsPair(x))
-            {
-                ((Pair)x).Rest = y;
-                return Undefined.Instance;
-            }
-
-            return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(x));
         }
 
         /// <summary>

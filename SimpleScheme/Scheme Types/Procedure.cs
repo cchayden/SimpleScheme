@@ -18,7 +18,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the procedure type.
         /// </summary>
-        private const string Name = "procedure";
+        public const string Name = "procedure";
 
         /// <summary>
         /// The default name of a procedure.

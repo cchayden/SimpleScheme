@@ -33,35 +33,44 @@ namespace SimpleScheme
             {
                 // Names for types implementing Scheme values, used for error messages.
                 case "System.Boolean":
-                    return "boolean";
+                    return SchemeBoolean.Name;
                 case "System.String":
-                    return "symbol";
+                    return Symbol.Name;
                 case "System.Char":
-                    return "character";
+                    return Character.Name;
                 case "System.Object[]":
-                    return "vector";
+                    return Vector.Name;
                 case "SimpleScheme.Pair":
-                    return "pair";
+                    return Pair.Name;
                 case "System.Byte":
                 case "System.Int32":
                 case "System.Int16":
                 case "System.Int64":
                 case "System.Single": 
                 case "System.Double":
-                    return "number";
+                    return Number.Name;
                 case "System.Char[]":
-                    return "string";
+                    return SchemeString.Name;
                 case "SimpleScheme.Procedure":
+                    return Procedure.Name;
                 case "SimpleScheme.Primitive":
+                    return Primitive.Name;
                 case "SimpleScheme.Closure":
+                    return Closure.Name;
                 case "SimpleScheme.Macro":
-                    return "procedure";
+                    return Macro.Name;
+                case "SimpleScheme.ClrProcedure":
+                    return ClrProcedure.Name;
+                case "SimpleScheme.SynchronousClrProcedure":
+                    return SynchronousClrProcedure.Name;
+                case "SimpleScheme.AsynchronousClrProcedure":
+                    return AsynchronousClrProcedure.Name;
                 case "SimpleScheme.InputPort":
-                    return "input port";
+                    return InputPort.Name;
                 case "SimpleScheme.OutputPort":
-                    return "output port";
+                    return OutputPort.Name;
                 case "SimpleScheme.EmptyList":
-                    return "empty list";
+                    return EmptyList.Name;
 
                 // Evaluator names, used for tracing.
                 case "SimpleScheme.EvaluateAnd":

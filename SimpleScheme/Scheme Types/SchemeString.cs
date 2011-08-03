@@ -17,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme string type.
         /// </summary>
-        private const string Name = "string";
+        public const string Name = "string";
         #endregion
 
         #region Public Static Methods

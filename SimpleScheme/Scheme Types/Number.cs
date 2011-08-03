@@ -10,24 +10,18 @@ namespace SimpleScheme
     /// <summary>
     /// Utilities that have to do with numbers.
     /// Scheme numbers are preresented by .NET double.
+    /// Sometimes primitives return int or long instead.
+    /// Other number types such as float or byte are also recognized
+    ///  as numbers, but are not produced by the interpeter.  They could,
+    ///  however, be produced by CLR methods.
     /// </summary>
     public static class Number
     {
         #region Constants
         /// <summary>
-        /// Define the zero obj.
-        /// </summary>
-        public const double Zero = 0.0D;
-
-        /// <summary>
-        /// Define the one obj.
-        /// </summary>
-        public const double One = 1.0D;
-
-        /// <summary>
         /// The printable name of the scheme number type.
         /// </summary>
-        private const string Name = "number";
+        public const string Name = "number";
         #endregion
 
         #region Public Static Methods
@@ -59,7 +53,7 @@ namespace SimpleScheme
             }
 
             ErrorHandlers.TypeError(Name, obj);
-            return 0.0;
+            return 0.0D;
         }
         #endregion
 
@@ -80,8 +74,6 @@ namespace SimpleScheme
             //// <r4rs section="6.5.5">(imag-part <z>)</r4rs>
             //// <r4rs section="6.5.5">(magnitude <z>)</r4rs>
             //// <r4rs section="6.5.5">(angle <z>)</r4rs>
-            //// <r4rs section="6.5.5">(exact->inexact <z>)</r4rs>
-            //// <r4rs section="6.5.5">(inexact->exact <z>)</r4rs>
 
             const int MaxInt = int.MaxValue;
             env
@@ -127,20 +119,24 @@ namespace SimpleScheme
                 .DefinePrimitive("even?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 == 0), 1)
                 //// <r4rs section="6.5.5">(exact? <obj>)</r4rs>
                 .DefinePrimitive("exact?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
+                //// <r4rs section="6.5.5">(exact->inexact <z>)</r4rs>
+                .DefinePrimitive("exact->inexact", (args, caller) => Num(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(exp <z>)</r4rs>
                 .DefinePrimitive("exp", (args, caller) => Num(Math.Exp(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(expt <z>)</r4rs>
                 .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (args, caller) => EmptyList.IsEmptyList(args) ? Zero : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (args, caller) => EmptyList.IsEmptyList(args) ? 0 : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(List.First(args))), 1)
+                //// <r4rs section="6.5.5">(inexact->exact <z>)</r4rs>
+                .DefinePrimitive("inexact->exact", (args, caller) => Num(List.First(args)), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
                 .DefinePrimitive("integer->char", (args, caller) => Character.AsCharacter((char)(int)Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (args, caller) => EmptyList.IsEmptyList(args) ? One : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (args, caller) => EmptyList.IsEmptyList(args) ? 1 : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(List.First(args)))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
@@ -192,7 +188,6 @@ namespace SimpleScheme
         private static Obj Gcd(Obj args)
         {
             long gcd = 0;
-
             while (Pair.IsPair(args))
             {
                 gcd = Gcd2(Math.Abs((long)Num(List.First(args))), gcd);
@@ -240,7 +235,7 @@ namespace SimpleScheme
         /// <returns>True if it is a number.</returns>
         private static bool IsSchemeNumber(Obj x)
         {
-            return SchemeBoolean.Truth(IsNumber(x));
+            return IsNumber(x);
         }
 
         /// <summary>
@@ -251,7 +246,6 @@ namespace SimpleScheme
         private static Obj Lcm(Obj args)
         {
             long lcm = 1;
-
             while (Pair.IsPair(args))
             {
                 long n = Math.Abs((long)Num(List.First(args)));
@@ -260,7 +254,7 @@ namespace SimpleScheme
                 args = List.Rest(args);
             }
 
-            return Num(lcm);
+            return lcm;
         }
 
         /// <summary>
@@ -293,15 +287,12 @@ namespace SimpleScheme
         {
             while (Pair.IsPair(List.Rest(args)))
             {
-                double x = Num(List.First(args));
-                args = List.Rest(args);
-
-                double y = Num(List.First(args));
-
-                if (! comp(x, y))
+                if (! comp(Num(List.First(args)), Num(List.Second(args))))
                 {
                     return SchemeBoolean.False;
                 }
+
+                args = List.Rest(args);
             }
 
             return SchemeBoolean.True;
@@ -318,28 +309,24 @@ namespace SimpleScheme
         /// <returns>The final result of the operation.</returns>
         private static Obj NumCompute(Obj args, Func<double, double, double> oper, double initial)
         {
-            double resultSoFar = initial;
-
             // If there are no numbers, apply return initial value
             if (EmptyList.IsEmptyList(args))
             {
-                return resultSoFar;
+                return initial;
             }
 
-            double d = Num(List.First(args));
+            double resultSoFar = Num(List.First(args));
             if (EmptyList.IsEmptyList(List.Rest(args)))
             {
-                // If there is one number, apply a unary operation on the value.
-                return oper(resultSoFar, d);
+                // If there is one number, apply the operation on the initial value and value.
+                return oper(initial, resultSoFar);
             }
-
-            resultSoFar = d;
 
             args = List.Rest(args);
             while (Pair.IsPair(args))
             {
-                d = Num(List.First(args));
-                resultSoFar = oper(resultSoFar, d);
+                // If there are several numbers, apply the operation on values and partial results.
+                resultSoFar = oper(resultSoFar, Num(List.First(args)));
                 args = List.Rest(args);
             }
 
@@ -357,7 +344,7 @@ namespace SimpleScheme
             if (Num(first) == 0.0 && Num(second) < 0.0)
             {
                 // Math.Pow gives infinity for this case
-                return 0.0;
+                return 0;
             }
 
             return Math.Pow(Num(first), Num(second));
@@ -410,6 +397,8 @@ namespace SimpleScheme
     {
         /// <summary>
         /// Write the number to the string builder.
+        /// For numbers without a fractional part, write as an integer.
+        /// Otherwise, write as a double.
         /// </summary>
         /// <param name="d">The number.</param>
         /// <param name="quoted">Whether to quote (not used).</param>

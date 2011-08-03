@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the closure type.
         /// </summary>
-        private const string Name = "lambda";
+        public new const string Name = "lambda";
         #endregion
 
         #region Constructor

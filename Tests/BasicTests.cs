@@ -138,7 +138,7 @@ namespace Tests
         private void Run(string expected, string label, string expr)
         {
             Obj res = this.ReadAndEvaluate(expr);
-            string actual = res != EmptyList_Accessor.Instance ? res.ToString() : "'()";
+            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
@@ -152,12 +152,12 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(str))
             {
-                InputPort_Accessor inp = new InputPort_Accessor(reader, (Interpreter)this.interpreter);
-                Obj last = EmptyList_Accessor.Instance;
+                InputPort inp = new InputPort(reader, (Interpreter)this.interpreter);
+                Obj last = EmptyList.Instance;
                 while (true)
                 {
                     Obj x;
-                    if (InputPort_Accessor.IsEof(x = inp.ReadObj()))
+                    if (InputPort.IsEof(x = inp.ReadObj()))
                     {
                         return last;
                     }

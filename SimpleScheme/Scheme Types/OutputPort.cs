@@ -17,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme output port type.
         /// </summary>
-        private const string Name = "output port";
+        public const string Name = "output port";
         #endregion
 
         #region Fields
@@ -154,6 +154,17 @@ namespace SimpleScheme
             this.transcript.LogOutput(str, this);
         }
 
+
+        /// <summary>
+        /// Write an obj into an output port.
+        /// </summary>
+        /// <param name="str">The string to write.</param>
+        /// <param name="port">The output port.</param>
+        public static void WriteObj(string str, OutputPort port)
+        {
+            port.Write(str);
+            port.Flush();
+        }
         /// <summary>
         /// Close the output port.
         /// </summary>
@@ -193,17 +204,6 @@ namespace SimpleScheme
         private static OutputPort Port(Obj port, Interpreter interp)
         {
             return EmptyList.IsEmptyList(port) ? interp.CurrentOutputPort : AsOutputPort(port);
-        }
-
-        /// <summary>
-        /// Write an obj into an output port.
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        /// <param name="port">The output port.</param>
-        private static void WriteObj(string str, OutputPort port)
-        {
-            port.Write(str);
-            port.Flush();
         }
 
         /// <summary>

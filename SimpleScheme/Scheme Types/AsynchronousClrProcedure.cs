@@ -21,7 +21,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the asynchronous clr procedure type.
         /// </summary>
-        private const string Name = "asynchronous clr procedure";
+        public new const string Name = "asynchronous clr procedure";
         #endregion
 
         #region Fields

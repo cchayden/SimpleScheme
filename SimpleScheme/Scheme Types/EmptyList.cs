@@ -19,6 +19,11 @@ namespace SimpleScheme
         /// It would also work to have the empty list be represeted by null.
         /// </summary>
         public static readonly Obj Instance = new EmptyList();
+
+        /// <summary>
+        /// The printable name of the empty list type.
+        /// </summary>
+        public const string Name = "empty list";
         #endregion
 
         #region Public Static Methods

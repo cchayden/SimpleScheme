@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme boolean type.
         /// </summary>
-        private const string Name = "boolean";
+        public const string Name = "boolean";
         #endregion
 
         #region Public Static Methods
@@ -45,7 +45,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme boolean.</returns>
-        public static bool AsSchemeString(Obj obj)
+        public static bool AsSchemeBoolean(Obj obj)
         {
             if (IsBoolean(obj))
             {

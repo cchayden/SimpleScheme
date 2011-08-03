@@ -16,7 +16,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the vector type.
         /// </summary>
-        private const string Name = "vector";
+        public const string Name = "vector";
         #endregion
 
         #region Public Static Methods

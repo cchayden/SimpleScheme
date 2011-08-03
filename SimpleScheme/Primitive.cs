@@ -19,12 +19,12 @@ namespace SimpleScheme
         /// <summary>
         /// The name of the stepper, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "primitive";
+        public new const string Name = "primitive";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(Name);
         #endregion
 
         #region Fields
