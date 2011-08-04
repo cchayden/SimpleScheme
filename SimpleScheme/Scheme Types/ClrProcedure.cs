@@ -35,7 +35,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The name of the class containing the method.</param>
         /// <param name="methodName">The name of the CLR method.</param>
-        protected ClrProcedure(Obj className, Obj methodName)
+        protected ClrProcedure(Obj className, Obj methodName) :
+            base(0, 0)
         {
             this.ClassName = Printer.AsString(className, false);
             this.MethodName = Printer.AsString(methodName, false);

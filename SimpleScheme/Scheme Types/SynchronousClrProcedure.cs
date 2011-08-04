@@ -36,27 +36,17 @@ namespace SimpleScheme
             try
             {
                 this.ArgClasses = ClassList(argClassNames);
+                this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
                 Type cls = TypePrimitives.ToClass(ClassName);
-                if (cls == null)
+                this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
+                if (this.MethodInfo == null)
                 {
-                    ErrorHandlers.ClrError("Bad class: can't load " + ClassName);
-                }
-                else
-                {
-                    this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
-                    if (this.MethodInfo == null)
-                    {
-                        ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.MethodName);
-                    }
+                    ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + this.MethodName);
                 }
             }
             catch (TypeLoadException)
             {
                 ErrorHandlers.ClrError("Bad class, can't load: " + ClassName);
-            }
-            catch (MissingMethodException)
-            {
-                ErrorHandlers.ClrError("Can't get method: " + ClassName + ":" + this.ProcedureName);
             }
         }
         #endregion
@@ -77,11 +67,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a synchronous clr procedure.</returns>
-        public static new Macro As(Obj obj)
+        public static new SynchronousClrProcedure As(Obj obj)
         {
             if (Is(obj))
             {
-                return (Macro)obj;
+                return (SynchronousClrProcedure)obj;
             }
 
             ErrorHandlers.TypeError(Name, obj);
@@ -143,10 +133,11 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to excute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
             object target;
             object[] argArray;
+            CheckArgs(args, "SynchronousClrProcedure");
             if (this.MethodInfo.IsStatic)
             {
                 target = null;

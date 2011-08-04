@@ -34,7 +34,8 @@ namespace SimpleScheme
         ///   clone necessary.
         /// </summary>
         /// <param name="step">The continuation to return to when applied.</param>
-        public Continuation(Stepper step)
+        public Continuation(Stepper step) : 
+            base(1, 1)
         {
             this.step = step.Caller.CloneChain(); 
         }
@@ -96,8 +97,9 @@ namespace SimpleScheme
         /// <param name="args">The value to return.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
+            CheckArgs(args, "Continuation");
             return Stepper.TransferToStep(this.step.CloneChain(), List.First(args), this.step.Env);
         }
         #endregion

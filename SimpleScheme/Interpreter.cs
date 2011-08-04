@@ -312,7 +312,7 @@ namespace SimpleScheme
                 Obj expr;
                 this.CurrentOutputPort.Write(Prompt);
                 this.CurrentOutputPort.Flush();
-                if (InputPort.IsEof(expr = InputPort.Read(this.CurrentInputPort)))
+                if (InputPort.IsEof(expr = this.CurrentInputPort.Read()))
                 {
                     return new CompletedAsyncResult<string>(InputPort.Eof);
                 }
@@ -429,7 +429,7 @@ namespace SimpleScheme
         {
             try
             {
-                return UnsafeRead(str);
+                return this.UnsafeRead(str);
             }
             catch (Exception ex)
             {
@@ -447,7 +447,7 @@ namespace SimpleScheme
         {
             try
             {
-                return UnsafeEval(UnsafeRead(inp));
+                return this.UnsafeEval(this.UnsafeRead(inp));
             }
             catch (Exception ex)
             {
@@ -461,11 +461,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The program to evaluate.</param>
         /// <returns>The evaluation result.</returns>
-        public Object ReadEval(string str)
+        public Obj ReadEval(string str)
         {
             try
             {
-                return this.UnsafeEval(UnsafeRead(str));
+                return this.UnsafeEval(this.UnsafeRead(str));
             }
             catch (Exception ex)
             {
@@ -484,12 +484,12 @@ namespace SimpleScheme
         {
             try
             {
-                return Printer.AsString(UnsafeEval(UnsafeRead(inp)));
+                return Printer.AsString(this.UnsafeEval(this.UnsafeRead(inp)));
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Caught exception {0}", ex.Message);
-                return "";
+                return String.Empty;
             }
         }
 
@@ -502,12 +502,12 @@ namespace SimpleScheme
         {
             try
             {
-                return Printer.AsString(this.UnsafeEval(UnsafeRead(str)));
+                return Printer.AsString(this.UnsafeEval(this.UnsafeRead(str)));
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Caught exception {0}", ex.Message);
-                return "";
+                return String.Empty;
             }
         }
 
@@ -595,7 +595,7 @@ namespace SimpleScheme
             while (true)
             {
                 Obj input;
-                if (InputPort.IsEof(input = InputPort.Read(inp)))
+                if (InputPort.IsEof(input = inp.Read()))
                 {
                     inp.Close();
                     return Undefined.Instance;
@@ -664,7 +664,7 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         private Obj UnsafeRead(InputPort inp)
         {
-            return InputPort.Read(inp);
+            return inp.Read();
         }
 
         /// <summary>
@@ -733,7 +733,7 @@ namespace SimpleScheme
             Obj expr;
             this.CurrentOutputPort.Write(Prompt);
             this.CurrentOutputPort.Flush();
-            if (InputPort.IsEof(expr = InputPort.Read(this.CurrentInputPort)))
+            if (InputPort.IsEof(expr = this.CurrentInputPort.Read()))
             {
                 return InputPort.Eof;
             }

@@ -26,6 +26,23 @@ namespace SimpleScheme
         public new const string Name = "lambda";
         #endregion
 
+        #region Fields
+        /// <summary>
+        /// A list of variable names, to be matched with values later.
+        /// </summary>
+        private readonly Obj formalParameters;
+
+        /// <summary>
+        /// The program to execute.
+        /// </summary>
+        private readonly Obj body;
+
+        /// <summary>
+        /// The environment in which to execute.
+        /// </summary>
+        private readonly Environment env;
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Closure class.
@@ -34,29 +51,24 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        public Closure(Obj formalParameters, Obj body, Environment env)
+        public Closure(Obj formalParameters, Obj body, Environment env) :
+            base(0, 0)
         {
-            this.FormalParameters = formalParameters;
-            this.Env = env;
-            this.Body = body;
+            this.formalParameters = formalParameters;
+            this.env = env;
+            this.body = body;
+            this.ProcessFormals();
         }
         #endregion
 
         #region Accessors
         /// <summary>
-        /// Gets a list of variable names, to be matched with values later.
-        /// </summary>
-        public Obj FormalParameters { get; private set; }
-
-        /// <summary>
-        /// Gets the program to execute.
-        /// </summary>
-        public Obj Body { get; private set; }
-
-        /// <summary>
         /// Gets the environment in which to execute.
         /// </summary>
-        public Environment Env { get; private set; }
+        public Environment Env
+        {
+            get { return this.env; }
+        }
         #endregion
 
         #region Public Static Methods
@@ -112,14 +124,14 @@ namespace SimpleScheme
         /// The arguments have already been bound to the formal parameters.
         /// If there is only one expression in the body, just evaluate it, otherwise evaluate the sequence.
         /// </summary>
-        /// <param name="env">The environment to evaluate in.</param>
+        /// <param name="givenEnv">The environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public Stepper ApplyWithtEnv(Environment env, Stepper caller)
+        public Stepper ApplyWithtEnv(Environment givenEnv, Stepper caller)
         {
-            return EmptyList.Is(List.Rest(this.Body)) ? 
-                EvaluateExpression.Call(List.First(this.Body), env, caller) : 
-                EvaluateSequence.Call(this.Body, env, caller);
+            return EmptyList.Is(List.Rest(this.body)) ? 
+                EvaluateExpression.Call(List.First(this.body), givenEnv, caller) : 
+                EvaluateSequence.Call(this.body, givenEnv, caller);
         }
 
         /// <summary>
@@ -130,9 +142,10 @@ namespace SimpleScheme
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
-            return this.ApplyWithtEnv(new Environment(this.FormalParameters, args, this.Env), caller);
+            CheckArgs(args, "Closure");
+            return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);
         }
 
         /// <summary>
@@ -143,13 +156,41 @@ namespace SimpleScheme
         protected string ToString(string tag)
         {
             // trim enclosing parentheses off body, to match the definition
-            string body = this.Body.ToString();
-            if (body.StartsWith("(") && body.EndsWith(")"))
+            string bodyStr = this.body.ToString();
+            if (bodyStr.StartsWith("(") && bodyStr.EndsWith(")"))
             {
-                body = body.Substring(1, body.Length - 2).Trim();
+                bodyStr = bodyStr.Substring(1, bodyStr.Length - 2).Trim();
             }
 
-            return String.Format("({0} {1} {2})", tag, this.FormalParameters, body);
+            return String.Format("({0} {1} {2})", tag, this.formalParameters, bodyStr);
+        }
+
+        /// <summary>
+        /// Extract the min amd max number of args allowed when calling the closure.
+        /// </summary>
+        private void ProcessFormals()
+        {
+            const int MaxInt = int.MaxValue;
+            int count = 0;
+            Obj vars = this.formalParameters;
+            while (true)
+            {
+                if (EmptyList.Is(vars))
+                {
+                    this.MinArgs = this.MaxArgs = count;
+                    return;
+                }
+
+                if (!Pair.Is(vars))
+                {
+                    this.MinArgs = count;
+                    this.MaxArgs = Symbol.Is(vars) ? MaxInt : count;
+                    return;
+                }
+
+                vars = List.Rest(vars);
+                count++;
+            }
         }
         #endregion
     }

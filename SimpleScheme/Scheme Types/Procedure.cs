@@ -28,12 +28,15 @@ namespace SimpleScheme
 
         #region Constructor
         /// <summary>
-        /// Initializes a new instance of the Procedure class.
-        /// Sets the name to the default.
+        /// Initializes a new instance of the Procedure class, setting min and max args.
         /// </summary>
-        protected Procedure()
+        /// <param name="minArgs">The minimum number of args.</param>
+        /// <param name="maxArgs">The maximum number of args.</param>
+        protected Procedure(int minArgs, int maxArgs)
         {
             this.ProcedureName = AnonymousProc;
+            this.MinArgs = minArgs;
+            this.MaxArgs = maxArgs;
         }
         #endregion
 
@@ -43,6 +46,18 @@ namespace SimpleScheme
         /// Can't figure out how to make this public rather than public.
         /// </summary>
         public string ProcedureName { get; protected set; }
+
+        /// <summary>
+        /// Gets or sets the minimum number of arguments permitted.
+        /// Set only during construction.
+        /// </summary>
+        protected int MinArgs { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of arguments permitted.
+        /// Set only during construction.
+        /// </summary>
+        protected int MaxArgs { get; set; }
         #endregion
 
         #region Public Static Methods
@@ -84,10 +99,10 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => Apply(List.First(args), List.Rest(args), caller), 2, MaxInt)
+                .DefinePrimitive("apply", (args, caller) => As(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
-                .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(List.First(args), caller), 1)
-                .DefinePrimitive("call/cc", (args, caller) => CallCc(List.First(args), caller), 1)
+                .DefinePrimitive("call-with-current-continuation", (args, caller) => As(List.First(args)).CallCc(caller), 1)
+                .DefinePrimitive("call/cc", (args, caller) => As(List.First(args)).CallCc(caller), 1)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1)
@@ -135,22 +150,6 @@ namespace SimpleScheme
         public abstract Stepper Apply(object args, Stepper caller);
 
         /// <summary>
-        /// Assign the procedure name.  If the name is still the default, assign it 
-        ///    the name given in the argument.
-        /// This is used to associate names with lambdas.  If a "define" is defining
-        ///   a lambda, then the name field of the lambda is set as a side effect.
-        /// Not all lambdas are defined however, so it may remain anonymous.
-        /// </summary>
-        /// <param name="name">The name to assign it.</param>
-        public void SetName(string name)
-        {
-            if (this.ProcedureName == AnonymousProc)
-            {
-                this.ProcedureName = name;
-            }
-        }
-
-        /// <summary>
         /// Evaluate the procedure.
         /// At this point, the args are NOT evaluated
         /// Macro is evaluated differently, and overrides this method.
@@ -166,9 +165,46 @@ namespace SimpleScheme
         {
             return EvaluateProc.Call(this, args, env, caller);
         }
+
+        /// <summary>
+        /// Assign the procedure name.  If the name is still the default, assign it 
+        ///    the name given in the argument.
+        /// This is used to associate names with lambdas.  If a "define" is defining
+        ///   a lambda, then the name field of the lambda is set as a side effect.
+        /// Not all lambdas are defined however, so it may remain anonymous.
+        /// </summary>
+        /// <param name="name">The name to assign it.</param>
+        public void SetName(string name)
+        {
+            if (this.ProcedureName == AnonymousProc)
+            {
+                this.ProcedureName = name;
+            }
+        }
         #endregion
 
-        #region Private Methods
+        /// <summary>
+        /// Check the number of args passed.
+        /// </summary>
+        /// <param name="args">The arguments passed to the procedure.</param>
+        /// <param name="tag">Name, for the error message.</param>
+        protected void CheckArgs(Obj args, string tag)
+        {
+            int numArgs = List.Length(args);
+            if (numArgs < this.MinArgs)
+            {
+                ErrorHandlers.SemanticError(tag + ": too few args, " + numArgs + ", for " +
+                                                            this.ProcedureName + ": " + args);
+            }
+
+            if (numArgs > this.MaxArgs)
+            {
+                ErrorHandlers.SemanticError(tag + ": too many args, " + numArgs + ", for " +
+                                                            this.ProcedureName + ": " + args);
+            }
+        }
+
+        #region Private Static Methods
         /// <summary>
         /// Force a promise.  The promise is a proc: apply it.
         /// </summary>
@@ -179,34 +215,20 @@ namespace SimpleScheme
         {
             return !Is(promise) ? promise : As(promise).Apply(null, caller);
         }
+        #endregion
 
-        /// <summary>
-        /// Apply the given procedure to the args.
-        /// Proc has been evaluated, and the args have also been evaluated.
-        /// This calls the abstract function, which is dispatched to the version of
-        ///   Apply that is appropriate to the kind of procedure that proc is.
-        /// </summary>
-        /// <param name="proc">The procedure to apply.</param>
-        /// <param name="args">The arguments.</param>
-        /// <param name="caller">The calling stepper.  Return to this when done.</param>
-        /// <returns>The stepper to run next.</returns>
-        private static Stepper Apply(Obj proc, Obj args, Stepper caller)
-        {
-            return As(proc).Apply(List.ListStar(args), caller);
-        }
-
+        #region Private Methods
         /// <summary>
         /// Perform the call/cc primitive.
         /// Create a continuation that captures the caller's environment and returns to the caller.
         /// The continuation itself is a sequence that evaluates the proc in the caller's environment and returns to the caller.
         /// </summary>
-        /// <param name="proc">The expression to evaluate.</param>
         /// <param name="caller">The calling stepper.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private static Obj CallCc(Obj proc, Stepper caller)
+        private Obj CallCc(Stepper caller)
         {
-            return As(proc).Apply(
-                List.New(new Continuation(EvaluateContinuation.Call(proc, caller.Env, caller))), caller);
+            return this.Apply(
+                List.New(new Continuation(EvaluateContinuation.Call(this, caller.Env, caller))), caller);
         }
         #endregion
     }

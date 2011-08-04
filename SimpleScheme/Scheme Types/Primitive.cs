@@ -39,16 +39,6 @@ namespace SimpleScheme
         /// (2) a Stepper, the next step to execute. 
         /// </summary>
         private readonly Op operation;
-
-        /// <summary>
-        /// The minimum number of arguments expected.
-        /// </summary>
-        private readonly int minArgs;
-
-        /// <summary>
-        /// The maximum number of args expected.
-        /// </summary>
-        private readonly int maxArgs;
         #endregion
 
         #region Constructor
@@ -58,11 +48,10 @@ namespace SimpleScheme
         /// <param name="operation">The code to carry out the operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
-        public Primitive(Op operation, int minArgs, int maxArgs)
+        public Primitive(Op operation, int minArgs, int maxArgs) :
+            base(minArgs, maxArgs)
         {
             this.operation = operation;
-            this.minArgs = minArgs;
-            this.maxArgs = maxArgs;
         }
         #endregion
 
@@ -102,15 +91,14 @@ namespace SimpleScheme
         /// <summary>
         /// Write the primitive to the string builder.
         /// </summary>
-        /// <param name="prim">The primitive.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void AsString(Primitive prim, bool quoted, StringBuilder buf)
+        public override void AsString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
                 buf.Append(Name + ": ");
-                buf.Append(prim.ToString());
+                buf.Append(this.ToString());
             }
         }
 
@@ -136,22 +124,10 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the primitive.</param>
         /// <param name="caller">The calling Stepper.</param>
         /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        public override Stepper Apply(Obj args, Stepper caller)
         {
             // First check the number of arguments
-            int numArgs = List.Length(args);
-            if (numArgs < this.minArgs)
-            {
-                return (Stepper)ErrorHandlers.SemanticError("Primitive: too few args, " + numArgs + ", for " +
-                             this.ProcedureName + ": " + args);
-            }
-
-            if (numArgs > this.maxArgs)
-            {
-                return (Stepper)ErrorHandlers.SemanticError("Primitive: too many args, " + numArgs + ", for " +
-                             this.ProcedureName + ": " + args);
-            }
-
+            CheckArgs(args, "Primitive");
             caller.IncrementCounter(counter);
 
             // Execute the operation

@@ -84,8 +84,11 @@ namespace SimpleScheme
         protected static Stepper ApplyStep(Stepper s)
         {
             EvaluateProc step = (EvaluateProc)s;
-            s.Caller.Interp.CurrentOutputPort.WriteLine(
-                String.Format("{0}: ({1} {2})", StepperName, step.fn.ProcedureName, List.First(s.ReturnedExpr)));
+            if (s.Interp.Trace)
+            {
+                s.Caller.Interp.CurrentOutputPort.WriteLine(
+                    String.Format("{0}: ({1} {2})", StepperName, step.fn.ProcedureName, List.First(s.ReturnedExpr)));
+            }
 
             return step.fn.Apply(s.ReturnedExpr, s.Caller);
         }

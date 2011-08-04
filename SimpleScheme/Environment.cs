@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
@@ -83,14 +82,18 @@ namespace SimpleScheme
         {
             this.Interp = lexicalParent.Interp;
             this.LexicalParent = lexicalParent;
+#if FALSE
             int count;
             if (!CheckArgCount(formals, vals, out count))
             {
                 ErrorHandlers.Warn("Wrong number of arguments: expected " + formals + " got " + vals);
             }
-
-            this.symbolTable = new SymbolTable(count);
-            this.symbolTable.AddList(formals, vals);
+            int count1 = List.Length(formals);
+if(count != count1)
+{
+}
+#endif
+            this.symbolTable = new SymbolTable(formals, vals);
         }
         #endregion
 
@@ -297,6 +300,7 @@ namespace SimpleScheme
         }
         #endregion
 
+#if FALSE
         #region Private Methods
         /// <summary>
         /// Check that the variable and value lists have the same length.
@@ -307,14 +311,13 @@ namespace SimpleScheme
         /// <param name="vars">The variable list</param>
         /// <param name="vals">The value list</param>
         /// <param name="count">The number of variables in the list</param>
-        /// <returns>True if the lists are both empty lists, if the variable list is just a string, 
+        /// <returns>True if the lists are both empty lists, if the variable list is just a symbol, 
         /// or if they are both lists of the same length.</returns>
         private static bool CheckArgCount(Obj vars, Obj vals, out int count)
         {
             count = 0;
             while (true)
             {
-                // (vars is empty && vals is empty) || vars is empty ==> vars is empty 
                 if (EmptyList.Is(vars))
                 {
                     return EmptyList.Is(vals);
@@ -322,7 +325,7 @@ namespace SimpleScheme
 
                 if (!Pair.Is(vars) || !Pair.Is(vals))
                 {
-                    return false;
+                    return Symbol.Is(vars);
                 }
 
                 vars = List.Rest(vars);
@@ -331,6 +334,7 @@ namespace SimpleScheme
             }
         }
         #endregion
+#endif
 
         #region Private Class
         /// <summary>
@@ -357,6 +361,17 @@ namespace SimpleScheme
             }
 
             /// <summary>
+            /// Initializes a new instance of the Environment.SymbolTable class and adds symbols.
+            /// </summary>
+            /// <param name="symbols">The list of symbols.</param>
+            /// <param name="vals">The list of values.</param>
+            public SymbolTable(Obj symbols, Obj vals)
+            {
+                this.symbolTable = new Dictionary<string, Obj>(List.Length(symbols));
+                this.AddList(symbols, vals);
+            }
+
+            /// <summary>
             /// Look up a symbol given its name.
             /// </summary>
             /// <param name="symbol">The symbol to look up.</param>
@@ -380,36 +395,6 @@ namespace SimpleScheme
             public void Add(Obj symbol, Obj val)
             {
                 this.symbolTable[Symbol.As(symbol)] = val;
-            }
-
-            /// <summary>
-            /// Add a list of symbols and values.
-            /// The list of symbols and their values must be the same length.
-            /// </summary>
-            /// <param name="symbols">The list of symbols.</param>
-            /// <param name="vals">The list of values.</param>
-            public void AddList(Obj symbols, Obj vals)
-            {
-                while (!EmptyList.Is(symbols))
-                {
-                    if (Symbol.Is(symbols))
-                    {
-                        this.Add(symbols, vals);
-                    }
-                    else
-                    {
-                        Obj symbol = List.First(symbols);
-                        if (!Symbol.Is(symbol))
-                        {
-                            ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
-                        }
-
-                        this.Add(symbol, List.First(vals));
-                    }
-
-                    symbols = List.Rest(symbols);
-                    vals = List.Rest(vals);
-                }
             }
 
             /// <summary>
@@ -440,6 +425,36 @@ namespace SimpleScheme
                 foreach (var key in this.symbolTable.Keys)
                 {
                     sb.AppendFormat("{0}{1}: {2}\n", initial, key, this.symbolTable[key]);
+                }
+            }
+
+            /// <summary>
+            /// Add a list of symbols and values.
+            /// The list of symbols and their values must be the same length.
+            /// </summary>
+            /// <param name="symbols">The list of symbols.</param>
+            /// <param name="vals">The list of values.</param>
+            private void AddList(Obj symbols, Obj vals)
+            {
+                while (!EmptyList.Is(symbols))
+                {
+                    if (Symbol.Is(symbols))
+                    {
+                        this.Add(symbols, vals);
+                    }
+                    else
+                    {
+                        Obj symbol = List.First(symbols);
+                        if (!Symbol.Is(symbol))
+                        {
+                            ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
+                        }
+
+                        this.Add(symbol, List.First(vals));
+                    }
+
+                    symbols = List.Rest(symbols);
+                    vals = List.Rest(vals);
                 }
             }
         }

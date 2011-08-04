@@ -137,37 +137,37 @@ namespace SimpleScheme
         // Destructive list operations
 
         /// <summary>
-        /// Set the first member of a pair destructively.
+        /// Set the First member of a pair destructively.
         /// </summary>
-        /// <param name="x">The pair whose first member we want to modify.</param>
-        /// <param name="y">The new value to put into it.</param>
-        /// <returns>The obj that has just been modified.</returns>
-        public static Obj SetFirst(Obj x, Obj y)
+        /// <param name="pair">The pair whose First cell we want to modify.</param>
+        /// <param name="newValue">The new value to put into it.</param>
+        /// <returns>Undefined instance.</returns>
+        public static Obj SetFirst(Obj pair, Obj newValue)
         {
-            if (Pair.Is(x))
+            if (Pair.Is(pair))
             {
-                ((Pair)x).First = y;
+                ((Pair)pair).First = newValue;
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(x));
+            return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(pair));
         }
 
         /// <summary>
-        /// Set the second member of a pair (the rest) destructively.
+        /// Set the Rest member of a pair destructively.
         /// </summary>
-        /// <param name="x">The pair whose second member we want to modify.</param>
-        /// <param name="y">The new value to put into it.</param>
-        /// <returns>The obj that has just been modified.</returns>
-        public static Obj SetRest(Obj x, Obj y)
+        /// <param name="pair">The pair whose Rest cell we want to modify.</param>
+        /// <param name="newTail">The new value to put into it.</param>
+        /// <returns>Undefined instance.</returns>
+        public static Obj SetRest(Obj pair, Obj newTail)
         {
-            if (Pair.Is(x))
+            if (Pair.Is(pair))
             {
-                ((Pair)x).Rest = y;
+                ((Pair)pair).Rest = newTail;
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(x));
+            return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(pair));
         }
 
         /// <summary>
@@ -408,6 +408,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Tests to see if the given obj is a list.
+        /// Tests for short loops, but if there is a bigger loop, this will hang.
         /// </summary>
         /// <param name="x">The obj to test.</param>
         /// <returns>True if the obj is a list.</returns>

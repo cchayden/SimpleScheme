@@ -70,7 +70,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("macro: ");
+                buf.Append(Name + ": ");
                 buf.Append(this.ToString());
             }
         }

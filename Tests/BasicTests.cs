@@ -157,7 +157,7 @@ namespace Tests
                 while (true)
                 {
                     Obj x;
-                    if (InputPort.IsEof(x = InputPort.Read(inp)))
+                    if (InputPort.IsEof(x = inp.Read()))
                     {
                         return last;
                     }

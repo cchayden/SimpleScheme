@@ -447,7 +447,7 @@ namespace Tests
             using (StringWriter writer = new StringWriter())
             {
                 var outp = new OutputPort(writer, (Interpreter)this.interpreter);
-                OutputPort_Accessor.Write("abc", outp);
+                outp.Write("abc");
                 Assert.AreEqual("abc", writer.ToString());
             }
         }

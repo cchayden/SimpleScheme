@@ -42,25 +42,29 @@ namespace SimpleScheme
         private AsynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
             : base(targetClassName, methodName)
         {
-            this.ArgClasses = this.ClassListBegin(argClassNames);
-            Type cls = TypePrimitives.ToClass(ClassName);
-            if (cls == null)
+            try
             {
-                ErrorHandlers.ClrError("Bad class: can't get type: " + ClassName);
-                return; // actually Error throws an exception
-            }
+                this.ArgClasses = this.ClassListBegin(argClassNames);
+                this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
+                Type cls = TypePrimitives.ToClass(ClassName);
+                string beginName = "Begin" + this.MethodName;
+                this.MethodInfo = cls.GetMethod(beginName, this.ArgClasses.ToArray());
+                if (this.MethodInfo == null)
+                {
+                    ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + beginName);
+                }
 
-            this.MethodInfo = cls.GetMethod("Begin" + this.MethodName, this.ArgClasses.ToArray());
-            if (this.MethodInfo == null)
-            {
-                ErrorHandlers.ClrError("Can't get BeginXXX method: " + this.MethodName);
+                Type[] endClasses = { typeof(IAsyncResult) };
+                string endName = "End" + this.MethodName;
+                this.endMethodInfo = cls.GetMethod(endName, endClasses);
+                if (this.endMethodInfo == null)
+                {
+                    ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + endName);
+                }
             }
-
-            Type[] endClasses = { typeof(IAsyncResult) };
-            this.endMethodInfo = cls.GetMethod("End" + this.MethodName, endClasses);
-            if (this.endMethodInfo == null)
+            catch (TypeLoadException)
             {
-                ErrorHandlers.ClrError("Can't get EndXXX method: " + this.MethodName);
+                ErrorHandlers.ClrError("Bad class, can't load: " + ClassName);
             }
         }
         #endregion
@@ -148,6 +152,7 @@ namespace SimpleScheme
         {
             Obj target;
             Obj[] argArray;
+            CheckArgs(args, "AsynchronousClrProcedure");
             if (this.MethodInfo.IsStatic)
             {
                 target = Undefined.Instance;
