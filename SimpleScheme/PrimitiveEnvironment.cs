@@ -125,7 +125,7 @@ namespace SimpleScheme
                     "exit",
                     (args, caller) =>
                     {
-                        System.Environment.Exit(EmptyList.IsEmptyList(List.First(args)) ? 0 : (int)Number.Num(List.First(args)));
+                        System.Environment.Exit(EmptyList.Is(List.First(args)) ? 0 : (int)Number.As(List.First(args)));
                         return Undefined.Instance;
                     },
                     0,

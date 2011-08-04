@@ -11,6 +11,13 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Continuation : Procedure
     {
+        #region Constants
+        /// <summary>
+        /// The name of the stepper, used for counters and tracing.
+        /// </summary>
+        public new const string Name = "continuation";
+        #endregion
+
         #region Fields
         /// <summary>
         /// The step to execute when the continuation is applied.
@@ -33,13 +40,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Public Static Methods
         /// <summary>
         /// Tests whether to given object is a scheme continuation.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme continuation.</returns>
-        public static bool IsContinuation(Obj obj)
+        public static new bool Is(Obj obj)
         {
             return obj is Continuation;
         }
@@ -49,9 +56,24 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The continuation.</returns>
-        public static Continuation AsContinuation(Obj obj)
+        public static new Continuation As(Obj obj)
         {
             return (Continuation)obj;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Write the continuation to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("<" + Name + ">");
+            }
         }
 
         /// <summary>
@@ -80,26 +102,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the continuation to the string builder.
-        /// </summary>
-        /// <param name="cont">The continuation (not used).</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Continuation cont, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("<continuation>");
-            }
-        }
-    }
-    #endregion
 }

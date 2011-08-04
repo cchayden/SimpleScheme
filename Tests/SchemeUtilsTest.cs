@@ -37,8 +37,8 @@ namespace Tests
         [TestMethod]
         public void ChrTest()
         {
-            Assert.AreEqual('a', Character.AsCharacter('a'));
-            AssertEx.Throws(() => Character.AsCharacter(0));
+            Assert.AreEqual('a', Character.As('a'));
+            AssertEx.Throws(() => Character.As(0));
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Tests
         [TestMethod]
         public void ConsTest()
         {
-            var actual = List.Cons(1, 2);
+            var actual = Pair.Cons(1, 2);
             Assert.IsInstanceOfType(actual, typeof(Pair));
             Assert.AreEqual(1, List.First(actual));
             Assert.AreEqual(2, List.Rest(actual));
@@ -59,7 +59,7 @@ namespace Tests
         [TestMethod]
         public void SecondTest()
         {
-            var actual = List.Cons(1, List.Cons(2, 3));
+            var actual = Pair.Cons(1, Pair.Cons(2, 3));
             Assert.IsInstanceOfType(actual, typeof(Pair));
             Assert.AreEqual(2, List.Second(actual));
         }
@@ -70,7 +70,7 @@ namespace Tests
         [TestMethod]
         public void ThirdTest()
         {
-            var actual = List.Cons(1, List.Cons(2, List.Cons(3, 4)));
+            var actual = Pair.Cons(1, Pair.Cons(2, Pair.Cons(3, 4)));
             Assert.IsInstanceOfType(actual, typeof(Pair));
             Assert.AreEqual(3, List.Third(actual));
         }
@@ -81,7 +81,7 @@ namespace Tests
         [TestMethod]
         public void SetFirstTest()
         {
-            var actual = List.Cons(1, 2);
+            var actual = Pair.Cons(1, 2);
             List.SetFirst(actual, 10);
             Assert.AreEqual(10, List.First(actual));
             AssertEx.Throws(() => List.SetFirst(1, 10));
@@ -93,7 +93,7 @@ namespace Tests
         [TestMethod]
         public void SetRestTest()
         {
-            var actual = List.Cons(1, 2);
+            var actual = Pair.Cons(1, 2);
             List.SetRest(actual, 10);
             Assert.AreEqual(10, List.Rest(actual));
             AssertEx.Throws(() => List.SetRest(1, 10));
@@ -198,9 +198,9 @@ namespace Tests
         {
             Assert.AreEqual(0, List.Length(null));
             Assert.AreEqual(0, List.Length(0));
-            var actual = List.Cons(1, 2);
+            var actual = Pair.Cons(1, 2);
             Assert.AreEqual(1, List.Length(actual));
-            actual = List.Cons(1, List.Cons(2, 3));
+            actual = Pair.Cons(1, Pair.Cons(2, 3));
             Assert.AreEqual(2, List.Length(actual));
         }
 
@@ -240,7 +240,7 @@ namespace Tests
             actual = List.ListStar(List.New(10, List.New(11)));
             Assert.AreEqual(10, List.First(actual));
             Assert.AreEqual(11, List.First(List.Rest(actual)));
-            actual = List.ListStar(List.Cons(10, List.New(11, List.New(12))));
+            actual = List.ListStar(Pair.Cons(10, List.New(11, List.New(12))));
             Assert.AreEqual(10, List.First(actual));
             Assert.AreEqual(11, List.Second(actual));
             Assert.AreEqual(12, List.Third(actual));
@@ -254,15 +254,15 @@ namespace Tests
         public void ListToStringTest()
         {
             var expected = new[] { 'a', 'b' };
-            var actual = SchemeString.ListToString(List.New('a', 'b'));
+            var actual = SchemeString_Accessor.ListToString(List.New('a', 'b'));
             for (int i = 0; i < expected.Length; i++)
             {
                 Assert.AreEqual(expected[i], actual[i]);
             }
 
-            actual = SchemeString.ListToString(1);
+            actual = SchemeString_Accessor.ListToString(1);
             Assert.AreEqual(0, actual.Length);
-            AssertEx.Throws(() => SchemeString.ListToString(List.New(1, 2)));
+            AssertEx.Throws(() => SchemeString_Accessor.ListToString(List.New(1, 2)));
         }
 
         /// <summary>
@@ -287,16 +287,16 @@ namespace Tests
         [TestMethod]
         public void NumTest()
         {
-            Assert.AreEqual(0.0, Number.Num(0.0));
-            Assert.AreEqual(0.0, Number.Num(0));
-            AssertEx.Throws(() => Number.Num("0"));
-            Assert.AreEqual(1.0, Number.Num(1.0));
-            Assert.AreEqual(1.0, Number.Num(1));
-            AssertEx.Throws(() => Number.Num("1"));
-            AssertEx.Throws(() => Number.Num(false));
-            AssertEx.Throws(() => Number.Num('a'));
-            AssertEx.Throws(() => Number.Num("xxx"));
-            AssertEx.Throws(() => Number.Num("false"));
+            Assert.AreEqual(0.0, Number.As(0.0));
+            Assert.AreEqual(0.0, Number.As(0));
+            AssertEx.Throws(() => Number.As("0"));
+            Assert.AreEqual(1.0, Number.As(1.0));
+            Assert.AreEqual(1.0, Number.As(1));
+            AssertEx.Throws(() => Number.As("1"));
+            AssertEx.Throws(() => Number.As(false));
+            AssertEx.Throws(() => Number.As('a'));
+            AssertEx.Throws(() => Number.As("xxx"));
+            AssertEx.Throws(() => Number.As("false"));
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace Tests
         [TestMethod]
         public void StrTest()
         {
-            var actual = SchemeString.AsSchemeString(SchemeString.MakeString("abc"));
+            var actual = SchemeString.As(SchemeString.New("abc"));
             Assert.AreEqual(3, actual.Length);
             Assert.AreEqual('a', actual[0]);
             Assert.AreEqual('b', actual[1]);
@@ -397,8 +397,8 @@ namespace Tests
         [TestMethod]
         public void SymTest()
         {
-            Assert.AreEqual("abc", Symbol.AsSymbol("abc"));
-            AssertEx.Throws(() => Symbol.AsSymbol(1));
+            Assert.AreEqual("abc", Symbol.As("abc"));
+            AssertEx.Throws(() => Symbol.As(1));
         }
 
         /// <summary>
@@ -408,10 +408,10 @@ namespace Tests
         public void VecTest()
         {
             var test = new Obj[] { 1, 2 };
-            Assert.AreEqual(2, Vector.AsVector(test).Length);
-            Assert.AreEqual(1, Vector.AsVector(test)[0]);
-            Assert.AreEqual(2, Vector.AsVector(test)[1]);
-            AssertEx.Throws(() => Vector.AsVector(1));
+            Assert.AreEqual(2, Vector.As(test).Length);
+            Assert.AreEqual(1, Vector.As(test)[0]);
+            Assert.AreEqual(2, Vector.As(test)[1]);
+            AssertEx.Throws(() => Vector.As(1));
         }
 
         /// <summary>
@@ -421,7 +421,7 @@ namespace Tests
         public void VectorToListTest()
         {
             var test = new Obj[] { 1, 2, 3 };
-            var actual = Vector_Accessor.VectorToList(test);
+            var actual = Vector_Accessor.ToList(test);
             Assert.AreEqual(3, List.Length(actual));
             Assert.AreEqual(1, List.First(actual));
             Assert.AreEqual(2, List.Second(actual));
@@ -447,7 +447,7 @@ namespace Tests
             using (StringWriter writer = new StringWriter())
             {
                 var outp = new OutputPort(writer, (Interpreter)this.interpreter);
-                OutputPort.WriteObj("abc", outp);
+                OutputPort_Accessor.Write("abc", outp);
                 Assert.AreEqual("abc", writer.ToString());
             }
         }

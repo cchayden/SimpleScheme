@@ -59,7 +59,7 @@ namespace SimpleScheme
         {
             env
                 //// (dump-counters)
-                .DefinePrimitive("dump-counters", (args, caller) => caller.Interp.CurrentCounters.DumpCounters(caller), 0)
+                .DefinePrimitive("dump-counters", (args, caller) => caller.Interp.CurrentCounters.DumpCounters(caller.Interp.CurrentOutputPort), 0)
                 //// (get-counters)
                 .DefinePrimitive("get-counters", (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
@@ -111,12 +111,13 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the counters on the console.
         /// </summary>
+        /// <param name="port">The port to dump to.</param>
         /// <returns>The result is unspecified.</returns>
-        private Obj DumpCounters(Stepper caller)
+        private Obj DumpCounters(OutputPort port)
         {
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
-            caller.Interp.CurrentOutputPort.WriteLine(sb.ToString());
+            port.WriteLine(sb.ToString());
             return Undefined.Instance;
         }
 
@@ -132,7 +133,7 @@ namespace SimpleScheme
                 int count = this.counters[kvp.Value];
                 if (count > 0)
                 {
-                    res = List.Cons(List.Cons(kvp.Key, count), res);
+                    res = Pair.Cons(Pair.Cons(kvp.Key, count), res);
                 }
             }
 

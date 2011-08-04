@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair
+    public sealed class Pair : Printable
     {
         #region Constants
         /// <summary>
@@ -72,7 +72,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme pair.</returns>
-        public static bool IsPair(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is Pair;
         }
@@ -82,9 +82,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a pair.</returns>
-        public static Pair AsPair(Obj obj)
+        public static Pair As(Obj obj)
         {
-            if (IsPair(obj))
+            if (Is(obj))
             {
                 return (Pair)obj;
             }
@@ -103,7 +103,7 @@ namespace SimpleScheme
         /// <returns>True if they are both pairs and all elements are equal.</returns>
         public static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!IsPair(obj2))
+            if (!Is(obj2))
             {
                 return false;
             }
@@ -121,7 +121,7 @@ namespace SimpleScheme
                 obj1 = List.Rest(pair1);
                 obj2 = List.Rest(pair2);
 
-                if (!IsPair(obj1) || !IsPair(obj2))
+                if (!Is(obj1) || !Is(obj2))
                 {
                     return SchemeBoolean.Equal(obj1, obj2);
                 }
@@ -130,45 +130,38 @@ namespace SimpleScheme
                 pair2 = (Pair)obj2;
             }
         }
+
+        /// <summary>
+        /// Construct a pair from two objs.
+        /// </summary>
+        /// <param name="a">The first obj.</param>
+        /// <param name="b">The rest of the objs.</param>
+        /// <returns>The pair resulting from the construction.</returns>
+        public static Pair Cons(Obj a, Obj b)
+        {
+            return new Pair(a, b);
+        }
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Turn the pair into a string for display.
-        /// </summary>
-        /// <returns>A string representing the pair.</returns>
-        public override string ToString()
-        {
-            return Printer.AsString(this, true);
-        }
-        #endregion
-    }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
         /// <summary>
         /// Write the pair to the string builder.
         /// Handle some special forms separately.
         /// Otherwise, just iterate down the list printing each element.
         /// Also, detect and handle improper lists.
         /// </summary>
-        /// <param name="pair">The pair to print.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Pair pair, bool quoted, StringBuilder buf)
+        public override void AsString(bool quoted, StringBuilder buf)
         {
-            if (Pair.IsPair(List.Rest(pair)) && 
-                EmptyList.IsEmptyList(List.Rest(List.Rest(pair))))
+            Obj tail = List.Rest(this);
+            if (Is(tail) && EmptyList.Is(List.Rest(tail)))
             {
                 string special = null;
 
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
-                switch (List.First(pair) as string)
+                switch (List.First(this) as string)
                 {
                     case "quote":
                         special = "'";
@@ -189,19 +182,17 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    Printer.AsString(List.Second(pair), quoted, buf);
+                    Printer.AsString(List.Second(this), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            Printer.AsString(List.First(pair), quoted, buf);
-
-            Obj tail = List.Rest(pair);
+            Printer.AsString(List.First(this), quoted, buf);
 
             int len = 0;
-            while (Pair.IsPair(tail))
+            while (Is(tail))
             {
                 buf.Append(' ');
                 Printer.AsString(List.First(tail), quoted, buf);
@@ -225,7 +216,7 @@ namespace SimpleScheme
                 }
             }
 
-            if (!EmptyList.IsEmptyList(tail))
+            if (!EmptyList.Is(tail))
             {
                 buf.Append(" . ");
                 Printer.AsString(tail, quoted, buf);
@@ -233,6 +224,15 @@ namespace SimpleScheme
 
             buf.Append(')');
         }
+
+        /// <summary>
+        /// Turn the pair into a string for display.
+        /// </summary>
+        /// <returns>A string representing the pair.</returns>
+        public override string ToString()
+        {
+            return Printer.AsString(this, true);
+        }
+        #endregion
     }
-    #endregion
 }

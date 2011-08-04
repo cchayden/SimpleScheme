@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure
+    public abstract class Procedure : Printable
     {
         #region Constants
         /// <summary>
@@ -47,13 +47,29 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme procedure.
+        /// Tests whether to given object is a procedure.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme procedure.</returns>
-        public static bool IsProcedure(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is Procedure;
+        }
+
+        /// <summary>
+        /// Cast the given object to a procedure.
+        /// </summary>
+        /// <param name="x">The obj to test.</param>
+        /// <returns>The procedure.</returns>
+        public static Procedure As(Obj x)
+        {
+            if (Is(x))
+            {
+                return (Procedure)x;
+            }
+
+            ErrorHandlers.TypeError(Name, x);
+            return null;
         }
         #endregion
 
@@ -68,7 +84,7 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => ApplyPrimitive(List.First(args), List.Rest(args), caller), 2, MaxInt)
+                .DefinePrimitive("apply", (args, caller) => Apply(List.First(args), List.Rest(args), caller), 2, MaxInt)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive("call-with-current-continuation", (args, caller) => CallCc(List.First(args), caller), 1)
                 .DefinePrimitive("call/cc", (args, caller) => CallCc(List.First(args), caller), 1)
@@ -76,44 +92,38 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(AsProcedure(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(AsProcedure(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(IsProcedure(List.First(args))), 1);
-        }
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Check that the given object is a procedure.
-        /// </summary>
-        /// <param name="x">The obj to test.</param>
-        /// <returns>The procedure.</returns>
-        public static Procedure AsProcedure(Obj x)
-        {
-            if (IsProcedure(x))
-            {
-                return (Procedure)x;
-            }
-
-            ErrorHandlers.TypeError(Name, x);
-            return null;
-        }
-
-        /// <summary>
-        /// Force a promise.  The promise is a proc: apply it.
-        /// </summary>
-        /// <param name="promise">A proc that will produce the result.</param>
-        /// <param name="caller">The caller.</param>
-        /// <returns>The result of applying the proc.</returns>
-        public static Obj Force(Obj promise, Stepper caller)
-        {
-            return !IsProcedure(promise) ? promise : AsProcedure(promise).Apply(null, caller);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
         }
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Write the procedure to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(this.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Display the procedure as a string.
+        /// Since there is nothing to show, at least give the type.
+        /// </summary>
+        /// <returns>The procedure type name.</returns>
+        public override string ToString()
+        {
+            return "<" + Name + ">";
+        }
+
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// That is what it means to be a procedure.
@@ -142,62 +152,47 @@ namespace SimpleScheme
 
         /// <summary>
         /// Evaluate the procedure.
-        /// Macro, Closure, and other procs are evaluated differently.
+        /// At this point, the args are NOT evaluated
+        /// Macro is evaluated differently, and overrides this method.
+        /// This is a primitive, a closure, a continuation, or a CLR Procedure.
+        /// Evaluate the arguments in the environment, then apply the function 
+        ///    to the arguments.
         /// </summary>
-        /// <param name="args">The expression to evaluate.</param>
+        /// <param name="args">The arguments to the procedure.</param>
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next step toexecute.</returns>
-        public Stepper Evaluate(Obj args, Environment env, Stepper caller)
+        public virtual Stepper Evaluate(Obj args, Environment env, Stepper caller)
         {
-            // If the function is a macro, expand it and then continue.
-            if (Macro.IsMacro(this))
-            {
-                return EvaluateExpandMacro.Call((Macro)this, args, env, caller);
-            }
-
-            // If the function is a closure, then create a new environment consisting of
-            //   1 the closure param list
-            //   2 arguments evaluated in the original environment
-            //   3 the closure's environment
-            // Then continue evaluating the closure body in this new environment
-            if (Closure.IsClosure(this))
-            {
-                // Closure call -- capture the environment and evaluate the body
-                return EvaluateClosure.Call((Closure)this, args, env, caller);
-            }
-
-            // This is a procedure call.
-            // It is a primitive, a continuation, or a CLR Procedure.
-            // Evaluate the arguments in the environment, then apply the function 
-            //    to the arguments.
             return EvaluateProc.Call(this, args, env, caller);
-        }
-
-        /// <summary>
-        /// Display the procedure as a string.
-        /// Since there is nothing to show, at least give the type.
-        /// </summary>
-        /// <returns>The procedure type name.</returns>
-        public override string ToString()
-        {
-            return "<" + Name + ">";
         }
         #endregion
 
         #region Private Methods
         /// <summary>
-        /// Apply the given primitive to the args.
-        /// The args have NOT been evaluated, since primitives may not want this.
-        /// The proc HAS been evaluated.
+        /// Force a promise.  The promise is a proc: apply it.
+        /// </summary>
+        /// <param name="promise">A proc that will produce the result.</param>
+        /// <param name="caller">The caller.</param>
+        /// <returns>The result of applying the proc.</returns>
+        private static Obj Force(Obj promise, Stepper caller)
+        {
+            return !Is(promise) ? promise : As(promise).Apply(null, caller);
+        }
+
+        /// <summary>
+        /// Apply the given procedure to the args.
+        /// Proc has been evaluated, and the args have also been evaluated.
+        /// This calls the abstract function, which is dispatched to the version of
+        ///   Apply that is appropriate to the kind of procedure that proc is.
         /// </summary>
         /// <param name="proc">The procedure to apply.</param>
-        /// <param name="args">The (unevaluated) arguments.</param>
+        /// <param name="args">The arguments.</param>
         /// <param name="caller">The calling stepper.  Return to this when done.</param>
         /// <returns>The stepper to run next.</returns>
-        private static Stepper ApplyPrimitive(Obj proc, Obj args, Stepper caller)
+        private static Stepper Apply(Obj proc, Obj args, Stepper caller)
         {
-            return AsProcedure(proc).Apply(List.ListStar(args), caller);
+            return As(proc).Apply(List.ListStar(args), caller);
         }
 
         /// <summary>
@@ -210,31 +205,9 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private static Obj CallCc(Obj proc, Stepper caller)
         {
-            return AsProcedure(proc).Apply(
+            return As(proc).Apply(
                 List.New(new Continuation(EvaluateContinuation.Call(proc, caller.Env, caller))), caller);
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the procedure to the string builder.
-        /// </summary>
-        /// <param name="proc">The procedure (not used).</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Procedure proc, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(proc.ToString());
-            }
-        }
-    }
-    #endregion
 }

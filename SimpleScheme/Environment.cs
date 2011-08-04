@@ -163,15 +163,15 @@ namespace SimpleScheme
         /// <param name="val">This is the value of that variable.</param>
         public void UnsafeDefine(Obj var, Obj val)
         {
-            if (Symbol.IsSymbol(var))
+            if (Symbol.Is(var))
             {
                 lock (this)
                 {
                     this.symbolTable.Add(var, val);
 
-                    if (Procedure.IsProcedure(val))
+                    if (Procedure.Is(val))
                     {
-                        Procedure.AsProcedure(val).SetName(var.ToString());
+                        Procedure.As(val).SetName(var.ToString());
                     }
                 }
 
@@ -190,7 +190,7 @@ namespace SimpleScheme
         /// <returns>The value bound to the variable.</returns>
         public Obj UnsafeLookup(Obj var)
         {
-            string symbol = Symbol.AsSymbol(var);
+            string symbol = Symbol.As(var);
             Environment env = this;
 
             // search down the chain of environments for a definition
@@ -224,12 +224,12 @@ namespace SimpleScheme
         /// <returns>The value that the variable was set to.</returns>
         public Obj Set(Obj var, Obj val)
         {
-            if (!Symbol.IsSymbol(var))
+            if (!Symbol.Is(var))
             {
                 return ErrorHandlers.SemanticError("Attempt to set a non-symbol: " + Printer.AsString(var));
             }
 
-            string symbol = Symbol.AsSymbol(var);
+            string symbol = Symbol.As(var);
             Environment env = this;
 
             // search down the chain of environments for a definition
@@ -282,10 +282,9 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
-        /// <param name="interp">The interpreter.  Used to find the current output port.</param>
-        public void DumpEnv(Interpreter interp)
+        public void DumpEnv()
         {
-            interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
+            this.Interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>
@@ -316,12 +315,12 @@ namespace SimpleScheme
             while (true)
             {
                 // (vars is empty && vals is empty) || vars is empty ==> vars is empty 
-                if (EmptyList.IsEmptyList(vars))
+                if (EmptyList.Is(vars))
                 {
-                    return true;
+                    return EmptyList.Is(vals);
                 }
 
-                if (!Pair.IsPair(vars) || !Pair.IsPair(vals))
+                if (!Pair.Is(vars) || !Pair.Is(vals))
                 {
                     return false;
                 }
@@ -380,7 +379,7 @@ namespace SimpleScheme
             /// <param name="val">The value.</param>
             public void Add(Obj symbol, Obj val)
             {
-                this.symbolTable[Symbol.AsSymbol(symbol)] = val;
+                this.symbolTable[Symbol.As(symbol)] = val;
             }
 
             /// <summary>
@@ -391,16 +390,16 @@ namespace SimpleScheme
             /// <param name="vals">The list of values.</param>
             public void AddList(Obj symbols, Obj vals)
             {
-                while (!EmptyList.IsEmptyList(symbols))
+                while (!EmptyList.Is(symbols))
                 {
-                    if (Symbol.IsSymbol(symbols))
+                    if (Symbol.Is(symbols))
                     {
                         this.Add(symbols, vals);
                     }
                     else
                     {
                         Obj symbol = List.First(symbols);
-                        if (!Symbol.IsSymbol(symbol))
+                        if (!Symbol.Is(symbol))
                         {
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }

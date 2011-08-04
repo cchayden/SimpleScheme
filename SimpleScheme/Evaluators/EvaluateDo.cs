@@ -91,7 +91,7 @@ namespace SimpleScheme
         private static Obj ThirdOrFirst(object x)
         {
             Obj res = List.Third(x);
-            return EmptyList.IsEmptyList(res) ? List.First(x) : res;
+            return EmptyList.Is(res) ? List.First(x) : res;
         }
 
         /// <summary>
@@ -104,13 +104,13 @@ namespace SimpleScheme
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateDo step = (EvaluateDo)s;
-            if (EmptyList.IsEmptyList(s.Expr))
+            if (EmptyList.Is(s.Expr))
             {
                 ErrorHandlers.SemanticError("No body for do");
                 return s.ReturnUndefined();
             }
 
-            if (!Pair.IsPair(s.Expr))
+            if (!Pair.Is(s.Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for do: " + s.Expr);
                 return s.ReturnUndefined();
@@ -125,7 +125,7 @@ namespace SimpleScheme
             step.exprs = List.Rest(List.Second(s.Expr));
             step.commands = List.Rest(List.Rest(s.Expr));
 
-            if (EmptyList.IsEmptyList(test))
+            if (EmptyList.Is(test))
             {
                 return s.ReturnUndefined();
             }
@@ -168,7 +168,7 @@ namespace SimpleScheme
                 // Evaluate exprs and return the value of the last
                 //   in the environment of the vars.
                 // If no exprs, unspecified.
-                if (EmptyList.IsEmptyList(step.exprs))
+                if (EmptyList.Is(step.exprs))
                 {
                     return step.ReturnUndefined();
                 }

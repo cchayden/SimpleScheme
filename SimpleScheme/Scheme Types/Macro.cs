@@ -38,7 +38,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme macro.</returns>
-        public static bool IsMacro(Obj obj)
+        public static new bool Is(Obj obj)
         {
             return obj is Macro;
         }
@@ -48,9 +48,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a macro.</returns>
-        public static Macro AsMacro(Obj obj)
+        public static new Macro As(Obj obj)
         {
-            if (IsMacro(obj))
+            if (Is(obj))
             {
                 return (Macro)obj;
             }
@@ -62,6 +62,34 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Write the macro to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("macro: ");
+                buf.Append(this.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Evaluate the macro.
+        /// At this point, the args are NOT evaluated.
+        /// Expand the macro and then continue.
+        /// </summary>
+        /// <param name="args">The macro arguments.</param>
+        /// <param name="env">The environment to use for the application.</param>
+        /// <param name="caller">Return here when done.</param>
+        /// <returns>The next step toexecute.</returns>
+        public override Stepper Evaluate(Obj args, Environment env, Stepper caller)
+        {
+            return EvaluateExpandMacro.Call(this, args, env, caller);
+        }
+
+        /// <summary>
         /// Display the macro as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
         /// </summary>
@@ -72,27 +100,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the macro to the string builder.
-        /// </summary>
-        /// <param name="macro">The macro.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Macro macro, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("macro: ");
-                buf.Append(macro.ToString());
-            }
-        }
-    }
-    #endregion
 }

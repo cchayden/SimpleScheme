@@ -98,13 +98,13 @@ namespace SimpleScheme
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
-            if (EmptyList.IsEmptyList(s.Expr))
+            if (EmptyList.Is(s.Expr))
             {
                 ErrorHandlers.SemanticError("No arguments arguments for let*");
                 return s.ReturnUndefined();
             }
 
-            if (!Pair.IsPair(s.Expr))
+            if (!Pair.Is(s.Expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let*: " + s.Expr);
                 return s.ReturnUndefined();
@@ -113,7 +113,7 @@ namespace SimpleScheme
             step.bindings = List.First(s.Expr);
             step.body = List.Rest(s.Expr);
 
-            if (EmptyList.IsEmptyList(step.body))
+            if (EmptyList.Is(step.body))
             {
                 return s.ReturnUndefined();
             }
@@ -134,7 +134,7 @@ namespace SimpleScheme
         private static Stepper EvalInitStep(Stepper s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
-            if (EmptyList.IsEmptyList(step.inits))
+            if (EmptyList.Is(step.inits))
             {
                 return s.ContinueHere(ApplyLambdaStep);
             }
@@ -153,8 +153,8 @@ namespace SimpleScheme
         private static Stepper BindVarToInitStep(Stepper s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
-            step.formals = List.Cons(List.First(step.vars), step.formals);
-            step.vals = List.Cons(s.ReturnedExpr, step.vals);
+            step.formals = Pair.Cons(List.First(step.vars), step.formals);
+            step.vals = Pair.Cons(s.ReturnedExpr, step.vals);
             step.vars = List.Rest(step.vars);
             step.inits = List.Rest(step.inits);
             return s.ContinueHere(EvalInitStep);

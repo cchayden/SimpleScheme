@@ -69,7 +69,7 @@ namespace SimpleScheme
         private static Stepper EvalExprStep(Stepper s)
         {
             EvaluateParallel step = (EvaluateParallel)s;
-            if (EmptyList.IsEmptyList(step.expressions))
+            if (EmptyList.Is(step.expressions))
             {
                 return s.ReturnFromStep(Undefined.Instance);
             }

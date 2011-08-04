@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a synchronous CLR procedure.</returns>
-        public static bool IsAsynchronousClrProcedure(Obj obj)
+        public static new bool Is(Obj obj)
         {
             return obj is AsynchronousClrProcedure;
         }
@@ -81,26 +81,15 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a asynchronous clr procedure.</returns>
-        public static AsynchronousClrProcedure AsAsynchronousClrProcedure(Obj obj)
+        public static new AsynchronousClrProcedure As(Obj obj)
         {
-            if (IsAsynchronousClrProcedure(obj))
+            if (Is(obj))
             {
                 return (AsynchronousClrProcedure)obj;
             }
 
             ErrorHandlers.TypeError(Name, obj);
             return null;
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Display the asynchronous clr procedure as a string.  
-        /// </summary>
-        /// <returns>The string form of the procedure.</returns>
-        public override string ToString()
-        {
-            return Name;
         }
         #endregion
 
@@ -123,6 +112,29 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Display the asynchronous clr procedure as a string.  
+        /// </summary>
+        /// <returns>The string form of the procedure.</returns>
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        /// <summary>
+        /// Write the asynchronous clr procedure to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(Name + ": ");
+                buf.Append(this.ToString());
+            }
+        }
+
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -231,27 +243,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the asynchronous clr procedure to the string builder.
-        /// </summary>
-        /// <param name="proc">The asynchronous clr procedure.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this AsynchronousClrProcedure proc, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("asynchronous procedure: ");
-                buf.Append(proc.ToString());
-            }
-        }
-    }
-    #endregion
 }

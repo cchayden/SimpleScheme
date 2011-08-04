@@ -69,7 +69,7 @@ namespace SimpleScheme
                 return InputPort.Eof;
             }
 
-            return Character.AsCharacter((char)p);
+            return Character.As((char)p);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace SimpleScheme
                     return InputPort.Eof;
                 }
 
-                return Character.AsCharacter((char)ch);
+                return Character.As((char)ch);
             }
             catch (IOException ex)
             {
@@ -313,7 +313,7 @@ namespace SimpleScheme
                             ErrorHandlers.Warn("EOF inside of a string.");
                         }
 
-                        return SchemeString.MakeString(buff);
+                        return SchemeString.New(buff);
                     }
 
                 case '#':
@@ -339,25 +339,25 @@ namespace SimpleScheme
                                 token = this.NextToken();
                                 if (token is string && (token as string).Length == 1)
                                 {
-                                    return Character.AsCharacter((char)ch);
+                                    return Character.As((char)ch);
                                 }
 
                                 switch (token as string)
                                 {
                                     case "space":
-                                        return Character.AsCharacter(' ');
+                                        return Character.As(' ');
                                     case "newline":
-                                        return Character.AsCharacter('\n');
+                                        return Character.As('\n');
                                     default:
                                         // this isn't really right
                                         // #\<char> is required to have delimiter after char
                                         ErrorHandlers.Warn("#\\<char> must be followed by delimiter");
                                         this.tokStream.PushToken(token);
-                                        return Character.AsCharacter((char)ch);
+                                        return Character.As((char)ch);
                                 }
                             }
 
-                            return Character.AsCharacter((char)ch);
+                            return Character.As((char)ch);
 
                         case 'e':
                         case 'i':
@@ -441,7 +441,7 @@ namespace SimpleScheme
             }
 
             this.tokStream.PushToken(token);
-            return List.Cons(this.Read(), this.ReadTail(true));
+            return Pair.Cons(this.Read(), this.ReadTail(true));
         }
         #endregion
 
@@ -502,7 +502,7 @@ namespace SimpleScheme
                         return -1;
                     }
 
-                    return Character.AsCharacter((char)this.pushedChar);
+                    return Character.As((char)this.pushedChar);
                 }
 
                 return -2;

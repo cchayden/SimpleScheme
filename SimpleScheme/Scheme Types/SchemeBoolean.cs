@@ -30,24 +30,34 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Write the boolean to the string builder.
+        /// </summary>
+        /// <param name="value">The boolean value.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(bool value, bool quoted, StringBuilder buf)
+        {
+            buf.Append(value ? "#t" : "#f");
+        }
+
+        /// <summary>
         /// Tests whether to given object is a scheme boolean.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme boolean.</returns>
-        public static bool IsBoolean(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is bool;
         }
-
 
         /// <summary>
         /// Check that an oject is a scheme boolean.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme boolean.</returns>
-        public static bool AsSchemeBoolean(Obj obj)
+        public static bool As(Obj obj)
         {
-            if (IsBoolean(obj))
+            if (Is(obj))
             {
                 return (bool)obj;
             }
@@ -70,24 +80,24 @@ namespace SimpleScheme
         public static bool Equal(Obj obj1, Obj obj2)
         {
             // both empty list
-            if (EmptyList.IsEmptyList(obj1) || EmptyList.IsEmptyList(obj2))
+            if (EmptyList.Is(obj1) || EmptyList.Is(obj2))
             {
                 return obj1 == obj2;
             }
 
             // test strings
-            if (SchemeString.IsString(obj1))
+            if (SchemeString.Is(obj1))
             {
                 return SchemeString.Equal(obj1, obj2);
             }
 
             // test vectors
-            if (Vector.IsVector(obj1))
+            if (Vector.Is(obj1))
             {
                 return Vector.Equal(obj1, obj2);
             }
 
-            if (Pair.IsPair(obj1))
+            if (Pair.Is(obj1))
             {
                 return Pair.Equal(obj1, obj2);
             }
@@ -124,7 +134,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         public static bool IsFalse(Obj value)
         {
-            return IsBoolean(value) && (bool)value == false;
+            return Is(value) && (bool)value == false;
         }
 
         /// <summary>
@@ -135,7 +145,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
         public static bool IsTrue(Obj value)
         {
-            return IsBoolean(value) && (bool)value;
+            return Is(value) && (bool)value;
         }
 
         /// <summary>
@@ -161,7 +171,7 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(IsBoolean(List.First(args))), 1)
+                .DefinePrimitive("boolean?", (args, caller) => Truth(Is(List.First(args))), 1)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
@@ -169,29 +179,10 @@ namespace SimpleScheme
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(IsBoolean(List.First(args)) && (bool)List.First(args) == false), 1)
+                .DefinePrimitive("not", (args, caller) => Truth(Is(List.First(args)) && (bool)List.First(args) == false), 1)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.IsEmptyList(List.First(args))), 1);
+                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.Is(List.First(args))), 1);
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the boolean to the string builder.
-        /// </summary>
-        /// <param name="value">The boolean value.</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this bool value, bool quoted, StringBuilder buf)
-        {
-            buf.Append(value ? "#t" : "#f");
-        }
-    }
-    #endregion
 }

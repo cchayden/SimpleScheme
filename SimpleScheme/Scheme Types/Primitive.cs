@@ -82,7 +82,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme primitive.</returns>
-        public static bool IsPrimitive(Obj obj)
+        public static new bool Is(Obj obj)
         {
             return obj is Primitive;
         }
@@ -92,13 +92,28 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The primitive as an object.</param>
         /// <returns>The primitive.</returns>
-        public static Primitive AsPrimitive(Obj obj)
+        public static new Primitive As(Obj obj)
         {
             return (Primitive)obj;
         }
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Write the primitive to the string builder.
+        /// </summary>
+        /// <param name="prim">The primitive.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public void AsString(Primitive prim, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(Name + ": ");
+                buf.Append(prim.ToString());
+            }
+        }
+
         /// <summary>
         /// The string form of a proc is its name in curly brackets.
         /// </summary>
@@ -154,27 +169,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the primitive to the string builder.
-        /// </summary>
-        /// <param name="prim">The primitive.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Primitive prim, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("primitive: ");
-                buf.Append(prim.ToString());
-            }
-        }
-    }
-    #endregion
 }

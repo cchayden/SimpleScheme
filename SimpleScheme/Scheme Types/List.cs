@@ -76,41 +76,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Construct a pair from two objs.
-        /// </summary>
-        /// <param name="a">The first obj.</param>
-        /// <param name="b">The rest of the objs.</param>
-        /// <returns>The pair resulting from the construction.</returns>
-        public static Pair Cons(Obj a, Obj b)
-        {
-            return new Pair(a, b);
-        }
-
-        /// <summary>
-        /// Determine the length of a list.
-        /// </summary>
-        /// <param name="list">The list to measure.</param>
-        /// <returns>The list length.</returns>
-        public static int Length(Obj list)
-        {
-            int len = 0;
-            while (Pair.IsPair(list))
-            {
-                len++;
-                list = Rest(list);
-            }
-
-            return len;
-        }
-
-        /// <summary>
         /// Get the first member of a list.
         /// </summary>
         /// <param name="list">The list to use.</param>
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static Obj First(Obj list)
         {
-            return Pair.IsPair(list) ? ((Pair)list).First : EmptyList.Instance;
+            return Pair.Is(list) ? ((Pair)list).First : EmptyList.Instance;
         }
 
         /// <summary>
@@ -142,7 +114,24 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static Obj Rest(Obj list)
         {
-            return Pair.IsPair(list) ? ((Pair)list).Rest : EmptyList.Instance;
+            return Pair.Is(list) ? ((Pair)list).Rest : EmptyList.Instance;
+        }
+
+        /// <summary>
+        /// Determine the length of a list.
+        /// </summary>
+        /// <param name="list">The list to measure.</param>
+        /// <returns>The list length.</returns>
+        public static int Length(Obj list)
+        {
+            int len = 0;
+            while (Pair.Is(list))
+            {
+                len++;
+                list = Rest(list);
+            }
+
+            return len;
         }
 
         // Destructive list operations
@@ -155,7 +144,7 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         public static Obj SetFirst(Obj x, Obj y)
         {
-            if (Pair.IsPair(x))
+            if (Pair.Is(x))
             {
                 ((Pair)x).First = y;
                 return Undefined.Instance;
@@ -172,7 +161,7 @@ namespace SimpleScheme
         /// <returns>The obj that has just been modified.</returns>
         public static Obj SetRest(Obj x, Obj y)
         {
-            if (Pair.IsPair(x))
+            if (Pair.Is(x))
             {
                 ((Pair)x).Rest = y;
                 return Undefined.Instance;
@@ -192,7 +181,7 @@ namespace SimpleScheme
         public static Obj ListStar(Obj args)
         {
             // only one arg -- take it
-            if (EmptyList.IsEmptyList(Rest(args)))
+            if (EmptyList.Is(Rest(args)))
             {
                 return First(args);
             }
@@ -205,7 +194,7 @@ namespace SimpleScheme
             Obj expr = args;
 
             // Iterate down the list, building a list of the results.
-            while (!EmptyList.IsEmptyList(Rest(expr)))
+            while (!EmptyList.Is(Rest(expr)))
             {
                 accum = (Pair)(accum.Rest = New(First(expr)));
                 expr = Rest(expr);
@@ -214,7 +203,7 @@ namespace SimpleScheme
             // Splice on the last arg
             // First, check that the last arg is a list.
             Obj rest = First(expr);
-            if (!Pair.IsPair(rest))
+            if (!Pair.Is(rest))
             {
                 ErrorHandlers.Error("ListStar: last argument is not a list: " + args);
             }
@@ -231,9 +220,9 @@ namespace SimpleScheme
         public static Obj Reverse(Obj x)
         {
             Obj result = EmptyList.Instance;
-            while (Pair.IsPair(x))
+            while (Pair.Is(x))
             {
-                result = Cons(First(x), result);
+                result = Pair.Cons(First(x), result);
                 x = Rest(x);
             }
 
@@ -255,7 +244,7 @@ namespace SimpleScheme
 
             // Iterate down the list, taking the function and building a list of the results.
             expr = First(expr);
-            while (Pair.IsPair(expr))
+            while (Pair.Is(expr))
             {
                 accum = (Pair)(accum.Rest = New(fun(First(expr))));
                 expr = Rest(expr);
@@ -295,9 +284,9 @@ namespace SimpleScheme
                 //// (rest <pair>)
                 .DefinePrimitive("rest", (args, caller) => Rest(First(args)), 1)
                 //// <r4rs section="6.3">(cons <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("cons", (args, caller) => Cons(First(args), Second(args)), 2)
+                .DefinePrimitive("cons", (args, caller) => Pair.Cons(First(args), Second(args)), 2)
                 //// <r4rs section="6.3">(length <list> ...)</r4rs>
-                .DefinePrimitive("length", (args, caller) => Number.Num(Length(First(args))), 1)
+                .DefinePrimitive("length", (args, caller) => Number.As(Length(First(args))), 1)
                 //// <r4rs section="6.3">(list <obj> ...)</r4rs>
                 .DefinePrimitive("list", (args, caller) => args, 0, MaxInt)
                 //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
@@ -314,7 +303,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
                 .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 2)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.IsPair(First(args))), 1)
+                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.Is(First(args))), 1)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
                 .DefinePrimitive("reverse", (args, caller) => Reverse(First(args)), 1)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
@@ -378,7 +367,7 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static Obj Append(Obj args)
         {
-            if (EmptyList.IsEmptyList(args))
+            if (EmptyList.Is(args))
             {
                 return EmptyList.Instance;
             }
@@ -386,7 +375,7 @@ namespace SimpleScheme
             Pair result = New();
             Pair accum = result;
 
-            while (!EmptyList.IsEmptyList(Rest(args)))
+            while (!EmptyList.Is(Rest(args)))
             {
                 accum = Append(accum, First(args));
                 args = Rest(args);
@@ -407,7 +396,7 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, Obj toCopy)
         {
-            while (!EmptyList.IsEmptyList(toCopy))
+            while (!EmptyList.Is(toCopy))
             {
                 tail.Rest = New(First(toCopy));
                 toCopy = Rest(toCopy);
@@ -426,12 +415,12 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (EmptyList.IsEmptyList(x))
+                if (EmptyList.Is(x))
                 {
                     return true;
                 }
 
-                if (!Pair.IsPair(x))
+                if (!Pair.Is(x))
                 {
                     return false;
                 }
@@ -454,7 +443,7 @@ namespace SimpleScheme
         /// <returns>The element after stepping down k steps.</returns>
         private static Obj ListRef(Obj list, Obj k)
         {
-            for (int i = (int)Number.Num(k); i > 0; i--)
+            for (int i = (int)Number.As(k); i > 0; i--)
             {
                 list = Rest(list);
             }
@@ -470,7 +459,7 @@ namespace SimpleScheme
         /// <returns>The list after stepping down k steps.</returns>
         private static Obj ListTail(Obj list, Obj k)
         {
-            for (int i = (int)Number.Num(k); i > 0; i--)
+            for (int i = (int)Number.As(k); i > 0; i--)
             {
                 list = Rest(list);
             }
@@ -489,7 +478,7 @@ namespace SimpleScheme
         /// <returns>The results that were found.</returns>
         private static Obj MemberAssoc(Obj obj, Obj list, Func<Obj, Obj> sel, Func<Obj, Obj, bool> eq)
         {
-            while (Pair.IsPair(list))
+            while (Pair.Is(list))
             {
                 if (eq(sel(First(list)), obj))
                 {

@@ -96,7 +96,7 @@ namespace Repl
             interp.GlobalEnv.Define("x", 10);
 
             // define a primitive in the global environment
-            interp.PrimEnv.DefinePrim("plus-one", (args, caller) => Number.Num(List.First(args)) + 1, 1);
+            interp.PrimEnv.DefinePrim("plus-one", (args, caller) => Number.As(List.First(args)) + 1, 1);
 
             // load a program stored in a string
             interp.Load("(p (plus-one x))");

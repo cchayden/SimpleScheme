@@ -26,11 +26,31 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Write the number to the string builder.
+        /// For numbers without a fractional part, write as an integer.
+        /// Otherwise, write as a double.
+        /// </summary>
+        /// <param name="d">The number.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(double d, bool quoted, StringBuilder buf)
+        {
+            if (d == Math.Round(d))
+            {
+                buf.Append((long)d);
+            }
+            else
+            {
+                buf.Append(d);
+            }
+        }
+
+        /// <summary>
         /// Tests whether to given object is a scheme number.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme number.</returns>
-        public static bool IsNumber(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is double || obj is float || obj is long || obj is int || obj is byte;
         }
@@ -40,7 +60,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The obj to convert.</param>
         /// <returns>The double contained in the obj.</returns>
-        public static double Num(Obj obj)
+        public static double As(Obj obj)
         {
             if (obj is double)
             {
@@ -78,43 +98,43 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.5.5">(* <z1> ...)</r4rs>
-                .DefinePrimitive("*", (args, caller) => NumCompute(args, (x, y) => x * y, 1.0), 0, MaxInt)
+                .DefinePrimitive("*", (args, caller) => Compute(args, (x, y) => x * y, 1.0), 0, MaxInt)
                 //// <r4rs section="6.5.5">(+ <z1> ...)</r4rs>
-                .DefinePrimitive("+", (args, caller) => NumCompute(args, (x, y) => x + y, 0.0), 0, MaxInt)
+                .DefinePrimitive("+", (args, caller) => Compute(args, (x, y) => x + y, 0.0), 0, MaxInt)
                 //// <r4rs section="6.5.5">(- <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(- <z>)</r4rs>
-                .DefinePrimitive("-", (args, caller) => NumCompute(args, (x, y) => x - y, 0.0), 1, MaxInt)
+                .DefinePrimitive("-", (args, caller) => Compute(args, (x, y) => x - y, 0.0), 1, MaxInt)
                 //// <r4rs section="6.5.5">(/ <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z1> <z2> ...)</r4rs>
-                .DefinePrimitive("/", (args, caller) => NumCompute(args, (x, y) => x / y, 1.0), 1, MaxInt)
+                .DefinePrimitive("/", (args, caller) => Compute(args, (x, y) => x / y, 1.0), 1, MaxInt)
                 //// <r4rs section="6.5.5">(= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("=", (args, caller) => NumCompare(args, (x, y) => x == y), 2, MaxInt)
+                .DefinePrimitive("=", (args, caller) => Compare(args, (x, y) => x == y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(< <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("<", (args, caller) => NumCompare(args, (x, y) => x < y), 2, MaxInt)
+                .DefinePrimitive("<", (args, caller) => Compare(args, (x, y) => x < y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(> <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive(">", (args, caller) => NumCompare(args, (x, y) => x > y), 2, MaxInt)
+                .DefinePrimitive(">", (args, caller) => Compare(args, (x, y) => x > y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(<= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("<=", (args, caller) => NumCompare(args, (x, y) => x <= y), 2, MaxInt)
+                .DefinePrimitive("<=", (args, caller) => Compare(args, (x, y) => x <= y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(>= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive(">=", (args, caller) => NumCompare(args, (x, y) => x >= y), 2, MaxInt)
+                .DefinePrimitive(">=", (args, caller) => Compare(args, (x, y) => x >= y), 2, MaxInt)
                 //// <r4rs section="6.5.5">(abs <x>)</r4rs>
-                .DefinePrimitive("abs", (args, caller) => Num(Math.Abs(Num(List.First(args)))), 1)
+                .DefinePrimitive("abs", (args, caller) => Math.Abs(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(ceiling <x>)</r4rs>
-                .DefinePrimitive("ceiling", (args, caller) => Num(Math.Ceiling(Num(List.First(args)))), 1)
+                .DefinePrimitive("ceiling", (args, caller) => Math.Ceiling(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(floor <x>)</r4rs>
-                .DefinePrimitive("floor", (args, caller) => Num(Math.Floor(Num(List.First(args)))), 1)
+                .DefinePrimitive("floor", (args, caller) => Math.Floor(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(acos <z>)</r4rs>
-                .DefinePrimitive("acos", (args, caller) => Num(Math.Acos(Num(List.First(args)))), 1)
+                .DefinePrimitive("acos", (args, caller) => Math.Acos(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(asin <z>)</r4rs>
-                .DefinePrimitive("asin", (args, caller) => Num(Math.Asin(Num(List.First(args)))), 1)
+                .DefinePrimitive("asin", (args, caller) => Math.Asin(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(atan <z>)</r4rs>
                 //// <r4rs section="6.5.5">(atan <y> <x>)</r4rs>
-                .DefinePrimitive("atan", (args, caller) => Num(Math.Atan(Num(List.First(args)))), 1)
+                .DefinePrimitive("atan", (args, caller) => Math.Atan(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(complex? <obj>)</r4rs>
-                .DefinePrimitive("complex?", (args, caller) => IsSchemeNumber(List.First(args)), 1)
+                .DefinePrimitive("complex?", (args, caller) => Is(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(cos <z>)</r4rs>
-                .DefinePrimitive("cos", (args, caller) => Num(Math.Cos(Num(List.First(args)))), 1)
+                .DefinePrimitive("cos", (args, caller) => Math.Cos(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(even? <n>)</r4rs>
                 .DefinePrimitive("even?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 == 0), 1)
                 //// <r4rs section="6.5.5">(exact? <obj>)</r4rs>
@@ -122,27 +142,27 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(exact->inexact <z>)</r4rs>
                 .DefinePrimitive("exact->inexact", (args, caller) => Num(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(exp <z>)</r4rs>
-                .DefinePrimitive("exp", (args, caller) => Num(Math.Exp(Num(List.First(args)))), 1)
+                .DefinePrimitive("exp", (args, caller) => Math.Exp(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(expt <z>)</r4rs>
                 .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (args, caller) => EmptyList.IsEmptyList(args) ? 0 : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (args, caller) => EmptyList.Is(args) ? 0 : Gcd(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(inexact->exact <z>)</r4rs>
                 .DefinePrimitive("inexact->exact", (args, caller) => Num(List.First(args)), 1)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
-                .DefinePrimitive("integer->char", (args, caller) => Character.AsCharacter((char)(int)Num(List.First(args))), 1)
+                .DefinePrimitive("integer->char", (args, caller) => Character.As((char)(int)Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (args, caller) => EmptyList.IsEmptyList(args) ? 1 : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (args, caller) => EmptyList.Is(args) ? 1 : Lcm(args), 0, MaxInt)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
-                .DefinePrimitive("log", (args, caller) => Num(Math.Log(Num(List.First(args)))), 1)
+                .DefinePrimitive("log", (args, caller) => Math.Log(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("max", (args, caller) => NumCompute(args, (x, y) => Math.Max(x, y), Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("max", (args, caller) => Compute(args, (x, y) => Math.Max(x, y), Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(min? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("min", (args, caller) => NumCompute(args, (x, y) => Math.Min(x, y), Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("min", (args, caller) => Compute(args, (x, y) => Math.Min(x, y), Num(List.First(args))), 1, MaxInt)
                 //// <r4rs section="6.5.5">(module <n1> <n2>)</r4rs>
                 .DefinePrimitive("modulo", (args, caller) => Modulo(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(negative? <x>)</r4rs>
@@ -151,7 +171,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.6">(number->string <number> <radix>)</r4rs>
                 .DefinePrimitive("number->string", (args, caller) => NumberToString(List.First(args), List.Second(args)), 1, 2)
                 //// <r4rs section="6.5.5">(number? <obj>)</r4rs>
-                .DefinePrimitive("number?", (args, caller) => IsNumber(List.First(args)), 1)
+                .DefinePrimitive("number?", (args, caller) => Is(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(odd? <n>)</r4rs>
                 .DefinePrimitive("odd?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 != 0), 1)
                 //// <r4rs section="6.5.5">(positive? <x>)</r4rs>
@@ -163,15 +183,15 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(real? <obj>)</r4rs>
                 .DefinePrimitive("real?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(remainder <n1> <n2>)</r4rs>
-                .DefinePrimitive("remainder", (args, caller) => Num((long)Num(List.First(args)) % (long)Num(List.Second(args))), 2)
+                .DefinePrimitive("remainder", (args, caller) => (long)Num(List.First(args)) % (long)Num(List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(round <x>)</r4rs>
-                .DefinePrimitive("round", (args, caller) => Num(Math.Round(Num(List.First(args)))), 1)
+                .DefinePrimitive("round", (args, caller) => Math.Round(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(sin <z>)</r4rs>
-                .DefinePrimitive("sin", (args, caller) => Num(Math.Sin(Num(List.First(args)))), 1)
+                .DefinePrimitive("sin", (args, caller) => Math.Sin(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(sqrt <z>)</r4rs>
-                .DefinePrimitive("sqrt", (args, caller) => Num(Math.Sqrt(Num(List.First(args)))), 1)
+                .DefinePrimitive("sqrt", (args, caller) => Math.Sqrt(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(tan <z>)</r4rs>
-                .DefinePrimitive("tan", (args, caller) => Num(Math.Tan(Num(List.First(args)))), 1)
+                .DefinePrimitive("tan", (args, caller) => Math.Tan(Num(List.First(args))), 1)
                 //// <r4rs section="6.5.5">(truncate <x>)</r4rs>
                 .DefinePrimitive("truncate", (args, caller) => Truncate(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(zero? <z>)</r4rs>
@@ -181,6 +201,16 @@ namespace SimpleScheme
 
         #region Private Static Methods
         /// <summary>
+        /// Another name for As, works better here.
+        /// </summary>
+        /// <param name="obj">The object to cast.</param>
+        /// <returns>The object, cast to double.</returns>
+        private static double Num(Obj obj)
+        {
+            return As(obj);
+        }
+
+        /// <summary>
         /// Compute the greatest common divisor of a list of numbers.
         /// </summary>
         /// <param name="args">The list of numbers.</param>
@@ -188,13 +218,13 @@ namespace SimpleScheme
         private static Obj Gcd(Obj args)
         {
             long gcd = 0;
-            while (Pair.IsPair(args))
+            while (Pair.Is(args))
             {
                 gcd = Gcd2(Math.Abs((long)Num(List.First(args))), gcd);
                 args = List.Rest(args);
             }
 
-            return Num(gcd);
+            return gcd;
         }
 
         /// <summary>
@@ -219,23 +249,13 @@ namespace SimpleScheme
         /// <returns>True if the number is exact.</returns>
         private static bool IsExact(Obj x)
         {
-            if (!IsNumber(x))
+            if (!Is(x))
             {
                 return false;
             }
 
             double d = Num(x);
             return d == Math.Round(d) && Math.Abs(d) < 9007199254740992.0;
-        }
-
-        /// <summary>
-        /// Tests if a object is a number.
-        /// </summary>
-        /// <param name="x">The number to test.</param>
-        /// <returns>True if it is a number.</returns>
-        private static bool IsSchemeNumber(Obj x)
-        {
-            return IsNumber(x);
         }
 
         /// <summary>
@@ -246,7 +266,7 @@ namespace SimpleScheme
         private static Obj Lcm(Obj args)
         {
             long lcm = 1;
-            while (Pair.IsPair(args))
+            while (Pair.Is(args))
             {
                 long n = Math.Abs((long)Num(List.First(args)));
                 long g = Gcd2(n, lcm);
@@ -261,18 +281,19 @@ namespace SimpleScheme
         /// Convert a number to its string equivalent.
         /// Optionally, use a number base different from 10.
         /// </summary>
-        /// <param name="x">The number to convert.</param>
-        /// <param name="y">The number base.</param>
+        /// <param name="num">The number to convert.</param>
+        /// <param name="numberBase">The number base.</param>
         /// <returns>A string version of the number.</returns>
-        private static Obj NumberToString(Obj x, Obj y)
+        private static Obj NumberToString(Obj num, Obj numberBase)
         {
-            int numberBase = IsNumber(y) ? (int)Num(y) : 10;
-            if (numberBase != 10 || Num(x) == Math.Round(Num(x)))
+            double d = Num(num);
+            int b = Is(numberBase) ? (int)Num(numberBase) : 10;
+            if (b != 10 || d == Math.Round(d))
             {
-                return Convert.ToString((long)Num(x), numberBase).ToCharArray();
+                return Convert.ToString((long)d, b).ToCharArray();
             }
 
-            return x.ToString().ToCharArray();
+            return num.ToString().ToCharArray();
         }
 
         /// <summary>
@@ -283,9 +304,9 @@ namespace SimpleScheme
         /// <param name="comp">The compare operation to apply successively to pairs of 
         ///     adjacent numbers.</param>
         /// <returns>True only if all comparisons are true.</returns>
-        private static Obj NumCompare(Obj args, Func<double, double, bool> comp)
+        private static Obj Compare(Obj args, Func<double, double, bool> comp)
         {
-            while (Pair.IsPair(List.Rest(args)))
+            while (Pair.Is(List.Rest(args)))
             {
                 if (! comp(Num(List.First(args)), Num(List.Second(args))))
                 {
@@ -307,23 +328,23 @@ namespace SimpleScheme
         /// <param name="oper">The operation to apply</param>
         /// <param name="initial">The initial value of the computation.</param>
         /// <returns>The final result of the operation.</returns>
-        private static Obj NumCompute(Obj args, Func<double, double, double> oper, double initial)
+        private static Obj Compute(Obj args, Func<double, double, double> oper, double initial)
         {
             // If there are no numbers, apply return initial value
-            if (EmptyList.IsEmptyList(args))
+            if (EmptyList.Is(args))
             {
                 return initial;
             }
 
             double resultSoFar = Num(List.First(args));
-            if (EmptyList.IsEmptyList(List.Rest(args)))
+            if (EmptyList.Is(List.Rest(args)))
             {
                 // If there is one number, apply the operation on the initial value and value.
                 return oper(initial, resultSoFar);
             }
 
             args = List.Rest(args);
-            while (Pair.IsPair(args))
+            while (Pair.Is(args))
             {
                 // If there are several numbers, apply the operation on values and partial results.
                 resultSoFar = oper(resultSoFar, Num(List.First(args)));
@@ -388,32 +409,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the number to the string builder.
-        /// For numbers without a fractional part, write as an integer.
-        /// Otherwise, write as a double.
-        /// </summary>
-        /// <param name="d">The number.</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this double d, bool quoted, StringBuilder buf)
-        {
-            if (d == Math.Round(d))
-            {
-                buf.Append((long)d);
-            }
-            else
-            {
-                buf.Append(d);
-            }
-        }
-    }
-    #endregion
 }

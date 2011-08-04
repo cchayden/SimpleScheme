@@ -143,7 +143,7 @@ namespace SimpleScheme
             // do not create an evaluator -- just return the value directly.
             //
             // First look for a symbol.
-            if (Symbol.IsSymbol(expr))
+            if (Symbol.Is(expr))
             {
                 // Evaluate a symbol by looking it up in the environment.
                 // It should correspond to a variable name, for which there 
@@ -157,7 +157,7 @@ namespace SimpleScheme
             }
 
             // Look for all other non-pair forms.
-            if (!Pair.IsPair(expr))
+            if (!Pair.Is(expr))
             {
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.
@@ -368,7 +368,7 @@ namespace SimpleScheme
             EvaluateExpression step = (EvaluateExpression)s;
 
             // Come here after evaluating fn
-            return Procedure.AsProcedure(s.ReturnedExpr).Evaluate(step.args, s.Env, s.Caller);
+            return Procedure.As(s.ReturnedExpr).Evaluate(step.args, s.Env, s.Caller);
         }
 
         /// <summary>

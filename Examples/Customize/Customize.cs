@@ -14,7 +14,7 @@ class Customize
         interp.GlobalEnv.Define("y", 20);
 
         // define a primitive in the global environment
-        primEnvironment.DefinePrim("plus-one", (args, caller) => Number.Num(List.First(args)) + 1, 1);
+        primEnvironment.DefinePrim("plus-one", (args, caller) => Number.As(List.First(args)) + 1, 1);
 
         // load a program stored in a string
         interp.Load("(p (plus-one x))");    // -> 11

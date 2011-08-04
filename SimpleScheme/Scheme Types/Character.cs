@@ -24,23 +24,46 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Write the character to the string builder.
+        /// </summary>
+        /// <param name="c">The character.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(char c, bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("#\\");
+            }
+
+            if (c == ' ')
+            {
+                buf.Append("space");
+            }
+            else
+            {
+                buf.Append(c);
+            }
+        }
+
+        /// <summary>
         /// Tests whether to given object is a scheme character.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme character.</returns>
-        public static bool IsCharacter(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is char;
         }
 
         /// <summary>
-        /// Checks that the object is a character.
+        /// Casts the object to a character.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The character.</returns>
-        public static char AsCharacter(Obj obj)
+        public static char As(Obj obj)
         {
-            if (IsCharacter(obj))
+            if (Is(obj))
             {
                 return (char)obj;
             }
@@ -59,47 +82,47 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
-                .DefinePrimitive("char->integer", (args, caller) => (double)AsCharacter(List.First(args)), 1)
+                .DefinePrimitive("char->integer", (args, caller) => (double)As(List.First(args)), 1)
                 //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
-                .DefinePrimitive("char-alphabetic?", (args, caller) => SchemeBoolean.Truth(char.IsLetter(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-alphabetic?", (args, caller) => SchemeBoolean.Truth(char.IsLetter(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci<=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) <= 0), 2)
+                .DefinePrimitive("char-ci<=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) <= 0), 2)
                 //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci<?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) < 0), 2)
+                .DefinePrimitive("char-ci<?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) < 0), 2)
                 //// <r4rs section="6.6">(char-ci=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) == 0), 2)
+                .DefinePrimitive("char-ci=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) == 0), 2)
                 //// <r4rs section="6.6">(char-ci>=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci>=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) >= 0), 2)
+                .DefinePrimitive("char-ci>=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) >= 0), 2)
                 //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci>?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), true) > 0), 2)
+                .DefinePrimitive("char-ci>?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) > 0), 2)
                 //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
-                .DefinePrimitive("char-downcase", (args, caller) => AsCharacter(char.ToLower(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-downcase", (args, caller) => As(char.ToLower(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
-                .DefinePrimitive("char-lower-case?", (args, caller) => SchemeBoolean.Truth(char.IsLower(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-lower-case?", (args, caller) => SchemeBoolean.Truth(char.IsLower(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
-                .DefinePrimitive("char-numeric?", (args, caller) => SchemeBoolean.Truth(char.IsDigit(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-numeric?", (args, caller) => SchemeBoolean.Truth(char.IsDigit(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
-                .DefinePrimitive("char-upcase", (args, caller) => AsCharacter(char.ToUpper(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-upcase", (args, caller) => As(char.ToUpper(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
-                .DefinePrimitive("char-upper-case?", (args, caller) => SchemeBoolean.Truth(char.IsUpper(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-upper-case?", (args, caller) => SchemeBoolean.Truth(char.IsUpper(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
-                .DefinePrimitive("char-whitespace?", (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(AsCharacter(List.First(args)))), 1)
+                .DefinePrimitive("char-whitespace?", (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(As(List.First(args)))), 1)
                 //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char<=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) <= 0), 2)
+                .DefinePrimitive("char<=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) <= 0), 2)
                 //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char<?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) < 0), 2)
+                .DefinePrimitive("char<?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) < 0), 2)
                 //// <r4rs section="6.6">(char=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) == 0), 2)
+                .DefinePrimitive("char=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) == 0), 2)
                 //// <r4rs section="6.6">(char>=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char>=?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) >= 0), 2)
+                .DefinePrimitive("char>=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) >= 0), 2)
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(ChrCompare(List.First(args), List.Second(args), false) > 0), 2)
+                .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) > 0), 2)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
-                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(IsCharacter(List.First(args))), 1);
+                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Private Static Methods
         /// <summary>
         /// Compares two characters.
         /// </summary>
@@ -108,49 +131,12 @@ namespace SimpleScheme
         /// <param name="caseInsensitive">If true, make the comparison case insensitive.</param>
         /// <returns>Negative if x is before y, positive if x is after y, 
         /// or 0 if they are the same.</returns>
-        public static int ChrCompare(Obj obj1, Obj obj2, bool caseInsensitive)
+        private static int Compare(Obj obj1, Obj obj2, bool caseInsensitive)
         {
-            char char1 = AsCharacter(obj1);
-            char char2 = AsCharacter(obj2);
-            if (caseInsensitive)
-            {
-                char1 = char.ToLower(char1);
-                char2 = char.ToLower(char2);
-            }
-
-            return char1 - char2;
+            char char1 = As(obj1);
+            char char2 = As(obj2);
+            return caseInsensitive ? char.ToLower(char1) - char.ToLower(char2) : char1 - char2;
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the character to the string builder.
-        /// </summary>
-        /// <param name="c">The character.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this char c, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("#\\");
-            }
-
-            if (c == ' ')
-            {
-                buf.Append("space");
-            }
-            else
-            {
-                buf.Append(c);
-            }
-        }
-    }
-    #endregion
 }

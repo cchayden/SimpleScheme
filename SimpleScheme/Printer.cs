@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
     using Obj = System.Object;
 
@@ -59,19 +58,16 @@ namespace SimpleScheme
             {
                 // Names for types implementing Scheme values, used for error messages.
                 case "System.Boolean":
-                    SchemeBoolean.Truth(x).AsString(quoted, buf);
+                    SchemeBoolean.AsString(SchemeBoolean.Truth(x), quoted, buf);
                     return;
                 case "System.String":
-                    Symbol.AsSymbol(x).AsString(quoted, buf);
+                    Symbol.AsString(Symbol.As(x), quoted, buf);
                     return;
                 case "System.Char":
-                    Character.AsCharacter(x).AsString(quoted, buf);
+                    Character.AsString(Character.As(x), quoted, buf);
                     return;
                 case "System.Object[]":
-                    Vector.AsVector(x).AsString(quoted, buf);
-                    return;
-                case "SimpleScheme.Pair":
-                    Pair.AsPair(x).AsString(quoted, buf);
+                    Vector.AsString(Vector.As(x), quoted, buf);
                     return;
                 case "System.Byte":
                 case "System.Int32":
@@ -79,43 +75,26 @@ namespace SimpleScheme
                 case "System.Int64":
                 case "System.Single": 
                 case "System.Double":
-                    Number.Num(x).AsString(quoted, buf);
+                    Number.AsString(Number.As(x), quoted, buf);
                     return;
                 case "System.Char[]":
-                    SchemeString.AsSchemeString(x).AsString(quoted, buf);
+                    SchemeString.AsString(SchemeString.As(x), quoted, buf);
                     return;
+                case "SimpleScheme.Pair":
                 case "SimpleScheme.Procedure":
-                    Procedure.AsProcedure(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.Primitive":
-                    Primitive.AsPrimitive(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.Continuation":
-                    Continuation.AsContinuation(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.Closure":
-                    Closure.AsClosure(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.Macro":
-                    Macro.AsMacro(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.InputPort":
-                    InputPort.AsInputPort(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.OutputPort":
-                    OutputPort.AsOutputPort(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.EmptyList":
-                    EmptyList.AsEmptyList(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.Stepper":
-                    Stepper.AsStepper(x).AsString(quoted, buf);
-                    return;
                 case "SimpleScheme.Undefined":
-                    Undefined.AsUndefined(x).AsString(quoted, buf);
+                    ((Printable)x).AsString(quoted, buf);
                     return;
                 default:
-                    // use the built-in ToString if not in the table
+                    // use the built-in ToString
                     buf.Append(x);   
                     return;
             }

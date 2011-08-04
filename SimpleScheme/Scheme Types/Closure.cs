@@ -65,7 +65,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme closure.</returns>
-        public static bool IsClosure(Obj obj)
+        public static new bool Is(Obj obj)
         {
             return obj is Closure;
         }
@@ -75,12 +75,26 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a closure.</returns>
-        public static Closure AsClosure(Obj obj)
+        public static new Closure As(Obj obj)
         {
             return (Closure)obj;
         }
 
         #region Public Methods
+        /// <summary>
+        /// Write the closure to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append("closure: ");
+                buf.Append(this.ToString());
+            }
+        }
+
         /// <summary>
         /// Display the closure as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
@@ -103,7 +117,7 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         public Stepper ApplyWithtEnv(Environment env, Stepper caller)
         {
-            return EmptyList.IsEmptyList(List.Rest(this.Body)) ? 
+            return EmptyList.Is(List.Rest(this.Body)) ? 
                 EvaluateExpression.Call(List.First(this.Body), env, caller) : 
                 EvaluateSequence.Call(this.Body, env, caller);
         }
@@ -139,27 +153,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the closure to the string builder.
-        /// </summary>
-        /// <param name="closure">The closure.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Closure closure, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("closure: ");
-                buf.Append(closure.ToString());
-            }
-        }
-    }
-    #endregion
 }

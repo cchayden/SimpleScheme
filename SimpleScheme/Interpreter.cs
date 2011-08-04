@@ -312,7 +312,7 @@ namespace SimpleScheme
                 Obj expr;
                 this.CurrentOutputPort.Write(Prompt);
                 this.CurrentOutputPort.Flush();
-                if (InputPort.IsEof(expr = this.CurrentInputPort.ReadObj()))
+                if (InputPort.IsEof(expr = InputPort.Read(this.CurrentInputPort)))
                 {
                     return new CompletedAsyncResult<string>(InputPort.Eof);
                 }
@@ -326,7 +326,6 @@ namespace SimpleScheme
                             {
                                 string output = Printer.AsString(val, false);
                                 this.CurrentOutputPort.WriteLine(output);
-                                this.CurrentOutputPort.Flush();
                             }
                         },
                     null);
@@ -596,7 +595,7 @@ namespace SimpleScheme
             while (true)
             {
                 Obj input;
-                if (InputPort.IsEof(input = inp.ReadObj()))
+                if (InputPort.IsEof(input = InputPort.Read(inp)))
                 {
                     inp.Close();
                     return Undefined.Instance;
@@ -665,7 +664,7 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         private Obj UnsafeRead(InputPort inp)
         {
-            return inp.ReadObj();
+            return InputPort.Read(inp);
         }
 
         /// <summary>
@@ -734,7 +733,7 @@ namespace SimpleScheme
             Obj expr;
             this.CurrentOutputPort.Write(Prompt);
             this.CurrentOutputPort.Flush();
-            if (InputPort.IsEof(expr = this.CurrentInputPort.ReadObj()))
+            if (InputPort.IsEof(expr = InputPort.Read(this.CurrentInputPort)))
             {
                 return InputPort.Eof;
             }
@@ -744,7 +743,6 @@ namespace SimpleScheme
             {
                 string output = Printer.AsString(val, false);
                 this.CurrentOutputPort.WriteLine(output);
-                this.CurrentOutputPort.Flush();
             }
 
             return val;

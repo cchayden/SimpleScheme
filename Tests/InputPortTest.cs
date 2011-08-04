@@ -183,19 +183,19 @@ namespace Tests
             using (StringReader reader = new StringReader(string.Empty))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual(InputPort.Eof, port.ReadObj());
+                Assert.AreEqual(InputPort.Eof, InputPort.Read(port));
             }
 
             using (StringReader reader = new StringReader("abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual("abc", port.ReadObj());
+                Assert.AreEqual("abc", InputPort.Read(port));
             }
 
             using (StringReader reader = new StringReader("(1 2 3)"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual(1.0, List.First(actual));
                 Assert.AreEqual(2.0, List.Second(actual));
                 Assert.AreEqual(3.0, List.Third(actual));
@@ -204,7 +204,7 @@ namespace Tests
             using (StringReader reader = new StringReader("('a 'b 'c)"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("quote", List.First(List.First(actual)));
                 Assert.AreEqual("a", List.Second(List.First(actual)));
                 Assert.AreEqual("quote", List.First(List.Second(actual)));
@@ -215,21 +215,21 @@ namespace Tests
             using (StringReader reader = new StringReader(")abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("abc", actual);
             }
 
             using (StringReader reader = new StringReader(". abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("abc", actual);
             }
 
             using (StringReader reader = new StringReader("'abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("quote", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
@@ -237,7 +237,7 @@ namespace Tests
             using (StringReader reader = new StringReader("`abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("quasiquote", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
@@ -245,7 +245,7 @@ namespace Tests
             using (StringReader reader = new StringReader(",abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("unquote", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }
@@ -253,7 +253,7 @@ namespace Tests
             using (StringReader reader = new StringReader(",@abc"))
             {
                 InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                var actual = port.ReadObj();
+                var actual = InputPort.Read(port);
                 Assert.AreEqual("unquote-splicing", List.First(actual));
                 Assert.AreEqual("abc", List.First(List.Rest(actual)));
             }

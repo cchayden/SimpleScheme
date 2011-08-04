@@ -4,6 +4,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     using Obj = System.Object;
 
     /// <summary>
@@ -33,11 +35,11 @@ namespace SimpleScheme
         /// Initializes a new instance of the EvaluateProc class.
         /// </summary>
         /// <param name="fn">The function to apply.</param>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="args">The arguments to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluateProc(Procedure fn, Obj expr, Environment env, Stepper caller)
-            : base(expr, env, caller)
+        protected EvaluateProc(Procedure fn, Obj args, Environment env, Stepper caller)
+            : base(args, env, caller)
         {
             this.fn = fn;
             ContinueHere(EvalArgsStep);
@@ -50,13 +52,13 @@ namespace SimpleScheme
         /// Call apply proc evaluator.
         /// </summary>
         /// <param name="fn">The function to apply.</param>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="args">The arguments to evaluate.</param>
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The apply proc evaluator.</returns>
-        public static Stepper Call(Procedure fn, Obj expr, Environment env, Stepper caller)
+        public static Stepper Call(Procedure fn, Obj args, Environment env, Stepper caller)
         {
-            return new EvaluateProc(fn, expr, env, caller);
+            return new EvaluateProc(fn, args, env, caller);
         }
         #endregion
 
@@ -82,8 +84,12 @@ namespace SimpleScheme
         protected static Stepper ApplyStep(Stepper s)
         {
             EvaluateProc step = (EvaluateProc)s;
+            s.Caller.Interp.CurrentOutputPort.WriteLine(
+                String.Format("{0}: ({1} {2})", StepperName, step.fn.ProcedureName, List.First(s.ReturnedExpr)));
+
             return step.fn.Apply(s.ReturnedExpr, s.Caller);
         }
+
         #endregion
 
         #region Private Methods

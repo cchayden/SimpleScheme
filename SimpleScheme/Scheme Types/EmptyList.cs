@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    public class EmptyList
+    public class EmptyList : Printable
     {
         #region Constants
         /// <summary>
@@ -26,13 +26,22 @@ namespace SimpleScheme
         public const string Name = "empty list";
         #endregion
 
+        #region Constructor
+        /// <summary>
+        /// Prevents a default instance of the EmptyList class from being created.
+        /// </summary>
+        private EmptyList()
+        {
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Tests whether to given object is a scheme empty list.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme empty list.</returns>
-        public static bool IsEmptyList(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is EmptyList;
         }
@@ -42,13 +51,23 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as an empty list.</returns>
-        public static EmptyList AsEmptyList(Obj obj)
+        public static EmptyList As(Obj obj)
         {
             return (EmptyList)obj;
         }
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Write the empty list to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            buf.Append(this.ToString());
+        }
+
         /// <summary>
         /// Print the empty list.
         /// </summary>
@@ -59,23 +78,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the empty list to the string builder.
-        /// </summary>
-        /// <param name="lst">The empty list (not used).</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this EmptyList lst, bool quoted, StringBuilder buf)
-        {
-            buf.Append("()");
-        }
-    }
-    #endregion
 }

@@ -9,13 +9,18 @@ namespace SimpleScheme
     /// <summary>
     /// Represents an undefined scheme value.
     /// </summary>
-    public class Undefined
+    public class Undefined : Printable
     {
-        #region Fields
+        #region Constants
         /// <summary>
         /// Keep one instance of this around to use when needed.
         /// </summary>
         public static readonly Undefined Instance = new Undefined();
+
+        /// <summary>
+        /// The printable name of the undefined type.
+        /// </summary>
+        public const string Name = "undefined";
         #endregion
 
         #region Constructor
@@ -33,7 +38,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme undefined object.</returns>
-        public static bool IsUndefined(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is Undefined;
         }
@@ -43,7 +48,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as an undefined object.</returns>
-        public static Undefined AsUndefined(Obj obj)
+        public static Undefined As(Obj obj)
         {
             return (Undefined)obj;
         }
@@ -51,38 +56,29 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Write the undefined object to the string builder.
+        /// If not quoted, write nothing.
+        /// One of the main reasons for this type is to suppress output.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(this.ToString());
+            }
+        }
+
+        /// <summary>
         /// Display the value as a string.
         /// Since there is nothing to show, at least give the type.
         /// </summary>
         /// <returns>The undefined type name.</returns>
         public override string ToString()
         {
-            return "<undefined>";
+            return "<" + Name + ">";
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the undefined object to the string builder.
-        /// If not quoted, write nothing.
-        /// One of the main reasons for this type is to suppress output.
-        /// </summary>
-        /// <param name="undef">The undefined object (not used).</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Undefined undef, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(undef.ToString());
-            }
-        }
-    }
-    #endregion
 }

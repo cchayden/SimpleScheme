@@ -69,7 +69,7 @@ namespace SimpleScheme
         private static Stepper EvalExprStep(Stepper s)
         {
             EvaluateSequence step = (EvaluateSequence)s;
-            if (EmptyList.IsEmptyList(List.Rest(step.expressions)))
+            if (EmptyList.Is(List.Rest(step.expressions)))
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.

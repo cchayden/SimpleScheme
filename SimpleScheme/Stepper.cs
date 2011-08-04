@@ -12,6 +12,12 @@ namespace SimpleScheme
     /// </summary>
     public class Stepper
     {
+        #region Constants
+        /// <summary>
+        /// The printable name of the scheme boolean type.
+        /// </summary>
+        public const string Name = "stepper";
+
         /// <summary>
         /// The expr in a halted stepper.
         /// </summary>
@@ -21,6 +27,7 @@ namespace SimpleScheme
         /// The expr in a suspended stepper.
         /// </summary>
         private const string Suspended = "*suspended*";
+        #endregion
 
         #region Fields
         /// <summary>
@@ -40,13 +47,13 @@ namespace SimpleScheme
         /// Initializes a new instance of the Stepper class.
         /// This class is not instantiated itself, but only derived classes.
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="args">The expression to evaluate.</param>
         /// <param name="env">The evaluator environment.</param>
         /// <param name="caller">The caller evaluator.</param>
-        protected Stepper(Obj expr, Environment env, Stepper caller)
+        protected Stepper(Obj args, Environment env, Stepper caller)
         {
             this.Caller = caller;
-            this.Expr = expr;
+            this.Expr = args;
             this.Env = env;
             this.traced = false;
         }
@@ -133,17 +140,18 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme stepper.</returns>
-        public static bool IsStepper(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is Stepper;
         }
 
         /// <summary>
-        /// Convert object to stepper.
+        /// Cast object to stepper.
+        /// If obj is not really a stepper, then this is going to throw an exception.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a stepper.</returns>
-        public static Stepper AsStepper(Obj obj)
+        public static Stepper As(Obj obj)
         {
             return (Stepper)obj;
         }
@@ -192,6 +200,19 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Write the stepper to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(this.IsSuspended ? "<suspended>" : "<" + Name + ">");
+            }
+        }
+
         /// <summary>
         /// Makes a copy of the step.  Each subclass makes a copy of its own member variables.
         /// This is needed to support continuations, because the step contains mutable state.  If the state 
@@ -400,7 +421,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder buf)
         {
             buf.AppendFormat("Step {0}\n", TypePrimitives.TypeName(this));
-            string exp = EmptyList.IsEmptyList(this.Expr) ? "()" : this.Expr.ToString();
+            string exp = EmptyList.Is(this.Expr) ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {
@@ -409,26 +430,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the stepper to the string builder.
-        /// </summary>
-        /// <param name="stepper">The stepper.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Stepper stepper, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(stepper.IsSuspended ? "<suspended>" : "<stepper>");
-            }
-        }
-    }
-    #endregion
 }

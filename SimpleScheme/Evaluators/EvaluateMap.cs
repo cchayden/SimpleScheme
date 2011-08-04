@@ -102,12 +102,12 @@ namespace SimpleScheme
             EvaluateMap step = (EvaluateMap)s;
 
             // first check for degenerate cases
-            if (EmptyList.IsEmptyList(step.lists))
+            if (EmptyList.Is(step.lists))
             {
                 return s.ReturnUndefined();
             }
 
-            if (!Pair.IsPair(step.lists))
+            if (!Pair.Is(step.lists))
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + step.lists);
                 return s.ReturnUndefined();
@@ -125,7 +125,7 @@ namespace SimpleScheme
         private static Stepper ApplyFunStep(Stepper s)
         {
             EvaluateMap step = (EvaluateMap)s;
-            if (Pair.IsPair(List.First(step.lists)))
+            if (Pair.Is(List.First(step.lists)))
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
@@ -149,7 +149,7 @@ namespace SimpleScheme
             if (step.returnResult)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = List.Cons(s.ReturnedExpr, step.result);
+                step.result = Pair.Cons(s.ReturnedExpr, step.result);
             }
 
             // Step down each of the lists

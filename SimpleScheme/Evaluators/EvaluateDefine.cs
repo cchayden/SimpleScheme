@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the body of the definition.</returns>
         private static Stepper InitialStep(Stepper s)
         {
-            if (Pair.IsPair(List.First(s.Expr)))
+            if (Pair.Is(List.First(s.Expr)))
             {
                 s.Env.UnsafeDefine(List.First(List.First(s.Expr)), new Closure(List.Rest(List.First(s.Expr)), List.Rest(s.Expr), s.Env));
                 return s.ReturnUndefined();

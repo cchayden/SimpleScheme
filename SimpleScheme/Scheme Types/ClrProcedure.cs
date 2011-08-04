@@ -45,12 +45,12 @@ namespace SimpleScheme
 
         #region Accessors
         /// <summary>
-        /// Gets or sets the name of the class containing the method to invoke.
+        /// Gets the name of the class containing the method to invoke.
         /// </summary>
         protected string ClassName { get; private set; }
 
         /// <summary>
-        /// Gets or sets the name of the method.
+        /// Gets the name of the method.
         /// </summary>
         protected string MethodName { get; private set; }
 
@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a CLR procedure.</returns>
-        public static bool IsClrProcedure(Obj obj)
+        public static new bool Is(Obj obj)
         {
             return obj is ClrProcedure;
         }
@@ -81,9 +81,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a clr procedure.</returns>
-        public static ClrProcedure AsClrProcedure(Obj obj)
+        public static new ClrProcedure As(Obj obj)
         {
-            if (IsClrProcedure(obj))
+            if (Is(obj))
             {
                 return (ClrProcedure)obj;
             }
@@ -112,6 +112,20 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Write the clr procedure to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(Name + ": ");
+                buf.Append(this.ToString());
+            }
+        }
+
+        /// <summary>
         /// Display the CLR proc name as a string.  
         /// </summary>
         /// <returns>The string form of the continuation.</returns>
@@ -133,7 +147,7 @@ namespace SimpleScheme
             int n = List.Length(args);
             List<Type> array = new List<Type>(n);
 
-            while (Pair.IsPair(args))
+            while (Pair.Is(args))
             {
                 array.Add(TypePrimitives.ToClass(List.First(args)));
                 args = List.Rest(args);
@@ -167,12 +181,12 @@ namespace SimpleScheme
 
             int i = 0;
             int a = 0;
-            while (Pair.IsPair(args))
+            while (Pair.Is(args))
             {
                 Obj elem = List.First(args);
                 if (this.ArgClasses[i] == typeof(int))
                 {
-                    array[a++] = (int)Number.Num(elem);
+                    array[a++] = (int)Number.As(elem);
                 }
                 else if (this.ArgClasses[i] == typeof(string))
                 {
@@ -245,31 +259,8 @@ namespace SimpleScheme
         private static Obj NewArray(Obj className, Obj length)
         {
             Type type = TypePrimitives.ToClass(className);
-            return Array.CreateInstance(type, (int)Number.Num(length));
+            return Array.CreateInstance(type, (int)Number.As(length));
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the clr procedure to the string builder.
-        /// </summary>
-        /// <param name="proc">The clr procedure.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this ClrProcedure proc, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append("clr procedure: ");
-                buf.Append(proc.ToString());
-            }
-        }
-    }
-    #endregion
 }

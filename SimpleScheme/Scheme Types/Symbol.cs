@@ -21,11 +21,22 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Write the symbol to the string builder.
+        /// </summary>
+        /// <param name="sym">The symbol.</param>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(string sym, bool quoted, StringBuilder buf)
+        {
+            buf.Append(sym);
+        }
+
+        /// <summary>
         /// Tests whether to given object is a scheme symbol.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme symbol.</returns>
-        public static bool IsSymbol(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is string;
         }
@@ -36,9 +47,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding symbol.</returns>
-        public static string AsSymbol(Obj x)
+        public static string As(Obj x)
         {
-            if (IsSymbol(x))
+            if (Is(x))
             {
                 return (string)x;
             }
@@ -55,7 +66,7 @@ namespace SimpleScheme
         /// <returns>The symbol.</returns>
         public static string New(Obj obj)
         {
-            return new string(SchemeString.AsSchemeString(obj));
+            return new string(SchemeString.As(obj));
         }
         #endregion
 
@@ -70,27 +81,8 @@ namespace SimpleScheme
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
                 .DefinePrimitive("string->symbol", (args, caller) => New(List.First(args)), 1)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(IsSymbol(List.First(args))), 1);
+                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
         }
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the symbol to the string builder.
-        /// </summary>
-        /// <param name="sym">The symbol.</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this string sym, bool quoted, StringBuilder buf)
-        {
-            buf.Append(sym);
-        }
-    }
-    #endregion
 }

@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public class OutputPort
+    public class OutputPort : Printable
     {
         #region Constants
         /// <summary>
@@ -45,23 +45,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Accessors
-        /// <summary>
-        /// Gets the newline string associated with the port.
-        /// </summary>
-        private string NewLine
-        {
-            get { return this.outp.NewLine; }
-        }
-        #endregion
-
         #region Public Static Methods
         /// <summary>
         /// Tests whether to given object is a scheme output port.
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme output port.</returns>
-        public static bool IsOutputPort(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is OutputPort;
         }
@@ -71,9 +61,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The output port.</returns>
-        public static OutputPort AsOutputPort(Obj obj)
+        public static OutputPort As(Obj obj)
         {
-            if (IsOutputPort(obj))
+            if (Is(obj))
             {
                 return (OutputPort)obj;
             }
@@ -97,33 +87,45 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
                 .DefinePrimitive("call-with-output-file", (args, caller) => EvaluateCallWithOutputFile.Call(args, caller), 2)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
-                .DefinePrimitive("close-output-port", (args, caller) => CloseOutputPort(List.First(args), caller.Interp), 1)
+                .DefinePrimitive("close-output-port", (args, caller) => CloseOutputPort(Port(List.First(args), caller.Interp.CurrentOutputPort)), 1)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
                 .DefinePrimitive("current-output-port", (args, caller) => caller.Interp.CurrentOutputPort, 0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
-                .DefinePrimitive("display", (args, caller) => Display(List.First(args), List.Second(args), caller.Interp), 1, 2)
+                .DefinePrimitive("display", (args, caller) => Display(List.First(args), Port(List.Second(args), caller.Interp.CurrentOutputPort)), 1, 2)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
-                .DefinePrimitive("newline", (args, caller) => Newline(List.First(args), caller.Interp), 0, 1)
+                .DefinePrimitive("newline", (args, caller) => Newline(Port(List.First(args), caller.Interp.CurrentOutputPort)), 0, 1)
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
                 .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args), caller.Interp), 1)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(IsOutputPort(List.First(args))), 1)
+                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
-                .DefinePrimitive("write", (args, caller) => Write(List.First(args), List.Second(args), caller.Interp), 1, 2)
+                .DefinePrimitive("write", (args, caller) => Write(List.First(args), Port(List.Second(args), caller.Interp.CurrentOutputPort)), 1, 2)
                 //// (p <expr>)
                 .DefinePrimitive("p", (args, caller) => P(List.First(args)), 1)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
-                .DefinePrimitive("write-char", (args, caller) => WriteChar(List.First(args), List.Second(args), caller.Interp), 1, 2)
+                .DefinePrimitive("write-char", (args, caller) => WriteChar(List.First(args), Port(List.Second(args), caller.Interp.CurrentOutputPort)), 1, 2)
                 //// (dump-env)
-                .DefinePrimitive("dump-env", (args, caller) => DumpEnv(caller.Env, caller.Interp), 0);
+                .DefinePrimitive("dump-env", (args, caller) => DumpEnv(caller.Env), 0);
         }
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Write the output port to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public override void AsString(bool quoted, StringBuilder buf)
+        {
+            if (quoted)
+            {
+                buf.Append(this.ToString());
+            }
+        }
 
         /// <summary>
         /// Write a string to the output port, followed by a newline.
@@ -131,17 +133,8 @@ namespace SimpleScheme
         /// <param name="str">The string to write.</param>
         public void WriteLine(string str)
         {
-            this.outp.Write(str + this.NewLine);
+            this.outp.Write(str + this.Newline());
             this.transcript.LogOutputLine("=> " + str, this);
-        }
-
-        /// <summary>
-        /// Write a newline to the output port.
-        /// </summary>
-        public void WriteLine()
-        {
-            this.outp.Write(this.NewLine);
-            this.transcript.LogOutputLine(this.NewLine, this);
         }
 
         /// <summary>
@@ -154,17 +147,6 @@ namespace SimpleScheme
             this.transcript.LogOutput(str, this);
         }
 
-
-        /// <summary>
-        /// Write an obj into an output port.
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        /// <param name="port">The output port.</param>
-        public static void WriteObj(string str, OutputPort port)
-        {
-            port.Write(str);
-            port.Flush();
-        }
         /// <summary>
         /// Close the output port.
         /// </summary>
@@ -188,7 +170,7 @@ namespace SimpleScheme
         /// <returns>The output port type name.</returns>
         public override string ToString()
         {
-            return "<" + Name +">";
+            return "<" + Name + ">";
         }
         #endregion
 
@@ -199,58 +181,50 @@ namespace SimpleScheme
         /// Otherwise, the current output port is used instead.
         /// </summary>
         /// <param name="port">The port to use, if supplied.</param>
-        /// <param name="interp">The interpreter, from which the current output port can be obtained.</param>
+        /// <param name="curr">The current output port.</param>
         /// <returns>The port to use.</returns>
-        private static OutputPort Port(Obj port, Interpreter interp)
+        private static OutputPort Port(Obj port, OutputPort curr)
         {
-            return EmptyList.IsEmptyList(port) ? interp.CurrentOutputPort : AsOutputPort(port);
+            return EmptyList.Is(port) ? curr : As(port);
         }
 
         /// <summary>
-        /// Write an expression on a given port, or onto the default port.
+        /// Write an expression on a given port.
         /// The output is not quoted.
         /// </summary>
         /// <param name="expr">The expression to write.</param>
-        /// <param name="port">The port, or the empty list.</param>
-        /// <param name="interp">The interpreter.</param>
+        /// <param name="port">The output port to display to.</param>
         /// <returns>The undefined object.</returns>
-        private static Obj Display(Obj expr, Obj port, Interpreter interp)
+        private static Obj Display(Obj expr, OutputPort port)
         {
-            string output = Printer.AsString(expr, false);
-            OutputPort p = Port(port, interp);
-            WriteObj(output, p);
+            Write(Printer.AsString(expr, false), port);
             return Undefined.Instance;
         }
 
         /// <summary>
-        /// Write an expression on a given port, or onto the default port.
+        /// Write an expression on a given port.
         /// The output is quoted.
         /// </summary>
         /// <param name="expr">The expression to write.</param>
-        /// <param name="port">The port, or the empty list.</param>
-        /// <param name="interp">The interpreter.</param>
+        /// <param name="port">The output port to write to.</param>
         /// <returns>The undefined object.</returns>
-        private static Obj Write(Obj expr, Obj port, Interpreter interp)
+        private static Obj Write(Obj expr, OutputPort port)
         {
-            string output = Printer.AsString(expr, true);
-            OutputPort p = Port(port, interp);
-            WriteObj(output, p);
+            port.Write(Printer.AsString(expr, true));
             return Undefined.Instance;
         }
 
         /// <summary>
-        /// Write a character on a given port, or onto the default port.
+        /// Write a character on a given port.
         /// The output is not quoted.
+        /// If the expr is not actually a character, it is written nevertheless.
         /// </summary>
         /// <param name="expr">The expression to write.</param>
-        /// <param name="port">The port, or the empty list.</param>
-        /// <param name="interp">The interpreter.</param>
+        /// <param name="port">The output port.</param>
         /// <returns>The undefined object.</returns>
-        private static Obj WriteChar(Obj expr, Obj port, Interpreter interp)
+        private static Obj WriteChar(Obj expr, OutputPort port)
         {
-            string output = Printer.AsString(expr, false);
-            OutputPort p = Port(port, interp);
-            WriteObj(output, p);
+            Write(Printer.AsString(expr, false), port);
             return Undefined.Instance;
         }
 
@@ -268,25 +242,22 @@ namespace SimpleScheme
         /// <summary>
         /// Close the output port.
         /// </summary>
-        /// <param name="port">The port to close.</param>
-        /// <param name="interp">The interpreter.</param>
+        /// <param name="port">The output port to close.</param>
         /// <returns>Undefined instance.</returns>
-        private static Obj CloseOutputPort(Obj port, Interpreter interp)
+        private static Obj CloseOutputPort(OutputPort port)
         {
-            Port(port, interp).Close();
+            port.Close();
             return Undefined.Instance;
         }
 
         /// <summary>
         /// Display a newline on the output.
         /// </summary>
-        /// <param name="port">The port to write to.</param>
-        /// <param name="interp">The interpreter.</param>
+        /// <param name="port">The output port to write to.</param>
         /// <returns>Undefined instance.</returns>
-        private static Obj Newline(Obj port, Interpreter interp)
+        private static Obj Newline(OutputPort port)
         {
-            OutputPort p = Port(port, interp);
-            WriteObj(p.NewLine, p);
+            Write(port.Newline(), port);
             return Undefined.Instance;
         }
 
@@ -294,36 +265,24 @@ namespace SimpleScheme
         /// Dump the environment on standard output.
         /// </summary>
         /// <param name="env">The environment to dump.</param>
-        /// <param name="interp">The interpreter -- used to get output port.</param>
         /// <returns>Undefined instance.</returns>
-        private static Obj DumpEnv(Environment env, Interpreter interp)
+        private static Obj DumpEnv(Environment env)
         {
-            env.DumpEnv(interp);
+            env.DumpEnv();
             return Undefined.Instance;
+        }
+        #endregion
+
+        #region Private Methods
+        /// <summary>
+        /// Gets the newline string associated with the port.
+        /// </summary>
+        /// <returns>The newline character(s).</returns>
+        private string Newline()
+        {
+            return this.outp.NewLine;
         }
 
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the output port to the string builder.
-        /// </summary>
-        /// <param name="port">The output port (not used).</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this OutputPort port, bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(port.ToString());
-            }
-        }
-    }
-    #endregion
 }

@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme vector.</returns>
-        public static bool IsVector(Obj obj)
+        public static bool Is(Obj obj)
         {
             return obj is Obj[];
         }
@@ -35,9 +35,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme vector.</returns>
-        public static Obj[] AsVector(Obj obj)
+        public static Obj[] As(Obj obj)
         {
-            if (IsVector(obj)) 
+            if (Is(obj)) 
             {
                 return (Obj[])obj;
             }
@@ -61,47 +61,46 @@ namespace SimpleScheme
                 .DefinePrimitive("list->vector", (args, caller) => FromList(List.First(args)), 1)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (args, caller) => MakeVector(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("make-vector", (args, caller) => New(List.First(args), List.Second(args)), 1, 2)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive("vector", (args, caller) => FromList(args), 0, MaxInt)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (args, caller) => VectorToList(List.First(args)), 1)
+                .DefinePrimitive("vector->list", (args, caller) => ToList(List.First(args)), 1)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                .DefinePrimitive("vector-fill", (args, caller) => VectorFill(List.First(args), List.Second(args)), 2)
+                .DefinePrimitive("vector-fill", (args, caller) => Fill(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (args, caller) => Number.Num(AsVector(List.First(args)).Length), 1)
+                .DefinePrimitive("vector-length", (args, caller) => Number.As(As(List.First(args)).Length), 1)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (args, caller) => AsVector(List.First(args))[(int)Number.Num(List.Second(args))], 2)
+                .DefinePrimitive("vector-ref", (args, caller) => Get(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (args, caller) => VectorSet(List.First(args), List.Second(args), List.Third(args)), 3)
+                .DefinePrimitive("vector-set!", (args, caller) => Set(List.First(args), List.Second(args), List.Third(args)), 3)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(IsVector(List.First(args))), 1);
+                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
         }
         #endregion
 
         #region Public Static Methods
         /// <summary>
-        /// Creates the vector from a list of values.
+        /// Write the vector to the string builder.
         /// </summary>
-        /// <param name="objs">A list of values to put in the vector.</param>
-        /// <returns>A vector of the objs.</returns>
-        public static Obj[] FromList(object objs)
+        /// <param name="vec">The vector.</param>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public static void AsString(Obj[] vec, bool quoted, StringBuilder buf)
         {
-            Obj[] vec = new Obj[List.Length(objs)];
-
-            if (!Pair.IsPair(objs))
+            buf.Append("#(");
+            if (vec.Length > 0)
             {
-                return vec;
+                foreach (Obj v in vec)
+                {
+                    Printer.AsString(v, quoted, buf);
+                    buf.Append(' ');
+                }
+
+                buf.Remove(buf.Length - 1, 1);
             }
 
-            int i = 0;
-            while (Pair.IsPair(objs))
-            {
-                vec[i++] = List.First(objs);
-                objs = List.Rest(objs);
-            }
-
-            return vec;
+            buf.Append(')');
         }
 
         /// <summary>
@@ -113,7 +112,7 @@ namespace SimpleScheme
         /// all elements are equal.</returns>
         public static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!IsVector(obj2))
+            if (!Is(obj2))
             {
                 return false;
             }
@@ -135,19 +134,17 @@ namespace SimpleScheme
 
             return true;
         }
-        #endregion
 
-        #region Private Static Methods
         /// <summary>
         /// Create a vector from a length and an optional fill value.
         /// </summary>
         /// <param name="length">The vector length.</param>
         /// <param name="fill">The value to initialize the vector entries to.</param>
         /// <returns>A vector of the objs filled with the fill object.</returns>
-        private static Obj[] MakeVector(object length, object fill)
+        public static Obj[] New(Obj length, Obj fill)
         {
-            Obj[] vec = new object[(int)Number.Num(length)];
-            if (EmptyList.IsEmptyList(fill))
+            Obj[] vec = new Obj[(int)Number.As(length)];
+            if (EmptyList.Is(fill))
             {
                 fill = Undefined.Instance;
             }
@@ -161,31 +158,67 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Get a vector element
+        /// </summary>
+        /// <param name="vector">The vector to get from.</param>
+        /// <param name="k">The index into the vector to get.</param>
+        /// <returns>The vector element.</returns>
+        public static Obj Get(Obj vector, Obj k)
+        {
+            return As(vector)[(int)Number.As(k)];
+        }
+
+        /// <summary>
         /// Set a vector element.
         /// </summary>
         /// <param name="vector">The vector to set.</param>
-        /// <param name="k">The index into the vector to set.</param>
+        /// <param name="index">The index into the vector to set.</param>
         /// <param name="obj">The new value to set.</param>
         /// <returns>Undefined value.</returns>
-        private static Obj VectorSet(object vector, object k, object obj)
+        public static Obj Set(Obj vector, Obj index, Obj obj)
         {
-            AsVector(vector)[(int)Number.Num(k)] = obj;
+            As(vector)[(int)Number.As(index)] = obj;
             return Undefined.Instance;
         }
 
+        /// <summary>
+        /// Creates the vector from a list of values.
+        /// </summary>
+        /// <param name="objs">A list of values to put in the vector.</param>
+        /// <returns>A vector of the objs.</returns>
+        public static Obj[] FromList(Obj objs)
+        {
+            Obj[] vec = new Obj[List.Length(objs)];
+            if (!Pair.Is(objs))
+            {
+                return vec;
+            }
+
+            int i = 0;
+            while (Pair.Is(objs))
+            {
+                vec[i++] = List.First(objs);
+                objs = List.Rest(objs);
+            }
+
+            return vec;
+        }
+        #endregion
+
+        #region Private Static Methods
         /// <summary>
         /// Convert a vector into a list of objs.
         /// If the obj is not a vector, return error.
         /// </summary>
         /// <param name="vector">The vector.</param>
         /// <returns>The vector as a list.</returns>
-        private static Obj VectorToList(object vector)
+        private static Obj ToList(Obj vector)
         {
-            Obj[] vec = AsVector(vector);
+            Obj[] vec = As(vector);
             Obj result = EmptyList.Instance;
             for (int i = vec.Length - 1; i >= 0; i--)
             {
-                result = List.Cons(vec[i], result);
+                result = Pair.Cons(vec[i], result);
             }
 
             return result;
@@ -197,9 +230,9 @@ namespace SimpleScheme
         /// <param name="vector">The vector to fill.</param>
         /// <param name="fill">The value to fill with.</param>
         /// <returns>Return value is unspecified.</returns>
-        private static Obj VectorFill(Obj vector, object fill)
+        private static Obj Fill(Obj vector, Obj fill)
         {
-            Obj[] vec = AsVector(vector);
+            Obj[] vec = As(vector);
             for (int i = 0; i < vec.Length; i++)
             {
                 vec[i] = fill;
@@ -207,38 +240,6 @@ namespace SimpleScheme
 
             return Undefined.Instance;
         }
-
         #endregion
     }
-
-    #region Extensions
-    /// <summary>
-    /// Provide common operations as extensions.
-    /// </summary>
-    public static partial class Extensions
-    {
-        /// <summary>
-        /// Write the vector to the string builder.
-        /// </summary>
-        /// <param name="vec">The vector.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(this Obj[] vec, bool quoted, StringBuilder buf)
-        {
-            buf.Append("#(");
-            if (vec.Length > 0)
-            {
-                foreach (Obj v in vec)
-                {
-                    Printer.AsString(v, quoted, buf);
-                    buf.Append(' ');
-                }
-
-                buf.Remove(buf.Length - 1, 1);
-            }
-
-            buf.Append(')');
-        }
-    }
-    #endregion
 }
