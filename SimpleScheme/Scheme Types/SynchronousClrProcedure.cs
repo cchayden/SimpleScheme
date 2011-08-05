@@ -36,12 +36,19 @@ namespace SimpleScheme
             try
             {
                 this.ArgClasses = ClassList(argClassNames);
-                this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
                 Type cls = TypePrimitives.ToClass(ClassName);
                 this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
                 if (this.MethodInfo == null)
                 {
                     ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + this.MethodName);
+                    return;
+                } 
+                if (this.MethodInfo.IsStatic)
+                {
+                    this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
+                } else
+                {
+                    this.MaxArgs = this.MinArgs = this.ArgClasses.Count + 1;
                 }
             }
             catch (TypeLoadException)
@@ -96,7 +103,35 @@ namespace SimpleScheme
                        Printer.AsString(List.Second(args), false), 
                        List.Rest(List.Rest(args))),
                     2,
-                    MaxInt);
+                    MaxInt)
+                .DefinePrimitive(
+                   "property-get",
+                   (args, caller) => new SynchronousClrProcedure(
+                       Printer.AsString(List.First(args), false), 
+                       "get_" + Printer.AsString(List.Second(args), false), 
+                       List.Rest(List.Rest(args))),
+                    2)
+                .DefinePrimitive(
+                   "property-set",
+                   (args, caller) => new SynchronousClrProcedure(
+                       Printer.AsString(List.First(args), false), 
+                       "set_" + Printer.AsString(List.Second(args), false), 
+                       List.Rest(List.Rest(args))),
+                    3)
+                .DefinePrimitive(
+                   "index-get",
+                   (args, caller) => new SynchronousClrProcedure(
+                       Printer.AsString(List.First(args), false), 
+                       "get_Item", 
+                       List.Rest(args)),
+                    2)
+                .DefinePrimitive(
+                   "index-set",
+                   (args, caller) => new SynchronousClrProcedure(
+                       Printer.AsString(List.First(args), false), 
+                       "set_Item", 
+                       List.Rest(args)),
+                    3);
         }
         #endregion
 
@@ -149,7 +184,9 @@ namespace SimpleScheme
                 argArray = this.ToArgList(List.Rest(args), null);
             }
 
-            return caller.ContinueStep(this.MethodInfo.Invoke(target, argArray));
+            Obj res = this.MethodInfo.Invoke(target, argArray);
+            res = res ?? Undefined.Instance;
+            return caller.ContinueStep(res);
         }
         #endregion
     }

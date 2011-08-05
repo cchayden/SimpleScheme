@@ -1,12 +1,20 @@
 ﻿public class TestClass
 {
-    public static string TestMethod1()
+    private int lastIndex = 0;
+    public string Attr { get; set; }
+    public int this[int i]
     {
-        return "Static method";
+        get { return lastIndex; }
+        set { lastIndex = value; }
     }
 
-    public string TestMethod2()
+    public static string StaticMethod(string str)
     {
-        return "Member method";
+        return "Static method: " + str;
+    }
+
+    public string MemberMethod(int n)
+    {
+        return "Member method: " + n;
     }
 }
