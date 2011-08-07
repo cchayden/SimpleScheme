@@ -31,10 +31,13 @@ namespace SimpleScheme
         /// </summary>
         private Obj vars;
 
+        private Obj inits;
+
         /// <summary>
         /// This list of step expressions.
         /// </summary>
         private Obj steps;
+
 
         /// <summary>
         /// The expression list following the test
@@ -59,9 +62,15 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateDo(Obj expr, Environment env, Stepper caller)
+        private EvaluateDo(Obj expr, Environment env, Stepper caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Closure testProc)
             : base(expr, env, caller)
         {
+            this.vars = vars;
+            this.inits = inits;
+            this.steps = steps;
+            this.exprs = exprs;
+            this.commands = commands;
+            this.testProc = testProc;
             ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
@@ -69,7 +78,11 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Call let evaluator.
+        /// Call do evaluator.
+        /// Start by checking the number of arguments.
+        /// Grab all the parts of the do statement.
+        /// Prepare an empty environment for the bound variables.
+        /// Then create the evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to make the expression in.</param>
@@ -77,7 +90,42 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateDo(expr, env, caller);
+            // Test for errors before creating the object.
+            if (EmptyList.Is(expr))
+            {
+                ErrorHandlers.SemanticError("No body for do");
+                caller.ContinueStep(Undefined.Instance);
+                return caller;
+            }
+
+            if (!Pair.Is(expr))
+            {
+                ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
+                caller.ContinueStep(Undefined.Instance);
+                return caller;
+            }
+
+            Obj bindings = List.First(expr);
+            Obj vars = List.MapFun(List.First, List.New(bindings));
+            Obj inits = List.MapFun(List.Second, List.New(bindings));
+            Obj steps = List.MapFun(ThirdOrFirst, List.New(bindings));
+            Obj exprs = List.Rest(List.Second(expr));
+            Obj commands = List.Rest(List.Rest(expr));
+
+            Obj test = List.First(List.Second(expr));
+            if (EmptyList.Is(test))
+            {
+                caller.ContinueStep(Undefined.Instance);
+                return caller;
+            }
+
+            // prepare test proc to execute each time through
+            Closure testProc = new Closure(vars, List.New(test), env);
+            EvaluateDo eval = new EvaluateDo(expr, env, caller, vars, inits, steps, exprs, commands, testProc);
+
+            // push an empty environment, to hold the iteration variables
+            eval.PushEmptyEnvironment(env);
+            return eval;
         }
         #endregion
 
@@ -95,49 +143,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Start by checking the number of arguments.
-        /// Then test for named let.  
-        /// Grab all the parts of the do statement.
+        /// Start by evaluating the inits.
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>Continues by evaluating the inits.</returns>
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateDo step = (EvaluateDo)s;
-            if (EmptyList.Is(s.Expr))
-            {
-                ErrorHandlers.SemanticError("No body for do");
-                return s.ReturnUndefined();
-            }
-
-            if (!Pair.Is(s.Expr))
-            {
-                ErrorHandlers.SemanticError("Bad arg list for do: " + s.Expr);
-                return s.ReturnUndefined();
-            }
-
-            Obj bindings = List.First(s.Expr);
-            step.vars = List.MapFun(List.First, List.New(bindings));
-            Obj inits = List.MapFun(List.Second, List.New(bindings));
-            step.steps = List.MapFun(ThirdOrFirst, List.New(bindings));
-
-            Obj test = List.First(List.Second(s.Expr));
-            step.exprs = List.Rest(List.Second(s.Expr));
-            step.commands = List.Rest(List.Rest(s.Expr));
-
-            if (EmptyList.Is(test))
-            {
-                return s.ReturnUndefined();
-            }
-
-            // prepare test proc to execute each time through
-            step.testProc = new Closure(step.vars, List.New(test), s.Env);
-
-            // push an empty environment, to hold the iteration variables
-            s.PushEmptyEnvironment(s.Env);
-
-            // First evaluare inits.
-            return EvaluateList.Call(inits, s.Env, s.ContinueHere(TestStep));
+            return EvaluateList.Call(step.inits, s.Env, s.ContinueHere(TestStep));
         }
 
         /// <summary>
