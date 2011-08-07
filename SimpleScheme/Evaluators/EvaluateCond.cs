@@ -158,7 +158,7 @@ namespace SimpleScheme
         private static Stepper ApplyRecipientStep(Stepper s)
         {
             EvaluateCond step = (EvaluateCond)s;
-            return EvaluateProcQuoted.Call(Procedure.As(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);
+            return EvaluateProc.CallQuoted(Procedure.As(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);
         }
         #endregion
     }

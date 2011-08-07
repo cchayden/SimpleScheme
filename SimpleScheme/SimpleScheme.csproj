@@ -51,7 +51,6 @@
     <Compile Include="Evaluators\EvaluateLetRec.cs" />
     <Compile Include="Evaluators\EvaluateLetStar.cs" />
     <Compile Include="Evaluators\EvaluateParallel.cs" />
-    <Compile Include="Evaluators\EvaluateProcQuoted.cs" />
     <Compile Include="Evaluators\EvaluateTime.cs" />
     <Compile Include="Evaluators\EvaluateTimeBase.cs" />
     <Compile Include="IEnvironment.cs" />

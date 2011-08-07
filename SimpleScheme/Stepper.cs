@@ -94,6 +94,9 @@ namespace SimpleScheme
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
+        /// Every stepper has a copy of the interpreter, so we don't have to search down the
+        ///   chain for it.
+        /// This never changes, even if Env does get updated.
         /// </summary>
         public Interpreter Interp
         {
@@ -101,7 +104,8 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the expression being evaluated.  
+        /// Gets the expression being evaluated.
+        /// Immutable.
         /// </summary>
         public Obj Expr { get; private set; }
 
@@ -117,11 +121,13 @@ namespace SimpleScheme
 
         /// <summary>
         /// Gets the returned environment from the last call.
+        /// Most primitives do not change the environment, but some do.
         /// </summary>
         public Environment ReturnedEnv { get; private set; }
 
         /// <summary>
         /// Gets the caller of this stepper.
+        /// Immutable.
         /// </summary>
         public Stepper Caller { get; private set; }
 
@@ -214,23 +220,15 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Makes a copy of the step.  Each subclass makes a copy of its own member variables.
+        /// Makes a copy of the whole chain of evaluation steps, from the current step back to
+        ///   the original step.  This chain is saved as the continuation.  
+        /// The cloned chain is linked up with each other to form a new chain.
+        /// Each subclass makes a copy of its own member variables.
         /// This is needed to support continuations, because the step contains mutable state.  If the state 
         ///  is changed after the saving of the continuation, then the continuation would not represent the
         ///  correct state.  
         /// For this shallow copy to be correct, each stepper must modify ONLY its own variables, not the
         ///  things to which they point.
-        /// </summary>
-        /// <returns>A copy of the step.</returns>
-        public Stepper Clone()
-        {
-            return (Stepper)this.MemberwiseClone();
-        }
-
-        /// <summary>
-        /// Makes a copy of the whole chain of evaluation steps, from the current step back to
-        ///   the original step.  This chain is saved as the continuation.  
-        /// The cloned chain is linked up with each other to form a new chain.
         /// </summary>
         /// <returns>A copy of the current step.</returns>
         public Stepper CloneChain()
@@ -283,17 +281,6 @@ namespace SimpleScheme
             return this.pc(this);
         }
 
-        /// <summary>
-        /// Continue executing in the existing evaluator, but set the returned expr.
-        /// </summary>
-        /// <param name="expr">The new expr value.</param>
-        /// <returns>The next step, which is this stepper.</returns>
-        public Stepper ContinueStep(Obj expr)
-        {
-            this.ReturnedExpr = expr;
-            return this;
-        }
-        
         /// <summary>
         /// Call the interpreter in the environment to start evaluating steps.
         /// </summary>
@@ -366,6 +353,17 @@ namespace SimpleScheme
             this.Env = new Environment(parent);
         }
 
+        /// <summary>
+        /// Continue executing in the existing evaluator, but set the returned expr.
+        /// </summary>
+        /// <param name="expr">The new expr value.</param>
+        /// <returns>The next step, which is this stepper.</returns>
+        public Stepper ContinueStep(Obj expr)
+        {
+            this.ReturnedExpr = expr;
+            return this;
+        }
+        
         /// <summary>
         /// Assign PC and return the current stepper.
         /// </summary>

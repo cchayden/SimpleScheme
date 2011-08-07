@@ -38,27 +38,49 @@ namespace SimpleScheme
         /// <param name="args">The arguments to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluateProc(Procedure fn, Obj args, Environment env, Stepper caller)
+        /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
+        protected EvaluateProc(Procedure fn, Obj args, Environment env, Stepper caller, bool evaluate)
             : base(args, env, caller)
         {
             this.fn = fn;
-            ContinueHere(EvalArgsStep);
+            if (evaluate)
+            {
+                ContinueHere(EvalArgsStep);
+            }
+            else
+            {
+                ContinueStep(args); // as if EvalArgs returned this, the unevaluated args
+                ContinueHere(ApplyStep);
+            }
             IncrementCounter(counter);
         }
         #endregion
 
         #region Public Static Methods
         /// <summary>
-        /// Call apply proc evaluator.
+        /// Call apply proc evaluator after evaluating args.
         /// </summary>
         /// <param name="fn">The function to apply.</param>
-        /// <param name="args">The arguments to evaluate.</param>
-        /// <param name="env">The environment to make the expression in.</param>
+        /// <param name="args">The arguments to evaluate, the pass to fn.</param>
+        /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>The apply proc evaluator.</returns>
+        /// <returns>The proc evaluator.</returns>
         public static Stepper Call(Procedure fn, Obj args, Environment env, Stepper caller)
         {
-            return new EvaluateProc(fn, args, env, caller);
+            return new EvaluateProc(fn, args, env, caller, true);
+        }
+
+        /// <summary>
+        /// Call apply proc evaluator, but do not evaluate arguments.
+        /// </summary>
+        /// <param name="fn">The function to apply.</param>
+        /// <param name="args">The arguments to pass to fn.</param>
+        /// <param name="env">The environment to evaluate the expression in.</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>The proc evaluator.</returns>
+        public static Stepper CallQuoted(Procedure fn, Obj args, Environment env, Stepper caller)
+        {
+            return new EvaluateProc(fn, args, env, caller, false);
         }
         #endregion
 
@@ -74,28 +96,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Protected Methods
-        /// <summary>
-        /// Back here after args have been evaluated.  
-        /// Apply the proc to the evaluated args.  
-        /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The result, or the next step to obtain it.</returns>
-        protected static Stepper ApplyStep(Stepper s)
-        {
-            EvaluateProc step = (EvaluateProc)s;
-            if (s.Interp.Trace)
-            {
-                s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("{0}: ({1} {2})", StepperName, step.fn.ProcedureName, List.First(s.ReturnedExpr)));
-            }
-
-            return step.fn.Apply(s.ReturnedExpr, s.Caller);
-        }
-
-        #endregion
-
-        #region Private Methods
+        #region Private Static Methods
         /// <summary>
         /// Begin by evaluating all the arguments.
         /// </summary>
@@ -104,6 +105,24 @@ namespace SimpleScheme
         private static Stepper EvalArgsStep(Stepper s)
         {
             return EvaluateList.Call(s.Expr, s.Env, s.ContinueHere(ApplyStep));
+        }
+
+        /// <summary>
+        /// Back here after args have been evaluated.  
+        /// Apply the proc to the evaluated args.  
+        /// </summary>
+        /// <param name="s">The step to evaluate.</param>
+        /// <returns>The result, or the next step to obtain it.</returns>
+        private static Stepper ApplyStep(Stepper s)
+        {
+            Procedure fn = ((EvaluateProc)s).fn;
+            if (s.Interp.Trace)
+            {
+                s.Caller.Interp.CurrentOutputPort.WriteLine(
+                    String.Format("{0}: ({1} {2})", StepperName, fn.ProcedureName, List.First(s.ReturnedExpr)));
+            }
+
+            return fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion
     }
