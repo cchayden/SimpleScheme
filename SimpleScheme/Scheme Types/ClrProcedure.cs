@@ -119,11 +119,8 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public override void AsString(bool quoted, StringBuilder buf)
         {
-            if (quoted)
-            {
-                buf.Append(Name + ": ");
-                buf.Append(this.ToString());
-            }
+            buf.Append(Name + ": ");
+            buf.Append(this.ToString());
         }
 
         /// <summary>

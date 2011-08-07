@@ -368,6 +368,11 @@ namespace SimpleScheme
             EvaluateExpression step = (EvaluateExpression)s;
 
             // Come here after evaluating fn
+            if (! Procedure.Is(s.ReturnedExpr))
+            {
+                ErrorHandlers.SemanticError("Value must be procedure: " + s.ReturnedExpr);
+            }
+
             return Procedure.As(s.ReturnedExpr).Evaluate(step.args, s.Env, s.Caller);
         }
 

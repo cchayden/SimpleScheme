@@ -79,7 +79,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
             }
         }
 
@@ -239,7 +239,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return Undefined.Instance;
             }
         }
@@ -260,7 +260,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return null;
             }
         }
@@ -279,7 +279,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return null;
             }
         }
@@ -296,7 +296,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return Undefined.Instance;
             }
         }
@@ -332,7 +332,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return null;
             }
         }
@@ -398,7 +398,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
             }
         }
 
@@ -415,7 +415,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return Undefined.Instance;
             }
         }
@@ -433,7 +433,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return Undefined.Instance;
             }
         }
@@ -451,7 +451,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return Undefined.Instance;
             }
         }
@@ -469,7 +469,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return Undefined.Instance;
             }
         }
@@ -488,7 +488,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return String.Empty;
             }
         }
@@ -506,7 +506,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return String.Empty;
             }
         }
@@ -524,7 +524,7 @@ namespace SimpleScheme
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Caught exception {0}", ex.Message);
+                ErrorHandlers.PrintException(ex);
                 return string.Empty;
             }
         }
@@ -742,7 +742,10 @@ namespace SimpleScheme
             if (val != Undefined.Instance)
             {
                 string output = Printer.AsString(val, false);
-                this.CurrentOutputPort.WriteLine(output);
+                if (output.Length > 0)
+                {
+                    this.CurrentOutputPort.WriteLine(output);
+                }
             }
 
             return val;

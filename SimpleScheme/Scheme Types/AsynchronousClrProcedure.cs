@@ -122,7 +122,7 @@ namespace SimpleScheme
         /// <returns>The string form of the procedure.</returns>
         public override string ToString()
         {
-            return Name;
+            return "<" + Name + ">";
         }
 
         /// <summary>

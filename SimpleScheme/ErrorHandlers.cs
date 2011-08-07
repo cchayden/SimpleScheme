@@ -126,6 +126,19 @@ namespace SimpleScheme
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
         }
+
+        /// <summary>
+        /// Print exception.
+        /// </summary>
+        /// <param name="ex">The exception to print.</param>
+        public static void PrintException(Exception ex)
+        {
+            // If this is a scheme exception, it has already been reported.
+            if (!(ex is SchemeException))
+            {
+                Console.WriteLine("Caught exception {0}", ex.Message);
+            }
+        }
         #endregion
 
         #region Exception Class
