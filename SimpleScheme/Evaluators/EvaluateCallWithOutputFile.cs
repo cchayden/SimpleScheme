@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// <summary>
         /// The output port to use during evaluation.
         /// </summary>
-        private OutputPort port;
+        private readonly OutputPort port;
         #endregion
 
         #region Constructor
@@ -35,9 +35,10 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCallWithOutputFile(Obj expr, Environment env, Stepper caller)
+        private EvaluateCallWithOutputFile(Obj expr, Environment env, Stepper caller, OutputPort port)
             : base(expr, env, caller)
         {
+            this.port = port;
             ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
@@ -52,7 +53,8 @@ namespace SimpleScheme
         /// <returns>The created evaluator.</returns>
         public static Stepper Call(Obj expr, Stepper caller)
         {
-            return new EvaluateCallWithOutputFile(expr, caller.Env, caller);
+            OutputPort port = OpenOutputFile(List.First(expr), caller.Interp);
+            return new EvaluateCallWithOutputFile(expr, caller.Env, caller, port);
         }
 
         /// <summary>
@@ -90,7 +92,6 @@ namespace SimpleScheme
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateCallWithOutputFile step = (EvaluateCallWithOutputFile)s;
-            step.port = OpenOutputFile(List.First(s.Expr), s.Caller.Interp);
             return Procedure.As(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
         }
 

@@ -28,14 +28,15 @@ namespace SimpleScheme
         #endregion
 
         #region Constructor
+
         /// <summary>
         /// Initializes a new instance of the EvaluateExpandMacro class.
         /// </summary>
-        /// <param name="fn">The macro to expand.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateExpandMacro(Macro fn, Obj expr, Environment env, Stepper caller)
+        /// <param name="fn">The macro to expand.</param>
+        private EvaluateExpandMacro(object expr, Environment env, Stepper caller, Macro fn)
             : base(expr, env, caller)
         {
             this.fn = fn;
@@ -59,7 +60,7 @@ namespace SimpleScheme
         /// <returns>The expand evaluator.</returns>
         public static Stepper Call(Macro fn, Obj args, Environment env, Stepper caller)
         {
-            return new EvaluateExpandMacro(fn, args, env, caller);
+            return new EvaluateExpandMacro(args, env, caller, fn);
         }
         #endregion
 

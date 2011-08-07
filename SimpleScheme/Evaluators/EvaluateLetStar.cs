@@ -26,14 +26,9 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create(StepperName);
 
         /// <summary>
-        /// The variable bindings established by the let expression.
-        /// </summary>
-        private Obj bindings;
-
-        /// <summary>
         /// The body of the let.
         /// </summary>
-        private Obj body;
+        private readonly Obj body;
 
         /// <summary>
         /// The list of variables to bind.
@@ -65,10 +60,20 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLetStar(Obj expr, Environment env, Stepper caller)
+        /// <param name="body">The body.</param>
+        /// <param name="vars">The list of variables to bind.</param>
+        /// <param name="inits">The initialization expressions.</param>
+        /// <param name="formals">The list of parameters to pass to the closure.</param>
+        /// <param name="vals">Evaluated values of inits.</param>
+        private EvaluateLetStar(Obj expr, Environment env, Stepper caller,Obj body, Obj vars, Obj inits, Obj formals, Obj vals)
             : base(expr, env, caller)
         {
-            ContinueHere(InitialStep);
+            this.body = body;
+            this.vars = vars;
+            this.inits = inits;
+            this.formals = formals;
+            this.vals = vals;
+            ContinueHere(EvalInitStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -83,48 +88,35 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateLetStar(expr, env, caller);
+            if (EmptyList.Is(expr))
+            {
+                ErrorHandlers.SemanticError("No arguments arguments for let*");
+                return caller.UpdateReturnedExpr(Undefined.Instance);
+            }
+
+            if (!Pair.Is(expr))
+            {
+                ErrorHandlers.SemanticError("Bad arg list for let*: " + expr);
+                return caller.UpdateReturnedExpr(Undefined.Instance);
+            }
+
+            Obj bindings = List.First(expr);
+            Obj body = List.Rest(expr);
+
+            if (EmptyList.Is(body))
+            {
+                return caller.UpdateReturnedExpr(Undefined.Instance);
+            }
+
+            Obj vars = List.MapFun(List.First, List.New(bindings));
+            Obj inits = List.MapFun(List.Second, List.New(bindings));
+            Obj formals = EmptyList.Instance;
+            Obj vals = EmptyList.Instance;
+            return new EvaluateLetStar(expr, env, caller, body, vars, inits, formals, vals);
         }
         #endregion
 
         #region Private Methods
-        /// <summary>
-        /// Start by checking the number of arguments.
-        /// Then test for named let.  
-        /// Grab bindings, body, vars, and inits.
-        /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>Continues by evaluating the init list.</returns>
-        private static Stepper InitialStep(Stepper s)
-        {
-            EvaluateLetStar step = (EvaluateLetStar)s;
-            if (EmptyList.Is(s.Expr))
-            {
-                ErrorHandlers.SemanticError("No arguments arguments for let*");
-                return s.ReturnUndefined();
-            }
-
-            if (!Pair.Is(s.Expr))
-            {
-                ErrorHandlers.SemanticError("Bad arg list for let*: " + s.Expr);
-                return s.ReturnUndefined();
-            }
-
-            step.bindings = List.First(s.Expr);
-            step.body = List.Rest(s.Expr);
-
-            if (EmptyList.Is(step.body))
-            {
-                return s.ReturnUndefined();
-            }
-
-            step.vars = List.MapFun(List.First, List.New(step.bindings));
-            step.inits = List.MapFun(List.Second, List.New(step.bindings));
-            step.formals = EmptyList.Instance;
-            step.vals = EmptyList.Instance;
-            return s.ContinueHere(EvalInitStep);
-        }
-
         /// <summary>
         /// Evaluate one of the inits.
         /// Do it in an environment made up of the previously evaluated inits bound to their vars.

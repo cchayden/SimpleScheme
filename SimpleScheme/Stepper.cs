@@ -105,7 +105,6 @@ namespace SimpleScheme
 
         /// <summary>
         /// Gets the expression being evaluated.
-        /// Immutable.
         /// </summary>
         public Obj Expr { get; private set; }
 

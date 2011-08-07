@@ -53,9 +53,10 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCase(Obj expr, Environment env, Stepper caller)
+        private EvaluateCase(Obj expr, Environment env, Stepper caller, Obj clauses)
             : base(expr, env, caller)
         {
+            this.clauses = clauses;
             ContinueHere(EvaluateKeyStep);
             IncrementCounter(counter);
         }
@@ -71,7 +72,7 @@ namespace SimpleScheme
         /// <returns>The case evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateCase(expr, env, caller);
+            return new EvaluateCase(expr, env, caller, List.Rest(expr));
         }
         #endregion
 
@@ -83,8 +84,6 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Stepper EvaluateKeyStep(Stepper s)
         {
-            EvaluateCase step = (EvaluateCase)s;
-            step.clauses = List.Rest(s.Expr);
             return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(AssignKeyStep));
         }
 

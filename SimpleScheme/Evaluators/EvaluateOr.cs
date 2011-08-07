@@ -22,11 +22,6 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
-
-        /// <summary>
-        /// The list of expressions.
-        /// </summary>
-        private Obj tests;
         #endregion
 
         #region Constructor
@@ -39,7 +34,6 @@ namespace SimpleScheme
         private EvaluateOr(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            this.tests = expr;
             ContinueHere(EvalTestStep);
             IncrementCounter(counter);
         }
@@ -73,15 +67,14 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private static Stepper EvalTestStep(Stepper s)
         {
-            EvaluateOr step = (EvaluateOr)s;
-            if (EmptyList.Is(List.Rest(step.tests)))
+            if (EmptyList.Is(List.Rest(s.Expr)))
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(List.First(step.tests), s.Env, s.Caller);
+                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(step.tests), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -92,13 +85,12 @@ namespace SimpleScheme
         /// <returns>The evaluation result, or loops back to evaluate the next item.</returns>
         private static Stepper LoopStep(Stepper s)
         {
-            EvaluateOr step = (EvaluateOr)s;
             if (SchemeBoolean.Truth(s.ReturnedExpr))
             {
                 return s.ReturnFromStep(s.ReturnedExpr);
             }
 
-            step.tests = List.Rest(step.tests);
+            s.UpdateExpr(List.Rest(s.Expr));
             return s.ContinueHere(EvalTestStep);
         }
         #endregion

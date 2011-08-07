@@ -28,7 +28,7 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private Obj body;
+        private readonly Obj body;
 
         /// <summary>
         /// The list of variables to bind.
@@ -44,12 +44,12 @@ namespace SimpleScheme
         /// The list of formal parameters to pass to the final closure.
         /// This is variable1, variable2, ...
         /// </summary>
-        private Obj formals;
+        private readonly Obj formals;
 
         /// <summary>
         /// Accumulate the list of init vals here for later assignment.
         /// </summary>
-        private System.Collections.Generic.List<Obj> vals;
+        private readonly System.Collections.Generic.List<Obj> vals;
         #endregion
 
         #region Constructor
@@ -59,10 +59,20 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLetRec(Obj expr, Environment env, Stepper caller)
+        /// <param name="body">The let body.</param>
+        /// <param name="vars">The variables to be bound.</param>
+        /// <param name="inits">The initialization expressions.</param>
+        /// <param name="formals">The formal parameters.</param>
+        /// <param name="vals">The initial values.</param>
+        private EvaluateLetRec(Obj expr, Environment env, Stepper caller, Obj body, Obj vars, Obj inits, Obj formals, System.Collections.Generic.List<Obj> vals)
             : base(expr, env, caller)
         {
-            ContinueHere(InitialStep);
+            this.body = body;
+            this.vars = vars;
+            this.inits = inits;
+            this.formals = formals;
+            this.vals = vals;
+            ContinueHere(EvalInitStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -77,58 +87,45 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateLetRec(expr, env, caller);
-        }
-        #endregion
-
-        #region Private Methods
-        /// <summary>
-        /// Start by checking the number of arguments.
-        /// Grab bindings, body, vars, and inits.
-        /// Make an environment for evaluating the inits consisting of the vars and 
-        ///   an equal number of undefined vals.
-        /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>Continues by evaluating the init list.</returns>
-        private static Stepper InitialStep(Stepper s)
-        {
-            EvaluateLetRec step = (EvaluateLetRec)s;
-            if (EmptyList.Is(s.Expr))
+            if (EmptyList.Is(expr))
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
-                return s.ReturnUndefined();
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
-            if (!Pair.Is(s.Expr))
+            if (!Pair.Is(expr))
             {
-                ErrorHandlers.SemanticError("Bad arg list for letrec: " + s.Expr);
-                return s.ReturnUndefined();
+                ErrorHandlers.SemanticError("Bad arg list for letrec: " + expr);
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
-            Obj bindings = List.First(s.Expr);
-            step.body = List.Rest(s.Expr);
+            Obj bindings = List.First(expr);
+            Obj body = List.Rest(expr);
 
-            if (EmptyList.Is(step.body))
+            if (EmptyList.Is(body))
             {
-                return s.ReturnUndefined();
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
-            step.vars = List.MapFun(List.First, List.New(bindings));
-            step.inits = List.MapFun(List.Second, List.New(bindings));
-            step.formals = step.vars;
+            Obj vars = List.MapFun(List.First, List.New(bindings));
+            Obj inits = List.MapFun(List.Second, List.New(bindings));
+            Obj formals = vars;
             Obj initVals = EmptyList.Instance;
-            int n = List.Length(step.vars);
+            int n = List.Length(vars);
             for (int i = 0; i < n; i++)
             {
                 initVals = Pair.Cons(Undefined.Instance, initVals);
             }
 
-            step.vals = new System.Collections.Generic.List<Obj>(n);
+            System.Collections.Generic.List<Obj> vals = new System.Collections.Generic.List<Obj>(n);
 
-            s.PushEnvironment(step.formals, initVals, s.Env);
-            return s.ContinueHere(EvalInitStep);
+            EvaluateLetRec eval = new EvaluateLetRec(expr, env, caller, body, vars, inits, formals, vals);
+            eval.PushEnvironment(formals, initVals, env);
+            return eval;
         }
+        #endregion
 
+        #region Private Methods
         /// <summary>
         /// Evaluate one of the inits in the environment of the vars.
         /// </summary>

@@ -28,11 +28,6 @@ namespace SimpleScheme
         /// The result that will be returned.
         /// </summary>
         private Obj result;
-
-        /// <summary>
-        /// Objs to make into a list.
-        /// </summary>
-        private Obj objs;
         #endregion
 
         #region Constructor
@@ -49,8 +44,6 @@ namespace SimpleScheme
         private EvaluateList(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            this.objs = expr;
-
             // Start with an empty list.  As exprs are evaluated, they will be consed on the
             //  front.  The list will be reversed before it is returned.  Do this rather than
             //  building a list in place so that the evaluator can be cloned.
@@ -95,10 +88,8 @@ namespace SimpleScheme
         /// <returns>Next step evaluates the first expression.</returns>
         private static Stepper EvalExprStep(Stepper s)
         {
-            EvaluateList step = (EvaluateList)s;
-
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(List.First(step.objs), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -113,12 +104,12 @@ namespace SimpleScheme
 
             // back from the evaluation -- save the result and keep going with the rest
             step.result = Pair.Cons(s.ReturnedExpr, step.result);
-            step.objs = List.Rest(step.objs);
+            step.UpdateExpr(List.Rest(s.Expr));
 
-            if (Pair.Is(step.objs))
+            if (Pair.Is(s.Expr))
             {
                 // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(List.First(step.objs), s.Env, s);
+                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s);
             }
 
             // We are done.  Reverse the list and return it.

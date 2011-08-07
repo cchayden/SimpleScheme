@@ -21,11 +21,6 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
-
-        /// <summary>
-        /// The list of expressions.
-        /// </summary>
-        private Obj expressions;
         #endregion
 
         #region Constructor
@@ -38,7 +33,6 @@ namespace SimpleScheme
         private EvaluateSequence(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            this.expressions = expr;
             ContinueHere(EvalExprStep);
             IncrementCounter(counter);
         }
@@ -68,17 +62,16 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Stepper EvalExprStep(Stepper s)
         {
-            EvaluateSequence step = (EvaluateSequence)s;
-            if (EmptyList.Is(List.Rest(step.expressions)))
+            if (EmptyList.Is(List.Rest(s.Expr)))
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
                 // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
                 //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.Caller);
+                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -88,8 +81,7 @@ namespace SimpleScheme
         /// <returns>Immediately steps back.</returns>
         private static Stepper LoopStep(Stepper s)
         {
-            EvaluateSequence step = (EvaluateSequence)s;
-            step.expressions = List.Rest(step.expressions);
+            s.UpdateExpr(List.Rest(s.Expr));
             return s.ContinueHere(EvalExprStep);
         }
         #endregion

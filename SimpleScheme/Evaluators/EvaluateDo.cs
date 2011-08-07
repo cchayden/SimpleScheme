@@ -65,6 +65,12 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="vars">The variables.</param>
+        /// <param name="inits">The initialization expressions.</param>
+        /// <param name="steps">The steps.</param>
+        /// <param name="exprs">The expressions.</param>
+        /// <param name="commands">The commands.</param>
+        /// <param name="testProc">The test proc to execute each interation.</param>
         private EvaluateDo(Obj expr, Environment env, Stepper caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Closure testProc)
             : base(expr, env, caller)
         {
@@ -97,15 +103,13 @@ namespace SimpleScheme
             if (EmptyList.Is(expr))
             {
                 ErrorHandlers.SemanticError("No body for do");
-                caller.UpdateReturnedExpr(Undefined.Instance);
-                return caller;
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
-                caller.UpdateReturnedExpr(Undefined.Instance);
-                return caller;
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
             Obj bindings = List.First(expr);
@@ -118,8 +122,7 @@ namespace SimpleScheme
             Obj test = List.First(List.Second(expr));
             if (EmptyList.Is(test))
             {
-                caller.UpdateReturnedExpr(Undefined.Instance);
-                return caller;
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
             // prepare test proc to execute each time through

@@ -31,15 +31,16 @@ namespace SimpleScheme
         #endregion
 
         #region Constructor
+
         /// <summary>
         /// Initializes a new instance of the EvaluateProc class.
         /// </summary>
-        /// <param name="fn">The function to apply.</param>
         /// <param name="args">The arguments to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        protected EvaluateProc(Procedure fn, Obj args, Environment env, Stepper caller, bool evaluate)
+        protected EvaluateProc(object args, Environment env, Stepper caller, Procedure fn, bool evaluate)
             : base(args, env, caller)
         {
             this.fn = fn;
@@ -67,7 +68,7 @@ namespace SimpleScheme
         /// <returns>The proc evaluator.</returns>
         public static Stepper Call(Procedure fn, Obj args, Environment env, Stepper caller)
         {
-            return new EvaluateProc(fn, args, env, caller, true);
+            return new EvaluateProc(args, env, caller, fn, true);
         }
 
         /// <summary>
@@ -80,7 +81,7 @@ namespace SimpleScheme
         /// <returns>The proc evaluator.</returns>
         public static Stepper CallQuoted(Procedure fn, Obj args, Environment env, Stepper caller)
         {
-            return new EvaluateProc(fn, args, env, caller, false);
+            return new EvaluateProc(args, env, caller, fn, false);
         }
         #endregion
 

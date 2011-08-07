@@ -59,10 +59,14 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLet(Obj expr, Environment env, Stepper caller)
+        private EvaluateLet(Obj expr, Environment env, Stepper caller, string name, Obj bindings, Obj body, Obj vars, Obj inits)
             : base(expr, env, caller)
         {
-            this.name = null;
+            this.name = name;
+            this.bindings = bindings;
+            this.body = body;
+            this.vars = vars;
+            this.inits = inits;
             ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
@@ -71,6 +75,9 @@ namespace SimpleScheme
         #region Public Static Methods
         /// <summary>
         /// Call let evaluator.
+        /// Start by checking the number of arguments.
+        /// Then test for named let.  
+        /// Grab bindings, body, and optionally name.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to make the expression in.</param>
@@ -78,15 +85,47 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
-            return new EvaluateLet(expr, env, caller);
+            if (EmptyList.Is(expr))
+            {
+                ErrorHandlers.SemanticError("No arguments for let");
+                return caller.UpdateReturnedExpr(Undefined.Instance);
+            }
+
+            if (!Pair.Is(expr))
+            {
+                ErrorHandlers.SemanticError("Bad arg list for let: " + expr);
+                return caller.UpdateReturnedExpr(Undefined.Instance);
+            }
+
+            string name = null;
+            Obj bindings;
+            Obj body;
+            if (Symbol.Is(List.First(expr)))
+            {
+                // named let
+                name = Symbol.As(List.First(expr));
+                bindings = List.Second(expr);
+                body = List.Rest(List.Rest(expr));
+            }
+            else
+            {
+                bindings = List.First(expr);
+                body = List.Rest(expr);
+            }
+
+            if (EmptyList.Is(body))
+            {
+                return caller.UpdateReturnedExpr(Undefined.Instance);
+            }
+
+            Obj vars = List.MapFun(List.First, List.New(bindings));
+            Obj inits = List.MapFun(List.Second, List.New(bindings));
+            return new EvaluateLet(expr, env, caller, name, bindings, body, vars, inits);
         }
         #endregion
 
         #region Private Methods
         /// <summary>
-        /// Start by checking the number of arguments.
-        /// Then test for named let.  
-        /// Grab bindings, body, and optionally name.
         /// Convert the let to a corresponding lambda.
         /// For a normal let, evaluate this lambda.
         /// For a named let, construct the additional lambda to bind to the name.
@@ -96,39 +135,6 @@ namespace SimpleScheme
         private static Stepper InitialStep(Stepper s)
         {
             EvaluateLet step = (EvaluateLet)s;
-            if (EmptyList.Is(s.Expr))
-            {
-                ErrorHandlers.SemanticError("No arguments for let");
-                return s.ReturnUndefined();
-            }
-
-            if (!Pair.Is(s.Expr))
-            {
-                ErrorHandlers.SemanticError("Bad arg list for let: " + s.Expr);
-                return s.ReturnUndefined();
-            }
-
-            if (Symbol.Is(List.First(s.Expr)))
-            {
-                // named let
-                step.name = Symbol.As(List.First(s.Expr));
-                step.bindings = List.Second(s.Expr);
-                step.body = List.Rest(List.Rest(s.Expr));
-            }
-            else
-            {
-                step.bindings = List.First(s.Expr);
-                step.body = List.Rest(s.Expr);
-            }
-
-            if (EmptyList.Is(step.body))
-            {
-                return s.ReturnUndefined();
-            }
-
-            step.vars = List.MapFun(List.First, List.New(step.bindings));
-            step.inits = List.MapFun(List.Second, List.New(step.bindings));
-
             if (step.name == null)
             {
                 // regular let -- create a closure for the body, bind inits to it, and apply it
