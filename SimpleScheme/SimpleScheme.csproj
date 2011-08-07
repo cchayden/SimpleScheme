@@ -84,7 +84,6 @@
     <Compile Include="Evaluators\EvaluateCond.cs" />
     <Compile Include="Evaluators\EvaluateSequence.cs" />
     <Compile Include="Evaluators\EvaluateSet.cs" />
-    <Compile Include="Evaluators\EvaluatorBase.cs" />
     <Compile Include="Scheme Types\InputPort.cs" />
     <Compile Include="Scheme Types\Macro.cs" />
     <Compile Include="Scheme Types\Number.cs" />
