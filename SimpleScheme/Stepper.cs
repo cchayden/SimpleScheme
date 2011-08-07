@@ -354,11 +354,22 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Continue executing in the existing evaluator, but set the returned expr.
+        /// Continue executing in the existing evaluator, but set the expr.
         /// </summary>
         /// <param name="expr">The new expr value.</param>
         /// <returns>The next step, which is this stepper.</returns>
-        public Stepper ContinueStep(Obj expr)
+        public Stepper UpdateExpr(Obj expr)
+        {
+            this.Expr = expr;
+            return this;
+        }
+
+        /// <summary>
+        /// Continue executing in the existing evaluator, but set the returned expr.
+        /// </summary>
+        /// <param name="expr">The new returned expr value.</param>
+        /// <returns>The next step, which is this stepper.</returns>
+        public Stepper UpdateReturnedExpr(Obj expr)
         {
             this.ReturnedExpr = expr;
             return this;

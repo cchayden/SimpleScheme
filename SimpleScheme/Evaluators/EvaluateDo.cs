@@ -29,30 +29,33 @@ namespace SimpleScheme
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private Obj vars;
+        private readonly Obj vars;
 
-        private Obj inits;
+        /// <summary>
+        /// The list of initializers.
+        /// </summary>
+        private readonly Obj inits;
 
         /// <summary>
         /// This list of step expressions.
         /// </summary>
-        private Obj steps;
+        private readonly Obj steps;
 
 
         /// <summary>
         /// The expression list following the test
         /// </summary>
-        private Obj exprs;
+        private readonly Obj exprs;
 
         /// <summary>
         /// The commands to execute each time through.
         /// </summary>
-        private Obj commands;
+        private readonly Obj commands;
 
         /// <summary>
         /// The test proc to execute each time around.
         /// </summary>
-        private Closure testProc;
+        private readonly Closure testProc;
         #endregion
 
         #region Constructor
@@ -94,14 +97,14 @@ namespace SimpleScheme
             if (EmptyList.Is(expr))
             {
                 ErrorHandlers.SemanticError("No body for do");
-                caller.ContinueStep(Undefined.Instance);
+                caller.UpdateReturnedExpr(Undefined.Instance);
                 return caller;
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
-                caller.ContinueStep(Undefined.Instance);
+                caller.UpdateReturnedExpr(Undefined.Instance);
                 return caller;
             }
 
@@ -115,7 +118,7 @@ namespace SimpleScheme
             Obj test = List.First(List.Second(expr));
             if (EmptyList.Is(test))
             {
-                caller.ContinueStep(Undefined.Instance);
+                caller.UpdateReturnedExpr(Undefined.Instance);
                 return caller;
             }
 

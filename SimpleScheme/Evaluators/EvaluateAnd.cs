@@ -22,11 +22,6 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(StepperName);
-
-        /// <summary>
-        /// The list of expressions.
-        /// </summary>
-        private Obj tests;
         #endregion
 
         #region Constructor
@@ -39,7 +34,6 @@ namespace SimpleScheme
         private EvaluateAnd(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            this.tests = expr;
             ContinueHere(EvalTestStep);
             IncrementCounter(counter);
         }
@@ -58,7 +52,7 @@ namespace SimpleScheme
             // If no expr, avoid creating an evaluator.
             if (EmptyList.Is(expr))
             {
-                return caller.ContinueStep(SchemeBoolean.True);
+                return caller.UpdateReturnedExpr(SchemeBoolean.True);
             }
 
             return new EvaluateAnd(expr, env, caller);
@@ -74,14 +68,14 @@ namespace SimpleScheme
         private static Stepper EvalTestStep(Stepper s)
         {
             EvaluateAnd step = (EvaluateAnd)s;
-            if (EmptyList.Is(List.Rest(step.tests)))
+            if (EmptyList.Is(List.Rest(step.Expr)))
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(List.First(step.tests), s.Env, s.Caller);
+                return EvaluateExpression.Call(List.First(step.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(step.tests), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(List.First(step.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -92,13 +86,12 @@ namespace SimpleScheme
         /// <returns>The result, or this step to loop back to previous step.</returns>
         private static Stepper LoopStep(Stepper s)
         {
-            EvaluateAnd step = (EvaluateAnd)s;
             if (SchemeBoolean.IsFalse(s.ReturnedExpr))
             {
                 return s.ReturnFromStep(SchemeBoolean.False);
             }
 
-            step.tests = List.Rest(step.tests);
+            s.UpdateExpr(List.Rest(s.Expr));
             return s.ContinueHere(EvalTestStep);
         }
         #endregion

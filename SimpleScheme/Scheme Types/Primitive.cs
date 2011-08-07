@@ -138,7 +138,7 @@ namespace SimpleScheme
 
             // Operation returned a result -- just return this
             //  to the caller.
-            return caller.ContinueStep(res);
+            return caller.UpdateReturnedExpr(res);
         }
         #endregion
     }

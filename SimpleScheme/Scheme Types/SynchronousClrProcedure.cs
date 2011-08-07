@@ -183,7 +183,7 @@ namespace SimpleScheme
 
             Obj res = this.MethodInfo.Invoke(target, argArray);
             res = res ?? Undefined.Instance;
-            return caller.ContinueStep(res);
+            return caller.UpdateReturnedExpr(res);
         }
         #endregion
     }

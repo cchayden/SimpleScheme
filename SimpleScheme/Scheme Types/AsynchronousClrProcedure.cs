@@ -213,7 +213,7 @@ namespace SimpleScheme
             AsyncState state = (AsyncState)result.AsyncState;
             Stepper caller = state.Caller;
             Obj res = this.endMethodInfo.Invoke(state.InvokedObject, args);
-            caller.ContinueStep(res);
+            caller.UpdateReturnedExpr(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.

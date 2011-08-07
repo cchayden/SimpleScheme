@@ -58,7 +58,7 @@ namespace SimpleScheme
             {
                 // Defun case -- create a closure and bind it to the variable.
                 env.UnsafeDefine(List.First(List.First(expr)), new Closure(List.Rest(List.First(expr)), List.Rest(expr), env));
-                return caller.ContinueStep(Undefined.Instance);
+                return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 
             return new EvaluateDefine(expr, env, caller);

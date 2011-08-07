@@ -49,7 +49,7 @@ namespace SimpleScheme
             }
             else
             {
-                ContinueStep(args); // as if EvalArgs returned this, the unevaluated args
+                this.UpdateReturnedExpr(args); // as if EvalArgs returned this, the unevaluated args
                 ContinueHere(ApplyStep);
             }
             IncrementCounter(counter);

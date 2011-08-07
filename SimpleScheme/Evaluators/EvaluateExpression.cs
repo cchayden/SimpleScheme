@@ -153,7 +153,7 @@ namespace SimpleScheme
                     return (Stepper)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
                 }
 
-                return caller.ContinueStep(env.UnsafeLookup(expr));
+                return caller.UpdateReturnedExpr(env.UnsafeLookup(expr));
             }
 
             // Look for all other non-pair forms.
@@ -162,7 +162,7 @@ namespace SimpleScheme
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.
                 // Return the integer, real, boolean, or vector.
-                return caller.ContinueStep(expr);
+                return caller.UpdateReturnedExpr(expr);
             }
 
             // Break apart and evaluate the fn and args
@@ -216,7 +216,7 @@ namespace SimpleScheme
         /// <returns>The quoted expression.</returns>
         private static Stepper EvalQuote(Obj args, Stepper caller)
         {
-            return caller.ContinueStep(List.First(args));
+            return caller.UpdateReturnedExpr(List.First(args));
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalLambda(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(new Closure(List.First(args), List.Rest(args), env));
+            return caller.UpdateReturnedExpr(new Closure(List.First(args), List.Rest(args), env));
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace SimpleScheme
         /// <returns>The closure representing the lambda.</returns>
         private static Stepper EvalMacro(Obj args, Environment env, Stepper caller)
         {
-            return caller.ContinueStep(new Macro(List.First(args), List.Rest(args), env));
+            return caller.UpdateReturnedExpr(new Macro(List.First(args), List.Rest(args), env));
         }
         #endregion
 
