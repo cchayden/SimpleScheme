@@ -83,8 +83,6 @@ namespace SimpleScheme
                     return EvaluateCase.StepperName;
                 case "SimpleScheme.EvaluateCond":
                     return EvaluateCond.StepperName;
-                case "SimpleScheme.EvaluateContinuation":
-                    return EvaluateContinuation.StepperName;
                 case "SimpleScheme.EvaluateDefine":
                     return EvaluateDefine.StepperName;
                 case "SimpleScheme.EvaluateDo":

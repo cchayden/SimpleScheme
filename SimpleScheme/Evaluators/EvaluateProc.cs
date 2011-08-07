@@ -122,6 +122,8 @@ namespace SimpleScheme
                     String.Format("{0}: ({1} {2})", StepperName, fn.ProcedureName, List.First(s.ReturnedExpr)));
             }
 
+            // Pass s.Caller to return to the caller rather than to here, since there is
+            //  nothing left to do.
             return fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion

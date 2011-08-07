@@ -7,6 +7,9 @@ namespace SimpleScheme
 
     /// <summary>
     /// Evaluate a define expression.
+    //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
+    //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
+    //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
     /// </summary>
     public sealed class EvaluateDefine : Stepper
     {
@@ -40,6 +43,10 @@ namespace SimpleScheme
         #region Public Static Methods
         /// <summary>
         /// Call a define evaluator.
+        /// Handle the two forms of define.
+        /// In the first case, just save the closure and return.
+        /// This is what would result if we prepend "lambda" and call EvaluateExpression.
+        /// In the second case, we need create an evaluator to evaluate the expression.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to make the expression in.</param>
@@ -47,32 +54,30 @@ namespace SimpleScheme
         /// <returns>The define evaluator.</returns>
         public static Stepper Call(Obj expr, Environment env, Stepper caller)
         {
+            if (Pair.Is(List.First(expr)))
+            {
+                // Defun case -- create a closure and bind it to the variable.
+                env.UnsafeDefine(List.First(List.First(expr)), new Closure(List.Rest(List.First(expr)), List.Rest(expr), env));
+                return caller.ContinueStep(Undefined.Instance);
+            }
+
             return new EvaluateDefine(expr, env, caller);
         }
         #endregion
 
         #region Private Methods
         /// <summary>
-        /// Handle the two forms of define.
-        /// In the first case, just save the closure and return.
-        /// This is what would result if we prepend "lambda" and call EvaluateExpression.
-        /// In the second case (defun) start by evaluating the body.
+        /// Start by evaluating the expression.
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
-        /// <returns>Continue by evaluating the body of the definition.</returns>
+        /// <returns>Continue by evaluating the expression.</returns>
         private static Stepper InitialStep(Stepper s)
         {
-            if (Pair.Is(List.First(s.Expr)))
-            {
-                s.Env.UnsafeDefine(List.First(List.First(s.Expr)), new Closure(List.Rest(List.First(s.Expr)), List.Rest(s.Expr), s.Env));
-                return s.ReturnUndefined();
-            }
-
             return EvaluateExpression.Call(List.Second(s.Expr), s.Env, s.ContinueHere(StoreDefineStep));
         }
 
         /// <summary>
-        /// Back from defun.  Store the body as the value of the symbol
+        /// Back from expression evaluation.  Store the result as the value of the symbol
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution continues in the caller.</returns>

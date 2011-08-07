@@ -218,14 +218,13 @@ namespace SimpleScheme
         /// <summary>
         /// Perform the call/cc primitive.
         /// Create a continuation that captures the caller's environment and returns to the caller.
-        /// The continuation itself is a sequence that evaluates the proc in the caller's environment and returns to the caller.
+        /// Then apply this procedure to it.
         /// </summary>
         /// <param name="caller">The calling stepper.</param>
         /// <returns>A function to continue the evaluation.</returns>
         private Obj CallCc(Stepper caller)
         {
-            return this.Apply(
-                List.New(new Continuation(EvaluateContinuation.Call(this, caller.Env, caller))), caller);
+            return this.Apply(List.New(new Continuation(caller)), caller);
         }
         #endregion
     }

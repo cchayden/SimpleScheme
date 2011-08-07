@@ -74,7 +74,6 @@
     <Compile Include="Evaluators\EvaluateProc.cs" />
     <Compile Include="Evaluators\EvaluateCallWithInputFile.cs" />
     <Compile Include="Evaluators\EvaluateCallWithOutputFile.cs" />
-    <Compile Include="Evaluators\EvaluateContinuation.cs" />
     <Compile Include="Evaluators\EvaluateDefine.cs" />
     <Compile Include="Evaluators\EvaluateExpandMacro.cs" />
     <Compile Include="Evaluators\EvaluateIf.cs" />

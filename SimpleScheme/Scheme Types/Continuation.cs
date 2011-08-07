@@ -37,7 +37,7 @@ namespace SimpleScheme
         public Continuation(Stepper step) : 
             base(1, 1)
         {
-            this.step = step.Caller.CloneChain(); 
+            this.step = step.CloneChain(); 
         }
         #endregion
 
