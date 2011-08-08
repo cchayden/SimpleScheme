@@ -75,6 +75,9 @@ namespace SimpleScheme
             }
 
             Stepper res = EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+// TODO fix this
+// If the result is suspended, then we must finish the evaluation but must NOT continue on to the next one.
+// write a test for this and fix it
             return res.IsSuspended ? s.ContinueHere(LoopStep) : res;
         }
 
