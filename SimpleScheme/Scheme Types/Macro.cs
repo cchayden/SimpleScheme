@@ -68,7 +68,6 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public override void AsString(bool quoted, StringBuilder buf)
         {
-            buf.Append(Name + ": ");
             buf.Append(this.ToString());
         }
 
