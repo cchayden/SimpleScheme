@@ -18,7 +18,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create("step");
+        private static readonly int counter = Counter.Create("eval");
 
         /// <summary>
         /// The interactive prompt.
@@ -30,7 +30,7 @@ namespace SimpleScheme
         /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
-        private readonly Stepper halted;
+        private readonly Evaluator halted;
 
         /// <summary>
         /// The async result used in case the interpreter is called asynchronously.
@@ -60,7 +60,7 @@ namespace SimpleScheme
 
             this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
-            this.halted = Stepper.NewHalted(this.GlobalEnvironment);
+            this.halted = Evaluator.NewHalted(this.GlobalEnvironment);
 
             try
             {
@@ -549,8 +549,8 @@ namespace SimpleScheme
         /// After suspension, return to this entry point.
         /// </summary>
         /// <param name="step">The step to perform first.</param>
-        /// <returns>The evaluation result, or suspended stepper.</returns>
-        public Obj EvalSteps(Stepper step)
+        /// <returns>The evaluation result, or suspended evaluator.</returns>
+        public Obj EvalSteps(Evaluator step)
         {
             while (true)
             {
@@ -623,10 +623,10 @@ namespace SimpleScheme
         /// <summary>
         /// Sets tracing on or off.
         /// </summary>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <param name="flag">The new trace state.</param>
         /// <returns>Undefined object.</returns>
-        private static Obj SetTraceFlag(Stepper caller, bool flag)
+        private static Obj SetTraceFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Trace = flag;
             return Undefined.Instance;
@@ -635,10 +635,10 @@ namespace SimpleScheme
         /// <summary>
         /// Sets counting on or off.
         /// </summary>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <param name="flag">The new count state.</param>
         /// <returns>Undefined object.</returns>
-        private static Obj SetCountFlag(Stepper caller, bool flag)
+        private static Obj SetCountFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Count = flag;
             return Undefined.Instance;
@@ -649,7 +649,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The caller.</param>
         /// <returns>Undefined result.</returns>
-        private static Obj Backtrace(Stepper caller)
+        private static Obj Backtrace(Evaluator caller)
         {
             caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
             return Undefined.Instance;
@@ -701,7 +701,7 @@ namespace SimpleScheme
         {
             this.asyncResult = new AsyncResult<object>(cb, state);
             Obj res = this.Eval(expr, this.GlobalEnvironment);
-            if (res is Stepper && ((Stepper)res).IsSuspended)
+            if (res is Evaluator && ((Evaluator)res).IsSuspended)
             {
                 return this.asyncResult;
             }
@@ -757,7 +757,7 @@ namespace SimpleScheme
         /// Write trace info if trace enabled.
         /// </summary>
         /// <param name="step">The step to trace.</param>
-        private void TraceStep(Stepper step)
+        private void TraceStep(Evaluator step)
         {
             if (!this.Trace)
             {

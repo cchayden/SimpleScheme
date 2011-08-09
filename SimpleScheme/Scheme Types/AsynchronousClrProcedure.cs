@@ -147,8 +147,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(object args, Stepper caller)
+        /// <returns>The next evaluator to execute.</returns>
+        public override Evaluator Apply(object args, Evaluator caller)
         {
             Obj target;
             Obj[] argArray;
@@ -165,7 +165,7 @@ namespace SimpleScheme
             }
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return Stepper.NewSuspended(res);
+            return Evaluator.NewSuspended(res);
         }
         #endregion
 
@@ -211,7 +211,7 @@ namespace SimpleScheme
         {
             object[] args = { result };
             AsyncState state = (AsyncState)result.AsyncState;
-            Stepper caller = state.Caller;
+            Evaluator caller = state.Caller;
             Obj res = this.endMethodInfo.Invoke(state.InvokedObject, args);
             caller.UpdateReturnedExpr(res);
 
@@ -229,8 +229,8 @@ namespace SimpleScheme
             /// Initializes a new instance of the AsynchronousClrProcedure.AsyncState class.
             /// </summary>
             /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
-            /// <param name="caller">The caller stepper to resume.</param>
-            public AsyncState(object invokedObject, Stepper caller)
+            /// <param name="caller">The caller evaluator to resume.</param>
+            public AsyncState(object invokedObject, Evaluator caller)
             {
                 this.InvokedObject = invokedObject;
                 this.Caller = caller;
@@ -242,9 +242,9 @@ namespace SimpleScheme
             public object InvokedObject { get; private set; }
 
             /// <summary>
-            /// Gets the caller stepper to resume.
+            /// Gets the caller evaluator to resume.
             /// </summary>
-            public Stepper Caller { get; private set; }
+            public Evaluator Caller { get; private set; }
         }
         #endregion
     }

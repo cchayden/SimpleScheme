@@ -11,13 +11,13 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
-    public class EvaluateProc : Stepper
+    public class EvaluateProc : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-proc";
+        public const string EvaluatorName = "evaluate-proc";
 
         /// <summary>
         /// The proc or primitive to apply.
@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
         #endregion
 
         #region Constructor
@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        protected EvaluateProc(object args, Environment env, Stepper caller, Procedure fn, bool evaluate)
+        protected EvaluateProc(object args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
             : base(args, env, caller)
         {
             this.fn = fn;
@@ -66,7 +66,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Stepper Call(Procedure fn, Obj args, Environment env, Stepper caller)
+        public static Evaluator Call(Procedure fn, Obj args, Environment env, Evaluator caller)
         {
             return new EvaluateProc(args, env, caller, fn, true);
         }
@@ -79,7 +79,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Stepper CallQuoted(Procedure fn, Obj args, Environment env, Stepper caller)
+        public static Evaluator CallQuoted(Procedure fn, Obj args, Environment env, Evaluator caller)
         {
             return new EvaluateProc(args, env, caller, fn, false);
         }
@@ -101,9 +101,9 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating all the arguments.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Next action to evaluate the args.</returns>
-        private static Stepper EvalArgsStep(Stepper s)
+        private static Evaluator EvalArgsStep(Evaluator s)
         {
             return EvaluateList.Call(s.Expr, s.Env, s.ContinueHere(ApplyStep));
         }
@@ -112,15 +112,15 @@ namespace SimpleScheme
         /// Back here after args have been evaluated.  
         /// Apply the proc to the evaluated args.  
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The result, or the next step to obtain it.</returns>
-        private static Stepper ApplyStep(Stepper s)
+        private static Evaluator ApplyStep(Evaluator s)
         {
             Procedure fn = ((EvaluateProc)s).fn;
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("{0}: ({1} {2})", StepperName, fn.ProcedureName, List.First(s.ReturnedExpr)));
+                    String.Format("{0}: ({1} {2})", EvaluatorName, fn.ProcedureName, List.First(s.ReturnedExpr)));
             }
 
             // Pass s.Caller to return to the caller rather than to here, since there is

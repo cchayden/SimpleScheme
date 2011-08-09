@@ -11,18 +11,18 @@ namespace SimpleScheme
     /// This is an iterative, rather than a recursive one.
     /// </summary>
     //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-    public sealed class EvaluateMap : Stepper
+    public sealed class EvaluateMap : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-map";
+        public const string EvaluatorName = "evaluate-map";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The proc to apply to each element of the list.
@@ -50,7 +50,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
-        private EvaluateMap(object expr, Environment env, Stepper caller, Procedure proc, Obj result)
+        private EvaluateMap(object expr, Environment env, Evaluator caller, Procedure proc, Obj result)
             : base(expr, env, caller)
         {
             this.proc = proc;
@@ -70,8 +70,8 @@ namespace SimpleScheme
         /// <param name="returnResult">If true, return the result of the map.</param>
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
-        /// <returns>The step to execute.</returns>
-        public static Stepper Call(Procedure proc, Obj expr, bool returnResult, Environment env, Stepper caller)
+        /// <returns>The evaluator to execute.</returns>
+        public static Evaluator Call(Procedure proc, Obj expr, bool returnResult, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
             if (EmptyList.Is(expr))
@@ -94,10 +94,10 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the map function to an element of the list and grab the result.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>If apply recurses, return that stepper.  Otherwise go on to save result.
+        /// <param name="s">This evaluator.</param>
+        /// <returns>If apply recurses, return that evaluator.  Otherwise go on to save result.
         /// If we are done, return the collected results.</returns>
-        private static Stepper ApplyFunStep(Stepper s)
+        private static Evaluator ApplyFunStep(Evaluator s)
         {
             EvaluateMap step = (EvaluateMap)s;
             if (Pair.Is(List.First(s.Expr)))
@@ -114,9 +114,9 @@ namespace SimpleScheme
         /// <summary>
         /// Collect the result of the function application and loop back to do the next one.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Continue back in apply fun step.</returns>
-        private static Stepper CollectAndLoopStep(Stepper s)
+        private static Evaluator CollectAndLoopStep(Evaluator s)
         {
             EvaluateMap step = (EvaluateMap)s;
 
@@ -127,7 +127,7 @@ namespace SimpleScheme
                 step.result = Pair.Cons(s.ReturnedExpr, step.result);
             }
 
-            // Step down each of the lists
+            // Move down each of the lists
             step.UpdateExpr(List.MapFun(List.Rest, List.New(s.Expr)));
             return s.ContinueHere(ApplyFunStep);
         }

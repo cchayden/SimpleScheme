@@ -74,47 +74,47 @@ namespace SimpleScheme
 
                 // Evaluator names, used for tracing.
                 case "SimpleScheme.EvaluateAnd":
-                    return EvaluateAnd.StepperName;
+                    return EvaluateAnd.EvaluatorName;
                 case "SimpleScheme.EvaluateCallWithInputFile":
-                    return EvaluateCallWithInputFile.StepperName;
+                    return EvaluateCallWithInputFile.EvaluatorName;
                 case "SimpleScheme.EvaluateCallWithOutputFile":
-                    return EvaluateCallWithOutputFile.StepperName;
+                    return EvaluateCallWithOutputFile.EvaluatorName;
                 case "SimpleScheme.EvaluateCase":
-                    return EvaluateCase.StepperName;
+                    return EvaluateCase.EvaluatorName;
                 case "SimpleScheme.EvaluateCond":
-                    return EvaluateCond.StepperName;
+                    return EvaluateCond.EvaluatorName;
                 case "SimpleScheme.EvaluateDefine":
-                    return EvaluateDefine.StepperName;
+                    return EvaluateDefine.EvaluatorName;
                 case "SimpleScheme.EvaluateDo":
-                    return EvaluateDo.StepperName;
+                    return EvaluateDo.EvaluatorName;
                 case "SimpleScheme.EvaluateExpandMacro":
-                    return EvaluateExpandMacro.StepperName;
+                    return EvaluateExpandMacro.EvaluatorName;
                 case "SimpleScheme.EvaluateExpression":
-                    return EvaluateExpression.StepperName;
+                    return EvaluateExpression.EvaluatorName;
                 case "SimpleScheme.EvaluateIf":
-                    return EvaluateIf.StepperName;
+                    return EvaluateIf.EvaluatorName;
                 case "SimpleScheme.EvaluateLet":
-                    return EvaluateLet.StepperName;
+                    return EvaluateLet.EvaluatorName;
                 case "SimpleScheme.EvaluateLetRec":
-                    return EvaluateLetRec.StepperName;
+                    return EvaluateLetRec.EvaluatorName;
                 case "SimpleScheme.EvaluateLetStar":
-                    return EvaluateLetStar.StepperName;
+                    return EvaluateLetStar.EvaluatorName;
                 case "SimpleScheme.EvaluateList":
-                    return EvaluateList.StepperName;
+                    return EvaluateList.EvaluatorName;
                 case "SimpleScheme.EvaluateMap":
-                    return EvaluateMap.StepperName;
+                    return EvaluateMap.EvaluatorName;
                 case "SimpleScheme.EvaluateOr":
-                    return EvaluateOr.StepperName;
+                    return EvaluateOr.EvaluatorName;
                 case "SimpleScheme.EvaluateProc":
-                    return EvaluateProc.StepperName;
+                    return EvaluateProc.EvaluatorName;
                 case "SimpleScheme.EvaluateSequence":
-                    return EvaluateSequence.StepperName;
+                    return EvaluateSequence.EvaluatorName;
                 case "SimpleScheme.EvaluateParallel":
-                    return EvaluateParallel.StepperName;
+                    return EvaluateParallel.EvaluatorName;
                 case "SimpleScheme.EvaluateSet":
-                    return EvaluateSet.StepperName;
+                    return EvaluateSet.EvaluatorName;
                 case "SimpleScheme.EvaluateTime":
-                    return EvaluateTime.StepperName;
+                    return EvaluateTime.EvaluatorName;
                 default:
                     return obj.GetType().FullName;
             }

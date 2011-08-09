@@ -13,18 +13,18 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    public sealed class EvaluateLet : Stepper
+    public sealed class EvaluateLet : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-let";
+        public const string EvaluatorName = "evaluate-let";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// Name, for named let.
@@ -59,7 +59,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLet(Obj expr, Environment env, Stepper caller, string name, Obj bindings, Obj body, Obj vars, Obj inits)
+        private EvaluateLet(Obj expr, Environment env, Evaluator caller, string name, Obj bindings, Obj body, Obj vars, Obj inits)
             : base(expr, env, caller)
         {
             this.name = name;
@@ -83,7 +83,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             if (EmptyList.Is(expr))
             {
@@ -130,9 +130,9 @@ namespace SimpleScheme
         /// For a normal let, evaluate this lambda.
         /// For a named let, construct the additional lambda to bind to the name.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Continues by evaluating the constructed lambda.</returns>
-        private static Stepper InitialStep(Stepper s)
+        private static Evaluator InitialStep(Evaluator s)
         {
             EvaluateLet step = (EvaluateLet)s;
             if (step.name == null)
@@ -151,9 +151,9 @@ namespace SimpleScheme
         ///   of the lambda.
         /// Then apply the lambda.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The next step to execute.</returns>
-        private static Stepper ApplyNamedLetStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The next evaluator to execute.</returns>
+        private static Evaluator ApplyNamedLetStep(Evaluator s)
         {
             EvaluateLet step = (EvaluateLet)s;
             Lambda fn = new Lambda(step.vars, step.body, s.Env);

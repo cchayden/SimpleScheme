@@ -13,18 +13,18 @@ namespace SimpleScheme
     ////                           ...)
     ////                           (<test> <expression> ...)
     ////                         <command> ...)</r4rs>
-    public sealed class EvaluateDo : Stepper
+    public sealed class EvaluateDo : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-do";
+        public const string EvaluatorName = "evaluate-do";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The list of variables to bind.
@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// <param name="exprs">The expressions.</param>
         /// <param name="commands">The commands.</param>
         /// <param name="testProc">The test proc to execute each interation.</param>
-        private EvaluateDo(Obj expr, Environment env, Stepper caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Lambda testProc)
+        private EvaluateDo(Obj expr, Environment env, Evaluator caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Lambda testProc)
             : base(expr, env, caller)
         {
             this.vars = vars;
@@ -97,7 +97,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // Test for errors before creating the object.
             if (EmptyList.Is(expr))
@@ -151,9 +151,9 @@ namespace SimpleScheme
         /// <summary>
         /// Start by evaluating the inits.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Continues by evaluating the inits.</returns>
-        private static Stepper InitialStep(Stepper s)
+        private static Evaluator InitialStep(Evaluator s)
         {
             EvaluateDo step = (EvaluateDo)s;
             return EvaluateList.Call(step.inits, s.Env, s.ContinueHere(TestStep));
@@ -163,9 +163,9 @@ namespace SimpleScheme
         /// Evaluate the test expr in the environment containing the variables with their new values.
         /// These are the init values or the step values.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step, which tests the result.</returns>
-        private static Stepper TestStep(Stepper s)
+        private static Evaluator TestStep(Evaluator s)
         {
             EvaluateDo step = (EvaluateDo)s;
             s.ReplaceEnvironment(step.vars, s.ReturnedExpr, s.Env);
@@ -176,9 +176,9 @@ namespace SimpleScheme
         /// Iterate: if test is true, eval the exprs and return.
         /// Otherwise, evaluate the commands.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step.</returns>
-        private static Stepper IterateStep(Stepper s)
+        private static Evaluator IterateStep(Evaluator s)
         {
             EvaluateDo step = (EvaluateDo)s;
             if (SchemeBoolean.Truth(step.ReturnedExpr))
@@ -204,9 +204,9 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the step expressions.  
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step.</returns>
-        private static Stepper LoopStep(Stepper s)
+        private static Evaluator LoopStep(Evaluator s)
         {
             EvaluateDo step = (EvaluateDo)s;
             return EvaluateList.Call(step.steps, step.Env, step.ContinueHere(TestStep));

@@ -11,18 +11,18 @@ namespace SimpleScheme
     /// The main evaluator for expressions.
     /// </summary>
    //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-    public sealed class EvaluateExpression : Stepper
+    public sealed class EvaluateExpression : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-expression";
+        public const string EvaluatorName = "evaluate-expression";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The function to evaluate.
@@ -41,7 +41,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to evaluate.</param>
-        private EvaluateExpression(Obj args, Environment env, Stepper caller, Obj fn)
+        private EvaluateExpression(Obj args, Environment env, Evaluator caller, Obj fn)
             : base(args, env, caller)
         {
             this.fn = fn;
@@ -138,7 +138,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.
@@ -151,7 +151,7 @@ namespace SimpleScheme
                 //    is a corresponding value.
                 if (env == null)
                 {
-                    return (Stepper)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
+                    return (Evaluator)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
                 }
 
                 return caller.UpdateReturnedExpr(env.UnsafeLookup(expr));
@@ -202,7 +202,7 @@ namespace SimpleScheme
         /// <param name="args">The args to quote.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The quoted expression.</returns>
-        private static Stepper EvalQuote(Obj args, Stepper caller)
+        private static Evaluator EvalQuote(Obj args, Evaluator caller)
         {
             return caller.UpdateReturnedExpr(List.First(args));
         }
@@ -214,7 +214,7 @@ namespace SimpleScheme
         /// <param name="env">The execution environment.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The lambda representing the expression.</returns>
-        private static Stepper EvalLambda(Obj args, Environment env, Stepper caller)
+        private static Evaluator EvalLambda(Obj args, Environment env, Evaluator caller)
         {
             return caller.UpdateReturnedExpr(new Lambda(List.First(args), List.Rest(args), env));
         }
@@ -226,7 +226,7 @@ namespace SimpleScheme
         /// <param name="env">The execution environment.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The macro representing the expression.</returns>
-        private static Stepper EvalMacro(Obj args, Environment env, Stepper caller)
+        private static Evaluator EvalMacro(Obj args, Environment env, Evaluator caller)
         {
             return caller.UpdateReturnedExpr(new Macro(List.First(args), List.Rest(args), env));
         }
@@ -238,9 +238,9 @@ namespace SimpleScheme
         /// The special forms have their own evaluators.
         /// Otherwise, evaluate the first argument (the proc) in preparation for a call.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next thing to do.</returns>
-        private static Stepper InitialStep(Stepper s)
+        private static Evaluator InitialStep(Evaluator s)
         {
             EvaluateExpression step = (EvaluateExpression)s;
 
@@ -349,12 +349,10 @@ namespace SimpleScheme
         /// Come here after evaluating the first expression, the proc.
         /// Handle the proc: macro, lambda, or function call.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next thing to do.</returns>
-        private static Stepper ApplyProcStep(Stepper s)
+        private static Evaluator ApplyProcStep(Evaluator s)
         {
-            EvaluateExpression step = (EvaluateExpression)s;
-
             // Come here after evaluating fn
             if (! Procedure.Is(s.ReturnedExpr))
             {
@@ -367,9 +365,9 @@ namespace SimpleScheme
         /// <summary>
         /// Here after an evaluation that should return a value.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The evaluation result.</returns>
-        private static Stepper ReturnValueAndEnvStep(Stepper s)
+        private static Evaluator ReturnValueAndEnvStep(Evaluator s)
         {
             // Assign return value and return to caller.
             return s.ReturnFromStep(s.ReturnedExpr, s.ReturnedEnv);

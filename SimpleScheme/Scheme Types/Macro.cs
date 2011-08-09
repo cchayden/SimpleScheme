@@ -79,8 +79,8 @@ namespace SimpleScheme
         /// <param name="args">The macro arguments.</param>
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
-        /// <returns>The next step toexecute.</returns>
-        public override Stepper Evaluate(Obj args, Environment env, Stepper caller)
+        /// <returns>The next evaluator to execute.</returns>
+        public override Evaluator Evaluate(Obj args, Environment env, Evaluator caller)
         {
             return EvaluateExpandMacro.Call(this, args, env, caller);
         }

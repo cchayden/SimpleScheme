@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    public abstract class EvaluateTimeBase : Stepper
+    public abstract class EvaluateTimeBase : Evaluator
     {
         #region Fields
         /// <summary>
@@ -43,7 +43,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluateTimeBase(Obj expr, Environment env, Stepper caller)
+        protected EvaluateTimeBase(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.startMem = GC.GetTotalMemory(true);
@@ -58,9 +58,9 @@ namespace SimpleScheme
         /// This evaluates the expression, in a way that is appropriate
         ///   to the function (eval or apply).
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step.</returns>
-        protected static Stepper Step1(Stepper s)
+        protected static Evaluator Step1(Evaluator s)
         {
             return ((EvaluateTimeBase)s).Step1();
         }
@@ -71,9 +71,9 @@ namespace SimpleScheme
         /// If not done, loop back.
         /// Otherwise, calculate elapsed time and mem use.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Continue, or else give the timer results.</returns>
-        protected static Stepper Step2(Stepper s)
+        protected static Evaluator Step2(Evaluator s)
         {
             EvaluateTimeBase step = (EvaluateTimeBase)s;
             step.i++;
@@ -97,16 +97,16 @@ namespace SimpleScheme
         /// Step1 is defined in the derived classes.
         /// </summary>
         /// <returns>The next step to take.</returns>
-        protected abstract Stepper Step1();
+        protected abstract Evaluator Step1();
         #endregion
 
         #region Private Static Methods
         /// <summary>
         /// Start by setting up timers and counter.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Continue to next step.</returns>
-        private static Stepper InitialStep(Stepper s)
+        private static Evaluator InitialStep(Evaluator s)
         {
             EvaluateTimeBase step = (EvaluateTimeBase)s;
             Obj y = List.Second(s.Expr);

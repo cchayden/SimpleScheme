@@ -8,13 +8,13 @@ namespace SimpleScheme
     /// <summary>
     /// Expand a macro.
     /// </summary>
-    public sealed class EvaluateExpandMacro : Stepper
+    public sealed class EvaluateExpandMacro : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-expand-macro";
+        public const string EvaluatorName = "evaluate-expand-macro";
 
         /// <summary>
         /// The macro to expand.
@@ -24,7 +24,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
         #endregion
 
         #region Constructor
@@ -36,7 +36,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
-        private EvaluateExpandMacro(object expr, Environment env, Stepper caller, Macro fn)
+        private EvaluateExpandMacro(object expr, Environment env, Evaluator caller, Macro fn)
             : base(expr, env, caller)
         {
             this.fn = fn;
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static Stepper Call(Macro fn, Obj args, Environment env, Stepper caller)
+        public static Evaluator Call(Macro fn, Obj args, Environment env, Evaluator caller)
         {
             return new EvaluateExpandMacro(args, env, caller, fn);
         }
@@ -68,9 +68,9 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the macro to the arguments, expanding it.  
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The first step to expand to macro.</returns>
-        private static Stepper ExpandStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The step to evaluate the expanded macro.</returns>
+        private static Evaluator ExpandStep(Evaluator s)
         {
             EvaluateExpandMacro step = (EvaluateExpandMacro)s;
             return step.fn.Apply(s.Expr, s.ContinueHere(EvaluateStep));
@@ -79,9 +79,9 @@ namespace SimpleScheme
         /// <summary>
         /// Back here after macro is expanded.  Evaluate the result.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Return to caller with the expanded macro.</returns>
-        private static Stepper EvaluateStep(Stepper s)
+        private static Evaluator EvaluateStep(Evaluator s)
         {
             return EvaluateExpression.Call(s.ReturnedExpr, s.Env, s.Caller);
         }

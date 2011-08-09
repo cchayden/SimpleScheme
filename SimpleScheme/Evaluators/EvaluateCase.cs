@@ -17,18 +17,18 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
     //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-    public sealed class EvaluateCase : Stepper
+    public sealed class EvaluateCase : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-case";
+        public const string EvaluatorName = "evaluate-case";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The list of clauses to test.
@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCase(Obj expr, Environment env, Stepper caller, Obj clauses)
+        private EvaluateCase(Obj expr, Environment env, Evaluator caller, Obj clauses)
             : base(expr, env, caller)
         {
             this.clauses = clauses;
@@ -70,7 +70,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The case evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             return new EvaluateCase(expr, env, caller, List.Rest(expr));
         }
@@ -80,9 +80,9 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private static Stepper EvalKeyStep(Stepper s)
+        private static Evaluator EvalKeyStep(Evaluator s)
         {
             return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(CheckClauseStep));
         }
@@ -93,9 +93,9 @@ namespace SimpleScheme
         /// If no clauses left, return empty list.
         /// If clause matches, start evaluating expressions.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The steps to test che clauses.</returns>
-        private static Stepper CheckClauseStep(Stepper s)
+        private static Evaluator CheckClauseStep(Evaluator s)
         {
             EvaluateCase step = (EvaluateCase)s;
             step.keyVal = s.ReturnedExpr;
@@ -104,7 +104,7 @@ namespace SimpleScheme
                 Obj clause = List.First(step.clauses);
                 if (!Pair.Is(clause))
                 {
-                    return (Stepper)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
+                    return (Evaluator)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
 
                 Obj data = List.First(clause);
@@ -138,8 +138,8 @@ namespace SimpleScheme
         /// <summary>
         /// Common logic for evaluating expressions in the clause expression list.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        private Stepper EvalExpr()
+        /// <returns>The next evaluator to execute.</returns>
+        private Evaluator EvalExpr()
         {
             if (EmptyList.Is(this.exprList))
             {

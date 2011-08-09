@@ -122,8 +122,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="givenEnv">The environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The next step to execute.</returns>
-        public Stepper ApplyWithtEnv(Environment givenEnv, Stepper caller)
+        /// <returns>The next evaluator to execute.</returns>
+        public Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
         {
             return EmptyList.Is(List.Rest(this.body)) ? 
                 EvaluateExpression.Call(List.First(this.body), givenEnv, caller) : 
@@ -137,8 +137,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        /// <returns>The next evaluator to execute.</returns>
+        public override Evaluator Apply(Obj args, Evaluator caller)
         {
             CheckArgs(args, "Lambda");
             return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);

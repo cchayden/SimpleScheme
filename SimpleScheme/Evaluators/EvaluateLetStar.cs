@@ -12,18 +12,18 @@ namespace SimpleScheme
     //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    public sealed class EvaluateLetStar : Stepper
+    public sealed class EvaluateLetStar : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-let*";
+        public const string EvaluatorName = "evaluate-let*";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The body of the let.
@@ -65,7 +65,7 @@ namespace SimpleScheme
         /// <param name="inits">The initialization expressions.</param>
         /// <param name="formals">The list of parameters to pass to the lambda.</param>
         /// <param name="vals">Evaluated values of inits.</param>
-        private EvaluateLetStar(Obj expr, Environment env, Stepper caller, Obj body, Obj vars, Obj inits, Obj formals, Obj vals)
+        private EvaluateLetStar(Obj expr, Environment env, Evaluator caller, Obj body, Obj vars, Obj inits, Obj formals, Obj vals)
             : base(expr, env, caller)
         {
             this.body = body;
@@ -86,7 +86,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             if (EmptyList.Is(expr))
             {
@@ -121,9 +121,9 @@ namespace SimpleScheme
         /// Evaluate one of the inits.
         /// Do it in an environment made up of the previously evaluated inits bound to their vars.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step.</returns>
-        private static Stepper EvalInitStep(Stepper s)
+        private static Evaluator EvalInitStep(Evaluator s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
             if (EmptyList.Is(step.inits))
@@ -137,12 +137,12 @@ namespace SimpleScheme
 
         /// <summary>
         /// Add var to list of formals, evaluation result to list of vals.
-        /// Step down list of vars and inits.
+        /// Move down list of vars and inits.
         /// Go back and evaluate another init.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step.</returns>
-        private static Stepper BindVarToInitStep(Stepper s)
+        private static Evaluator BindVarToInitStep(Evaluator s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
             step.formals = Pair.Cons(List.First(step.vars), step.formals);
@@ -155,9 +155,9 @@ namespace SimpleScheme
         /// <summary>
         /// Inits evaluated and bound -- execute the proc.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with evaluation of the body of the let.</returns>
-        private static Stepper ApplyProcStep(Stepper s)
+        private static Evaluator ApplyProcStep(Evaluator s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
 

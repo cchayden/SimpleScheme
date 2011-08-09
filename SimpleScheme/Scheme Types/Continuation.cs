@@ -13,31 +13,31 @@ namespace SimpleScheme
     {
         #region Constants
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
         public new const string Name = "continuation";
         #endregion
 
         #region Fields
         /// <summary>
-        /// The step to execute when the continuation is applied.
+        /// The evaluator to execute when the continuation is applied.
         /// </summary>
-        private readonly Stepper step;
+        private readonly Evaluator savedEvaluator;
         #endregion
 
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Continuation class.
-        /// The step and its chain of steps back to the beginning have to be cloned because they
+        /// The evaluator and its chain of evaluators back to the beginning have to be cloned because they
         ///   hold information about the progress of the evaluation.  When the evaluation proceeds
-        ///   these steps might be altered, damaging the ability to continue, which is what makes the
+        ///   these evaluators might be altered, damaging the ability to continue, which is what makes the
         ///   clone necessary.
         /// </summary>
-        /// <param name="step">The continuation to return to when applied.</param>
-        public Continuation(Stepper step) : 
+        /// <param name="eval">The continuation to return to when applied.</param>
+        public Continuation(Evaluator eval) : 
             base(1, 1)
         {
-            this.step = step.CloneChain(); 
+            this.savedEvaluator = eval.CloneChain(); 
         }
         #endregion
 
@@ -86,18 +86,18 @@ namespace SimpleScheme
 
         /// <summary>
         /// Execute the continuation.
-        /// Transfers execution to the step saved when the continuation was created.
+        /// Transfers execution to the evaluator saved when the continuation was created.
         /// The environment in effect at that time is also restored.
         /// Again, the chain of steps back to the beginning need to be clones so that this application
         ///   does not alter the evaluation, making it impossible to return back to the continuation.
         /// </summary>
         /// <param name="args">The value to return.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        /// <returns>The next evaluator to execute.</returns>
+        public override Evaluator Apply(Obj args, Evaluator caller)
         {
             CheckArgs(args, "Continuation");
-            return Stepper.TransferToStep(this.step.CloneChain(), List.First(args), this.step.Env);
+            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), List.First(args), this.savedEvaluator.Env);
         }
         #endregion
     }

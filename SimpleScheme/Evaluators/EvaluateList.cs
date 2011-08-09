@@ -11,18 +11,18 @@ namespace SimpleScheme
     /// This is an iterative, rather than a recursive one.
     /// </summary>
     //// <r4rs section="6.3">(list <obj> ...)</r4rs>
-    public sealed class EvaluateList : Stepper
+    public sealed class EvaluateList : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-list";
+        public const string EvaluatorName = "evaluate-list";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The result that will be returned.
@@ -41,7 +41,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateList(Obj expr, Environment env, Stepper caller)
+        private EvaluateList(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             // Start with an empty list.  As exprs are evaluated, they will be consed on the
@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
             if (EmptyList.Is(expr))
@@ -84,9 +84,9 @@ namespace SimpleScheme
         /// <summary>
         /// Create the list by evaluating the expression.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Next step evaluates the first expression.</returns>
-        private static Stepper EvalExprStep(Stepper s)
+        private static Evaluator EvalExprStep(Evaluator s)
         {
             // there is more to do --  evaluate the first expression
             return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
@@ -96,9 +96,9 @@ namespace SimpleScheme
         /// Back from evaluating the expression.  Accumulate the result and, if there
         ///   is anything left, loop back to evaluate another expression.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The created list, or a stepper to loop back and evaluate some more.</returns>
-        private static Stepper LoopStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The created list, or an evaluator to loop back and evaluate some more.</returns>
+        private static Evaluator LoopStep(Evaluator s)
         {
             EvaluateList step = (EvaluateList)s;
 

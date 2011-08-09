@@ -69,7 +69,7 @@
     <Compile Include="Scheme Types\SchemeString.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Stepper.cs" />
+    <Compile Include="Evaluators\Evaluator.cs" />
     <Compile Include="Evaluators\EvaluateTimeCall.cs" />
     <Compile Include="Evaluators\EvaluateProc.cs" />
     <Compile Include="Evaluators\EvaluateCallWithInputFile.cs" />

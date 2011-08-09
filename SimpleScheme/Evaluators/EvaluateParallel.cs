@@ -8,18 +8,18 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a sequence of exprs in parallel by evaluating each member.
     /// </summary>
-    public sealed class EvaluateParallel : Stepper
+    public sealed class EvaluateParallel : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-parallel";
+        public const string EvaluatorName = "evaluate-parallel";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The list of expressions.
@@ -34,7 +34,7 @@ namespace SimpleScheme
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateParallel(Obj expr, Environment env, Stepper caller)
+        private EvaluateParallel(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.expressions = expr;
@@ -51,7 +51,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The parallel evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             return new EvaluateParallel(expr, env, caller);
         }
@@ -64,9 +64,9 @@ namespace SimpleScheme
         /// If we are, evaluate and return.
         /// If the expression suspended, then go on anyway with the next expr.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The next step.</returns>
-        private static Stepper EvalExprStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The next evaluator.</returns>
+        private static Evaluator EvalExprStep(Evaluator s)
         {
             EvaluateParallel step = (EvaluateParallel)s;
             if (EmptyList.Is(step.expressions))
@@ -74,7 +74,7 @@ namespace SimpleScheme
                 return s.ReturnFromStep(Undefined.Instance);
             }
 
-            Stepper res = EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+            Evaluator res = EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
 // TODO fix this
 // If the result is suspended, then we must finish the evaluation but must NOT continue on to the next one.
 // write a test for this and fix it
@@ -84,9 +84,9 @@ namespace SimpleScheme
         /// <summary>
         /// Comes back here after expression evaluation.  Loop back and evaluate another.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Immediately steps back.</returns>
-        private static Stepper LoopStep(Stepper s)
+        private static Evaluator LoopStep(Evaluator s)
         {
             EvaluateParallel step = (EvaluateParallel)s;
             step.expressions = List.Rest(step.expressions);

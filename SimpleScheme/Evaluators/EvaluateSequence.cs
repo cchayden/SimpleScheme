@@ -9,18 +9,18 @@ namespace SimpleScheme
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-    public sealed class EvaluateSequence : Stepper
+    public sealed class EvaluateSequence : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-sequence";
+        public const string EvaluatorName = "evaluate-sequence";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
         #endregion
 
         #region Constructor
@@ -30,7 +30,7 @@ namespace SimpleScheme
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSequence(Obj expr, Environment env, Stepper caller)
+        private EvaluateSequence(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(EvalExprStep);
@@ -46,7 +46,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             return new EvaluateSequence(expr, env, caller);
         }
@@ -58,9 +58,9 @@ namespace SimpleScheme
         /// If not, evaluate the next expression.
         /// If we are, evaluate and return the last expr.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The next step.</returns>
-        private static Stepper EvalExprStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The next evaluator.</returns>
+        private static Evaluator EvalExprStep(Evaluator s)
         {
             if (EmptyList.Is(List.Rest(s.Expr)))
             {
@@ -77,9 +77,9 @@ namespace SimpleScheme
         /// <summary>
         /// Comes back here after expression evaluation.  Loop back and evaluate another.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Immediately steps back.</returns>
-        private static Stepper LoopStep(Stepper s)
+        private static Evaluator LoopStep(Evaluator s)
         {
             s.UpdateExpr(List.Rest(s.Expr));
             return s.ContinueHere(EvalExprStep);

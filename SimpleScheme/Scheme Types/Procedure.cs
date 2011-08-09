@@ -143,8 +143,8 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the procedure, which may or may not have 
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The next step to run after the application.</returns>
-        public abstract Stepper Apply(object args, Stepper caller);
+        /// <returns>The next evaluator to run after the application.</returns>
+        public abstract Evaluator Apply(object args, Evaluator caller);
 
         /// <summary>
         /// Evaluate the procedure.
@@ -157,8 +157,8 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the procedure.</param>
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
-        /// <returns>The next step toexecute.</returns>
-        public virtual Stepper Evaluate(Obj args, Environment env, Stepper caller)
+        /// <returns>The next evaluator to execute.</returns>
+        public virtual Evaluator Evaluate(Obj args, Environment env, Evaluator caller)
         {
             return EvaluateProc.Call(this, args, env, caller);
         }
@@ -208,7 +208,7 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        private static Obj Force(Obj promise, Stepper caller)
+        private static Obj Force(Obj promise, Evaluator caller)
         {
             return !Is(promise) ? promise : As(promise).Apply(null, caller);
         }
@@ -220,9 +220,9 @@ namespace SimpleScheme
         /// Create a continuation that captures the caller's environment and returns to the caller.
         /// Then apply this procedure to it.
         /// </summary>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private Obj CallCc(Stepper caller)
+        private Obj CallCc(Evaluator caller)
         {
             return this.Apply(List.New(new Continuation(caller)), caller);
         }

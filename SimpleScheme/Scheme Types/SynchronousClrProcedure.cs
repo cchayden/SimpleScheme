@@ -164,8 +164,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The next step to excute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        /// <returns>The next evaluator to excute.</returns>
+        public override Evaluator Apply(Obj args, Evaluator caller)
         {
             object target;
             object[] argArray;

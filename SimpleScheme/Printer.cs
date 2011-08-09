@@ -89,7 +89,7 @@ namespace SimpleScheme
                 case "SimpleScheme.InputPort":
                 case "SimpleScheme.OutputPort":
                 case "SimpleScheme.EmptyList":
-                case "SimpleScheme.Stepper":
+                case "SimpleScheme.Evaluator":
                 case "SimpleScheme.Undefined":
                     ((Printable)x).AsString(quoted, buf);
                     return;

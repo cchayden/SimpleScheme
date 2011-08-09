@@ -12,18 +12,18 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-    public sealed class EvaluateCond : Stepper
+    public sealed class EvaluateCond : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-cond";
+        public const string EvaluatorName = "evaluate-cond";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The value of the test expr
@@ -48,7 +48,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCond(Obj expr, Environment env, Stepper caller)
+        private EvaluateCond(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.clauses = expr;
@@ -65,7 +65,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
             if (EmptyList.Is(expr))
@@ -83,9 +83,9 @@ namespace SimpleScheme
         ///   such as else or the end of the list.
         /// Most often it evaluates the first clause.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>Usually, the step to evaluate the first clause.</returns>
-        private static Stepper EvalClauseStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Usually, This evaluator the first clause.</returns>
+        private static Evaluator EvalClauseStep(Evaluator s)
         {
             EvaluateCond step = (EvaluateCond)s;
             step.clause = List.First(step.clauses);
@@ -104,9 +104,9 @@ namespace SimpleScheme
         /// Otherwise, go back to initial step.
         /// The list was stepped down already in the previous step.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>The next step, either loop or finish.</returns>
-        private static Stepper TestClauseStep(Stepper s)
+        private static Evaluator TestClauseStep(Evaluator s)
         {
             EvaluateCond step = (EvaluateCond)s;
             step.test = s.ReturnedExpr;
@@ -129,9 +129,9 @@ namespace SimpleScheme
         /// Handle the varous forms for conequent.
         /// Evaluate and return the consequent.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with the caller.</returns>
-        private static Stepper EvalConsequentStep(Stepper s)
+        private static Evaluator EvalConsequentStep(Evaluator s)
         {
             EvaluateCond step = (EvaluateCond)s;
             if (EmptyList.Is(List.Rest(step.clause)))
@@ -153,9 +153,9 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the recipient function to the value of the test
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The next step to execute (the return).</returns>
-        private static Stepper ApplyRecipientStep(Stepper s)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The next evaluator to execute (the return).</returns>
+        private static Evaluator ApplyRecipientStep(Evaluator s)
         {
             EvaluateCond step = (EvaluateCond)s;
             return EvaluateProc.CallQuoted(Procedure.As(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);

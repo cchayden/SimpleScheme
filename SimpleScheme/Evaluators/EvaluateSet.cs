@@ -9,18 +9,18 @@ namespace SimpleScheme
     /// Evaluate a set! expression.
     /// </summary>
     //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
-    public sealed class EvaluateSet : Stepper
+    public sealed class EvaluateSet : Evaluator
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-set";
+        public const string EvaluatorName = "evaluate-set";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
         /// The variable of the assignment.
@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSet(Obj expr, Environment env, Stepper caller, Obj lhs, Obj rhs)
+        private EvaluateSet(Obj expr, Environment env, Evaluator caller, Obj lhs, Obj rhs)
             : base(expr, env, caller)
         {
             this.lhs = lhs;
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             Obj lhs = List.First(expr);
             Obj rhs = List.Second(expr);
@@ -75,9 +75,9 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the second expression (rhs).
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Code to evaluate the second expression.</returns>
-        private static Stepper InitialStep(Stepper s)
+        private static Evaluator InitialStep(Evaluator s)
         {
             EvaluateSet step = (EvaluateSet)s;
             return EvaluateExpression.Call(step.rhs, s.Env, s.ContinueHere(SetStep));
@@ -87,9 +87,9 @@ namespace SimpleScheme
         /// Back here after evaluation.  Assign the result to the variable in the environment
         ///   named by the first part of the expression.
         /// </summary>
-        /// <param name="s">The step to evaluate.</param>
+        /// <param name="s">This evaluator.</param>
         /// <returns>Returns to caller.</returns>
-        private static Stepper SetStep(Stepper s)
+        private static Evaluator SetStep(Evaluator s)
         {
             EvaluateSet step = (EvaluateSet)s;
             s.Env.Set(step.lhs, s.ReturnedExpr);

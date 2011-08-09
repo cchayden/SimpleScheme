@@ -13,14 +13,14 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string StepperName = "evaluate-time";
+        public const string EvaluatorName = "evaluate-time";
 
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(StepperName);
+        private static readonly int counter = Counter.Create(EvaluatorName);
         #endregion
 
         #region Constructor
@@ -30,7 +30,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateTime(Obj expr, Environment env, Stepper caller)
+        private EvaluateTime(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             IncrementCounter(counter);
@@ -45,7 +45,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Stepper Call(Obj expr, Environment env, Stepper caller)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             return new EvaluateTime(expr, env, caller);
         }
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// Test to see if we are done.
         /// </summary>
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
-        protected override Stepper Step1()
+        protected override Evaluator Step1()
         {
             return EvaluateExpression.Call(List.First(Expr), this.Env, ContinueHere(Step2));
         }

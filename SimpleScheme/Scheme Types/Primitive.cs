@@ -17,7 +17,7 @@ namespace SimpleScheme
     {
         #region Constants
         /// <summary>
-        /// The name of the stepper, used for counters and tracing.
+        /// The name of the evaluator, used for counters and tracing.
         /// </summary>
         public new const string Name = "primitive";
 
@@ -30,13 +30,13 @@ namespace SimpleScheme
         #region Fields
         /// <summary>
         /// The code to perform the operation.
-        /// The stepper function is executed to perform the primitive operation.
+        /// the evaluator function is executed to perform the primitive operation.
         /// It takes two arguments, a caller and args.
-        /// The caller is the step to return to when the operation is done.
+        /// The caller is the evaluator to return to when the operation is done.
         /// The args is the operand.
         /// The return value is either
         /// (1) a value, the operation result, or
-        /// (2) a Stepper, the next step to execute. 
+        /// (2) a Evaluator, The next evaluator to execute. 
         /// </summary>
         private readonly Op operation;
         #endregion
@@ -60,9 +60,9 @@ namespace SimpleScheme
         /// The signature for primitives.
         /// </summary>
         /// <param name="args">The primitive's arguments</param>
-        /// <param name="caller">The calling stepper.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The primitive's result.</returns>
-        public delegate Obj Op(Obj args, Stepper caller);
+        public delegate Obj Op(Obj args, Evaluator caller);
         #endregion
 
         #region Public Static Methods
@@ -110,17 +110,17 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the primitive to the arguments, giving a result.
         /// As a convenience for primitives, they are allowed to return either
-        ///   a result or a Stepper.  If they return a stepper, it means the result
-        ///   is not yet ready, and that a new stepper was created and returned.  When
-        ///   that stepper has a result, it will put in into ReturnedResult and return to the
-        ///   caller stepper provided to it.
+        ///   a result or a Evaluator.  If they return an evaluator, it means the result
+        ///   is not yet ready, and that a new evaluator was created and returned.  When
+        ///   that evaluator has a result, it will put in into ReturnedResult and return to the
+        ///   caller evaluator provided to it.
         /// If there is a result available immediately, this returns it by storing it
         ///   in ReturnedResult and returning to the caller.
         /// </summary>
         /// <param name="args">The arguments to the primitive.</param>
-        /// <param name="caller">The calling Stepper.</param>
-        /// <returns>The next step to execute.</returns>
-        public override Stepper Apply(Obj args, Stepper caller)
+        /// <param name="caller">The calling Evaluator.</param>
+        /// <returns>The next evaluator to execute.</returns>
+        public override Evaluator Apply(Obj args, Evaluator caller)
         {
             // First check the number of arguments
             CheckArgs(args, "Primitive");
@@ -129,10 +129,10 @@ namespace SimpleScheme
             // Execute the operation
             Obj res = this.operation(args, caller);
 
-            // See if the operation returns a result or another step
-            if (res is Stepper)
+            // See if the operation returns a result or another evaluator
+            if (res is Evaluator)
             {
-                return (Stepper)res;
+                return (Evaluator)res;
             }
 
             // Operation returned a result -- just return this
