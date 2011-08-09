@@ -45,7 +45,7 @@ namespace SimpleScheme
             try
             {
                 this.ArgClasses = this.ClassListBegin(argClassNames);
-                this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
+                this.MaxArgs = this.MinArgs = this.ArgClasses.Count - 2;
                 Type cls = TypePrimitives.ToClass(ClassName);
                 string beginName = "Begin" + this.MethodName;
                 this.MethodInfo = cls.GetMethod(beginName, this.ArgClasses.ToArray());
@@ -152,15 +152,16 @@ namespace SimpleScheme
         {
             Obj target;
             Obj[] argArray;
-            CheckArgs(args, "AsynchronousClrProcedure");
             if (this.MethodInfo.IsStatic)
             {
                 target = Undefined.Instance;
+                CheckArgs(args, "AsynchronousClrProcedure");
                 argArray = this.ToArgListBegin(args, new AsyncState(target, caller));
             }
             else
             {
                 target = List.First(args);
+                CheckArgs(List.Rest(args), "AsynchronousClrProcedure");
                 argArray = this.ToArgListBegin(List.Rest(args), new AsyncState(target, caller));
             }
 
@@ -213,7 +214,7 @@ namespace SimpleScheme
             AsyncState state = (AsyncState)result.AsyncState;
             Evaluator caller = state.Caller;
             Obj res = this.endMethodInfo.Invoke(state.InvokedObject, args);
-            caller.UpdateReturnedExpr(res);
+            caller.UpdateReturnValue(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.

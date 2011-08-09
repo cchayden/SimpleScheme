@@ -359,16 +359,17 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Continue executing in the existing evaluator, but set the returned expr.
+        /// Continue executing in this evaluator, but set the returned expr.
+        /// Usually invoked on an object's caller.  
         /// </summary>
-        /// <param name="expr">The new returned expr value.</param>
+        /// <param name="expr">The returned value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public Evaluator UpdateReturnedExpr(Obj expr)
+        public Evaluator UpdateReturnValue(Obj expr)
         {
             this.ReturnedExpr = expr;
             return this;
         }
-        
+
         /// <summary>
         /// Assign PC and return the current evaluator.
         /// </summary>

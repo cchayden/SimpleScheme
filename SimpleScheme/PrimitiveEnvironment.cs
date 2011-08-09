@@ -114,6 +114,7 @@ namespace SimpleScheme
             Character.DefinePrimitives(this);
             Symbol.DefinePrimitives(this);
             ClrProcedure.DefinePrimitives(this);
+            ClrConstructor.DefinePrimitives(this);
             SynchronousClrProcedure.DefinePrimitives(this);
             AsynchronousClrProcedure.DefinePrimitives(this);
             Counter.DefinePrimitives(this);

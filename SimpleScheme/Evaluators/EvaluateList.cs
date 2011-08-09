@@ -67,13 +67,13 @@ namespace SimpleScheme
             // first check for degenerate cases
             if (EmptyList.Is(expr))
             {
-                return caller.UpdateReturnedExpr(EmptyList.Instance);
+                return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad args for list: " + expr);
-                return caller.UpdateReturnedExpr(Undefined.Instance);
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             return new EvaluateList(expr, env, caller);

@@ -91,13 +91,13 @@ namespace SimpleScheme
             if (EmptyList.Is(expr))
             {
                 ErrorHandlers.SemanticError("No arguments arguments for let*");
-                return caller.UpdateReturnedExpr(Undefined.Instance);
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let*: " + expr);
-                return caller.UpdateReturnedExpr(Undefined.Instance);
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             Obj bindings = List.First(expr);
@@ -105,7 +105,7 @@ namespace SimpleScheme
 
             if (EmptyList.Is(body))
             {
-                return caller.UpdateReturnedExpr(Undefined.Instance);
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             Obj vars = List.MapFun(List.First, List.New(bindings));

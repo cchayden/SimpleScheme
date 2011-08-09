@@ -5,10 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Text;
-
     using Obj = System.Object;
-
-    // TODO write unit tests for static and non-static cases
 
     /// <summary>
     /// Handles normal synchronous CLR method calls.
@@ -30,7 +27,7 @@ namespace SimpleScheme
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="methodName">The method to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        private SynchronousClrProcedure(Obj targetClassName, Obj methodName, object argClassNames)
+        private SynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
             : base(targetClassName, methodName)
         {
             try
@@ -43,10 +40,12 @@ namespace SimpleScheme
                     ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + this.MethodName);
                     return;
                 } 
+
                 if (this.MethodInfo.IsStatic)
                 {
                     this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
-                } else
+                } 
+                else
                 {
                     this.MaxArgs = this.MinArgs = this.ArgClasses.Count + 1;
                 }
@@ -104,6 +103,7 @@ namespace SimpleScheme
                        List.Rest(List.Rest(args))),
                     2,
                     MaxInt)
+                //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
                    "property-get",
                    (args, caller) => new SynchronousClrProcedure(
@@ -111,6 +111,7 @@ namespace SimpleScheme
                        "get_" + Printer.AsString(List.Second(args), false), 
                        List.Rest(List.Rest(args))),
                     2)
+                //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
                    "property-set",
                    (args, caller) => new SynchronousClrProcedure(
@@ -118,6 +119,7 @@ namespace SimpleScheme
                        "set_" + Printer.AsString(List.Second(args), false), 
                        List.Rest(List.Rest(args))),
                     3)
+                //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
                    "index-get",
                    (args, caller) => new SynchronousClrProcedure(
@@ -125,6 +127,7 @@ namespace SimpleScheme
                        "get_Item", 
                        List.Rest(args)),
                     2)
+                //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
                    "index-set",
                    (args, caller) => new SynchronousClrProcedure(
@@ -153,7 +156,7 @@ namespace SimpleScheme
         /// <returns>The string form of the procedure.</returns>
         public override string ToString()
         {
-            return "<" + Name+ ">";
+            return "<" + Name + ">";
         }
 
         /// <summary>
@@ -183,7 +186,7 @@ namespace SimpleScheme
 
             Obj res = this.MethodInfo.Invoke(target, argArray);
             res = res ?? Undefined.Instance;
-            return caller.UpdateReturnedExpr(res);
+            return caller.UpdateReturnValue(res);
         }
         #endregion
     }

@@ -76,13 +76,13 @@ namespace SimpleScheme
             // first check for degenerate cases
             if (EmptyList.Is(expr))
             {
-                return caller.UpdateReturnedExpr(EmptyList.Instance);
+                return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + expr);
-                return caller.UpdateReturnedExpr(EmptyList.Instance);
+                return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
             Obj result = returnResult ? EmptyList.Instance : null;

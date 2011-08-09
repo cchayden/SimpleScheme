@@ -58,7 +58,7 @@ namespace SimpleScheme
             {
                 // Defun case -- create a lambda and bind it to the variable.
                 env.UnsafeDefine(List.First(List.First(expr)), new Lambda(List.Rest(List.First(expr)), List.Rest(expr), env));
-                return caller.UpdateReturnedExpr(Undefined.Instance);
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             return new EvaluateDefine(expr, env, caller);

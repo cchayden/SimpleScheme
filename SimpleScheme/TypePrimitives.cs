@@ -61,6 +61,8 @@ namespace SimpleScheme
                     return Macro.Name;
                 case "SimpleScheme.ClrProcedure":
                     return ClrProcedure.Name;
+                case "SimpleScheme.ClrConstructor":
+                    return ClrConstructor.Name;
                 case "SimpleScheme.SynchronousClrProcedure":
                     return SynchronousClrProcedure.Name;
                 case "SimpleScheme.AsynchronousClrProcedure":
@@ -165,6 +167,9 @@ namespace SimpleScheme
                 case "double":
                     typeName = "System.Double";
                     break;
+                case "object":
+                    typeName = "System.Object";
+                    break;
                case "boolean[]":
                     typeName = "System.Boolean[]";
                     break;
@@ -191,6 +196,9 @@ namespace SimpleScheme
                     break;
                 case "double[]":
                     typeName = "System.Double[]";
+                    break;
+                case "object[]":
+                    typeName = "System.Object[]";
                     break;
                 case "void":
                     return typeof(void);

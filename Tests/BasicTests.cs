@@ -5,6 +5,7 @@ namespace Tests
 {
     using System;
     using System.IO;
+    using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
     using Obj = System.Object;
@@ -13,8 +14,13 @@ namespace Tests
     /// This tests basic functionality.
     /// </summary>
     [TestClass]
-    public class Basictests
+    public class BasicTests
     {
+        /// <summary>
+        /// Counts the number of times the sleep function is called.
+        /// </summary>
+        private static int sleepCounter;
+
         /// <summary>
         /// A scheme interpreter, created for each test.
         /// </summary>
@@ -26,10 +32,38 @@ namespace Tests
         private string section;
 
         /// <summary>
+        /// Delegate for TestSleep, needed for the async call.
+        /// </summary>
+        /// <param name="interval">The dleep duration.</param>
+        /// <returns>Delegate for sleep.</returns>
+        public delegate int TestSleepCaller(int interval);
+
+        /// <summary>
         /// Gets or sets the test context which provides
         /// information about and functionality for the current test run.
         /// </summary>
         public TestContext TestContext { get; set; }
+
+        /// <summary>
+        /// Sleep for a given interval.
+        /// </summary>
+        /// <param name="interval">Duration of sleep (milliseconds).</param>
+        /// <returns>The interval.</returns>
+        public static int TestSleep(int interval)
+        {
+            Thread.Sleep(interval);
+            sleepCounter++;
+            return interval;
+        }
+
+        /// <summary>
+        /// Create a delegate, for calling asynchronously.
+        /// </summary>
+        /// <returns>TestSleep delegate.</returns>
+        public static TestSleepCaller CreateAsync()
+        {
+            return TestSleep;
+        }
 
         /// <summary>
         /// Initialize each test.
@@ -38,6 +72,7 @@ namespace Tests
         public void MyTestInitialize()
         {
             this.interpreter = Interpreter.New();
+            sleepCounter = 0;
         }
 
         /// <summary>
@@ -140,6 +175,7 @@ namespace Tests
                 (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
                 (str-equals 'xxx 'xxx)
             ");
+
             this.Run("False", "sync string equals", @"
                 (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
                 (str-equals 'xxx 'yyy)
@@ -188,9 +224,9 @@ namespace Tests
             // index get
             this.Run("1", "item array-list", @"
                 (define array-list (new ""System.Collections.ArrayList""))
-                (define add (method ""System.Collections.ArrayList"" ""Add"" ""System.Object""))
+                (define add (method ""System.Collections.ArrayList"" ""Add"" ""object""))
                 (define item (index-get ""System.Collections.ArrayList"" ""int""))
-                (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""System.Object"" ))
+                (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""object"" ))
                 (add array-list 1)
                 (item array-list 0)
             ");
@@ -198,13 +234,61 @@ namespace Tests
             // index set
             this.Run("3", "item array-list", @"
                 (define array-list (new ""System.Collections.ArrayList""))
-                (define add (method ""System.Collections.ArrayList"" ""Add"" ""System.Object""))
+                (define add (method ""System.Collections.ArrayList"" ""Add"" ""object""))
                 (define item (index-get ""System.Collections.ArrayList"" ""int""))
-                (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""System.Object"" ))
+                (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""object"" ))
                 (add array-list 1)
                 (item-set! array-list 0 3)
                 (item array-list 0)
             ");
+        }
+
+        /// <summary>
+        /// A test for synchronous CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void CtorClrTest()
+        {
+            // define constructor
+            this.Run("<clr constructor>", "define string constructor", @"
+                (define str-ctor (constructor ""System.String"" ""char[]""))
+                str-ctor
+            ");
+
+            // use constructor
+            this.Run("xxx", "construct string", @"
+                (define str-ctor (constructor ""System.String"" ""char[]""))
+                (str-ctor ""xxx"")
+            ");
+      }
+
+        /// <summary>
+        /// A test for asynchronous CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void ASyncClrTest()
+        {
+            // sync sleep
+            sleepCounter = 0;
+            this.Run("10", "sync sleep",
+               @"
+                (define test-sleep (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
+                (test-sleep 10)
+            ");
+            Assert.AreEqual(1, sleepCounter, "sync");
+
+            // async sleep
+            sleepCounter = 0;
+            this.Run("SimpleScheme.Evaluator", "async sleep",
+               @"
+                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                (define caller (create-async))
+                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                (async-sleep caller 10)
+            ");
+            Assert.AreEqual(0, sleepCounter, "async before");
+            Thread.Sleep(20);
+            Assert.AreEqual(1, sleepCounter, "async after");
         }
 
         /// <summary>

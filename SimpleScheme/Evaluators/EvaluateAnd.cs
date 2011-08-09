@@ -52,7 +52,7 @@ namespace SimpleScheme
             // If no expr, avoid creating an evaluator.
             if (EmptyList.Is(expr))
             {
-                return caller.UpdateReturnedExpr(SchemeBoolean.True);
+                return caller.UpdateReturnValue(SchemeBoolean.True);
             }
 
             return new EvaluateAnd(expr, env, caller);

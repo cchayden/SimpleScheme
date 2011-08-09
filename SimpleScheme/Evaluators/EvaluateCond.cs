@@ -70,7 +70,7 @@ namespace SimpleScheme
             // If no expr, avoid creating an evaluator.
             if (EmptyList.Is(expr))
             {
-                return caller.UpdateReturnedExpr(SchemeBoolean.False);
+                return caller.UpdateReturnValue(SchemeBoolean.False);
             }
 
             return new EvaluateCond(expr, env, caller);

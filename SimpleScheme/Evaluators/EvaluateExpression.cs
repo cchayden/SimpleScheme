@@ -154,7 +154,7 @@ namespace SimpleScheme
                     return (Evaluator)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
                 }
 
-                return caller.UpdateReturnedExpr(env.UnsafeLookup(expr));
+                return caller.UpdateReturnValue(env.UnsafeLookup(expr));
             }
 
             // Look for all other non-pair forms.
@@ -163,7 +163,7 @@ namespace SimpleScheme
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.
                 // Return the integer, real, boolean, or vector.
-                return caller.UpdateReturnedExpr(expr);
+                return caller.UpdateReturnValue(expr);
             }
 
             // Break apart and evaluate the fn and args
@@ -204,7 +204,7 @@ namespace SimpleScheme
         /// <returns>The quoted expression.</returns>
         private static Evaluator EvalQuote(Obj args, Evaluator caller)
         {
-            return caller.UpdateReturnedExpr(List.First(args));
+            return caller.UpdateReturnValue(List.First(args));
         }
 
         /// <summary>
@@ -216,7 +216,7 @@ namespace SimpleScheme
         /// <returns>The lambda representing the expression.</returns>
         private static Evaluator EvalLambda(Obj args, Environment env, Evaluator caller)
         {
-            return caller.UpdateReturnedExpr(new Lambda(List.First(args), List.Rest(args), env));
+            return caller.UpdateReturnValue(new Lambda(List.First(args), List.Rest(args), env));
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace SimpleScheme
         /// <returns>The macro representing the expression.</returns>
         private static Evaluator EvalMacro(Obj args, Environment env, Evaluator caller)
         {
-            return caller.UpdateReturnedExpr(new Macro(List.First(args), List.Rest(args), env));
+            return caller.UpdateReturnValue(new Macro(List.First(args), List.Rest(args), env));
         }
         #endregion
 
