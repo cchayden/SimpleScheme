@@ -84,7 +84,7 @@ namespace SimpleScheme
                 case "SimpleScheme.Procedure":
                 case "SimpleScheme.Primitive":
                 case "SimpleScheme.Continuation":
-                case "SimpleScheme.Closure":
+                case "SimpleScheme.Lambda":
                 case "SimpleScheme.Macro":
                 case "SimpleScheme.InputPort":
                 case "SimpleScheme.OutputPort":

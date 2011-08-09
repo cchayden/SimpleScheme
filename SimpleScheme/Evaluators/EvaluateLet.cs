@@ -137,8 +137,8 @@ namespace SimpleScheme
             EvaluateLet step = (EvaluateLet)s;
             if (step.name == null)
             {
-                // regular let -- create a closure for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(new Closure(step.vars, step.body, s.Env), step.inits, s.Env, s.Caller);
+                // regular let -- create a lambda for the body, bind inits to it, and apply it
+                return EvaluateProc.Call(new Lambda(step.vars, step.body, s.Env), step.inits, s.Env, s.Caller);
             }
 
             // named let -- eval the inits in the outer environment
@@ -147,16 +147,16 @@ namespace SimpleScheme
 
         /// <summary>
         /// Apply the named let.
-        /// Define a closure with the bound vars and the body, and put it in the environment
-        ///   of the closure.
-        /// Then apply the closure.
+        /// Define a lambda with the bound vars and the body, and put it in the environment
+        ///   of the lambda.
+        /// Then apply the lambda.
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>The next step to execute.</returns>
         private static Stepper ApplyNamedLetStep(Stepper s)
         {
             EvaluateLet step = (EvaluateLet)s;
-            Closure fn = new Closure(step.vars, step.body, s.Env);
+            Lambda fn = new Lambda(step.vars, step.body, s.Env);
             fn.Env.UnsafeDefine(step.name, fn);
             return fn.Apply(s.ReturnedExpr, s.Caller);
         }

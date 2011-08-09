@@ -36,7 +36,7 @@ namespace SimpleScheme
         private EvaluateIf(Obj expr, Environment env, Stepper caller)
             : base(expr, env, caller)
         {
-            ContinueHere(EvaluateTestStep);
+            ContinueHere(EvalTestStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -61,9 +61,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private static Stepper EvaluateTestStep(Stepper s)
+        private static Stepper EvalTestStep(Stepper s)
         {
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(EvaluateAlternativeStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(EvalAlternativeStep));
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution continues with the return.</returns>
-        private static Stepper EvaluateAlternativeStep(Stepper s)
+        private static Stepper EvalAlternativeStep(Stepper s)
         {
             Obj toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr) ? List.Second(s.Expr) : List.Third(s.Expr);
             return EvaluateExpression.Call(

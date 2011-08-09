@@ -57,7 +57,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.clauses = clauses;
-            ContinueHere(EvaluateKeyStep);
+            ContinueHere(EvalKeyStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -82,21 +82,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private static Stepper EvaluateKeyStep(Stepper s)
+        private static Stepper EvalKeyStep(Stepper s)
         {
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(AssignKeyStep));
-        }
-
-        /// <summary>
-        /// Grab the evaluated key and go to the test loop.
-        /// </summary>
-        /// <param name="s">The step to evaluate.</param>
-        /// <returns>The next step: check clause.</returns>
-        private static Stepper AssignKeyStep(Stepper s)
-        {
-            EvaluateCase step = (EvaluateCase)s;
-            step.keyVal = s.ReturnedExpr;
-            return s.ContinueHere(CheckClauseStep);
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(CheckClauseStep));
         }
 
         /// <summary>
@@ -110,6 +98,7 @@ namespace SimpleScheme
         private static Stepper CheckClauseStep(Stepper s)
         {
             EvaluateCase step = (EvaluateCase)s;
+            step.keyVal = s.ReturnedExpr;
             while (!EmptyList.Is(step.clauses))
             {
                 Obj clause = List.First(step.clauses);

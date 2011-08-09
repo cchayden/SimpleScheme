@@ -1,4 +1,4 @@
-﻿// <copyright file="Closure.cs" company="Charles Hayden">
+﻿// <copyright file="Lambda.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -8,7 +8,7 @@ namespace SimpleScheme
     using Obj = System.Object;
 
     /// <summary>
-    /// A closure stores the environment and a program to run.
+    /// A lambda stores the environment and a program to run.
     /// It can be executed later, through Apply.
     /// The Macro class also derives from this.
     /// </summary>
@@ -17,11 +17,11 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
     //// <r4rs section="4.1.4">formals: <variable></r4rs>
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-    public class Closure : Procedure
+    public class Lambda : Procedure
     {
         #region Constants
         /// <summary>
-        /// The printable name of the closure type.
+        /// The printable name of the lambda type.
         /// </summary>
         public new const string Name = "lambda";
         #endregion
@@ -45,13 +45,13 @@ namespace SimpleScheme
 
         #region Constructor
         /// <summary>
-        /// Initializes a new instance of the Closure class.
+        /// Initializes a new instance of the Lambda class.
         /// </summary>
         /// <param name="formalParameters">A list of variable names, to be matched with 
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        public Closure(Obj formalParameters, Obj body, Environment env) :
+        public Lambda(Obj formalParameters, Obj body, Environment env) :
             base(0, 0)
         {
             this.formalParameters = formalParameters;
@@ -73,28 +73,28 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme closure.
+        /// Tests whether to given object is a scheme lambda.
         /// </summary>
         /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme closure.</returns>
+        /// <returns>True if the object is a scheme lambda.</returns>
         public static new bool Is(Obj obj)
         {
-            return obj is Closure;
+            return obj is Lambda;
         }
 
         /// <summary>
-        /// Convert object to closure.
+        /// Convert object to lambda.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a closure.</returns>
-        public static new Closure As(Obj obj)
+        /// <returns>The object as a lambda.</returns>
+        public static new Lambda As(Obj obj)
         {
-            return (Closure)obj;
+            return (Lambda)obj;
         }
 
         #region Public Methods
         /// <summary>
-        /// Write the closure to the string builder.
+        /// Write the lambda to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
@@ -104,10 +104,10 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Display the closure as a string.  
+        /// Display the lambda as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
         /// </summary>
-        /// <returns>The string form of the closure.</returns>
+        /// <returns>The string form of the lambda.</returns>
         public override string ToString()
         {
             return this.ToString(Name);
@@ -132,23 +132,23 @@ namespace SimpleScheme
 
         /// <summary>
         /// Actually executes the saved program, with the given arguments bound with the 
-        ///   formal parameters of the closure.
-        /// Creates a new environment, linked to the encironment of the closure itself (which should be the lexical parent).
+        ///   formal parameters of the lambda.
+        /// Creates a new environment, linked to the environment of the lambda itself (which should be the lexical parent).
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next step to execute.</returns>
         public override Stepper Apply(Obj args, Stepper caller)
         {
-            CheckArgs(args, "Closure");
+            CheckArgs(args, "Lambda");
             return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);
         }
 
         /// <summary>
-        /// Common printing logic for closures.
+        /// Common printing logic for lambdas.
         /// </summary>
         /// <param name="tag">The function name.</param>
-        /// <returns>String representing the closure.</returns>
+        /// <returns>String representing the lambda.</returns>
         protected string ToString(string tag)
         {
             // trim enclosing parentheses off body, to match the definition
@@ -162,7 +162,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Extract the min amd max number of args allowed when calling the closure.
+        /// Extract the min amd max number of args allowed when calling the lambda.
         /// </summary>
         private void ProcessFormals()
         {

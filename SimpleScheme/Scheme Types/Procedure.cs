@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// <summary>
     /// A procedure is executable. 
     /// It supports an Apply method.
-    /// Closures, Continuations, CLR methods, and primitives are examples of Procedures.
+    /// Lambdas, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
     public abstract class Procedure : Printable
     {
@@ -150,7 +150,7 @@ namespace SimpleScheme
         /// Evaluate the procedure.
         /// At this point, the args are NOT evaluated
         /// Macro is evaluated differently, and overrides this method.
-        /// This is a primitive, a closure, a continuation, or a CLR Procedure.
+        /// This is a primitive, a lambda, a continuation, or a CLR Procedure.
         /// Evaluate the arguments in the environment, then apply the function 
         ///    to the arguments.
         /// </summary>

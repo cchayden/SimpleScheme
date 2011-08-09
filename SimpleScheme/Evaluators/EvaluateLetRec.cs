@@ -41,7 +41,7 @@ namespace SimpleScheme
         private Obj inits;
 
         /// <summary>
-        /// The list of formal parameters to pass to the final closure.
+        /// The list of formal parameters to pass to the final lambda.
         /// This is variable1, variable2, ...
         /// </summary>
         private readonly Obj formals;
@@ -139,7 +139,7 @@ namespace SimpleScheme
                 return s.ContinueHere(ApplyProcStep);
             }
 
-            Closure fun = new Closure(step.formals, List.New(List.First(step.inits)), s.Env);  
+            Lambda fun = new Lambda(step.formals, List.New(List.First(step.inits)), s.Env);  
             return fun.ApplyWithtEnv(s.Env, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -178,7 +178,7 @@ namespace SimpleScheme
             }
 
             // apply the fun to the vals and return
-            Closure fun = new Closure(step.formals, step.body, s.Env);
+            Lambda fun = new Lambda(step.formals, step.body, s.Env);
             return fun.ApplyWithtEnv(s.Env, s.Caller);
         }
         #endregion

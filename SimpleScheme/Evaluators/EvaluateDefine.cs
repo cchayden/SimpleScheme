@@ -44,7 +44,7 @@ namespace SimpleScheme
         /// <summary>
         /// Call a define evaluator.
         /// Handle the two forms of define.
-        /// In the first case, just save the closure and return.
+        /// In the first case, just save the lambda and return.
         /// This is what would result if we prepend "lambda" and call EvaluateExpression.
         /// In the second case, we need create an evaluator to evaluate the expression.
         /// </summary>
@@ -56,8 +56,8 @@ namespace SimpleScheme
         {
             if (Pair.Is(List.First(expr)))
             {
-                // Defun case -- create a closure and bind it to the variable.
-                env.UnsafeDefine(List.First(List.First(expr)), new Closure(List.Rest(List.First(expr)), List.Rest(expr), env));
+                // Defun case -- create a lambda and bind it to the variable.
+                env.UnsafeDefine(List.First(List.First(expr)), new Lambda(List.Rest(List.First(expr)), List.Rest(expr), env));
                 return caller.UpdateReturnedExpr(Undefined.Instance);
             }
 

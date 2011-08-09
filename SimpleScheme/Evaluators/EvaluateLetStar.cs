@@ -46,7 +46,7 @@ namespace SimpleScheme
         private Obj vals;
 
         /// <summary>
-        /// The list of formal parameters to pass to the final closure.
+        /// The list of formal parameters to pass to the final lambda.
         /// This is built up from variable1, variable2, ...
         /// It is in the reverse order from the given list.
         /// </summary>
@@ -60,12 +60,12 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="body">The body.</param>
+        /// <param name="body">The let* body.</param>
         /// <param name="vars">The list of variables to bind.</param>
         /// <param name="inits">The initialization expressions.</param>
-        /// <param name="formals">The list of parameters to pass to the closure.</param>
+        /// <param name="formals">The list of parameters to pass to the lambda.</param>
         /// <param name="vals">Evaluated values of inits.</param>
-        private EvaluateLetStar(Obj expr, Environment env, Stepper caller,Obj body, Obj vars, Obj inits, Obj formals, Obj vals)
+        private EvaluateLetStar(Obj expr, Environment env, Stepper caller, Obj body, Obj vars, Obj inits, Obj formals, Obj vals)
             : base(expr, env, caller)
         {
             this.body = body;
@@ -128,10 +128,10 @@ namespace SimpleScheme
             EvaluateLetStar step = (EvaluateLetStar)s;
             if (EmptyList.Is(step.inits))
             {
-                return s.ContinueHere(ApplyLambdaStep);
+                return s.ContinueHere(ApplyProcStep);
             }
 
-            Procedure fun = new Closure(step.formals, List.New(List.First(step.inits)), s.Env);
+            Procedure fun = new Lambda(step.formals, List.New(List.First(step.inits)), s.Env);
             return fun.Apply(step.vals, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -157,12 +157,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">The step to evaluate.</param>
         /// <returns>Execution continues with evaluation of the body of the let.</returns>
-        private static Stepper ApplyLambdaStep(Stepper s)
+        private static Stepper ApplyProcStep(Stepper s)
         {
             EvaluateLetStar step = (EvaluateLetStar)s;
 
             // apply the fun to the vals
-            Closure fun = new Closure(step.formals, step.body, s.Env);
+            Lambda fun = new Lambda(step.formals, step.body, s.Env);
             return fun.Apply(step.vals, s.Caller);
         }
         #endregion

@@ -8,9 +8,9 @@ namespace SimpleScheme
 
     /// <summary>
     /// Represents a macro definition.
-    /// It is just a closure with a different ToString.
+    /// It is just a lambda with a different ToString.
     /// </summary>
-    public sealed class Macro : Closure
+    public sealed class Macro : Lambda
     {
         #region Constants
         /// <summary>
@@ -90,7 +90,7 @@ namespace SimpleScheme
         /// Display the macro as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
         /// </summary>
-        /// <returns>The string form of the closure.</returns>
+        /// <returns>The string form of the lambda.</returns>
         public override string ToString()
         {
             return this.ToString(Name);

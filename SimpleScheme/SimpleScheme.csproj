@@ -61,7 +61,7 @@
     <Compile Include="Printer.cs" />
     <Compile Include="Scheme Types\Printable.cs" />
     <Compile Include="Scheme Types\SchemeBoolean.cs" />
-    <Compile Include="Scheme Types\Closure.cs" />
+    <Compile Include="Scheme Types\Lambda.cs" />
     <Compile Include="Scheme Types\ClrProcedure.cs" />
     <Compile Include="Scheme Types\Continuation.cs" />
     <Compile Include="Environment.cs" />

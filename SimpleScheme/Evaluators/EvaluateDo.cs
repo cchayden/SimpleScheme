@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// <summary>
         /// The test proc to execute each time around.
         /// </summary>
-        private readonly Closure testProc;
+        private readonly Lambda testProc;
         #endregion
 
         #region Constructor
@@ -71,7 +71,7 @@ namespace SimpleScheme
         /// <param name="exprs">The expressions.</param>
         /// <param name="commands">The commands.</param>
         /// <param name="testProc">The test proc to execute each interation.</param>
-        private EvaluateDo(Obj expr, Environment env, Stepper caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Closure testProc)
+        private EvaluateDo(Obj expr, Environment env, Stepper caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Lambda testProc)
             : base(expr, env, caller)
         {
             this.vars = vars;
@@ -126,7 +126,7 @@ namespace SimpleScheme
             }
 
             // prepare test proc to execute each time through
-            Closure testProc = new Closure(vars, List.New(test), env);
+            Lambda testProc = new Lambda(vars, List.New(test), env);
             EvaluateDo eval = new EvaluateDo(expr, env, caller, vars, inits, steps, exprs, commands, testProc);
 
             // push an empty environment, to hold the iteration variables

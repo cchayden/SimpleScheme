@@ -55,8 +55,8 @@ namespace SimpleScheme
                     return Procedure.Name;
                 case "SimpleScheme.Primitive":
                     return Primitive.Name;
-                case "SimpleScheme.Closure":
-                    return Closure.Name;
+                case "SimpleScheme.Lambda":
+                    return Lambda.Name;
                 case "SimpleScheme.Macro":
                     return Macro.Name;
                 case "SimpleScheme.ClrProcedure":
