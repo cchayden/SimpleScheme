@@ -130,6 +130,84 @@ namespace Tests
         }
 
         /// <summary>
+        /// A test for synchronous CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void SyncClrTest()
+        {
+            // static method
+            this.Run("True", "sync string equals", @"
+                (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
+                (str-equals 'xxx 'xxx)
+            ");
+            this.Run("False", "sync string equals", @"
+                (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
+                (str-equals 'xxx 'yyy)
+            ");
+
+            // member method -- no arg
+            this.Run("xxx", "sync trim", @"
+                (define trim (method ""System.String"" ""Trim""))
+                (trim (string->symbol ""   xxx   ""))
+            ");
+
+            // member method with arg
+            this.Run("xxx", "sync trim chars", @"
+                (define trim-chars (method ""System.String"" ""Trim"" ""char[]""))
+                (trim-chars 'yyyxxxyyy ""y"")
+            ");
+
+            // property get
+            this.Run("3", "sync length", @"
+                (define str-length (property-get ""System.String"" ""Length""))
+                (str-length 'xxx)
+            ");
+
+            // new
+            this.Run("System.Collections.ArrayList", "new array-list", @"
+                (define array-list (new ""System.Collections.ArrayList""))
+                array-list
+            ");
+
+            // property get
+            this.Run("0", "capacity array-list", @"
+                (define array-list (new ""System.Collections.ArrayList""))
+                (define capacity (property-get ""System.Collections.ArrayList"" ""Capacity""))
+                (capacity array-list)
+            ");
+
+            // property-set
+            this.Run("3", "capacity array-list", @"
+                (define array-list (new ""System.Collections.ArrayList""))
+                (define capacity (property-get ""System.Collections.ArrayList"" ""Capacity""))
+                (define capacity-set! (property-set ""System.Collections.ArrayList"" ""Capacity"" ""int""))
+                (capacity-set! array-list 3)
+                (capacity array-list)
+            ");
+
+            // index get
+            this.Run("1", "item array-list", @"
+                (define array-list (new ""System.Collections.ArrayList""))
+                (define add (method ""System.Collections.ArrayList"" ""Add"" ""System.Object""))
+                (define item (index-get ""System.Collections.ArrayList"" ""int""))
+                (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""System.Object"" ))
+                (add array-list 1)
+                (item array-list 0)
+            ");
+
+            // index set
+            this.Run("3", "item array-list", @"
+                (define array-list (new ""System.Collections.ArrayList""))
+                (define add (method ""System.Collections.ArrayList"" ""Add"" ""System.Object""))
+                (define item (index-get ""System.Collections.ArrayList"" ""int""))
+                (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""System.Object"" ))
+                (add array-list 1)
+                (item-set! array-list 0 3)
+                (item array-list 0)
+            ");
+        }
+
+        /// <summary>
         /// Run a test and check the result.
         /// </summary>
         /// <param name="expected">The expected result.</param>
