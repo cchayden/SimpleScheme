@@ -297,16 +297,18 @@ namespace Tests
         public void ParallelClrTest()
         {
             sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "async sleep",
+            this.Run("<undefined>", "async sleep",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
                 (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
                 (define (sleep duration) (async-sleep sleep-caller duration))
-                (parallel (sleep 100) (sleep 100) (sleep 100))
+                (parallel (sleep 100) 
+                          (sleep 100) 
+                          (sleep 100))
             ");
             Assert.AreEqual(0, sleepCounter, "async before");
-            Thread.Sleep(140);
+            Thread.Sleep(120);
             Assert.AreEqual(3, sleepCounter, "async after");
         }
 

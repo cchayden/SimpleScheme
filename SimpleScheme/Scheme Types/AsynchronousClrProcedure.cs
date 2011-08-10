@@ -166,7 +166,7 @@ namespace SimpleScheme
             }
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return Evaluator.NewSuspended(res);
+            return Evaluator.NewSuspended(res, caller);
         }
         #endregion
 

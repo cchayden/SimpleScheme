@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     using Obj = System.Object;
 
     /// <summary>
@@ -43,6 +45,16 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Properties
+        /// <summary>
+        /// Catch when a caller suspends
+        /// </summary>
+        public override bool CatchSuspended
+        {
+            get { return true; }
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Call the parallel evaluator.
@@ -74,15 +86,13 @@ namespace SimpleScheme
                 return s.ReturnFromStep(Undefined.Instance);
             }
 
-            Evaluator res = EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
-// TODO fix this
-// If the result is suspended, then we must finish the evaluation but must NOT continue on to the next one.
-// write a test for this and fix it
-            return res.IsSuspended ? s.ContinueHere(LoopStep) : res;
+            return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
-        /// Comes back here after expression evaluation.  Loop back and evaluate another.
+        /// Comes back here after suspension.
+        /// This happens because CatchSuspended is true and something in the EvaluateExpression suspended.
+        /// Loop back and evaluate another expression.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Immediately steps back.</returns>

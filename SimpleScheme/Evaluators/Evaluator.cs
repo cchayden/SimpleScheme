@@ -84,6 +84,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// By default, do not catch when a step returns suspended.
+        /// </summary>
+        public virtual bool CatchSuspended
+        {
+            get { return false; }
+        }
+
+        /// <summary>
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
@@ -174,9 +182,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="ar">The async result that is associated with the suspension.</param>
         /// <returns>A suspended evaluator.</returns>
-        public static Evaluator NewSuspended(IAsyncResult ar)
+        public static Evaluator NewSuspended(IAsyncResult ar, Evaluator caller)
         {
-            return new Evaluator(Suspended, null, null) { ReturnedExpr = ar };
+            return new Evaluator(Suspended, null, caller) { ReturnedExpr = ar };
         }
 
         /// <summary>

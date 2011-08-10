@@ -561,7 +561,16 @@ namespace SimpleScheme
 
                 if (step.IsSuspended)
                 {
-                    return step;
+                    // See if evaluator wants to handle
+                    Evaluator s = SearchForHandler(step);
+                    if (s == null)
+                    {
+                        // nope
+                        return step;
+                    }
+
+                    // this evaluator wants to -- run it now
+                    step = s;
                 }
 
                 if (step.IsHalted)
@@ -642,6 +651,25 @@ namespace SimpleScheme
         {
             caller.Interp.Count = flag;
             return Undefined.Instance;
+        }
+
+        /// <summary>
+        /// When a step is suspended, check with each caller up the chain, seeing if any
+        ///   one of them want to resume.
+        /// </summary>
+        /// <param name="step">The suspended step.</param>
+        /// <returns>The evaluator that wants to handle suspension, orherwise null</returns>
+        private static Evaluator SearchForHandler(Evaluator step)
+        {
+            while (!step.IsHalted)
+            {
+                if (step.CatchSuspended)
+                {
+                    return step;
+                }
+                step = step.Caller;
+            }
+            return null;
         }
 
         /// <summary>
