@@ -251,13 +251,13 @@ namespace Tests
         {
             // define constructor
             this.Run("<clr constructor>", "define string constructor", @"
-                (define str-ctor (constructor ""System.String"" ""char[]""))
+                (define str-ctor (constructor ""string"" ""char[]""))
                 str-ctor
             ");
 
             // use constructor
             this.Run("xxx", "construct string", @"
-                (define str-ctor (constructor ""System.String"" ""char[]""))
+                (define str-ctor (constructor ""string"" ""char[]""))
                 (str-ctor ""xxx"")
             ");
       }
@@ -266,7 +266,7 @@ namespace Tests
         /// A test for asynchronous CLR procedures
         /// </summary>
         [TestMethod]
-        public void ASyncClrTest()
+        public void AsyncClrTest()
         {
             // sync sleep
             sleepCounter = 0;
@@ -282,13 +282,32 @@ namespace Tests
             this.Run("SimpleScheme.Evaluator", "async sleep",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define caller (create-async))
                 (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (async-sleep caller 10)
+                (async-sleep (create-async) 10)
             ");
             Assert.AreEqual(0, sleepCounter, "async before");
             Thread.Sleep(20);
             Assert.AreEqual(1, sleepCounter, "async after");
+        }
+
+        /// <summary>
+        /// A test for parallel primitive
+        /// </summary>
+        [TestMethod]
+        public void ParallelClrTest()
+        {
+            sleepCounter = 0;
+            this.Run("SimpleScheme.Evaluator", "async sleep",
+               @"
+                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                (define sleep-caller (create-async))
+                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                (define (sleep duration) (async-sleep sleep-caller duration))
+                (parallel (sleep 100) (sleep 100) (sleep 100))
+            ");
+            Assert.AreEqual(0, sleepCounter, "async before");
+            Thread.Sleep(140);
+            Assert.AreEqual(3, sleepCounter, "async after");
         }
 
         /// <summary>
