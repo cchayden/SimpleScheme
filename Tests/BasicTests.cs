@@ -297,10 +297,23 @@ namespace Tests
         /// A test for parallel primitive
         /// </summary>
         [TestMethod]
-        public void ParallelClrTest1()
+        public void ParallelClrTest()
         {
+            // make sure non-async calls work sequentially
+            this.Run("3", "parallel sequential",
+               @"
+                (define result 0)
+                (parallel (if (= result 0) (set! result 1))
+                          (if (= result 1) (set! result 2))
+                          (if (= result 2) (set! result 3)))
+                result
+            ");
+
+            // all three sleep simultaneously
+            // immediately after, verify no sleep is completed
+            // then wait and verify that all have completed
             sleepCounter = 0;
-            this.Run("<undefined>", "async sleep",
+            this.Run("<undefined>", "async sleep basic",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
@@ -313,30 +326,18 @@ namespace Tests
             Assert.AreEqual(0, sleepCounter, "async before");
             Thread.Sleep(120);
             Assert.AreEqual(3, sleepCounter, "async after");
-        }
 
-        /// <summary>
-        /// A test for parallel primitive.
-        /// Test to make sure after completing an asynchronous action, the completion halts
-        ///   rather than continuing.
-        /// </summary>
-        [TestMethod]
-        public void ParallelClrTest2()
-        {
-            sleepCounter = 0;
+            // test parallel expr halts properly
             // first parallel expr sleeps asynchronously
-            // sedond delays for a while
+            // second delays for a while
             // first completes its sleep
             // make sure it does not continue execution of the parallel statement
             // if it does, it would set here to #t
             // it needs to halt after the parallel sleep, not continue
-            this.Run("notyet", "async sleep",
+            sleepCounter = 0;
+            this.Run("notyet", "async sleep sequence",
                @"
                 (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
-                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define sleep-caller (create-async))
-                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (define (sleep duration) (async-sleep sleep-caller duration))
                 (define here #f)
                 (define result 0)
                 (parallel (begin (sleep 100))
@@ -345,6 +346,26 @@ namespace Tests
                 result
             ");
             Assert.AreEqual(2, sleepCounter, "async ");
+
+            // verify that all exprs in a parallel statement continue after the async op is finished
+            sleepCounter = 0;
+            this.Run("(#f #f #f)", "async sleep continue",
+               @"
+                (define res1 #f)
+                (define res2 #f)
+                (define res3 #f)
+                (parallel (begin (sleep 100) (set! res1 #t))
+                          (begin (sleep 100) (set! res2 #t))
+                          (begin (sleep 100) (set! res3 #t)))
+                (list res1 res2 res3))
+            ");
+            Assert.AreEqual(0, sleepCounter, "async ");
+            this.Run("(#t #t #t)", "async sleep continue",
+               @"
+                 (delay 120) 
+                 (list res1 res2 res3)
+            ");
+            Assert.AreEqual(4, sleepCounter, "async ");
         }
 
         /// <summary>
