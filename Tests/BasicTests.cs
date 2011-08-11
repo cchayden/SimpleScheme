@@ -347,7 +347,7 @@ namespace Tests
             ");
             Assert.AreEqual(2, sleepCounter, "async ");
 
-            // verify that all exprs in a parallel statement continue after the async op is finished
+            // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
             this.Run("(#f #f #f)", "async sleep continue",
                @"
