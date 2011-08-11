@@ -22,16 +22,6 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(EvaluatorName);
-
-        /// <summary>
-        /// The list of expressions.
-        /// </summary>
-        private Obj expressions;
-
-        /// <summary>
-        /// The step we call to evaluate an expression in parallel.
-        /// </summary>
-        private EvaluateIdentity pendingEvaluation;
         #endregion
 
         #region Constructor
@@ -44,20 +34,8 @@ namespace SimpleScheme
         private EvaluateParallel(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
-            this.expressions = expr;
             ContinueHere(EvalExprStep);
             IncrementCounter(counter);
-        }
-        #endregion
-
-        #region Accessors
-        /// <summary>
-        /// Catch when a caller suspends
-        /// </summary>
-        /// <returns>We want to catch suspensions.</returns>
-        public override bool CatchSuspended
-        {
-            get { return true; }
         }
         #endregion
 
@@ -77,44 +55,35 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Initial step: see if we are done.
-        /// If not, evaluate the next expression.
-        /// If we are, evaluate and return.
-        /// If the expression suspended, then go on anyway with the next expr.
+        /// Evaluate expression step: see if we are done.
+        /// If we are, return undefined.
+        /// If we are, evaluate the next expression.
+        /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
+        ///   execution and halts the evaluation.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator.</returns>
         private static Evaluator EvalExprStep(Evaluator s)
         {
-            EvaluateParallel step = (EvaluateParallel)s;
-            if (EmptyList.Is(step.expressions))
+            if (EmptyList.Is(s.Expr))
             {
                 return s.ReturnFromStep(Undefined.Instance);
             }
 
-            // We really want to de EvaluateExpression, but need the ability to cancel it.
-            // Use the IdentityEvaluator, which keeps its caller reference to itself, so allows
-            //  cancellation.
-            step.pendingEvaluation = EvaluateIdentity.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
-            return step.pendingEvaluation;
+            return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
-        /// Comes back here after suspension.
-        /// This happens because CatchSuspended is true and something in the EvaluateExpression suspended.
+        /// Comes back here after evaluation completes synchronously or is suspended.
+        /// In either case, returned value is discarded.
+        /// If evaluation is suspended, then EvaluateExpressionWithCatch will catch and return undefined.
         /// Loop back and evaluate another expression.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Immediately steps back.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            EvaluateParallel step = (EvaluateParallel)s;
-
-            // If we came back normally, then this has not effect.
-            // If we came back by catching suspended, this makes sure that after resumption,
-            //    the evaluation stops after completing the expression.
-            step.pendingEvaluation.HaltAfterCompletion();
-            step.expressions = List.Rest(step.expressions);
+            s.UpdateExpr(List.Rest(s.Expr));
             return s.ContinueHere(EvalExprStep);
         }
         #endregion

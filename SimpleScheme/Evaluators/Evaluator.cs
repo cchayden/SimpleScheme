@@ -62,6 +62,7 @@ namespace SimpleScheme
             this.Caller = caller;
             this.Expr = args;
             this.Env = env;
+            this.ReturnedExpr = Undefined.Instance;
             this.traced = false;
         }
         #endregion

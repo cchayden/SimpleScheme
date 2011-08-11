@@ -36,7 +36,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Evaluators\EvaluateIdentity.cs" />
+    <Compile Include="Evaluators\EvaluateExpressionWithCatch.cs" />
+    <Compile Include="Evaluators\EvaluateExpressionWithHalt.cs" />
     <Compile Include="Scheme Types\AsynchronousClrProcedure.cs" />
     <Compile Include="AsyncResult.cs" />
     <Compile Include="Scheme Types\Character.cs" />

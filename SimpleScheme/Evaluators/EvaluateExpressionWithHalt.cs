@@ -1,4 +1,4 @@
-// <copyright file="EvaluateIdentity.cs" company="Charles Hayden">
+// <copyright file="EvaluateExpressionWithHalt.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,16 +6,18 @@ namespace SimpleScheme
     using Obj = System.Object;
 
     /// <summary>
-    /// Identity Evaluator
-    /// This exists so it can be canceled.
+    /// Evaluate an expression with the ability to halt.
+    /// Normally the evaluator returns to the caller.
+    /// But it also supports the option to halt rather than return.
+    /// This option is selected at any time after evaluation has started.
     /// </summary>
-    public sealed class EvaluateIdentity : Evaluator
+    public sealed class EvaluateExpressionWithHalt : Evaluator
     {
         #region Fields
         /// <summary>
         /// The name of the evaluator, used for counters and tracing.
         /// </summary>
-        public const string EvaluatorName = "evaluate-identity";
+        public const string EvaluatorName = "evaluate-expression-with-halt";
 
         /// <summary>
         /// The counter id.
@@ -25,12 +27,12 @@ namespace SimpleScheme
 
         #region Constructor
         /// <summary>
-        /// Initializes a new instance of the EvaluateIdentity class.
+        /// Initializes a new instance of the EvaluateExpressionWithHalt class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateIdentity(Obj expr, Environment env, Evaluator caller)
+        private EvaluateExpressionWithHalt(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(InitialStep);
@@ -40,21 +42,21 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Creates an identity evaluator.
+        /// Creates an expression evaluator.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>The if evaluator.</returns>
-        public static EvaluateIdentity Call(Obj expr, Environment env, Evaluator caller)
+        /// <returns>The expression evaluator.</returns>
+        public static EvaluateExpressionWithHalt Call(Obj expr, Environment env, Evaluator caller)
         {
-            return new EvaluateIdentity(expr, env, caller);
+            return new EvaluateExpressionWithHalt(expr, env, caller);
         }
         #endregion
 
         #region Public Methods
         /// <summary>
-        /// Instead of returning to the caller, halt the computation after this completes.
+        /// Instead of returning to the caller, halt the computation after it completes.
         /// </summary>
         public void HaltAfterCompletion()
         {
@@ -64,19 +66,18 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Begin by evaluating the first expression (the test).
+        /// Begin by evaluating the expression.
         /// </summary>
         /// <param name="s">This evaluator.</param>
-        /// <returns>Steps to evaluate the test.</returns>
+        /// <returns>Steps to evaluate the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
             return EvaluateExpression.Call(s.Expr, s.Env, s.ContinueHere(DoneStep));
         }
 
         /// <summary>
-        /// Back here after the test has been evaluated.
-        /// Evaluate and return either the second or third expression.
-        /// If there is no thid, the empty list will be evaluated, which is OK.
+        /// Back here after the expression has been evaluated.
+        /// Return to caller, or the halted expression that has overridden it.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with the return.</returns>

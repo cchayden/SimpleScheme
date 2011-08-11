@@ -324,6 +324,12 @@ namespace Tests
         public void ParallelClrTest2()
         {
             sleepCounter = 0;
+            // first parallel expr sleeps asynchronously
+            // sedond delays for a while
+            // first completes its sleep
+            // make sure it does not continue execution of the parallel statement
+            // if it does, it would set here to #t
+            // it needs to halt after the parallel sleep, not continue
             this.Run("notyet", "async sleep",
                @"
                 (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
@@ -333,9 +339,9 @@ namespace Tests
                 (define (sleep duration) (async-sleep sleep-caller duration))
                 (define here #f)
                 (define result 0)
-                (parallel (begin (p 'sleeping) (sleep 100))
-                          (begin (p 'delaying) (delay 200) (p ""end delay"") (p here) (set! result (if here 'already 'notyet)))
-                          (begin (p ""setting here"") (set! here #t)))
+                (parallel (begin (sleep 100))
+                          (begin (delay 200) (set! result (if here 'already 'notyet)))
+                          (begin (set! here #t)))
                 result
             ");
             Assert.AreEqual(2, sleepCounter, "async ");
