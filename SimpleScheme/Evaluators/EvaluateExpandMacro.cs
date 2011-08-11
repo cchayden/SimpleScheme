@@ -36,7 +36,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
-        private EvaluateExpandMacro(object expr, Environment env, Evaluator caller, Macro fn)
+        private EvaluateExpandMacro(Obj expr, Environment env, Evaluator caller, Macro fn)
             : base(expr, env, caller)
         {
             this.fn = fn;

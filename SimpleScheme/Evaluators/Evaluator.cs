@@ -84,14 +84,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// By default, do not catch when a step returns suspended.
-        /// </summary>
-        public virtual bool CatchSuspended
-        {
-            get { return false; }
-        }
-
-        /// <summary>
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
@@ -138,6 +130,16 @@ namespace SimpleScheme
         {
             get { return this.Caller.Caller; }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether to catch suspended execution.
+        /// </summary>
+        /// <returns>By default, do not catch.</returns>
+        public virtual bool CatchSuspended
+        {
+            get { return false; }
+        }
+
         #endregion
 
         #region Public Static Methods
@@ -176,11 +178,13 @@ namespace SimpleScheme
         /// <summary>
         /// Create a new evaluator in the suspended state.  
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
+        /// The caller i needed so that we can search for a catcher.
         /// The IAsyncResult is given as the ReturnedExpr of the Evaluator.
         /// The IAsyncResult is not that useful: it only gives info about the suspendded evqluator, not the
         ///   final result.  There is still no way to get that without calling the async evaluator.
         /// </summary>
         /// <param name="ar">The async result that is associated with the suspension.</param>
+        /// <param name="caller">The caller.</param>
         /// <returns>A suspended evaluator.</returns>
         public static Evaluator NewSuspended(IAsyncResult ar, Evaluator caller)
         {
@@ -375,6 +379,20 @@ namespace SimpleScheme
         public Evaluator UpdateReturnValue(Obj expr)
         {
             this.ReturnedExpr = expr;
+            return this;
+        }
+
+        /// <summary>
+        /// Update the caller field.
+        /// Normally this would not be changable, but in the parallel primitive
+        ///   it is necessary to suppress the normal return and to make the
+        ///   evaluation halt.
+        /// </summary>
+        /// <param name="eval">The alternate caller.</param>
+        /// <returns>The current evaluator.</returns>
+        public Evaluator UpdateCaller(Evaluator eval)
+        {
+            this.Caller = eval;
             return this;
         }
 

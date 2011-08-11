@@ -144,7 +144,7 @@ namespace SimpleScheme
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to run after the application.</returns>
-        public abstract Evaluator Apply(object args, Evaluator caller);
+        public abstract Evaluator Apply(Obj args, Evaluator caller);
 
         /// <summary>
         /// Evaluate the procedure.

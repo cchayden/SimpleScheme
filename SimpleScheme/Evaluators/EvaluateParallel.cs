@@ -27,6 +27,11 @@ namespace SimpleScheme
         /// The list of expressions.
         /// </summary>
         private Obj expressions;
+
+        /// <summary>
+        /// The step we call to evaluate an expression in parallel.
+        /// </summary>
+        private EvaluateIdentity pendingEvaluation;
         #endregion
 
         #region Constructor
@@ -45,10 +50,11 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Properties
+        #region Accessors
         /// <summary>
         /// Catch when a caller suspends
         /// </summary>
+        /// <returns>We want to catch suspensions.</returns>
         public override bool CatchSuspended
         {
             get { return true; }
@@ -86,7 +92,11 @@ namespace SimpleScheme
                 return s.ReturnFromStep(Undefined.Instance);
             }
 
-            return EvaluateExpression.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+            // We really want to de EvaluateExpression, but need the ability to cancel it.
+            // Use the IdentityEvaluator, which keeps its caller reference to itself, so allows
+            //  cancellation.
+            step.pendingEvaluation = EvaluateIdentity.Call(List.First(step.expressions), s.Env, s.ContinueHere(LoopStep));
+            return step.pendingEvaluation;
         }
 
         /// <summary>
@@ -99,6 +109,11 @@ namespace SimpleScheme
         private static Evaluator LoopStep(Evaluator s)
         {
             EvaluateParallel step = (EvaluateParallel)s;
+
+            // If we came back normally, then this has not effect.
+            // If we came back by catching suspended, this makes sure that after resumption,
+            //    the evaluation stops after completing the expression.
+            step.pendingEvaluation.HaltAfterCompletion();
             step.expressions = List.Rest(step.expressions);
             return s.ContinueHere(EvalExprStep);
         }

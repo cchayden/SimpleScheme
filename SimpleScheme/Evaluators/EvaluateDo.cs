@@ -142,7 +142,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The list to start with.</param>
         /// <returns>The third, if it exists, otherwise the first.</returns>
-        private static Obj ThirdOrFirst(object x)
+        private static Obj ThirdOrFirst(Obj x)
         {
             Obj res = List.Third(x);
             return EmptyList.Is(res) ? List.First(x) : res;

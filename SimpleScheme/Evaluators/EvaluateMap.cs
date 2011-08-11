@@ -50,7 +50,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
-        private EvaluateMap(object expr, Environment env, Evaluator caller, Procedure proc, Obj result)
+        private EvaluateMap(Obj expr, Environment env, Evaluator caller, Procedure proc, Obj result)
             : base(expr, env, caller)
         {
             this.proc = proc;

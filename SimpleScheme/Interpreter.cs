@@ -118,6 +118,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Gets the halted evaluator.
+        /// </summary>
+        public Evaluator Halted
+        {
+            get { return this.halted; }
+        }
+
+        /// <summary>
         /// Gets the global environment for the interpreter.
         /// </summary>
         public Environment GlobalEnvironment { get; private set; }
@@ -667,8 +675,10 @@ namespace SimpleScheme
                 {
                     return step;
                 }
+
                 step = step.Caller;
             }
+
             return null;
         }
 

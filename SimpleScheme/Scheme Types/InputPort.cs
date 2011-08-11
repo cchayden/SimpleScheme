@@ -200,7 +200,7 @@ namespace SimpleScheme
         /// <param name="filename">The file to load from.</param>
         /// <param name="interp">The interpreter.</param>
         /// <returns>Undefined object.</returns>
-        private static object LoadFile(Obj filename, Interpreter interp)
+        private static Obj LoadFile(Obj filename, Interpreter interp)
         {
             interp.LoadFile(filename);
             return Undefined.Instance;

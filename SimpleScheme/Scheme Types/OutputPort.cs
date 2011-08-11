@@ -104,7 +104,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
                 .DefinePrimitive("write", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Write(List.First(args)), 1, 2)
                 //// (p <expr>)
-                .DefinePrimitive("p", (args, caller) => P(List.First(args)), 1)
+                .DefinePrimitive("p", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).P(List.First(args)), 1)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
                 .DefinePrimitive("write-char", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).WriteChar(List.First(args)), 1, 2)
@@ -186,17 +186,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Print the obj on the console.
-        /// </summary>
-        /// <param name="x">The obj to print.</param>
-        /// <returns>Undefined value.</returns>
-        private static Obj P(Obj x)
-        {
-            Console.Out.WriteLine(Printer.AsString(x, false));
-            return Undefined.Instance;
-        }
-
-        /// <summary>
         /// Dump the environment on standard output.
         /// </summary>
         /// <param name="env">The environment to dump.</param>
@@ -209,6 +198,17 @@ namespace SimpleScheme
         #endregion
 
         #region Private Methods
+        /// <summary>
+        /// Print the obj on the console.
+        /// </summary>
+        /// <param name="x">The obj to print.</param>
+        /// <returns>Undefined value.</returns>
+        private Obj P(Obj x)
+        {
+            this.WriteLine(Printer.AsString(x, false));
+            return Undefined.Instance;
+        }
+
         /// <summary>
         /// Write an expression on a given port.
         /// The output is not quoted.

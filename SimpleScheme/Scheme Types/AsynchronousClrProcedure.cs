@@ -148,7 +148,7 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(object args, Evaluator caller)
+        public override Evaluator Apply(Obj args, Evaluator caller)
         {
             Obj target;
             Obj[] argArray;

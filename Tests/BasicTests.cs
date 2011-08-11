@@ -270,10 +270,13 @@ namespace Tests
         {
             // sync sleep
             sleepCounter = 0;
-            this.Run("10", "sync sleep",
+            this.Run("1", "sync sleep",
                @"
-                (define test-sleep (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
-                (test-sleep 10)
+                (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
+                (define counter 0)
+                (define (delay-count x) (delay x) (set! counter (+ 1 counter)))
+                (delay-count 10)
+                counter
             ");
             Assert.AreEqual(1, sleepCounter, "sync");
 
@@ -294,7 +297,7 @@ namespace Tests
         /// A test for parallel primitive
         /// </summary>
         [TestMethod]
-        public void ParallelClrTest()
+        public void ParallelClrTest1()
         {
             sleepCounter = 0;
             this.Run("<undefined>", "async sleep",
@@ -302,7 +305,7 @@ namespace Tests
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
                 (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (define (sleep duration) (async-sleep sleep-caller duration))
+                (define (sleep duration) (async-sleep sleep-caller duration) (display 'done))
                 (parallel (sleep 100) 
                           (sleep 100) 
                           (sleep 100))
@@ -310,6 +313,32 @@ namespace Tests
             Assert.AreEqual(0, sleepCounter, "async before");
             Thread.Sleep(120);
             Assert.AreEqual(3, sleepCounter, "async after");
+        }
+
+        /// <summary>
+        /// A test for parallel primitive.
+        /// Test to make sure after completing an asynchronous action, the completion halts
+        ///   rather than continuing.
+        /// </summary>
+        [TestMethod]
+        public void ParallelClrTest2()
+        {
+            sleepCounter = 0;
+            this.Run("notyet", "async sleep",
+               @"
+                (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
+                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                (define sleep-caller (create-async))
+                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                (define (sleep duration) (async-sleep sleep-caller duration))
+                (define here #f)
+                (define result 0)
+                (parallel (begin (p 'sleeping) (sleep 100))
+                          (begin (p 'delaying) (delay 200) (p ""end delay"") (p here) (set! result (if here 'already 'notyet)))
+                          (begin (p ""setting here"") (set! here #t)))
+                result
+            ");
+            Assert.AreEqual(2, sleepCounter, "async ");
         }
 
         /// <summary>

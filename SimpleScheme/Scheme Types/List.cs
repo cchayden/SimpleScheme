@@ -237,7 +237,7 @@ namespace SimpleScheme
         /// <param name="fun">The function to apply to each elment.</param>
         /// <param name="expr">The list to process.</param>
         /// <returns>A list made up of the function results of each input element.  Could be the empty list.</returns>
-        public static Obj MapFun(Func<object, object> fun, Obj expr)
+        public static Obj MapFun(Func<Obj, Obj> fun, Obj expr)
         {
             Pair result = New();
             Pair accum = result;

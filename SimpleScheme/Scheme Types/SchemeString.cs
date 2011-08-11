@@ -276,7 +276,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">The string to convert.</param>
         /// <returns>A list of the characters.</returns>
-        private static Obj ToList(object s)
+        private static Obj ToList(Obj s)
         {
             Obj result = EmptyList.Instance;
             char[] str = As(s);
@@ -295,7 +295,7 @@ namespace SimpleScheme
         /// <param name="index">The index of the character to change.</param>
         /// <param name="chr">The new character.</param>
         /// <returns>Undefined value.</returns>
-        private static Obj Set(object str, object index, object chr)
+        private static Obj Set(Obj str, Obj index, Obj chr)
         {
             As(str)[(int)Number.As(index)] = Character.As(chr);
             return Undefined.Instance;
@@ -306,7 +306,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The string to copy.</param>
         /// <returns>The return value is unspecified.</returns>
-        private static Obj Copy(object str)
+        private static Obj Copy(Obj str)
         {
             return New(As(str));
         }
@@ -317,7 +317,7 @@ namespace SimpleScheme
         /// <param name="str">The string to fill.</param>
         /// <param name="fill">The fill character.</param>
         /// <returns>The return value is unspecified.</returns>
-        private static Obj Fill(object str, object fill)
+        private static Obj Fill(Obj str, Obj fill)
         {
             char[] ss = As(str);
             for (int i = 0; i < ss.Length; i++)
@@ -403,18 +403,18 @@ namespace SimpleScheme
         /// <summary>
         /// Convert a string into a number, in a given number base.
         /// </summary>
-        /// <param name="x">The value to convert.  This is first converted to a string, 
+        /// <param name="val">The value to convert.  This is first converted to a string, 
         ///     then parsed as a number.</param>
-        /// <param name="y">The number base.  If not a number, then base 10 is used.</param>
+        /// <param name="bas">The number base.  If not a number, then base 10 is used.</param>
         /// <returns>The number represented by the string.</returns>
-        private static Obj ToNumber(object x, object y)
+        private static Obj ToNumber(Obj val, Obj bas)
         {
-            int numberBase = Number.Is(y) ? (int)Number.As(y) : 10;
+            int numberBase = Number.Is(bas) ? (int)Number.As(bas) : 10;
             try
             {
                 return numberBase == 10
-                           ? Double.Parse(Printer.AsString(x, false))
-                           : Number.As(Convert.ToInt64(Printer.AsString(x, false), numberBase));
+                           ? Double.Parse(Printer.AsString(val, false))
+                           : Number.As(Convert.ToInt64(Printer.AsString(val, false), numberBase));
             }
             catch (FormatException)
             {
