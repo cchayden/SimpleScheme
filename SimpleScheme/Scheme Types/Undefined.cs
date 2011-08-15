@@ -13,22 +13,43 @@ namespace SimpleScheme
     {
         #region Constants
         /// <summary>
-        /// Keep one instance of this around to use when needed.
-        /// </summary>
-        public static readonly Undefined Instance = new Undefined();
-
-        /// <summary>
         /// The printable name of the undefined type.
         /// </summary>
         public const string Name = "undefined";
+
+        /// <summary>
+        /// An internal value that may be used to pass information back
+        ///   through an undefined value.
+        /// </summary>
+        private readonly int value;
         #endregion
 
         #region Constructor
         /// <summary>
-        /// Prevents a default instance of the Undefined class from being created.
+        /// Initializes a new instance of the Undefined class.
         /// </summary>
-        private Undefined()
+        public Undefined() : this(0)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Undefined class.
+        /// Sets the internal value.
+        /// </summary>
+        /// <param name="value">The value to use.</param>
+        public Undefined(int value)
+        {
+            this.value = value;
+        }
+        #endregion
+
+        #region Accessors
+        /// <summary>
+        /// Gets the value.
+        /// </summary>
+        public int Value
+        {
+            get { return this.value; }
         }
         #endregion
 
@@ -77,7 +98,13 @@ namespace SimpleScheme
         /// <returns>The undefined type name.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            string str = "<" + Name + ">";
+            if (this.value != 0)
+            {
+                str += " " + this.value;
+            }
+
+            return str;
         }
         #endregion
     }

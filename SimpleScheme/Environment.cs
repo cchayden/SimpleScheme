@@ -254,6 +254,47 @@ if(count != count1)
         }
 
         /// <summary>
+        /// Increment the variable.
+        /// This should be atomic.
+        /// TODO is this atomic?
+        /// </summary>
+        /// <param name="var"></param>
+        /// <returns></returns>
+        public Obj Increment(Obj var)
+        {
+            if (!Symbol.Is(var))
+            {
+                return ErrorHandlers.SemanticError("Attempt to increment a non-symbol: " + Printer.AsString(var));
+            }
+
+            string symbol = Symbol.As(var);
+            Environment env = this;
+
+            // search down the chain of environments for a definition
+            lock (this)
+            {
+                while (env != Empty)
+                {
+                    Obj val;
+                    if (env.symbolTable.Lookup(symbol, out val))
+                    {
+                        if (!Number.Is(val))
+                        {
+                            return ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
+                        }
+                        var newVal = Number.As(val) + 1;
+                        env.symbolTable.Update(symbol, newVal);
+                        return newVal;
+                    }
+
+                    // if we have not found anything yet, look in the parent
+                    env = env.LexicalParent;
+                }
+            }
+
+            return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
+        }
+        /// <summary>
         /// Dump the stack of environments.
         /// At each level, show the symbol table.
         /// </summary>

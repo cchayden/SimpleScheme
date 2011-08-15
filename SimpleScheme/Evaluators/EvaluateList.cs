@@ -73,7 +73,7 @@ namespace SimpleScheme
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad args for list: " + expr);
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             return new EvaluateList(expr, env, caller);

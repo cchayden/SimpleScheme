@@ -146,7 +146,7 @@ namespace SimpleScheme
             Obj[] vec = new Obj[(int)Number.As(length)];
             if (EmptyList.Is(fill))
             {
-                fill = Undefined.Instance;
+                fill = new Undefined();
             }
 
             for (int i = 0; i < vec.Length; i++)
@@ -178,7 +178,7 @@ namespace SimpleScheme
         public static Obj Set(Obj vector, Obj index, Obj obj)
         {
             As(vector)[(int)Number.As(index)] = obj;
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace SimpleScheme
                 vec[i] = fill;
             }
 
-            return Undefined.Instance;
+            return new Undefined();
         }
         #endregion
     }

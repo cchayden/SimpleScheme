@@ -137,7 +137,7 @@ namespace SimpleScheme
             Assembly assembly = this.classType.Assembly;
             object[] argArray = ToArgList(args, null);
             Obj res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
-            res = res ?? Undefined.Instance;
+            res = res ?? new Undefined();
             return caller.UpdateReturnValue(res);
         }
         #endregion

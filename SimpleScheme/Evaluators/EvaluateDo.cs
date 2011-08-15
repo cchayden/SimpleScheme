@@ -103,13 +103,13 @@ namespace SimpleScheme
             if (EmptyList.Is(expr))
             {
                 ErrorHandlers.SemanticError("No body for do");
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             Obj bindings = List.First(expr);
@@ -122,7 +122,7 @@ namespace SimpleScheme
             Obj test = List.First(List.Second(expr));
             if (EmptyList.Is(test))
             {
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             // prepare test proc to execute each time through

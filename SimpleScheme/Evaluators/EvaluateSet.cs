@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     using Obj = System.Object;
 
     /// <summary>
@@ -92,6 +94,7 @@ namespace SimpleScheme
         private static Evaluator SetStep(Evaluator s)
         {
             EvaluateSet step = (EvaluateSet)s;
+Console.WriteLine("Setting {0} {1}", step.lhs, s.ReturnedExpr);
             s.Env.Set(step.lhs, s.ReturnedExpr);
             return s.ReturnUndefined();
         }

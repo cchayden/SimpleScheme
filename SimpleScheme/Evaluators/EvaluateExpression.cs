@@ -74,6 +74,7 @@ namespace SimpleScheme
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                 .DefinePrimitive("begin", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "begin"), 0, MaxInt)
                 .DefinePrimitive("parallel", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "parallel"), 0, MaxInt)
+                .DefinePrimitive("parallel-join", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "parallel-join"), 0, MaxInt)
                 //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
@@ -264,7 +265,14 @@ namespace SimpleScheme
                     // If any suspend, keep going.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateParallel.Call(s.Expr, s.Env, s.Caller);
+                    return EvaluateParallel.Call(s.Expr, s.Env, s.Caller, false);
+                case "parallel-join":
+                    // Evaluate begin by evaluating all the items in order.
+                    // Return Undefined.
+                    // If any suspend, keep going.
+                    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
+                    //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
+                    return EvaluateParallel.Call(s.Expr, s.Env, s.Caller, true);
 
                 case "define":
                     // Define is a shortcut for lambda.
@@ -278,7 +286,12 @@ namespace SimpleScheme
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
                     //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                    return EvaluateSet.Call(s.Expr, s.Env, s.ContinueHere(ReturnValueAndEnvStep));
+                    //return EvaluateSet.Call(s.Expr, s.Env, s.ContinueHere(ReturnValueAndEnvStep));
+                    return EvaluateSet.Call(s.Expr, s.Env, s.Caller);
+
+                case "increment!":
+                    //// <r4rs section="none">(increment! <variable>)</r4rs>
+                    return Increment(s.Expr, s.Env, s.Caller);
 
                 case "if":
                     // Eval an if expression by evaluating the first clause, 
@@ -346,6 +359,25 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Increment the variable.
+        /// The intention is that this should be atomic.
+        /// </summary>
+        /// <param name="expr">The symbol whose value is incremented.</param>
+        /// <param name="env">The environment.</param>
+        /// <param name="caller">Return to this caller.</param>
+        /// <returns></returns>
+        private static Evaluator Increment(Obj expr, Environment env, Evaluator caller)
+        {
+            Obj lhs = List.First(expr);
+            if (!Symbol.Is(lhs))
+            {
+                ErrorHandlers.SemanticError("Increment: first argument must be a symbol.  Got: " + lhs);
+            }
+
+            return caller.UpdateReturnValue(env.Increment(lhs));
+        }
+
+        /// <summary>
         /// Come here after evaluating the first expression, the proc.
         /// Handle the proc: macro, lambda, or function call.
         /// </summary>
@@ -360,17 +392,6 @@ namespace SimpleScheme
             }
 
             return Procedure.As(s.ReturnedExpr).Evaluate(s.Expr, s.Env, s.Caller);
-        }
-
-        /// <summary>
-        /// Here after an evaluation that should return a value.
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The evaluation result.</returns>
-        private static Evaluator ReturnValueAndEnvStep(Evaluator s)
-        {
-            // Assign return value and return to caller.
-            return s.ReturnFromStep(s.ReturnedExpr, s.ReturnedEnv);
         }
         #endregion
     }

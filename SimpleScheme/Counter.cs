@@ -118,7 +118,7 @@ namespace SimpleScheme
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
             port.WriteLine(sb.ToString());
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace SimpleScheme
                 return this.counters[counterNames[counterName]];
             }
 
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace SimpleScheme
                 this.counters[i] = 0;
             }
 
-            return Undefined.Instance;
+            return new Undefined();
         }
         #endregion
     }

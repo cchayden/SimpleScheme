@@ -203,7 +203,7 @@ namespace SimpleScheme
         private static Obj LoadFile(Obj filename, Interpreter interp)
         {
             interp.LoadFile(filename);
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace SimpleScheme
         private static Obj TranscriptOn(Obj filename, TranscriptLogger transcript)
         {
             transcript.TranscriptOn(filename);
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace SimpleScheme
         private static Obj TranscriptOff(TranscriptLogger transcript)
         {
             transcript.TranscriptOff();
-            return Undefined.Instance;
+            return new Undefined();
         }
         #endregion
 
@@ -238,7 +238,7 @@ namespace SimpleScheme
         private Obj CloseInputPort()
         {
             this.Close();
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>

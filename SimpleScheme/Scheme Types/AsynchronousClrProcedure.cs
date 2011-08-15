@@ -154,7 +154,7 @@ namespace SimpleScheme
             Obj[] argArray;
             if (this.MethodInfo.IsStatic)
             {
-                target = Undefined.Instance;
+                target = new Undefined();
                 CheckArgs(args, "AsynchronousClrProcedure");
                 argArray = this.ToArgListBegin(args, new AsyncState(target, caller));
             }
@@ -166,7 +166,7 @@ namespace SimpleScheme
             }
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return Evaluator.NewSuspended(res, caller);
+            return Evaluator.NewSuspendedEvaluator(res, caller.Env, caller);
         }
         #endregion
 

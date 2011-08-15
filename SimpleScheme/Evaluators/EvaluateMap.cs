@@ -108,7 +108,7 @@ namespace SimpleScheme
             }
 
             // if we are done, return the reversed result list
-            return s.ReturnFromStep(step.result != null ? List.Reverse(step.result) : Undefined.Instance);
+            return s.ReturnFromStep(step.result != null ? List.Reverse(step.result) : new Undefined());
         }
 
         /// <summary>

@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Text;
+    using System.Threading;
     using Obj = System.Object;
 
     /// <summary>
@@ -44,6 +45,11 @@ namespace SimpleScheme
         private Func<Evaluator, Evaluator> pc;
 
         /// <summary>
+        /// The number of asynchronous evaluations that are waiting to complete.
+        /// </summary>
+        private int caught;
+
+        /// <summary>
         /// Indicates whether a trace has been performed on this evaluator instance.
         /// </summary>
         private bool traced;
@@ -62,7 +68,8 @@ namespace SimpleScheme
             this.Caller = caller;
             this.Expr = args;
             this.Env = env;
-            this.ReturnedExpr = Undefined.Instance;
+            this.ReturnedExpr = new Undefined();
+            this.caught = 0;
             this.traced = false;
         }
         #endregion
@@ -71,7 +78,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a value indicating whether the evaluator is halted.
         /// </summary>
-        public bool IsHalted
+        public bool IsHaltedEvaluator
         {
             get { return this.Expr as string == Halted; }
         }
@@ -79,7 +86,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a value indicating whether the evaluator is suspended.
         /// </summary>
-        public bool IsSuspended
+        public bool IsSuspendedEvaluator
         {
             get { return this.Expr as string == Suspended; }
         }
@@ -133,6 +140,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Gets tne number of caught evaluations
+        /// </summary>
+        public int Caught
+        {
+            get { return this.caught; }
+        }
+
+        /// <summary>
         /// Gets a value indicating whether to catch suspended execution.
         /// </summary>
         /// <returns>By default, do not catch.</returns>
@@ -171,7 +186,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="env">The global environment.</param>
         /// <returns>A halted evaluator.</returns>
-        public static Evaluator NewHalted(Environment env)
+        public static Evaluator NewHaltedEvaluator(Environment env)
         {
             return new Evaluator(Halted, env, null);
         }
@@ -182,12 +197,13 @@ namespace SimpleScheme
         /// The caller i needed so that we can search for a catcher.
         /// The IAsyncResult is given as the ReturnedExpr of the Evaluator.
         /// The IAsyncResult is not that useful: it only gives info about the suspendded evqluator, not the
-        ///   final result.  There is still no way to get that without calling the async evaluator.
+        ///   final result.  There is no way to get that without calling the async evaluator.
         /// </summary>
         /// <param name="ar">The async result that is associated with the suspension.</param>
+        /// <param name="env">The environment ofthe suspended operation.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>A suspended evaluator.</returns>
-        public static Evaluator NewSuspended(IAsyncResult ar, Evaluator caller)
+        public static Evaluator NewSuspendedEvaluator(IAsyncResult ar, Environment env, Evaluator caller)
         {
             return new Evaluator(Suspended, null, caller) { ReturnedExpr = ar };
         }
@@ -220,7 +236,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append(this.IsSuspended ? "<suspended>" : "<" + Name + ">");
+                buf.Append(this.IsSuspendedEvaluator ? "<suspended>" : "<" + Name + ">");
             }
         }
 
@@ -372,6 +388,36 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Increment the caught counter.
+        /// </summary>
+        /// <returns>The new value of the caught flag.</returns>
+        public int IncrementCaught()
+        {
+            Interlocked.Increment(ref this.caught);
+            return this.caught;
+        }
+
+        /// <summary>
+        /// Decrement the caught counter.
+        /// </summary>
+        /// <returns>The new value of the caught flag.</returns>
+        public int DecrementCaught()
+        {
+            Interlocked.Decrement(ref this.caught);
+            return this.caught;
+        }
+
+        /// <summary>
+        /// DecrementReset the caught counter.
+        /// </summary>
+        /// <returns>The new value of the caught flag.</returns>
+        public int ResetCaught()
+        {
+            this.caught = 0;
+            return this.caught;
+        }
+
+        /// <summary>
         /// Continue executing in this evaluator, but set the returned expr.
         /// Usually invoked on an object's caller.  
         /// </summary>
@@ -439,7 +485,19 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is in the caller.</returns>
         public Evaluator ReturnUndefined()
         {
-            this.Caller.ReturnedExpr = Undefined.Instance;
+            this.Caller.ReturnedExpr = new Undefined();
+            return this.Caller;
+        }
+
+        /// <summary>
+        /// Returns undefined result.
+        /// Also sets the interal value field.
+        /// </summary>
+        /// <param name="value">The value to set.</param>
+        /// <returns>The next evaluator, which is in the caller.</returns>
+        public Evaluator ReturnUndefined(int value)
+        {
+            this.Caller.ReturnedExpr = new Undefined(value);
             return this.Caller;
         }
         #endregion

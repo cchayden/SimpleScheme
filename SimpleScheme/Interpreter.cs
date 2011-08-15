@@ -60,7 +60,7 @@ namespace SimpleScheme
 
             this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
-            this.halted = Evaluator.NewHalted(this.GlobalEnvironment);
+            this.halted = Evaluator.NewHaltedEvaluator(this.GlobalEnvironment);
 
             try
             {
@@ -248,7 +248,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.Instance;
+                return new Undefined();
             }
         }
 
@@ -305,7 +305,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.Instance;
+                return new Undefined();
             }
         }
 
@@ -330,7 +330,7 @@ namespace SimpleScheme
                     ar =>
                         {
                             object val = this.UnsafeEndEval(ar);
-                            if (val != Undefined.Instance)
+                            if (val != new Undefined())
                             {
                                 string output = Printer.AsString(val, false);
                                 this.CurrentOutputPort.WriteLine(output);
@@ -424,7 +424,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.Instance;
+                return new Undefined();
             }
         }
 
@@ -442,7 +442,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.Instance;
+                return new Undefined();
             }
         }
 
@@ -460,7 +460,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.Instance;
+                return new Undefined();
             }
         }
 
@@ -478,7 +478,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.Instance;
+                return new Undefined();
             }
         }
 
@@ -567,7 +567,7 @@ namespace SimpleScheme
                     return ErrorHandlers.InternalError("PC bad value");
                 }
 
-                if (step.IsSuspended)
+                if (step.IsSuspendedEvaluator)
                 {
                     // See if evaluator wants to handle
                     Evaluator s = SearchForHandler(step);
@@ -577,11 +577,12 @@ namespace SimpleScheme
                         return step;
                     }
 
-                    // this evaluator wants to -- run it now
+                    // this evaluator wants to handle -- run it now
+                    s.IncrementCaught();
                     step = s;
                 }
 
-                if (step.IsHalted)
+                if (step.IsHaltedEvaluator)
                 {
                     if (this.asyncResult != null)
                     {
@@ -615,7 +616,7 @@ namespace SimpleScheme
                 if (InputPort.IsEof(input = inp.Read()))
                 {
                     inp.Close();
-                    return Undefined.Instance;
+                    return new Undefined();
                 }
 
                 this.Eval(input);
@@ -646,7 +647,7 @@ namespace SimpleScheme
         private static Obj SetTraceFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Trace = flag;
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -658,7 +659,7 @@ namespace SimpleScheme
         private static Obj SetCountFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Count = flag;
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -669,7 +670,7 @@ namespace SimpleScheme
         /// <returns>The evaluator that wants to handle suspension, orherwise null</returns>
         private static Evaluator SearchForHandler(Evaluator step)
         {
-            while (!step.IsHalted)
+            while (!step.IsHaltedEvaluator)
             {
                 if (step.CatchSuspended)
                 {
@@ -690,7 +691,7 @@ namespace SimpleScheme
         private static Obj Backtrace(Evaluator caller)
         {
             caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
-            return Undefined.Instance;
+            return new Undefined();
         }
         #endregion
 
@@ -739,7 +740,7 @@ namespace SimpleScheme
         {
             this.asyncResult = new AsyncResult<object>(cb, state);
             Obj res = this.Eval(expr, this.GlobalEnvironment);
-            if (res is Evaluator && ((Evaluator)res).IsSuspended)
+            if (res is Evaluator && ((Evaluator)res).IsSuspendedEvaluator)
             {
                 return this.asyncResult;
             }
@@ -777,7 +778,7 @@ namespace SimpleScheme
             }
 
             Obj val = this.UnsafeEval(expr);
-            if (val != Undefined.Instance)
+            if (val != new Undefined())
             {
                 string output = Printer.AsString(val, false);
                 if (output.Length > 0)

@@ -193,7 +193,7 @@ namespace SimpleScheme
         private static Obj DumpEnv(Environment env)
         {
             env.DumpEnv();
-            return Undefined.Instance;
+            return new Undefined();
         }
         #endregion
 
@@ -206,7 +206,7 @@ namespace SimpleScheme
         private Obj P(Obj x)
         {
             this.WriteLine(Printer.AsString(x, false));
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace SimpleScheme
         private Obj Display(Obj expr)
         {
             this.Write(Printer.AsString(expr, false));
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace SimpleScheme
         private Obj Write(Obj expr)
         {
             this.Write(Printer.AsString(expr, true));
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace SimpleScheme
         private Obj WriteChar(Obj expr)
         {
             this.Write(Printer.AsString(expr, false));
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace SimpleScheme
         private Obj CloseOutputPort()
         {
             this.Close();
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace SimpleScheme
         private Obj Newline()
         {
             this.Write(this.outp.NewLine);
-            return Undefined.Instance;
+            return new Undefined();
         }
         #endregion
     }

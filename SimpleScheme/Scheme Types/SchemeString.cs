@@ -298,7 +298,7 @@ namespace SimpleScheme
         private static Obj Set(Obj str, Obj index, Obj chr)
         {
             As(str)[(int)Number.As(index)] = Character.As(chr);
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace SimpleScheme
                 ss[i] = Character.As(fill);
             }
 
-            return Undefined.Instance;
+            return new Undefined();
         }
 
         /// <summary>

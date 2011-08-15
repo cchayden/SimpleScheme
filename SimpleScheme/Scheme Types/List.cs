@@ -147,7 +147,7 @@ namespace SimpleScheme
             if (Pair.Is(pair))
             {
                 ((Pair)pair).First = newValue;
-                return Undefined.Instance;
+                return new Undefined();
             }
 
             return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(pair));
@@ -164,7 +164,7 @@ namespace SimpleScheme
             if (Pair.Is(pair))
             {
                 ((Pair)pair).Rest = newTail;
-                return Undefined.Instance;
+                return new Undefined();
             }
 
             return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(pair));

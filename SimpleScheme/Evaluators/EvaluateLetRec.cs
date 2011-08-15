@@ -90,13 +90,13 @@ namespace SimpleScheme
             if (EmptyList.Is(expr))
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             if (!Pair.Is(expr))
             {
                 ErrorHandlers.SemanticError("Bad arg list for letrec: " + expr);
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             Obj bindings = List.First(expr);
@@ -104,7 +104,7 @@ namespace SimpleScheme
 
             if (EmptyList.Is(body))
             {
-                return caller.UpdateReturnValue(Undefined.Instance);
+                return caller.UpdateReturnValue(new Undefined());
             }
 
             Obj vars = List.MapFun(List.First, List.New(bindings));
@@ -114,7 +114,7 @@ namespace SimpleScheme
             int n = List.Length(vars);
             for (int i = 0; i < n; i++)
             {
-                initVals = Pair.Cons(Undefined.Instance, initVals);
+                initVals = Pair.Cons(new Undefined(), initVals);
             }
 
             System.Collections.Generic.List<Obj> vals = new System.Collections.Generic.List<Obj>(n);

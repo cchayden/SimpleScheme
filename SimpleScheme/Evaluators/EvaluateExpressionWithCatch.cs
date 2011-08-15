@@ -1,4 +1,5 @@
-﻿// <copyright file="EvaluateExpressionWithCatch.cs" company="Charles Hayden">
+﻿#define OLD
+// <copyright file="EvaluateExpressionWithCatch.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -9,6 +10,10 @@ namespace SimpleScheme
     /// Evaluate an expression with the ability to catch suspension.
     /// Anything that this calls that returns a suspended evaluator will be "caught"
     ///   by this evaluator.
+    /// It then returns Undefined, and any other return (the actual eval result)
+    ///   will be halted.
+    /// Evaluations can finish synchronously, without suspending, in which case they return
+    ///   the result of evaluating the given expression.
     /// </summary>
     public sealed class EvaluateExpressionWithCatch : Evaluator
     {
@@ -24,9 +29,10 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
-        /// The step we call to evaluate an expression in parallel.
+        /// Indicates whether to catch suspensions.
+        /// Catch only the first: let the rest through.
         /// </summary>
-        private EvaluateExpressionWithHalt pendingEvaluation;
+        private bool catchSuspended;
         #endregion
 
         #region Constructor
@@ -39,19 +45,39 @@ namespace SimpleScheme
         private EvaluateExpressionWithCatch(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
+            this.catchSuspended = true;
             ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
 
+        #region Enums
+        /// <summary>
+        /// Codes to pass back in the Undefined value to tell the caller what happened.
+        /// </summary>
+        public enum CatchCode
+        {
+            /// <summary>
+            /// The evaluation suspended due to async call.
+            /// </summary>
+            CaughtSuspended = 1,
+
+            /// <summary>
+            /// The evaluation returned a value after previously suspending.
+            /// </summary>
+            ReturnAfterSuspended = 2
+        }
+        #endregion
+
         #region Accessors
         /// <summary>
-        /// Catch when a caller suspends
+        /// Tells the evaluator main loop to catch suspensions.
+        /// This is reset after we catch one, to let the others through.
         /// </summary>
-        /// <returns>We want to catch suspensions.</returns>
+        /// <returns>Whether we want to catch suspensions.</returns>
         public override bool CatchSuspended
         {
-            get { return true; }
+            get { return this.catchSuspended; }
         }
         #endregion
 
@@ -71,33 +97,41 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Begin by evaluating the expression.
+        /// Evaluate the expression.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Steps to evaluate the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateExpressionWithCatch step = (EvaluateExpressionWithCatch)s;
-            step.pendingEvaluation = EvaluateExpressionWithHalt.Call(s.Expr, s.Env, s.ContinueHere(DoneStep));
-            return step.pendingEvaluation;
+            return EvaluateExpression.Call(s.Expr, s.Env, s.ContinueHere(DoneStep));
         }
 
         /// <summary>
         /// Back here after the expression has been evaluated.
-        /// Return to caller, or the halted expression that has overridden it.
+        /// Return to caller.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator DoneStep(Evaluator s)
         {
+            // If we get here because a suspend was caught, then return a distinguished
+            //  value to the caller.  Make sure we do not catch any more suspensions
+            //  from the same evaluation, and reset the counter so we can recognize the
+            //  final return.
+            // If we get here because of a normal return, then just return as normal.
             EvaluateExpressionWithCatch step = (EvaluateExpressionWithCatch)s;
+            if (s.Caught > 0)
+            {
+                step.catchSuspended = false;
+                s.ResetCaught();
+                return s.ReturnUndefined((int)CatchCode.CaughtSuspended);
+            }
 
-            // If we came back normally, then this has no effect.
-            // If we came back by catching suspended, this makes sure that after resumption,
-            //    the evaluation stops after completing the expression.
-            step.pendingEvaluation.HaltAfterCompletion();
-            return s.ReturnFromStep(s.ReturnedExpr);
+            return step.catchSuspended
+                       ? s.ReturnFromStep(s.ReturnedExpr)
+                       : s.ReturnUndefined((int)CatchCode.ReturnAfterSuspended);
         }
+
         #endregion
     }
 }
