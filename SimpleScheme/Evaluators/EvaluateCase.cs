@@ -53,6 +53,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="clauses">The case clauses.</param>
         private EvaluateCase(Obj expr, Environment env, Evaluator caller, Obj clauses)
             : base(expr, env, caller)
         {

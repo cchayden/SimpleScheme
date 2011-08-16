@@ -258,8 +258,8 @@ if(count != count1)
         /// This should be atomic.
         /// TODO is this atomic?
         /// </summary>
-        /// <param name="var"></param>
-        /// <returns></returns>
+        /// <param name="var">The symbol naming the variable to increment.</param>
+        /// <returns>The incremented value.</returns>
         public Obj Increment(Obj var)
         {
             if (!Symbol.Is(var))
@@ -282,6 +282,7 @@ if(count != count1)
                         {
                             return ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
                         }
+
                         var newVal = Number.As(val) + 1;
                         env.symbolTable.Update(symbol, newVal);
                         return newVal;
@@ -294,6 +295,7 @@ if(count != count1)
 
             return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
         }
+
         /// <summary>
         /// Dump the stack of environments.
         /// At each level, show the symbol table.
@@ -340,42 +342,6 @@ if(count != count1)
             return this.Dump(1, 0);
         }
         #endregion
-
-#if FALSE
-        #region Private Methods
-        /// <summary>
-        /// Check that the variable and value lists have the same length.
-        /// Iterate down the lists together.
-        /// If the formals list is not a proper list, but ends in a dotted pair whose 
-        ///   tail is a string, then the variable matches the rest of the args.
-        /// </summary>
-        /// <param name="vars">The variable list</param>
-        /// <param name="vals">The value list</param>
-        /// <param name="count">The number of variables in the list</param>
-        /// <returns>True if the lists are both empty lists, if the variable list is just a symbol, 
-        /// or if they are both lists of the same length.</returns>
-        private static bool CheckArgCount(Obj vars, Obj vals, out int count)
-        {
-            count = 0;
-            while (true)
-            {
-                if (EmptyList.Is(vars))
-                {
-                    return EmptyList.Is(vals);
-                }
-
-                if (!Pair.Is(vars) || !Pair.Is(vals))
-                {
-                    return Symbol.Is(vars);
-                }
-
-                vars = List.Rest(vars);
-                vals = List.Rest(vals);
-                count++;
-            }
-        }
-        #endregion
-#endif
 
         #region Private Class
         /// <summary>

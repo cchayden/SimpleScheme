@@ -42,6 +42,8 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="lhs">The left hand side -- the variable to set.</param>
+        /// <param name="rhs">The right hand side -- the new value.</param>
         private EvaluateSet(Obj expr, Environment env, Evaluator caller, Obj lhs, Obj rhs)
             : base(expr, env, caller)
         {
@@ -68,6 +70,7 @@ namespace SimpleScheme
             {
                 ErrorHandlers.SemanticError("Set: first argument must be a symbol.  Got: " + lhs);
             }
+
             return new EvaluateSet(expr, env, caller, lhs, rhs);
         }
 

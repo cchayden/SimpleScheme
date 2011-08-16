@@ -286,7 +286,6 @@ namespace SimpleScheme
                     // Evaluate a set! expression by evaluating the second, 
                     //   then setting the first to it.
                     //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                    //return EvaluateSet.Call(s.Expr, s.Env, s.ContinueHere(ReturnValueAndEnvStep));
                     return EvaluateSet.Call(s.Expr, s.Env, s.Caller);
 
                 case "increment!":
@@ -365,7 +364,7 @@ namespace SimpleScheme
         /// <param name="expr">The symbol whose value is incremented.</param>
         /// <param name="env">The environment.</param>
         /// <param name="caller">Return to this caller.</param>
-        /// <returns></returns>
+        /// <returns>The next step to execute.</returns>
         private static Evaluator Increment(Obj expr, Environment env, Evaluator caller)
         {
             Obj lhs = List.First(expr);

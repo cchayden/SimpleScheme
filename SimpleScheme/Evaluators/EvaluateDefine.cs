@@ -5,11 +5,12 @@ namespace SimpleScheme
 {
     using Obj = System.Object;
 
-    /// <summary>
-    /// Evaluate a define expression.
     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
+
+    /// <summary>
+    /// Evaluate a define expression.
     /// </summary>
     public sealed class EvaluateDefine : Evaluator
     {

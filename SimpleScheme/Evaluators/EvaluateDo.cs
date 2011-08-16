@@ -41,7 +41,6 @@ namespace SimpleScheme
         /// </summary>
         private readonly Obj steps;
 
-
         /// <summary>
         /// The expression list following the test
         /// </summary>

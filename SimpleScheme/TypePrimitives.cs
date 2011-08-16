@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Generic operations on Obj, for tracing, debugging, and interfacing with the CLR.
     /// Includes a method that returns "friendly" names for objects of given types.
     /// Also includes a methat that turns a "friendly" name into a full .NET name.
-    ///
+    /// <br/>
     /// We could have done this with a couple of Dictionaries, initialized by the various classes, but then
     ///   it would have been necessary to find an environment to store them.
     /// If it becomes important to make these extensible, that would be the right way to do it.
@@ -29,7 +29,8 @@ namespace SimpleScheme
             {
                 return "null";
             }
-            switch(obj.GetType().FullName)
+
+            switch (obj.GetType().FullName)
             {
                 // Names for types implementing Scheme values, used for error messages.
                 case "System.Boolean":

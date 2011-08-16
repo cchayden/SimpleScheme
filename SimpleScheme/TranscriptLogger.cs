@@ -74,6 +74,12 @@ namespace SimpleScheme
             this.transcriptWriter.Write(str);
         }
 
+        /// <summary>
+        /// Log input to the transcript file, followed by newline.
+        /// Do this only if the transcript is on, and the port is the current input port.
+        /// </summary>
+        /// <param name="str">The input to log.</param>
+        /// <param name="port">The port that it came from.</param>
         public void LogInputLine(string str, InputPort port)
         {
             if (this.transcriptWriter == null || port != this.interp.CurrentInputPort)
@@ -83,6 +89,7 @@ namespace SimpleScheme
 
             this.transcriptWriter.WriteLine(str);
         }
+
         /// <summary>
         /// Log output to the transcript file.
         /// Do this only if the transcript is on, and the port is the current output port.

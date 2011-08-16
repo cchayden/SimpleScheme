@@ -105,11 +105,15 @@ namespace SimpleScheme
         /// <summary>
         /// Read, evaluate, print, and return the result.
         /// </summary>
+        /// <param name="inp">The input port to read from.</param>
+        /// <returns>The evaluated result, printed as a string.</returns>
         string ReadEvalPrint(InputPort inp);
 
         /// <summary>
         /// Read, evaluate, print, and return the result.
         /// </summary>
+        /// <param name="str">The string to read from.</param>
+        /// <returns>The evaluated result, printed as a string.</returns>
         string ReadEvalPrint(string str);
 
         /// <summary>
@@ -129,9 +133,5 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="fileName">The file to load.</param>
         void LoadFile(object fileName);
-
-
-
-
     }
 }

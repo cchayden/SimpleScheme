@@ -117,136 +117,12 @@ namespace SimpleScheme
                 ErrorHandlers.IoError("IOException on close: " + ex);
             }
         }
-        #endregion
-
-        #region Private Methods
-        /// <summary>
-        /// Read a whole expression.
-        /// Handles parentheses and the various kinds of quote syntax shortcuts.
-        /// Warns about extra right parentheses and dots.
-        /// </summary>
-        /// <returns>The expression as a list.</returns>
-        private Obj Read()
-        {
-            try
-            {
-                object token = this.NextToken();
-
-                switch (token as string)
-                {
-                    case "(":
-                        token = this.ReadTail(false);
-                        break;
-
-                    case ")":
-                        ErrorHandlers.Warn("Extra ) ignored.");
-                        token = this.Read();
-                        break;
-                    case ".":
-                        ErrorHandlers.Warn("Extra . ignored.");
-                        token = this.Read();
-                        break;
-                    case "'": 
-                        token = List.New("quote", this.Read());
-                        break;
-                    case "`":
-                        token = List.New("quasiquote", this.Read());
-                        break;
-                    case ",": 
-                        token = List.New("unquote", this.Read());
-                        break;
-                    case ",@": 
-                        token = List.New("unquote-splicing", this.Read());
-                        break;
-                    default:
-                        break;
-                }
-
-                return token;
-            }
-            catch (IOException ex)
-            {
-                ErrorHandlers.Warn("On input, exception:" + ex);
-                return InputPort.Eof;
-            }
-        }
-
-        /// <summary>
-        /// Peek into the input stream, and return the next character to be read.
-        /// The character is saved, so that the next read will see it.
-        /// If the input stream is closed, return -1.
-        /// </summary>
-        /// <returns>The next character in the stream.</returns>
-        private int Peek()
-        {
-            int ch = this.charStream.Peek();
-            if (ch != -1)
-            {
-                return ch;
-            }
-
-            try
-            {
-                this.charStream.Push(ch = this.inp.Read());
-                return ch;
-            }
-            catch (IOException ex)
-            {
-                ErrorHandlers.Warn("On input, exception: " + ex);
-                return -1;
-            }
-        }
-
-        /// <summary>
-        /// Pop a buffered character, if one is availab.e
-        /// Otherwise read one from the stream.
-        /// </summary>
-        /// <returns>The character read.</returns>
-        private int ReadOrPop()
-        {
-            int ch = this.charStream.Pop();
-            if (ch != -1)
-            {
-                return ch;
-            }
-
-            ch = this.inp.Read();
-
-            if (this.logger != null)
-            {
-                this.logger.Append((char)ch);
-            }
-
-            return ch;
-        }
-
-        /// <summary>
-        /// Read the next character from the reader.
-        /// If there is a buffered character, throw it away and give a warning.
-        /// </summary>
-        /// <returns>The character read.</returns>
-        private int ReadNextChar()
-        {
-            int ch = this.charStream.Pop();
-            if (ch != -1)
-            {
-                    ErrorHandlers.IoError("Read bypassed pushed char.");
-            }
-
-            ch = this.inp.Read();
-            if (this.logger != null)
-            {
-                this.logger.Append((char)ch);
-            }
-
-            return ch;
-        }
 
         /// <summary>
         /// Gets the next token from the input stream.
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
-        /// <returns>the next token.</returns>
+        /// <returns>The next token.</returns>
         public object NextToken()
         {
             // See if we should re-use a pushed token or character
@@ -401,6 +277,131 @@ namespace SimpleScheme
                         return string.Intern(buff.ToString().ToLower());
                     }
             }
+        }
+
+        #endregion
+
+        #region Private Methods
+        /// <summary>
+        /// Read a whole expression.
+        /// Handles parentheses and the various kinds of quote syntax shortcuts.
+        /// Warns about extra right parentheses and dots.
+        /// </summary>
+        /// <returns>The expression as a list.</returns>
+        private Obj Read()
+        {
+            try
+            {
+                object token = this.NextToken();
+
+                switch (token as string)
+                {
+                    case "(":
+                        token = this.ReadTail(false);
+                        break;
+
+                    case ")":
+                        ErrorHandlers.Warn("Extra ) ignored.");
+                        token = this.Read();
+                        break;
+                    case ".":
+                        ErrorHandlers.Warn("Extra . ignored.");
+                        token = this.Read();
+                        break;
+                    case "'": 
+                        token = List.New("quote", this.Read());
+                        break;
+                    case "`":
+                        token = List.New("quasiquote", this.Read());
+                        break;
+                    case ",": 
+                        token = List.New("unquote", this.Read());
+                        break;
+                    case ",@": 
+                        token = List.New("unquote-splicing", this.Read());
+                        break;
+                    default:
+                        break;
+                }
+
+                return token;
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.Warn("On input, exception:" + ex);
+                return InputPort.Eof;
+            }
+        }
+
+        /// <summary>
+        /// Peek into the input stream, and return the next character to be read.
+        /// The character is saved, so that the next read will see it.
+        /// If the input stream is closed, return -1.
+        /// </summary>
+        /// <returns>The next character in the stream.</returns>
+        private int Peek()
+        {
+            int ch = this.charStream.Peek();
+            if (ch != -1)
+            {
+                return ch;
+            }
+
+            try
+            {
+                this.charStream.Push(ch = this.inp.Read());
+                return ch;
+            }
+            catch (IOException ex)
+            {
+                ErrorHandlers.Warn("On input, exception: " + ex);
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Pop a buffered character, if one is availab.e
+        /// Otherwise read one from the stream.
+        /// </summary>
+        /// <returns>The character read.</returns>
+        private int ReadOrPop()
+        {
+            int ch = this.charStream.Pop();
+            if (ch != -1)
+            {
+                return ch;
+            }
+
+            ch = this.inp.Read();
+
+            if (this.logger != null)
+            {
+                this.logger.Append((char)ch);
+            }
+
+            return ch;
+        }
+
+        /// <summary>
+        /// Read the next character from the reader.
+        /// If there is a buffered character, throw it away and give a warning.
+        /// </summary>
+        /// <returns>The character read.</returns>
+        private int ReadNextChar()
+        {
+            int ch = this.charStream.Pop();
+            if (ch != -1)
+            {
+                    ErrorHandlers.IoError("Read bypassed pushed char.");
+            }
+
+            ch = this.inp.Read();
+            if (this.logger != null)
+            {
+                this.logger.Append((char)ch);
+            }
+
+            return ch;
         }
 
         /// <summary>

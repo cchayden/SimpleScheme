@@ -29,27 +29,22 @@ namespace SimpleScheme
         /// <summary>
         /// Name, for named let.
         /// </summary>
-        private string name;
-
-        /// <summary>
-        /// The variable bindings established by the let expression.
-        /// </summary>
-        private Obj bindings;
+        private readonly string name;
 
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private Obj body;
+        private readonly Obj body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private Obj vars;
+        private readonly Obj vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private Obj inits;
+        private readonly Obj inits;
         #endregion
 
         #region Constructor
@@ -59,11 +54,14 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateLet(Obj expr, Environment env, Evaluator caller, string name, Obj bindings, Obj body, Obj vars, Obj inits)
+        /// <param name="name">The name of a named let.</param>
+        /// <param name="body">The let body.</param>
+        /// <param name="vars">The variables to bind.</param>
+        /// <param name="inits">The initial values of the variables.</param>
+        private EvaluateLet(Obj expr, Environment env, Evaluator caller, string name, Obj body, Obj vars, Obj inits)
             : base(expr, env, caller)
         {
             this.name = name;
-            this.bindings = bindings;
             this.body = body;
             this.vars = vars;
             this.inits = inits;
@@ -120,7 +118,7 @@ namespace SimpleScheme
 
             Obj vars = List.MapFun(List.First, List.New(bindings));
             Obj inits = List.MapFun(List.Second, List.New(bindings));
-            return new EvaluateLet(expr, env, caller, name, bindings, body, vars, inits);
+            return new EvaluateLet(expr, env, caller, name, body, vars, inits);
         }
         #endregion
 

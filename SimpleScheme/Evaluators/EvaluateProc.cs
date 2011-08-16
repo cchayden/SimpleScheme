@@ -53,6 +53,7 @@ namespace SimpleScheme
                 this.UpdateReturnValue(args); // as if EvalArgs returned this, the unevaluated args
                 ContinueHere(ApplyStep);
             }
+
             IncrementCounter(counter);
         }
         #endregion
