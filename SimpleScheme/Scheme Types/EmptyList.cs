@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the empty list type.
         /// </summary>
-        public const string Name = "empty list";
+        public const string Name = "empty-list";
         #endregion
 
         #region Constructor

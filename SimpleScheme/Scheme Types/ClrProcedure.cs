@@ -21,7 +21,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the clr procedure type.
         /// </summary>
-        public new const string Name = "clr procedure";
+        public new const string Name = "clr-procedure";
         #endregion
 
         #region Constructor

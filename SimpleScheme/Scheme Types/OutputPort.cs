@@ -17,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme output port type.
         /// </summary>
-        public const string Name = "output port";
+        public const string Name = "output-port";
         #endregion
 
         #region Fields

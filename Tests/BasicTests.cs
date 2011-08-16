@@ -250,7 +250,7 @@ namespace Tests
         public void CtorClrTest()
         {
             // define constructor
-            this.Run("<clr constructor>", "define string constructor", @"
+            this.Run("<clr-constructor>", "define string constructor", @"
                 (define str-ctor (constructor ""string"" ""char[]""))
                 str-ctor
             ");

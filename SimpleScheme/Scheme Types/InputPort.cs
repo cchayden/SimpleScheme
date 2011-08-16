@@ -22,7 +22,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the scheme input port type.
         /// </summary>
-        public const string Name = "input port";
+        public const string Name = "input-port";
         #endregion
 
         #region Fields

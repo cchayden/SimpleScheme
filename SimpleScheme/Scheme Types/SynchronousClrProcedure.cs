@@ -17,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the synchronous clr procedure type.
         /// </summary>
-        public new const string Name = "synchronous clr procedure";
+        public new const string Name = "synchronous-clr-procedure";
         #endregion
 
         #region Constructor

@@ -466,9 +466,9 @@ namespace Tests
             Assert.AreEqual("number", TypePrimitives.TypeName(1.0d));
             Assert.AreEqual("string", TypePrimitives.TypeName(new[] { 'a', 'b', 'c' }));
             Assert.AreEqual("primitive", TypePrimitives.TypeName(new Primitive((args, caller) => null, 0, 0)));
-            Assert.AreEqual("input port", TypePrimitives.TypeName(new InputPort(new StringReader(string.Empty), (Interpreter)this.interpreter)));
-            Assert.AreEqual("output port", TypePrimitives.TypeName(new OutputPort(new StringWriter(), (Interpreter)this.interpreter)));
-            Assert.AreEqual("empty list", TypePrimitives.TypeName(EmptyList.Instance));
+            Assert.AreEqual("input-port", TypePrimitives.TypeName(new InputPort(new StringReader(string.Empty), (Interpreter)this.interpreter)));
+            Assert.AreEqual("output-port", TypePrimitives.TypeName(new OutputPort(new StringWriter(), (Interpreter)this.interpreter)));
+            Assert.AreEqual("empty-list", TypePrimitives.TypeName(EmptyList.Instance));
         }
 
         /// <summary>
