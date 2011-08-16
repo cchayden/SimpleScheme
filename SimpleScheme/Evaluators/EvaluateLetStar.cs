@@ -125,7 +125,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Evaluator EvalInitStep(Evaluator s)
         {
-            EvaluateLetStar step = (EvaluateLetStar)s;
+            var step = (EvaluateLetStar)s;
             if (EmptyList.Is(step.inits))
             {
                 return s.ContinueHere(ApplyProcStep);
@@ -144,7 +144,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
-            EvaluateLetStar step = (EvaluateLetStar)s;
+            var step = (EvaluateLetStar)s;
             step.formals = Pair.Cons(List.First(step.vars), step.formals);
             step.vals = Pair.Cons(s.ReturnedExpr, step.vals);
             step.vars = List.Rest(step.vars);
@@ -159,7 +159,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with evaluation of the body of the let.</returns>
         private static Evaluator ApplyProcStep(Evaluator s)
         {
-            EvaluateLetStar step = (EvaluateLetStar)s;
+            var step = (EvaluateLetStar)s;
 
             // apply the fun to the vals
             Lambda fun = new Lambda(step.formals, step.body, s.Env);

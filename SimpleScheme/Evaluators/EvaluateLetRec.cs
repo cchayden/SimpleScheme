@@ -31,6 +31,12 @@ namespace SimpleScheme
         private readonly Obj body;
 
         /// <summary>
+        /// The list of formal parameters to pass to the final lambda.
+        /// This is variable1, variable2, ...
+        /// </summary>
+        private readonly Obj formals;
+
+        /// <summary>
         /// The list of variables to bind.
         /// </summary>
         private Obj vars;
@@ -41,15 +47,9 @@ namespace SimpleScheme
         private Obj inits;
 
         /// <summary>
-        /// The list of formal parameters to pass to the final lambda.
-        /// This is variable1, variable2, ...
-        /// </summary>
-        private readonly Obj formals;
-
-        /// <summary>
         /// Accumulate the list of init vals here for later assignment.
         /// </summary>
-        private readonly System.Collections.Generic.List<Obj> vals;
+        private Obj vals;
         #endregion
 
         #region Constructor
@@ -62,16 +62,14 @@ namespace SimpleScheme
         /// <param name="body">The let body.</param>
         /// <param name="vars">The variables to be bound.</param>
         /// <param name="inits">The initialization expressions.</param>
-        /// <param name="formals">The formal parameters.</param>
-        /// <param name="vals">The initial values.</param>
-        private EvaluateLetRec(Obj expr, Environment env, Evaluator caller, Obj body, Obj vars, Obj inits, Obj formals, System.Collections.Generic.List<Obj> vals)
+        private EvaluateLetRec(Obj expr, Environment env, Evaluator caller, Obj body, Obj vars, Obj inits)
             : base(expr, env, caller)
         {
             this.body = body;
             this.vars = vars;
             this.inits = inits;
-            this.formals = formals;
-            this.vals = vals;
+            this.formals = vars;
+            this.vals = EmptyList.Instance;
             ContinueHere(EvalInitStep);
             IncrementCounter(counter);
         }
@@ -99,29 +97,18 @@ namespace SimpleScheme
                 return caller.UpdateReturnValue(new Undefined());
             }
 
-            Obj bindings = List.First(expr);
             Obj body = List.Rest(expr);
-
             if (EmptyList.Is(body))
             {
                 return caller.UpdateReturnValue(new Undefined());
             }
 
-            Obj vars = List.MapFun(List.First, List.New(bindings));
+            Obj bindings = List.First(expr);
+            Obj formals = List.MapFun(List.First, List.New(bindings));
             Obj inits = List.MapFun(List.Second, List.New(bindings));
-            Obj formals = vars;
-            Obj initVals = EmptyList.Instance;
-            int n = List.Length(vars);
-            for (int i = 0; i < n; i++)
-            {
-                initVals = Pair.Cons(new Undefined(), initVals);
-            }
+            Obj initVals = List.Fill(List.Length(formals), new Undefined());
 
-            System.Collections.Generic.List<Obj> vals = new System.Collections.Generic.List<Obj>(n);
-
-            EvaluateLetRec eval = new EvaluateLetRec(expr, env, caller, body, vars, inits, formals, vals);
-            eval.PushEnvironment(formals, initVals, env);
-            return eval;
+            return new EvaluateLetRec(expr, new Environment(formals, initVals, env), caller, body, formals, inits);
         }
         #endregion
 
@@ -133,7 +120,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Evaluator EvalInitStep(Evaluator s)
         {
-            EvaluateLetRec step = (EvaluateLetRec)s;
+            var step = (EvaluateLetRec)s;
             if (EmptyList.Is(step.inits))
             {
                 return s.ContinueHere(ApplyProcStep);
@@ -152,8 +139,8 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
-            EvaluateLetRec step = (EvaluateLetRec)s;
-            step.vals.Add(s.ReturnedExpr);
+            var step = (EvaluateLetRec)s;
+            step.vals = Pair.Cons(s.ReturnedExpr, step.vals);
             step.vars = List.Rest(step.vars);
             step.inits = List.Rest(step.inits);
             return s.ContinueHere(EvalInitStep);
@@ -166,15 +153,17 @@ namespace SimpleScheme
         /// <returns>Execution returns to the caller.</returns>
         private static Evaluator ApplyProcStep(Evaluator s)
         {
-            EvaluateLetRec step = (EvaluateLetRec)s;
+            var step = (EvaluateLetRec)s;
 
             // assign the inits into the env
             Obj var = step.formals;
+            Obj vals = List.Reverse(step.vals);
             int n = List.Length(step.formals);
             for (int i = 0; i < n; i++)
             {
-                s.Env.Set(List.First(var), step.vals[i]);
+                s.Env.Set(List.First(var), List.First(vals));
                 var = List.Rest(var);
+                vals = List.Rest(vals);
             }
 
             // apply the fun to the vals and return

@@ -75,7 +75,7 @@ namespace SimpleScheme
         /// <returns>Continue, or else give the timer results.</returns>
         protected static Evaluator Step2(Evaluator s)
         {
-            EvaluateTimeBase step = (EvaluateTimeBase)s;
+            var step = (EvaluateTimeBase)s;
             step.i++;
             if (step.i < step.counter)
             {
@@ -108,7 +108,7 @@ namespace SimpleScheme
         /// <returns>Continue to next step.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateTimeBase step = (EvaluateTimeBase)s;
+            var step = (EvaluateTimeBase)s;
             Obj y = List.Second(s.Expr);
             step.counter = EmptyList.Is(y) ? 1 : (int)Number.As(y);
             step.i = 0;

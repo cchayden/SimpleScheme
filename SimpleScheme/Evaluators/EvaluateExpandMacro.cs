@@ -72,7 +72,7 @@ namespace SimpleScheme
         /// <returns>The step to evaluate the expanded macro.</returns>
         private static Evaluator ExpandStep(Evaluator s)
         {
-            EvaluateExpandMacro step = (EvaluateExpandMacro)s;
+            var step = (EvaluateExpandMacro)s;
             return step.fn.Apply(s.Expr, s.ContinueHere(EvaluateStep));
         }
 

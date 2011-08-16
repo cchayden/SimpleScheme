@@ -87,7 +87,7 @@ namespace SimpleScheme
         /// <returns>Usually, This evaluator the first clause.</returns>
         private static Evaluator EvalClauseStep(Evaluator s)
         {
-            EvaluateCond step = (EvaluateCond)s;
+            var step = (EvaluateCond)s;
             step.clause = List.First(step.clauses);
             if (List.First(step.clause) as string == "else")
             {
@@ -108,7 +108,7 @@ namespace SimpleScheme
         /// <returns>The next step, either loop or finish.</returns>
         private static Evaluator TestClauseStep(Evaluator s)
         {
-            EvaluateCond step = (EvaluateCond)s;
+            var step = (EvaluateCond)s;
             step.test = s.ReturnedExpr;
             if (SchemeBoolean.Truth(step.test))
             {
@@ -133,7 +133,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the caller.</returns>
         private static Evaluator EvalConsequentStep(Evaluator s)
         {
-            EvaluateCond step = (EvaluateCond)s;
+            var step = (EvaluateCond)s;
             if (EmptyList.Is(List.Rest(step.clause)))
             {
                 // no consequent: return the test as the result
@@ -157,7 +157,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute (the return).</returns>
         private static Evaluator ApplyRecipientStep(Evaluator s)
         {
-            EvaluateCond step = (EvaluateCond)s;
+            var step = (EvaluateCond)s;
             return EvaluateProc.CallQuoted(Procedure.As(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);
         }
         #endregion

@@ -91,7 +91,7 @@ namespace SimpleScheme
         /// continues to the next step.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateCallWithOutputFile step = (EvaluateCallWithOutputFile)s;
+            var step = (EvaluateCallWithOutputFile)s;
             return Procedure.As(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
         }
 
@@ -102,7 +102,7 @@ namespace SimpleScheme
         /// <returns>The evaluation result.</returns>
         private static Evaluator CloseStep(Evaluator s)
         {
-            EvaluateCallWithOutputFile step = (EvaluateCallWithOutputFile)s;
+            var step = (EvaluateCallWithOutputFile)s;
             if (step.port != null)
             {
                 step.port.Close();

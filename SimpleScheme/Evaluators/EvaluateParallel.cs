@@ -91,7 +91,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator EvalExprStep(Evaluator s)
         {
-            EvaluateParallel step = (EvaluateParallel)s;
+            var step = (EvaluateParallel)s;
             if (EmptyList.Is(s.Expr))
             {
                 if (step.join)
@@ -116,7 +116,7 @@ namespace SimpleScheme
         private static Evaluator LoopStep(Evaluator s)
         {
             int parm = Undefined.As(s.ReturnedExpr).Value;
-            EvaluateParallel step = (EvaluateParallel)s;
+            var step = (EvaluateParallel)s;
             switch (parm)
             {
                 default:
@@ -161,7 +161,7 @@ namespace SimpleScheme
         private static Evaluator JoinStep(Evaluator s)
         {
             int parm = Undefined.As(s.ReturnedExpr).Value;
-            EvaluateParallel step = (EvaluateParallel)s;
+            var step = (EvaluateParallel)s;
             switch (parm)
             {
                 default:

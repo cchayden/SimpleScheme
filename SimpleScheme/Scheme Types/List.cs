@@ -230,6 +230,23 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Create a new list of the given length, where each element is given.
+        /// </summary>
+        /// <param name="n">The length of the list.</param>
+        /// <param name="fill">The element to place in each list element.</param>
+        /// <returns>A list filled with the given element.</returns>
+        public static Obj Fill(int n, Obj fill)
+        {
+            Obj res = EmptyList.Instance;
+            for (int i = 0; i < n; i++)
+            {
+                res = Pair.Cons(fill, res);
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Traverse the given list, applying the given function to all elements.
         /// Create a list of the results.
         /// This is purely iterative.

@@ -97,7 +97,7 @@ namespace SimpleScheme
         /// <returns>The steps to test che clauses.</returns>
         private static Evaluator CheckClauseStep(Evaluator s)
         {
-            EvaluateCase step = (EvaluateCase)s;
+            var step = (EvaluateCase)s;
             step.keyVal = s.ReturnedExpr;
             while (!EmptyList.Is(step.clauses))
             {

@@ -81,7 +81,7 @@ namespace SimpleScheme
         /// <returns>Code to evaluate the second expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateSet step = (EvaluateSet)s;
+            var step = (EvaluateSet)s;
             return EvaluateExpression.Call(step.rhs, s.Env, s.ContinueHere(SetStep));
         }
 
@@ -93,8 +93,7 @@ namespace SimpleScheme
         /// <returns>Returns to caller.</returns>
         private static Evaluator SetStep(Evaluator s)
         {
-            EvaluateSet step = (EvaluateSet)s;
-Console.WriteLine("Setting {0} {1}", step.lhs, s.ReturnedExpr);
+            var step = (EvaluateSet)s;
             s.Env.Set(step.lhs, s.ReturnedExpr);
             return s.ReturnUndefined();
         }

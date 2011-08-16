@@ -243,7 +243,7 @@ namespace SimpleScheme
         /// <returns>The next thing to do.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateExpression step = (EvaluateExpression)s;
+            var step = (EvaluateExpression)s;
 
             // defined as macro for now
             //// <r4rs section="4.2.6">(quasiquote <template>)</r4rs>

@@ -99,7 +99,7 @@ namespace SimpleScheme
         /// If we are done, return the collected results.</returns>
         private static Evaluator ApplyFunStep(Evaluator s)
         {
-            EvaluateMap step = (EvaluateMap)s;
+            var step = (EvaluateMap)s;
             if (Pair.Is(List.First(s.Expr)))
             {
                 // Grab the arguments to the applications (the head of each list).
@@ -118,7 +118,7 @@ namespace SimpleScheme
         /// <returns>Continue back in apply fun step.</returns>
         private static Evaluator CollectAndLoopStep(Evaluator s)
         {
-            EvaluateMap step = (EvaluateMap)s;
+            var step = (EvaluateMap)s;
 
             // back from the evaluation -- save the result and keep going with the rest
             if (step.result != null)

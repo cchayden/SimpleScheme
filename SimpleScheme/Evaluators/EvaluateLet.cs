@@ -134,7 +134,7 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the constructed lambda.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateLet step = (EvaluateLet)s;
+            var step = (EvaluateLet)s;
             if (step.name == null)
             {
                 // regular let -- create a lambda for the body, bind inits to it, and apply it
@@ -155,7 +155,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         private static Evaluator ApplyNamedLetStep(Evaluator s)
         {
-            EvaluateLet step = (EvaluateLet)s;
+            var step = (EvaluateLet)s;
             Lambda fn = new Lambda(step.vars, step.body, s.Env);
             fn.Env.UnsafeDefine(step.name, fn);
             return fn.Apply(s.ReturnedExpr, s.Caller);

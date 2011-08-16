@@ -346,25 +346,13 @@ namespace SimpleScheme
         #region Protected Methods
         /// <summary>
         /// Create a new environment and replace the current one with it.
+        /// The new one has the same lexical parent as it did before.
         /// </summary>
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
-        /// <param name="parent">The existing environment.</param>
-        public void ReplaceEnvironment(Obj formals, Obj vals, Environment parent)
+        public void ReplaceEnvironment(Obj formals, Obj vals)
         {
-            this.Env = new Environment(formals, vals, parent.LexicalParent);
-        }
-
-        /// <summary>
-        /// Push a new environment made up of the formals and their values.
-        /// Link it to the parent environment.
-        /// </summary>
-        /// <param name="formals">The environment variable names.</param>
-        /// <param name="vals">The values of the variables.</param>
-        /// <param name="parent">The lexically enclosing environment.</param>
-        public void PushEnvironment(Obj formals, Obj vals, Environment parent)
-        {
-            this.Env = new Environment(formals, vals, parent);
+            this.Env = new Environment(formals, vals, this.Env.LexicalParent);
         }
 
         /// <summary>

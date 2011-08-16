@@ -119,7 +119,7 @@ namespace SimpleScheme
             //  from the same evaluation, and reset the counter so we can recognize the
             //  final return.
             // If we get here because of a normal return, then just return as normal.
-            EvaluateExpressionWithCatch step = (EvaluateExpressionWithCatch)s;
+            var step = (EvaluateExpressionWithCatch)s;
             if (s.Caught > 0)
             {
                 step.catchSuspended = false;

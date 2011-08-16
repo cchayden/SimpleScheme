@@ -155,7 +155,7 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the inits.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            EvaluateDo step = (EvaluateDo)s;
+            var step = (EvaluateDo)s;
             return EvaluateList.Call(step.inits, s.Env, s.ContinueHere(TestStep));
         }
 
@@ -167,8 +167,8 @@ namespace SimpleScheme
         /// <returns>The next step, which tests the result.</returns>
         private static Evaluator TestStep(Evaluator s)
         {
-            EvaluateDo step = (EvaluateDo)s;
-            s.ReplaceEnvironment(step.vars, s.ReturnedExpr, s.Env);
+            var step = (EvaluateDo)s;
+            s.ReplaceEnvironment(step.vars, s.ReturnedExpr);
             return step.testProc.ApplyWithtEnv(s.Env, step.ContinueHere(IterateStep));
         }
 
@@ -180,7 +180,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Evaluator IterateStep(Evaluator s)
         {
-            EvaluateDo step = (EvaluateDo)s;
+            var step = (EvaluateDo)s;
             if (SchemeBoolean.Truth(step.ReturnedExpr))
             {
                 // test is true
@@ -208,7 +208,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            EvaluateDo step = (EvaluateDo)s;
+            var step = (EvaluateDo)s;
             return EvaluateList.Call(step.steps, step.Env, step.ContinueHere(TestStep));
         }
         #endregion

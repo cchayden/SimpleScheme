@@ -100,7 +100,7 @@ namespace SimpleScheme
         /// <returns>The created list, or an evaluator to loop back and evaluate some more.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            EvaluateList step = (EvaluateList)s;
+            var step = (EvaluateList)s;
 
             // back from the evaluation -- save the result and keep going with the rest
             step.result = Pair.Cons(s.ReturnedExpr, step.result);
