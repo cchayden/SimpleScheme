@@ -149,6 +149,14 @@ namespace SimpleScheme
                 return Thread.VolatileRead(ref this.completedState) != StatePending;
             }
         }
+
+        public TResult Result
+        {
+            get
+            {
+                return this.result;
+            }
+        }
         #endregion
 
         #region Public Methods

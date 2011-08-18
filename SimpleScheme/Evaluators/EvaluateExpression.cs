@@ -265,14 +265,7 @@ namespace SimpleScheme
                     // If any suspend, keep going.
                     //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                     //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateParallel.Call(s.Expr, s.Env, s.Caller, false);
-                case "parallel-join":
-                    // Evaluate begin by evaluating all the items in order.
-                    // Return Undefined.
-                    // If any suspend, keep going.
-                    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-                    //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                    return EvaluateParallel.Call(s.Expr, s.Env, s.Caller, true);
+                    return EvaluateParallel.Call(s.Expr, s.Env, s.Caller);
 
                 case "define":
                     // Define is a shortcut for lambda.

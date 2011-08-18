@@ -313,19 +313,19 @@ namespace Tests
             // immediately after, verify no sleep is completed
             // then wait and verify that all have completed
             sleepCounter = 0;
-            this.Run("<undefined>", "parallel concurrent",
+            this.Run("SimpleScheme.Evaluator", "parallel concurrent",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
                 (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
                 (define (sleep duration) (async-sleep sleep-caller duration))
-                (parallel (sleep 100) 
-                          (sleep 100) 
-                          (sleep 100))
+                (define count 0)
+                (parallel (begin (sleep 100) (p 'inc1) (increment! count))
+                               (begin (sleep 100) (p 'inc2) (increment! count))
+                               (begin (sleep 100) (p 'inc3) (increment! count)))
             ");
-            Assert.AreEqual(0, sleepCounter, "parallel concurrent before");
             Thread.Sleep(200);
-            Assert.AreEqual(3, sleepCounter, "parallel concurrent after");
+            this.Run("3", "parallel concurrent", "count");
 
             // test parallel expr halts properly
             // first parallel expr sleeps asynchronously
@@ -345,115 +345,11 @@ namespace Tests
                           (begin (set! here #t)))
                 result
             ");
-            Assert.AreEqual(2, sleepCounter, "parallel continue");
+            Assert.AreEqual(2, sleepCounter, "parallel continue ");
 
             // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
-            this.Run("(#f #f #f)", "parallel continue all 1",
-               @"
-                (define res1 #f)
-                (define res2 #f)
-                (define res3 #f)
-                (parallel (begin (sleep 100) (set! res1 #t))
-                          (begin (sleep 100) (set! res2 #t))
-                          (begin (sleep 100) (set! res3 #t)))
-                (list res1 res2 res3)
-            ");
-            Assert.AreEqual(0, sleepCounter, "parallel continue all");
-            this.Run("(#t #t #t)", "parallel continue all 2",
-               @"
-                 (delay 120) 
-                 (list res1 res2 res3)
-            ");
-            Assert.AreEqual(4, sleepCounter, "parallel continue all 2");
-
-            // verify several sleeps in one expr
-            sleepCounter = 0;
-            this.Run("(#f #f #f #f #f)", "parallel continue all 1",
-               @"
-                (define res1 #f)
-                (define res2 #f)
-                (define res3 #f)
-                (define res4 #f)
-                (define res5 #f)
-                (parallel (begin (sleep 100) (set! res1 #t)
-                                 (sleep 100) (set! res2 #t)
-                                 (sleep 100) (set! res3 #t))
-                          (begin (sleep 100) (set! res4 #t))
-                          (begin (sleep 100) (set! res5 #t)))
-                (list res1 res2 res3 res4 res5)
-            ");
-            Assert.AreEqual(0, sleepCounter, "parallel continue all");
-            this.Run("(#t #f #f #t #t)", "parallel continue all 2",
-               @"
-                 (delay 120) 
-                 (list res1 res2 res3 res4 res5)
-            ");
-            this.Run("(#t #t #t #t #t)", "parallel continue all 2",
-               @"
-                 (delay 250) 
-                 (list res1 res2 res3 res4 res5)
-            ");
-            Assert.AreEqual(7, sleepCounter, "parallel continue all 2");
-        }
-
-        /// <summary>
-        /// A test for parallel-join primitive
-        /// </summary>
-        [TestMethod]
-        public void ParallelJoinClrTest()
-        {
-            // make sure non-async calls work sequentially
-            this.Run("3", "parallel-join sequential",
-               @"
-                (define result 0)
-                (parallel-join (if (= result 0) (set! result 1))
-                          (if (= result 1) (set! result 2))
-                          (if (= result 2) (set! result 3)))
-                result
-            ");
-
-            // all three sleep simultaneously
-            // immediately after, verify no sleep is completed
-            // then wait and verify that all have completed
-            sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "parallel-join concurrent",
-               @"
-                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define sleep-caller (create-async))
-                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (define (sleep duration) (async-sleep sleep-caller duration))
-                (define count 0)
-                (parallel-join (begin (sleep 100) (p 'inc1) (increment! count))
-                               (begin (sleep 100) (p 'inc2) (increment! count))
-                               (begin (sleep 100) (p 'inc3) (increment! count)))
-            ");
-            Thread.Sleep(200);
-            this.Run("3", "parallel-join concurrent", "count");
-
-            // test parallel expr halts properly
-            // first parallel expr sleeps asynchronously
-            // second delays for a while
-            // first completes its sleep
-            // make sure it does not continue execution of the parallel statement
-            // if it does, it would set here to #t
-            // it needs to halt after the parallel sleep, not continue
-            sleepCounter = 0;
-            this.Run("notyet", "parallel-join continue",
-               @"
-                (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
-                (define here #f)
-                (define result 0)
-                (parallel-join (begin (sleep 100))
-                          (begin (delay 200) (set! result (if here 'already 'notyet)))
-                          (begin (set! here #t)))
-                result
-            ");
-            Assert.AreEqual(2, sleepCounter, "parallel-join continue ");
-
-            // verify that all exprs in a parallel statement continue after the async expr is finished
-            sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "parallel-join continue all 1",
+            this.Run("SimpleScheme.Evaluator", "parallel continue all 1",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
@@ -466,20 +362,20 @@ namespace Tests
                   (define res1 #f)
                   (define res2 #f)
                   (define res3 #f)
-                  (parallel-join (begin (sleep 100) (set! res1 #t))
+                  (parallel (begin (sleep 100) (set! res1 #t))
                                  (begin (sleep 100) (set! res2 #t))
                                  (begin (sleep 100) (set! res3 #t)))
                   (set! res (list res1 res2 res3)))
             ");
-            Assert.AreEqual(0, sleepCounter, "parallel-join continue all 1");
-            this.Run("0", "parallel-join continue all 2", "res");
+            Assert.AreEqual(0, sleepCounter, "parallel continue all 1");
+            this.Run("0", "parallel continue all 2", "res");
             Thread.Sleep(200);
-            this.Run("(#t #t #t)", "parallel-join continue all 2", "res");
-            Assert.AreEqual(3, sleepCounter, "parallel-join continue all 3");
+            this.Run("(#t #t #t)", "parallel continue all 2", "res");
+            Assert.AreEqual(3, sleepCounter, "parallel continue all 3");
 
             // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "parallel-join continue all 1",
+            this.Run("SimpleScheme.Evaluator", "parallel continue all 1",
                @"
                 (define res 0)
                 (begin
@@ -488,18 +384,18 @@ namespace Tests
                   (define res3 #f)
                   (define res4 #f)
                   (define res5 #f)
-                  (parallel-join (begin (sleep 100) (set! res1 #t))
+                  (parallel (begin (sleep 100) (set! res1 #t))
                                  (begin (sleep 100) (set! res2 #t))
                                  (begin (sleep 100) (set! res3 #t)
                                         (sleep 100) (set! res4 #t)
                                         (sleep 100) (set! res5 #t)))
                   (set! res (list res1 res2 res3 res4 res5)))
             ");
-            Assert.AreEqual(0, sleepCounter, "parallel-join continue all 1");
-            this.Run("0", "parallel-join continue all 2", "res");
+            Assert.AreEqual(0, sleepCounter, "parallel continue all 1");
+            this.Run("0", "parallel continue all 2", "res");
             Thread.Sleep(400);
-            this.Run("(#t #t #t #t #t)", "parallel-join continue all 2", "res");
-            Assert.AreEqual(5, sleepCounter, "parallel-join continue all 3");
+            this.Run("(#t #t #t #t #t)", "parallel continue all 2", "res");
+            Assert.AreEqual(5, sleepCounter, "parallel continue all 3");
         }
 
         /// <summary>

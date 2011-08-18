@@ -23,11 +23,6 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create(EvaluatorName);
 
         /// <summary>
-        /// If true, then wait for all async operations to complete.
-        /// </summary>
-        private readonly bool join;
-
-        /// <summary>
         /// The count of evaluations that have been forked.
         /// A forked evaluation is one that has been suspended due to an async
         ///   operation, was caught, and execution continued in parallel.
@@ -53,12 +48,10 @@ namespace SimpleScheme
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="join">If true, join after the exprs have been evaluated.</param>
-        private EvaluateParallel(Obj expr, Environment env, Evaluator caller, bool join)
+        private EvaluateParallel(Obj expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.forked = this.joined = 0;
-            this.join = join;
             ContinueHere(EvalExprStep);
             IncrementCounter(counter);
         }
@@ -71,11 +64,10 @@ namespace SimpleScheme
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="join">If true, join after the exprs have been evaluated.</param>
         /// <returns>The parallel evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller, bool join)
+        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            return new EvaluateParallel(expr, env, caller, join);
+            return new EvaluateParallel(expr, env, caller);
         }
         #endregion
 
@@ -92,14 +84,15 @@ namespace SimpleScheme
         private static Evaluator EvalExprStep(Evaluator s)
         {
             var step = (EvaluateParallel)s;
+            if (Undefined.As(s.ReturnedExpr).Value == (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended)
+            {
+                step.joined++;
+                return s.Interp.Ended;
+            }
+
             if (EmptyList.Is(s.Expr))
             {
-                if (step.join)
-                {
-                    return NewSuspendedEvaluator(null, s.Env, s.ContinueHere(JoinStep));
-                }
-
-                return s.ReturnFromStep(new Undefined());
+                return NewSuspendedEvaluator(null, s.Env, s.ContinueHere(JoinStep));
             }
 
             return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
@@ -115,8 +108,8 @@ namespace SimpleScheme
         /// <returns>Immediately steps back.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            int parm = Undefined.As(s.ReturnedExpr).Value;
             var step = (EvaluateParallel)s;
+            int parm = Undefined.As(s.ReturnedExpr).Value;
             switch (parm)
             {
                 default:
@@ -133,7 +126,7 @@ namespace SimpleScheme
                     step.joined++;
                     if (step.joined < step.forked)
                     {
-                        return s.Interp.Halted;
+                        return s.Interp.Ended;
                     }
 
                     return s.ReturnFromStep(new Undefined());
@@ -145,41 +138,25 @@ namespace SimpleScheme
         /// Once the last one is done, then continue executing by returning.
         /// We expect that all the normal and catches will be done by now,
         ///   only async returns allowed.
-/// TODO what happens if a parallel expression contains an async call, a long sleep, and another async operation?
-/// The first will be caught, then execution will proceed and we will get into join.
-/// Then the second will be caught, and we need to continue at that point.
-/// So we cannot have a join step.
-/// TODO what happens if a parallel expression contains two async calls?
-/// TODO can we get a catch or a return after catch in EvalExprStep?
-/// The catch must come after eval -- so after eval it is either finish or catch.  
-/// But the return after catch can come in any state.
-/// TODO what if the last clause suspends, then resumes and suspends again?
-/// How do we know when the last one is done?
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Where to execute next.</returns>
         private static Evaluator JoinStep(Evaluator s)
         {
-            int parm = Undefined.As(s.ReturnedExpr).Value;
             var step = (EvaluateParallel)s;
-            switch (parm)
+            if (Undefined.As(s.ReturnedExpr).Value == (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended) 
             {
-                default:
-                    ErrorHandlers.InternalError("Unexpected value in join " + parm);
-                    return null;
-                case (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended:
-                    {
                     step.joined++;
                     if (step.joined < step.forked)
-                        {
-                            return s.Interp.Halted;
-                        }
-
-                        return s.ReturnFromStep(new Undefined());
+                    {
+                        return s.Interp.Ended;
                     }
-            }
-        }
 
+                    return s.ReturnFromStep(new Undefined());
+            }
+
+            return null;
+        }
         #endregion
     }
 }

@@ -1,8 +1,10 @@
-﻿// <copyright file="Environment.cs" company="Charles Hayden">
+﻿#define OLDx
+// <copyright file="Environment.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
@@ -168,9 +170,10 @@ if(count != count1)
         {
             if (Symbol.Is(var))
             {
+                string symbol = Symbol.As(var);
                 lock (this)
                 {
-                    this.symbolTable.Add(var, val);
+                    this.symbolTable.Add(symbol, val);
 
                     if (Procedure.Is(val))
                     {
@@ -276,6 +279,7 @@ if(count != count1)
                 while (env != Empty)
                 {
                     Obj val;
+#if OLD
                     if (env.symbolTable.Lookup(symbol, out val))
                     {
                         if (!Number.Is(val))
@@ -287,6 +291,12 @@ if(count != count1)
                         env.symbolTable.Update(symbol, newVal);
                         return newVal;
                     }
+#else
+                    if (env.symbolTable.Increment(symbol, out val))
+                    {
+                        return val;
+                    }
+#endif
 
                     // if we have not found anything yet, look in the parent
                     env = env.LexicalParent;
@@ -356,7 +366,7 @@ if(count != count1)
             /// <summary>
             /// Stores symbols and their values.
             /// </summary>
-            private readonly Dictionary<string, Obj> symbolTable;
+            private readonly ConcurrentDictionary<string, Obj> symbolTable;
 
             /// <summary>
             /// Initializes a new instance of the Environment.SymbolTable class.
@@ -364,7 +374,7 @@ if(count != count1)
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
             public SymbolTable(int count)
             {
-                this.symbolTable = new Dictionary<string, Obj>(count);
+                this.symbolTable = new ConcurrentDictionary<string, Obj>(1, count);
             }
 
             /// <summary>
@@ -374,7 +384,7 @@ if(count != count1)
             /// <param name="vals">The list of values.</param>
             public SymbolTable(Obj symbols, Obj vals)
             {
-                this.symbolTable = new Dictionary<string, Obj>(List.Length(symbols));
+                this.symbolTable = new ConcurrentDictionary<string, Obj>(1, List.Length(symbols));
                 this.AddList(symbols, vals);
             }
 
@@ -386,12 +396,7 @@ if(count != count1)
             /// <returns>True if found in the symbol table, false if not found.</returns>
             public bool Lookup(string symbol, out Obj val)
             {
-                if (this.symbolTable.TryGetValue(symbol, out val))
-                {
-                    return true;
-                }
-
-                return false;
+                return this.symbolTable.TryGetValue(symbol, out val);
             }
 
             /// <summary>
@@ -399,26 +404,60 @@ if(count != count1)
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            public void Add(Obj symbol, Obj val)
+            public void Add(string symbol, Obj val)
             {
-                this.symbolTable[Symbol.As(symbol)] = val;
+                this.symbolTable.AddOrUpdate(symbol, val, (key, existingValue) => val);
             }
 
             /// <summary>
             /// Update a value in the symbol table.
+            /// This is not really thread safe -- there is no operation on the symbol table to update only
+            ///   if found.  But since items are never removed, some concurrent action that defines the symbol
+            ///   can have its value overwritten.
             /// </summary>
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
             /// <returns>True if the value was found and stored, false if not found.</returns>
             public bool Update(string symbol, Obj val)
             {
-                if (this.symbolTable.ContainsKey(symbol))
+                if (!this.symbolTable.ContainsKey(symbol))
                 {
-                    this.symbolTable[symbol] = val;
-                    return true;
+                    return false;
                 }
 
-                return false;
+                this.symbolTable[symbol] = val;
+                return true;
+            }
+
+            /// <summary>
+            /// Increment the value for a symbol.
+            /// This is not really thread safe, since there is no operation on symbolTable to update only
+            ///   if the value is present.  Since items are never removed, AddOrUpdate can never add, only update.
+            /// </summary>
+            /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
+            /// <param name="val">The new value.</param>
+            /// <returns>True if the symbol was found (and incremented), false otherwise.</returns>
+            public bool Increment(string symbol, out Obj val)
+            {
+                if (!this.symbolTable.TryGetValue(symbol, out val))
+                {
+                    return false;
+                }
+
+                val = this.symbolTable.AddOrUpdate(
+                    symbol,
+                    0,
+                    (key, existingValue) =>
+                        {
+                            if (!Number.Is(existingValue))
+                            {
+                                ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(existingValue));
+                                return 0;
+                            }
+
+                            return Number.As(existingValue) + 1;
+                        });
+                return true;
             }
 
             /// <summary>
@@ -447,7 +486,7 @@ if(count != count1)
                 {
                     if (Symbol.Is(symbols))
                     {
-                        this.Add(symbols, vals);
+                        this.Add(Symbol.As(symbols), vals);
                     }
                     else
                     {
@@ -457,7 +496,7 @@ if(count != count1)
                             ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
                         }
 
-                        this.Add(symbol, List.First(vals));
+                        this.Add(Symbol.As(symbol), List.First(vals));
                     }
 
                     symbols = List.Rest(symbols);

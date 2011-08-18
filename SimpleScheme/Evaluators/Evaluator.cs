@@ -26,6 +26,11 @@ namespace SimpleScheme
         private const string Halted = "*halted*";
 
         /// <summary>
+        /// The expr in a ended evaluator.
+        /// </summary>
+        private const string Ended = "*ended*";
+
+        /// <summary>
         /// The expr in a suspended evaluator.
         /// </summary>
         private const string Suspended = "*suspended*";
@@ -81,6 +86,14 @@ namespace SimpleScheme
         public bool IsHaltedEvaluator
         {
             get { return this.Expr as string == Halted; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the evaluator is ended.
+        /// </summary>
+        public bool IsEndedEvaluator
+        {
+            get { return this.Expr as string == Ended; }
         }
 
         /// <summary>
@@ -189,6 +202,17 @@ namespace SimpleScheme
         public static Evaluator NewHaltedEvaluator(Environment env)
         {
             return new Evaluator(Halted, env, null);
+        }
+
+        /// <summary>
+        /// Create a new evaluator in the ended state.  This is used when a parallel evaluation
+        ///   ends.
+        /// </summary>
+        /// <param name="env">The global environment.</param>
+        /// <returns>A halted evaluator.</returns>
+        public static Evaluator NewEndedEvaluator(Environment env)
+        {
+            return new Evaluator(Ended, env, null);
         }
 
         /// <summary>

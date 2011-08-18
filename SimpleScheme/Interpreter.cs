@@ -33,6 +33,11 @@ namespace SimpleScheme
         private readonly Evaluator halted;
 
         /// <summary>
+        /// One of the parallel steps is ended
+        /// </summary>
+        private readonly Evaluator ended;
+
+        /// <summary>
         /// The async result used in case the interpreter is called asynchronously.
         /// </summary>
         private AsyncResult<object> asyncResult;
@@ -61,6 +66,7 @@ namespace SimpleScheme
             this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
             this.halted = Evaluator.NewHaltedEvaluator(this.GlobalEnvironment);
+            this.ended = Evaluator.NewEndedEvaluator(this.GlobalEnvironment);
 
             try
             {
@@ -123,6 +129,14 @@ namespace SimpleScheme
         public Evaluator Halted
         {
             get { return this.halted; }
+        }
+
+        /// <summary>
+        /// Gets the ended evaluator.
+        /// </summary>
+        public Evaluator Ended
+        {
+            get { return this.ended; }
         }
 
         /// <summary>
@@ -241,6 +255,7 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         public Obj Eval(Obj expr)
         {
+            this.asyncResult = null;
             try
             {
                 return this.UnsafeEval(expr);
@@ -262,6 +277,7 @@ namespace SimpleScheme
         /// <returns>Async result, used to monitor progress.</returns>
         public IAsyncResult BeginEval(Obj expr, AsyncCallback cb, object state)
         {
+            this.asyncResult = null;
             try
             {
                 return this.UnsafeBeginEval(expr, cb, state);
@@ -298,6 +314,7 @@ namespace SimpleScheme
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
         public Obj ReadEvalPrint()
         {
+            this.asyncResult = null;
             try
             {
                 return this.UnsafeReadEvalPrint();
@@ -315,6 +332,7 @@ namespace SimpleScheme
         /// <returns>If end of file, InputPort.Eof, otherwise the IAsyncResult.</returns>
         public IAsyncResult ReadEvalPrintAsync()
         {
+            this.asyncResult = null;
             try
             {
                 Obj expr;
@@ -508,6 +526,7 @@ namespace SimpleScheme
         /// <returns>The evaluation result.</returns>
         public string ReadEvalPrint(string str)
         {
+            this.asyncResult = null;
             try
             {
                 return Printer.AsString(this.UnsafeEval(this.UnsafeRead(str)));
@@ -589,6 +608,11 @@ namespace SimpleScheme
                         this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
                     }
 
+                    return step.ReturnedExpr;
+                }
+
+                if (step.IsEndedEvaluator)
+                {
                     return step.ReturnedExpr;
                 }
 
