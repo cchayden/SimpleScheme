@@ -104,7 +104,7 @@ namespace SimpleScheme
 
             // back from the evaluation -- save the result and keep going with the rest
             step.result = Pair.Cons(s.ReturnedExpr, step.result);
-            step.UpdateExpr(List.Rest(s.Expr));
+            step.StepDownExpr();
 
             if (Pair.Is(s.Expr))
             {

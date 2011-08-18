@@ -81,7 +81,7 @@ namespace SimpleScheme
         /// <returns>Immediately steps back.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            s.UpdateExpr(List.Rest(s.Expr));
+            s.StepDownExpr();
             return s.ContinueHere(EvalExprStep);
         }
         #endregion

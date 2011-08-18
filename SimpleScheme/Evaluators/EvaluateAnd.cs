@@ -90,7 +90,7 @@ namespace SimpleScheme
                 return s.ReturnFromStep(SchemeBoolean.False);
             }
 
-            s.UpdateExpr(List.Rest(s.Expr));
+            s.StepDownExpr();
             return s.ContinueHere(EvalTestStep);
         }
         #endregion

@@ -1,5 +1,4 @@
-﻿#define OLDx
-// <copyright file="Environment.cs" company="Charles Hayden">
+﻿// <copyright file="Environment.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -84,17 +83,6 @@ namespace SimpleScheme
         {
             this.Interp = lexicalParent.Interp;
             this.LexicalParent = lexicalParent;
-#if FALSE
-            int count;
-            if (!CheckArgCount(formals, vals, out count))
-            {
-                ErrorHandlers.Warn("Wrong number of arguments: expected " + formals + " got " + vals);
-            }
-            int count1 = List.Length(formals);
-if(count != count1)
-{
-}
-#endif
             this.symbolTable = new SymbolTable(formals, vals);
         }
         #endregion
@@ -279,24 +267,10 @@ if(count != count1)
                 while (env != Empty)
                 {
                     Obj val;
-#if OLD
-                    if (env.symbolTable.Lookup(symbol, out val))
-                    {
-                        if (!Number.Is(val))
-                        {
-                            return ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
-                        }
-
-                        var newVal = Number.As(val) + 1;
-                        env.symbolTable.Update(symbol, newVal);
-                        return newVal;
-                    }
-#else
                     if (env.symbolTable.Increment(symbol, out val))
                     {
                         return val;
                     }
-#endif
 
                     // if we have not found anything yet, look in the parent
                     env = env.LexicalParent;

@@ -124,14 +124,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the halted evaluator.
-        /// </summary>
-        public Evaluator Halted
-        {
-            get { return this.halted; }
-        }
-
-        /// <summary>
         /// Gets the ended evaluator.
         /// </summary>
         public Evaluator Ended

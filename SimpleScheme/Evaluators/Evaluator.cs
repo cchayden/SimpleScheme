@@ -400,6 +400,17 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Continue executing in the existing evaluator, but step
+        ///   one element down the list.
+        /// </summary>
+        /// <returns>The next evaluator, which is this evaluator.</returns>
+        public Evaluator StepDownExpr()
+        {
+            this.Expr = List.Rest(this.Expr);
+            return this;
+        }
+
+        /// <summary>
         /// Increment the caught counter.
         /// </summary>
         /// <returns>The new value of the caught flag.</returns>
@@ -489,6 +500,15 @@ namespace SimpleScheme
         {
             this.Caller.ReturnedExpr = expr;
             return this.Caller;
+        }
+
+        /// <summary>
+        /// Return from this step and end evaluation.
+        /// </summary>
+        /// <returns>The ended evaluator.</returns>
+        public Evaluator ReturnEnded()
+        {
+            return this.Interp.Ended;
         }
 
         /// <summary>

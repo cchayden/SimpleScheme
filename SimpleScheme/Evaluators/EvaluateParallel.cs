@@ -87,7 +87,7 @@ namespace SimpleScheme
             if (Undefined.As(s.ReturnedExpr).Value == (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended)
             {
                 step.joined++;
-                return s.Interp.Ended;
+                return s.ReturnEnded();
             }
 
             if (EmptyList.Is(s.Expr))
@@ -112,25 +112,26 @@ namespace SimpleScheme
             int parm = Undefined.As(s.ReturnedExpr).Value;
             switch (parm)
             {
-                default:
-                    // normal return -- not asynchronous
-                    s.UpdateExpr(List.Rest(s.Expr));
-                    return s.ContinueHere(EvalExprStep);
                 case (int)EvaluateExpressionWithCatch.CatchCode.CaughtSuspended:
-                    // caught an asynchronous suspension
+                    // caught an asynchronous suspension -- go on to the next expr
                     step.forked++;
-                    s.UpdateExpr(List.Rest(s.Expr));
-                    return s.ContinueHere(EvalExprStep);
+                    break;
                 case (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended:
                     // return from previously suspended evaluation
                     step.joined++;
                     if (step.joined < step.forked)
                     {
-                        return s.Interp.Ended;
+                        return s.ReturnEnded();
                     }
 
                     return s.ReturnFromStep(new Undefined());
+                default:
+                    // normal return -- go on to the next expr
+                    break;
             }
+
+            s.StepDownExpr();
+            return s.ContinueHere(EvalExprStep);
         }
 
         /// <summary>
@@ -149,7 +150,7 @@ namespace SimpleScheme
                     step.joined++;
                     if (step.joined < step.forked)
                     {
-                        return s.Interp.Ended;
+                        return s.ReturnEnded();
                     }
 
                     return s.ReturnFromStep(new Undefined());
