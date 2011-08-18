@@ -16,11 +16,6 @@ namespace SimpleScheme
     {
         #region Constants
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("eval");
-
-        /// <summary>
         /// The interactive prompt.
         /// </summary>
         private const string Prompt = "> ";
@@ -65,8 +60,8 @@ namespace SimpleScheme
 
             this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
-            this.halted = Evaluator.NewHaltedEvaluator(this.GlobalEnvironment);
-            this.ended = Evaluator.NewEndedEvaluator(this.GlobalEnvironment);
+            this.halted = new HaltedEvaluator(this.GlobalEnvironment);
+            this.ended = new EndedEvaluator(this.GlobalEnvironment);
 
             try
             {
@@ -239,6 +234,19 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Set the asynchronous completion value, if we were
+        ///   doing an async call.
+        /// </summary>
+        /// <param name="returnedExpr">The value to return as the asynchronous result.</param>
+        public void SetComplete(Obj returnedExpr)
+        {
+            if (this.asyncResult != null)
+            {
+                this.asyncResult.SetAsCompleted(returnedExpr, false);
+            }
+        }
+
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
         /// Catch any exceptions that may happen.
@@ -565,7 +573,6 @@ namespace SimpleScheme
 
         /// <summary>
         /// Perform steps until evaluation is complete or suspended.
-        /// After suspension, return to this entry point.
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended evaluator.</returns>
@@ -578,38 +585,11 @@ namespace SimpleScheme
                     return ErrorHandlers.InternalError("PC bad value");
                 }
 
-                if (step.IsSuspendedEvaluator)
+                Obj toReturn = step.ReturnedExpr;
+                if ((step = step.Divert()) == null)
                 {
-                    // See if evaluator wants to handle
-                    Evaluator s = SearchForHandler(step);
-                    if (s == null)
-                    {
-                        // nope
-                        return step;
-                    }
-
-                    // this evaluator wants to handle -- run it now
-                    s.IncrementCaught();
-                    step = s;
+                    return toReturn;
                 }
-
-                if (step.IsHaltedEvaluator)
-                {
-                    if (this.asyncResult != null)
-                    {
-                        this.asyncResult.SetAsCompleted(this.halted.ReturnedExpr, false);
-                    }
-
-                    return step.ReturnedExpr;
-                }
-
-                if (step.IsEndedEvaluator)
-                {
-                    return step.ReturnedExpr;
-                }
-
-                this.TraceStep(step);
-                step.IncrementCounter(counter);
 
                 // run the step and capture the next step
                 step = step.RunStep();
@@ -679,27 +659,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// When a step is suspended, check with each caller up the chain, seeing if any
-        ///   one of them want to resume.
-        /// </summary>
-        /// <param name="step">The suspended step.</param>
-        /// <returns>The evaluator that wants to handle suspension, orherwise null</returns>
-        private static Evaluator SearchForHandler(Evaluator step)
-        {
-            while (!step.IsHaltedEvaluator)
-            {
-                if (step.CatchSuspended)
-                {
-                    return step;
-                }
-
-                step = step.Caller;
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// Display a stack backtrace.
         /// </summary>
         /// <param name="caller">The caller.</param>
@@ -756,7 +715,7 @@ namespace SimpleScheme
         {
             this.asyncResult = new AsyncResult<object>(cb, state);
             Obj res = this.Eval(expr, this.GlobalEnvironment);
-            if (res is Evaluator && ((Evaluator)res).IsSuspendedEvaluator)
+            if (res is SuspendedEvaluator)
             {
                 return this.asyncResult;
             }
@@ -804,28 +763,6 @@ namespace SimpleScheme
             }
 
             return val;
-        }
-        #endregion
-
-        #region Private Methods
-        /// <summary>
-        /// Write trace info if trace enabled.
-        /// </summary>
-        /// <param name="step">The step to trace.</param>
-        private void TraceStep(Evaluator step)
-        {
-            if (!this.Trace)
-            {
-                return;
-            }
-
-            string info = step.TraceInfo();
-            if (info == null)
-            {
-                return;
-            }
-
-            step.Interp.CurrentOutputPort.WriteLine(String.Format("{0}: {1}", info, step.Expr));
         }
         #endregion
     }

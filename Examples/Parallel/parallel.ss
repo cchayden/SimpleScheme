@@ -22,3 +22,4 @@
 ))
 
 ;(trace-on)
+;(counters-on)

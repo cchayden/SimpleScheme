@@ -12,28 +12,18 @@ namespace SimpleScheme
     /// Evaluates expressions step by step.
     /// Base class for all other evaluators.
     /// </summary>
-    public class Evaluator
+    public class Evaluator : Printable
     {
         #region Constants
         /// <summary>
-        /// The printable name of the scheme boolean type.
+        /// The printable name of the evaluator type.
         /// </summary>
         public const string Name = "evaluator";
 
         /// <summary>
-        /// The expr in a halted evaluator.
+        /// The counter id.
         /// </summary>
-        private const string Halted = "*halted*";
-
-        /// <summary>
-        /// The expr in a ended evaluator.
-        /// </summary>
-        private const string Ended = "*ended*";
-
-        /// <summary>
-        /// The expr in a suspended evaluator.
-        /// </summary>
-        private const string Suspended = "*suspended*";
+        private static readonly int counter = Counter.Create("step");
         #endregion
 
         #region Fields
@@ -81,27 +71,11 @@ namespace SimpleScheme
 
         #region Accessors
         /// <summary>
-        /// Gets a value indicating whether the evaluator is halted.
-        /// </summary>
-        public bool IsHaltedEvaluator
-        {
-            get { return this.Expr as string == Halted; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the evaluator is ended.
-        /// </summary>
-        public bool IsEndedEvaluator
-        {
-            get { return this.Expr as string == Ended; }
-        }
-
-        /// <summary>
         /// Gets a value indicating whether the evaluator is suspended.
         /// </summary>
         public bool IsSuspendedEvaluator
         {
-            get { return this.Expr as string == Suspended; }
+            get { return this is SuspendedEvaluator; }
         }
 
         /// <summary>
@@ -194,45 +168,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Create a new evaluator in the halted state.  This is used as the base evaluator, and contains
-        ///   the given environment, which should be the global environment.
-        /// </summary>
-        /// <param name="env">The global environment.</param>
-        /// <returns>A halted evaluator.</returns>
-        public static Evaluator NewHaltedEvaluator(Environment env)
-        {
-            return new Evaluator(Halted, env, null);
-        }
-
-        /// <summary>
-        /// Create a new evaluator in the ended state.  This is used when a parallel evaluation
-        ///   ends.
-        /// </summary>
-        /// <param name="env">The global environment.</param>
-        /// <returns>A halted evaluator.</returns>
-        public static Evaluator NewEndedEvaluator(Environment env)
-        {
-            return new Evaluator(Ended, env, null);
-        }
-
-        /// <summary>
-        /// Create a new evaluator in the suspended state.  
-        /// It is used to indicate that an evaluation has suspended rather than returning a value.
-        /// The caller i needed so that we can search for a catcher.
-        /// The IAsyncResult is given as the ReturnedExpr of the Evaluator.
-        /// The IAsyncResult is not that useful: it only gives info about the suspendded evqluator, not the
-        ///   final result.  There is no way to get that without calling the async evaluator.
-        /// </summary>
-        /// <param name="ar">The async result that is associated with the suspension.</param>
-        /// <param name="env">The environment ofthe suspended operation.</param>
-        /// <param name="caller">The caller.</param>
-        /// <returns>A suspended evaluator.</returns>
-        public static Evaluator NewSuspendedEvaluator(IAsyncResult ar, Environment env, Evaluator caller)
-        {
-            return new Evaluator(Suspended, null, caller) { ReturnedExpr = ar };
-        }
-
-        /// <summary>
         /// Transfer to a given evaluator.  
         /// This can be used to return fram an evaluator.
         /// Assign the return value and return the caller task to resume.
@@ -256,11 +191,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void AsString(bool quoted, StringBuilder buf)
+        public override void AsString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
-                buf.Append(this.IsSuspendedEvaluator ? "<suspended>" : "<" + Name + ">");
+                buf.Append("<" + Name + ">");
             }
         }
 
@@ -291,6 +226,40 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Give the evaluator a chance to divert execution.
+        /// The halt, suspend, and end evaluators do this.
+        /// Return null to break out of evaluation main loop.
+        /// Return a different step to jump to that step.
+        /// Return this to just proceed as normal.
+        /// </summary>
+        /// <returns>Null to break out of main loop, a different evaluator to jump to it.</returns>
+        public virtual Evaluator Divert()
+        {
+            return this;
+        }
+
+        /// <summary>
+        /// When a step is suspended, check with each caller up the chain, seeing if any
+        ///   one of them want to resume.
+        /// </summary>
+        /// <returns>The evaluator that wants to handle suspension, orherwise null</returns>
+        public Evaluator SearchForHandler()
+        {
+            Evaluator step = this;
+            while (! (step is HaltedEvaluator))
+            {
+                if (step.CatchSuspended)
+                {
+                    return step;
+                }
+
+                step = step.Caller;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Trace information for the evaluator.
         /// Do this only once per instance.
         /// </summary>
@@ -318,7 +287,9 @@ namespace SimpleScheme
         /// <returns>The next step to run.</returns>
         public Evaluator RunStep()
         {
+            this.TraceStep();
 #if DEBUG
+            this.IncrementCounter(counter);
             if (this.pc.Target != null)
             {
                 ErrorHandlers.InternalError("Step bound to instance: " + this.pc);
@@ -536,9 +507,28 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
+        /// Write trace info if trace enabled.
+        /// </summary>
+        private void TraceStep()
+        {
+            if (!this.Interp.Trace)
+            {
+                return;
+            }
+
+            string info = this.TraceInfo();
+            if (info == null)
+            {
+                return;
+            }
+
+            this.Interp.CurrentOutputPort.WriteLine(String.Format("{0}: {1}", info, this.Expr));
+        }
+
+        /// <summary>
         /// Dump the current evaluator into a string builder.
         /// </summary>
-        /// <param name="buf">The string builder to write to.</param>
+        /// <param name="buf">The string builder to write to.</param>#
         private void DumpStep(StringBuilder buf)
         {
             buf.AppendFormat("Exaluator {0}\n", TypePrimitives.TypeName(this));

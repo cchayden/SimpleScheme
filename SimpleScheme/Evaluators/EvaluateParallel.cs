@@ -84,7 +84,7 @@ namespace SimpleScheme
         private static Evaluator EvalExprStep(Evaluator s)
         {
             var step = (EvaluateParallel)s;
-            if (Undefined.As(s.ReturnedExpr).Value == (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended)
+            if (Undefined.Is(s.ReturnedExpr) && Undefined.As(s.ReturnedExpr).Value == (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended)
             {
                 step.joined++;
                 return s.ReturnEnded();
@@ -92,7 +92,12 @@ namespace SimpleScheme
 
             if (EmptyList.Is(s.Expr))
             {
-                return NewSuspendedEvaluator(null, s.Env, s.ContinueHere(JoinStep));
+                if (step.joined < step.forked)
+                {
+                    return new SuspendedEvaluator(s.ContinueHere(JoinStep));
+                }
+
+                return s.ReturnFromStep(new Undefined());
             }
 
             return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
@@ -109,25 +114,28 @@ namespace SimpleScheme
         private static Evaluator LoopStep(Evaluator s)
         {
             var step = (EvaluateParallel)s;
-            int parm = Undefined.As(s.ReturnedExpr).Value;
-            switch (parm)
+            if (Undefined.Is(s.ReturnedExpr))
             {
-                case (int)EvaluateExpressionWithCatch.CatchCode.CaughtSuspended:
-                    // caught an asynchronous suspension -- go on to the next expr
-                    step.forked++;
-                    break;
-                case (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended:
-                    // return from previously suspended evaluation
-                    step.joined++;
-                    if (step.joined < step.forked)
-                    {
-                        return s.ReturnEnded();
-                    }
+                int parm = Undefined.As(s.ReturnedExpr).Value;
+                switch (parm)
+                {
+                    case (int)EvaluateExpressionWithCatch.CatchCode.CaughtSuspended:
+                        // caught an asynchronous suspension -- go on to the next expr
+                        step.forked++;
+                        break;
+                    case (int)EvaluateExpressionWithCatch.CatchCode.ReturnAfterSuspended:
+                        // return from previously suspended evaluation
+                        step.joined++;
+                        if (step.joined < step.forked)
+                        {
+                            return s.ReturnEnded();
+                        }
 
-                    return s.ReturnFromStep(new Undefined());
-                default:
-                    // normal return -- go on to the next expr
-                    break;
+                        return s.ReturnFromStep(new Undefined());
+                    default:
+                        // normal return -- go on to the next expr
+                        break;
+                }
             }
 
             s.StepDownExpr();

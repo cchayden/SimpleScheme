@@ -282,7 +282,7 @@ namespace Tests
 
             // async sleep
             sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "async sleep",
+            this.Run("SimpleScheme.SuspendedEvaluator", "async sleep",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
@@ -299,7 +299,9 @@ namespace Tests
         [TestMethod]
         public void ParallelClrTest()
         {
-            // make sure non-async calls work sequentially
+            this.Run("<undefined>", "parallel simple", "(parallel 1)");
+
+            // make sure non-async calls work sequentially);
             this.Run("3", "parallel sequential",
                @"
                 (define result 0)
@@ -313,18 +315,21 @@ namespace Tests
             // immediately after, verify no sleep is completed
             // then wait and verify that all have completed
             sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "parallel concurrent",
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallel concurrent",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
                 (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
                 (define (sleep duration) (async-sleep sleep-caller duration))
                 (define count 0)
-                (parallel (begin (sleep 100) (p 'inc1) (increment! count))
-                               (begin (sleep 100) (p 'inc2) (increment! count))
-                               (begin (sleep 100) (p 'inc3) (increment! count)))
+                (parallel (begin (sleep 100) (increment! count))
+                          (begin (sleep 100) (increment! count))
+                          (begin (sleep 100) (increment! count)))
             ");
-            Thread.Sleep(200);
+            Assert.AreEqual(0, sleepCounter);
+            this.Run("0", "parallel concurrent", "count");
+            Thread.Sleep(120);
+            Assert.AreEqual(3, sleepCounter);
             this.Run("3", "parallel concurrent", "count");
 
             // test parallel expr halts properly
@@ -349,7 +354,7 @@ namespace Tests
 
             // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "parallel continue all 1",
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallel continue all 1",
                @"
                 (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                 (define sleep-caller (create-async))
@@ -363,19 +368,19 @@ namespace Tests
                   (define res2 #f)
                   (define res3 #f)
                   (parallel (begin (sleep 100) (set! res1 #t))
-                                 (begin (sleep 100) (set! res2 #t))
-                                 (begin (sleep 100) (set! res3 #t)))
+                            (begin (sleep 100) (set! res2 #t))
+                            (begin (sleep 100) (set! res3 #t)))
                   (set! res (list res1 res2 res3)))
             ");
             Assert.AreEqual(0, sleepCounter, "parallel continue all 1");
             this.Run("0", "parallel continue all 2", "res");
-            Thread.Sleep(200);
+            Thread.Sleep(150);
             this.Run("(#t #t #t)", "parallel continue all 2", "res");
             Assert.AreEqual(3, sleepCounter, "parallel continue all 3");
 
             // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
-            this.Run("SimpleScheme.Evaluator", "parallel continue all 1",
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallel continue all 1",
                @"
                 (define res 0)
                 (begin
@@ -385,15 +390,15 @@ namespace Tests
                   (define res4 #f)
                   (define res5 #f)
                   (parallel (begin (sleep 100) (set! res1 #t))
-                                 (begin (sleep 100) (set! res2 #t))
-                                 (begin (sleep 100) (set! res3 #t)
-                                        (sleep 100) (set! res4 #t)
-                                        (sleep 100) (set! res5 #t)))
+                            (begin (sleep 100) (set! res2 #t))
+                            (begin (sleep 100) (set! res3 #t)
+                                   (sleep 100) (set! res4 #t)
+                                   (sleep 100) (set! res5 #t)))
                   (set! res (list res1 res2 res3 res4 res5)))
             ");
             Assert.AreEqual(0, sleepCounter, "parallel continue all 1");
             this.Run("0", "parallel continue all 2", "res");
-            Thread.Sleep(400);
+            Thread.Sleep(350);
             this.Run("(#t #t #t #t #t)", "parallel continue all 2", "res");
             Assert.AreEqual(5, sleepCounter, "parallel continue all 3");
         }
