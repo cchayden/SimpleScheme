@@ -1,10 +1,8 @@
-﻿#define OLD
-// <copyright file="EvaluateParallel.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateParallel.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using Obj = System.Object;
 
     /// <summary>

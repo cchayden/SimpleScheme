@@ -101,7 +101,8 @@ namespace SimpleScheme
             //  value to the caller.  Make sure we do not catch any more suspensions
             //  from the same evaluation, and reset the counter so we can recognize the
             //  final return.
-            // If we get here because of a normal return, then just return as normal.
+            // If we get here because of a normal return, then wrap return value and return 
+            //  an appropriate catch code.
             var step = (EvaluateExpressionWithCatch)s;
             if (s.Caught > 0)
             {
@@ -110,9 +111,11 @@ namespace SimpleScheme
                 return s.ReturnCatchCode(AsyncReturnValue.CatchCode.CaughtSuspended, new Undefined());
             }
 
-            return step.catchSuspended
-                       ? s.ReturnFromStep(s.ReturnedExpr)
-                       : s.ReturnCatchCode(AsyncReturnValue.CatchCode.ReturnAfterSuspended, s.ReturnedExpr);
+            return s.ReturnCatchCode(
+                step.catchSuspended
+                    ? AsyncReturnValue.CatchCode.NormalReturn
+                    : AsyncReturnValue.CatchCode.ReturnAfterSuspended,
+                s.ReturnedExpr);
         }
 
         #endregion

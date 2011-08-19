@@ -51,12 +51,18 @@ namespace SimpleScheme
         public enum CatchCode
         {
             /// <summary>
+            /// The normal return.  Has ReturnedExpr.
+            /// </summary>
+            NormalReturn,
+
+            /// <summary>
             /// The evaluation suspended due to async call.
             /// </summary>
             CaughtSuspended,
 
             /// <summary>
             /// The evaluation returned a value after previously suspending.
+            /// Has ReturnedExpr.
             /// </summary>
             ReturnAfterSuspended
         }
