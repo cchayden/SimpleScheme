@@ -10,8 +10,9 @@ namespace SimpleScheme
     /// Evaluate an expression with the ability to catch suspension.
     /// Anything that this calls that returns a suspended evaluator will be "caught"
     ///   by this evaluator.
-    /// It then returns Undefined, and any other return (the actual eval result)
-    ///   will be halted.
+    /// This will only catch the first suspension -- subsequent ones go through.
+    /// Once caught, a special undefined with value is returned.
+    /// The final evaluation result is also returned as a different undefined value.
     /// Evaluations can finish synchronously, without suspending, in which case they return
     ///   the result of evaluating the given expression.
     /// </summary>
@@ -48,24 +49,6 @@ namespace SimpleScheme
             this.catchSuspended = true;
             ContinueHere(InitialStep);
             IncrementCounter(counter);
-        }
-        #endregion
-
-        #region Enums
-        /// <summary>
-        /// Codes to pass back in the Undefined value to tell the caller what happened.
-        /// </summary>
-        public enum CatchCode
-        {
-            /// <summary>
-            /// The evaluation suspended due to async call.
-            /// </summary>
-            CaughtSuspended = 1,
-
-            /// <summary>
-            /// The evaluation returned a value after previously suspending.
-            /// </summary>
-            ReturnAfterSuspended = 2
         }
         #endregion
 
@@ -124,12 +107,12 @@ namespace SimpleScheme
             {
                 step.catchSuspended = false;
                 s.ResetCaught();
-                return s.ReturnUndefined((int)CatchCode.CaughtSuspended);
+                return s.ReturnCatchCode(AsyncReturnValue.CatchCode.CaughtSuspended);
             }
 
             return step.catchSuspended
                        ? s.ReturnFromStep(s.ReturnedExpr)
-                       : s.ReturnUndefined((int)CatchCode.ReturnAfterSuspended);
+                       : s.ReturnCatchCode(AsyncReturnValue.CatchCode.ReturnAfterSuspended);
         }
 
         #endregion

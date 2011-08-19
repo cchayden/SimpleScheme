@@ -493,14 +493,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Returns undefined result.
-        /// Also sets the interal value field.
+        /// Returns async return value with given catch code.
         /// </summary>
         /// <param name="value">The value to set.</param>
         /// <returns>The next evaluator, which is in the caller.</returns>
-        public Evaluator ReturnUndefined(int value)
+        public Evaluator ReturnCatchCode(AsyncReturnValue.CatchCode value)
         {
-            this.Caller.ReturnedExpr = new Undefined(value);
+            this.Caller.ReturnedExpr = new AsyncReturnValue(value);
             return this.Caller;
         }
         #endregion

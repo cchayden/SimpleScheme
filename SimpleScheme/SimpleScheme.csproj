@@ -98,6 +98,7 @@
     <Compile Include="Scheme Types\Procedure.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Interpreter.cs" />
+    <Compile Include="Scheme Types\AsyncReturnValue.cs" />
     <Compile Include="SchemePrimitives.cs" />
     <Compile Include="ErrorHandlers.cs" />
     <Compile Include="Scheme Types\Symbol.cs" />

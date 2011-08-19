@@ -16,40 +16,14 @@ namespace SimpleScheme
         /// The printable name of the undefined type.
         /// </summary>
         public const string Name = "undefined";
-
-        /// <summary>
-        /// An internal value that may be used to pass information back
-        ///   through an undefined value.
-        /// </summary>
-        private readonly int value;
         #endregion
 
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Undefined class.
         /// </summary>
-        public Undefined() : this(0)
+        public Undefined()
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Undefined class.
-        /// Sets the internal value.
-        /// </summary>
-        /// <param name="value">The value to use.</param>
-        public Undefined(int value)
-        {
-            this.value = value;
-        }
-        #endregion
-
-        #region Accessors
-        /// <summary>
-        /// Gets the value.
-        /// </summary>
-        public int Value
-        {
-            get { return this.value; }
         }
         #endregion
 
@@ -98,13 +72,7 @@ namespace SimpleScheme
         /// <returns>The undefined type name.</returns>
         public override string ToString()
         {
-            string str = "<" + Name + ">";
-            if (this.value != 0)
-            {
-                str += " " + this.value;
-            }
-
-            return str;
+            return "<" + Name + ">";
         }
         #endregion
     }

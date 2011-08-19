@@ -30,19 +30,30 @@ namespace SimpleScheme
                 return "null";
             }
 
-            switch (obj.GetType().FullName)
+            string fullName = obj.GetType().FullName;
+            switch (fullName)
             {
                 // Names for types implementing Scheme values, used for error messages.
-                case "System.Boolean":
-                    return SchemeBoolean.Name;
-                case "System.String":
-                    return Symbol.Name;
+                case "SimpleScheme.AsynchronousClrProcedure":
+                    return AsynchronousClrProcedure.Name;
+                case "SimpleScheme.AsyncReturnValue":
+                    return AsyncReturnValue.Name;
                 case "System.Char":
                     return Character.Name;
-                case "System.Object[]":
-                    return Vector.Name;
-                case "SimpleScheme.Pair":
-                    return Pair.Name;
+                case "SimpleScheme.ClrConstructor":
+                    return ClrConstructor.Name;
+                case "SimpleScheme.ClrProcedure":
+                    return ClrProcedure.Name;
+                case "SimpleScheme.Continuation":
+                    return Continuation.Name;
+                case "SimpleScheme.EmptyList":
+                    return EmptyList.Name;
+                case "SimpleScheme.InputPort":
+                    return InputPort.Name;
+                case "SimpleScheme.Lambda":
+                    return Lambda.Name;
+                case "SimpleScheme.Macro":
+                    return Macro.Name;
                 case "System.Byte":
                 case "System.Int32":
                 case "System.Int16":
@@ -50,30 +61,26 @@ namespace SimpleScheme
                 case "System.Single": 
                 case "System.Double":
                     return Number.Name;
-                case "System.Char[]":
-                    return SchemeString.Name;
-                case "SimpleScheme.Procedure":
-                    return Procedure.Name;
-                case "SimpleScheme.Primitive":
-                    return Primitive.Name;
-                case "SimpleScheme.Lambda":
-                    return Lambda.Name;
-                case "SimpleScheme.Macro":
-                    return Macro.Name;
-                case "SimpleScheme.ClrProcedure":
-                    return ClrProcedure.Name;
-                case "SimpleScheme.ClrConstructor":
-                    return ClrConstructor.Name;
-                case "SimpleScheme.SynchronousClrProcedure":
-                    return SynchronousClrProcedure.Name;
-                case "SimpleScheme.AsynchronousClrProcedure":
-                    return AsynchronousClrProcedure.Name;
-                case "SimpleScheme.InputPort":
-                    return InputPort.Name;
                 case "SimpleScheme.OutputPort":
                     return OutputPort.Name;
-                case "SimpleScheme.EmptyList":
-                    return EmptyList.Name;
+                case "SimpleScheme.Pair":
+                    return Pair.Name;
+                case "SimpleScheme.Primitive":
+                    return Primitive.Name;
+                case "SimpleScheme.Procedure":
+                    return Procedure.Name;
+                case "System.Boolean":
+                    return SchemeBoolean.Name;
+                case "System.Char[]":
+                    return SchemeString.Name;
+                case "System.String":
+                    return Symbol.Name;
+                case "SimpleScheme.SynchronousClrProcedure":
+                    return SynchronousClrProcedure.Name;
+                case "SimpleScheme.Undefined":
+                    return Undefined.Name;
+                case "System.Object[]":
+                    return Vector.Name;
 
                 // Evaluator names, used for tracing.
                 case "SimpleScheme.EvaluateAnd":
@@ -108,18 +115,24 @@ namespace SimpleScheme
                     return EvaluateMap.EvaluatorName;
                 case "SimpleScheme.EvaluateOr":
                     return EvaluateOr.EvaluatorName;
+                case "SimpleScheme.EvaluateParallel":
+                    return EvaluateParallel.EvaluatorName;
                 case "SimpleScheme.EvaluateProc":
                     return EvaluateProc.EvaluatorName;
                 case "SimpleScheme.EvaluateSequence":
                     return EvaluateSequence.EvaluatorName;
-                case "SimpleScheme.EvaluateParallel":
-                    return EvaluateParallel.EvaluatorName;
                 case "SimpleScheme.EvaluateSet":
                     return EvaluateSet.EvaluatorName;
                 case "SimpleScheme.EvaluateTime":
                     return EvaluateTime.EvaluatorName;
+                case "SimpleScheme.HaltedEvaluator":
+                    return HaltedEvaluator.EvaluatorName;
+                case "SimpleScheme.SuspendedEvaluator":
+                    return SuspendedEvaluator.EvaluatorName;
+
+                // anything else
                 default:
-                    return obj.GetType().FullName;
+                    return fullName;
             }
         }
 
