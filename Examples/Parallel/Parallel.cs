@@ -43,7 +43,7 @@ class Parallel
         res.AsyncWaitHandle.WaitOne();
         Console.WriteLine("Completed: {0} in {1} ms", res.IsCompleted, (DateTime.Now - startTime).Milliseconds);
         Console.WriteLine("Result: {0}", ((AsyncResult<object>)res).Result);
-        interp.ReadEvalPrintLoop();
-        //Console.ReadLine();
+        //interp.ReadEvalPrintLoop();
+        Console.ReadLine();
     }
 }
