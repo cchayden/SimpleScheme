@@ -83,6 +83,8 @@ namespace SimpleScheme
                     return Vector.Name;
 
                 // Evaluator names, used for tracing.
+                case "SimpleScheme.EndedEvaluator":
+                    return EndedEvaluator.EvaluatorName;
                 case "SimpleScheme.EvaluateAnd":
                     return EvaluateAnd.EvaluatorName;
                 case "SimpleScheme.EvaluateCallWithInputFile":

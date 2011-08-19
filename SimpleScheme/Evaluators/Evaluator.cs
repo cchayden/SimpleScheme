@@ -496,10 +496,11 @@ namespace SimpleScheme
         /// Returns async return value with given catch code.
         /// </summary>
         /// <param name="value">The value to set.</param>
+        /// <param name="returnedExpr">The returned value.</param>
         /// <returns>The next evaluator, which is in the caller.</returns>
-        public Evaluator ReturnCatchCode(AsyncReturnValue.CatchCode value)
+        public Evaluator ReturnCatchCode(AsyncReturnValue.CatchCode value, Obj returnedExpr)
         {
-            this.Caller.ReturnedExpr = new AsyncReturnValue(value);
+            this.Caller.ReturnedExpr = new AsyncReturnValue(value, returnedExpr);
             return this.Caller;
         }
         #endregion

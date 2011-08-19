@@ -84,10 +84,9 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator EvalExprStep(Evaluator s)
         {
-            var step = (EvaluateParallel)s;
             // Don't check for return because the only way to get here is from
-            //  LoopStep, and it already checked.
-
+            //   LoopStep, and it already checked.
+            var step = (EvaluateParallel)s;
             if (EmptyList.Is(s.Expr))
             {
                 if (step.joined < step.forked)
@@ -153,7 +152,6 @@ namespace SimpleScheme
             {
                 switch (AsyncReturnValue.As(this.ReturnedExpr).Value)
                 {
-
                     case AsyncReturnValue.CatchCode.ReturnAfterSuspended:
                         // return after suspension == end or return
                         this.joined++;

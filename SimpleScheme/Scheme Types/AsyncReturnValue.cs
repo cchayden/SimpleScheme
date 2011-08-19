@@ -22,18 +22,25 @@ namespace SimpleScheme
         /// An internal value that may be used to pass information back to caller.
         /// </summary>
         private readonly CatchCode value;
+
+        /// <summary>
+        /// The value that otherwise would have been returned.
+        /// </summary>
+        private readonly Obj returnedExpr;
         #endregion
 
         #region Constructor
 
         /// <summary>
-        /// Initializes a new instance of the class.
+        /// Initializes a new instance of the AsyncReturnValue class.
         /// Sets the internal value.
         /// </summary>
         /// <param name="value">The value to use.</param>
-        public AsyncReturnValue(CatchCode value)
+        /// <param name="returnedExpr">The returned value.</param>
+        public AsyncReturnValue(CatchCode value, Obj returnedExpr)
         {
             this.value = value;
+            this.returnedExpr = returnedExpr;
         }
         #endregion
 
@@ -62,6 +69,14 @@ namespace SimpleScheme
         public CatchCode Value
         {
             get { return this.value; }
+        }
+
+        /// <summary>
+        /// Gets the returned value.
+        /// </summary>
+        public Obj ReturnedExpr
+        {
+            get { return this.returnedExpr; }
         }
         #endregion
 
