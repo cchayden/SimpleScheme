@@ -36,8 +36,6 @@ namespace SimpleScheme
                 // Names for types implementing Scheme values, used for error messages.
                 case "SimpleScheme.AsynchronousClrProcedure":
                     return AsynchronousClrProcedure.Name;
-                case "SimpleScheme.AsyncReturnValue":
-                    return AsyncReturnValue.Name;
                 case "System.Char":
                     return Character.Name;
                 case "SimpleScheme.ClrConstructor":

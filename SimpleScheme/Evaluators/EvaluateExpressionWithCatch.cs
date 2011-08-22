@@ -108,14 +108,12 @@ namespace SimpleScheme
             {
                 step.catchSuspended = false;
                 s.ResetCaught();
-                return s.ReturnCatchCode(AsyncReturnValue.CatchCode.CaughtSuspended, new Undefined());
+                return s.ReturnFromStep(new Undefined(), ReturnType.CaughtSuspended);
             }
 
-            return s.ReturnCatchCode(
-                step.catchSuspended
-                    ? AsyncReturnValue.CatchCode.NormalReturn
-                    : AsyncReturnValue.CatchCode.ReturnAfterSuspended,
-                s.ReturnedExpr);
+            return s.ReturnFromStep(
+                s.ReturnedExpr,
+                step.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn);
         }
 
         #endregion

@@ -64,8 +64,33 @@ namespace SimpleScheme
             this.Expr = args;
             this.Env = env;
             this.ReturnedExpr = new Undefined();
+            this.ReturnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
             this.traced = false;
+        }
+        #endregion
+
+        #region Enums
+        /// <summary>
+        /// Codes to pass back to tell the caller what happened.
+        /// </summary>
+        public enum ReturnType
+        {
+            /// <summary>
+            /// The normal synchronous return.  Has ReturnedExpr.
+            /// </summary>
+            SynchronousReturn,
+
+            /// <summary>
+            /// The evaluation suspended due to async call.  No ReturnedExpr.
+            /// </summary>
+            CaughtSuspended,
+
+            /// <summary>
+            /// The evaluation returned a value after previously suspending.
+            /// Has ReturnedExpr.
+            /// </summary>
+            AsynchronousReturn
         }
         #endregion
 
@@ -127,12 +152,17 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets tne number of caught evaluations
+        /// Gets the number of caught evaluations
         /// </summary>
         public int Caught
         {
             get { return this.caught; }
         }
+
+        /// <summary>
+        /// Gets a flag indicating whether the return is synchronous, asynchronous, or catch.
+        /// </summary>
+        public ReturnType ReturnFlag { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether to catch suspended execution.
@@ -474,6 +504,19 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Returns an expression along with return flag.
+        /// </summary>
+        /// <param name="expr">The value to save as the returned value.</param>
+        /// <param name="flag">The return type.</param>
+        /// <returns>The next evaluator, which is in the caller.</returns>
+        public Evaluator ReturnFromStep(Obj expr, ReturnType flag)
+        {
+            this.Caller.ReturnedExpr = expr;
+            this.Caller.ReturnFlag = flag;
+            return this.Caller;
+        }
+
+        /// <summary>
         /// Return from this step and end evaluation.
         /// </summary>
         /// <returns>The ended evaluator.</returns>
@@ -489,18 +532,6 @@ namespace SimpleScheme
         public Evaluator ReturnUndefined()
         {
             this.Caller.ReturnedExpr = new Undefined();
-            return this.Caller;
-        }
-
-        /// <summary>
-        /// Returns async return value with given catch code.
-        /// </summary>
-        /// <param name="value">The value to set.</param>
-        /// <param name="returnedExpr">The returned value.</param>
-        /// <returns>The next evaluator, which is in the caller.</returns>
-        public Evaluator ReturnCatchCode(AsyncReturnValue.CatchCode value, Obj returnedExpr)
-        {
-            this.Caller.ReturnedExpr = new AsyncReturnValue(value, returnedExpr);
             return this.Caller;
         }
         #endregion
