@@ -30,31 +30,11 @@ namespace SimpleScheme
         private SynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
             : base(targetClassName, methodName)
         {
-            try
-            {
-                this.ArgClasses = ClassList(argClassNames);
-                Type cls = TypePrimitives.ToClass(ClassName);
-                this.MethodInfo = cls.GetMethod(this.MethodName, this.ArgClasses.ToArray());
-                if (this.MethodInfo == null)
-                {
-                    ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + this.MethodName);
-                    return;
-                } 
-
-                if (this.MethodInfo.IsStatic)
-                {
-                    this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
-                } 
-                else
-                {
-                    this.MaxArgs = this.MinArgs = this.ArgClasses.Count + 1;
-                }
-            }
-            catch (TypeLoadException)
-            {
-                ErrorHandlers.ClrError("Bad class, can't load: " + ClassName);
-            }
+            this.SetArgClasses(this.ClassList(argClassNames));
+            this.SetMethodInfo(this.MethodName, this.ArgClasses);
+            this.SetMinMax(this.ArgClasses.Count + (this.MethodInfo.IsStatic ? 0 : 1));
         }
+
         #endregion
 
         #region Public Static Methods
@@ -170,19 +150,9 @@ namespace SimpleScheme
         /// <returns>The next evaluator to excute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            object target;
-            object[] argArray;
             CheckArgs(args, "SynchronousClrProcedure");
-            if (this.MethodInfo.IsStatic)
-            {
-                target = null;
-                argArray = this.ToArgList(args, null);
-            }
-            else
-            {
-                target = List.First(args);
-                argArray = this.ToArgList(List.Rest(args), null);
-            }
+            object target = this.MethodInfo.IsStatic ? null : List.First(args);
+            object[] argArray = this.ToArgList(this.MethodInfo.IsStatic ? args : List.Rest(args), null);
 
             Obj res = this.MethodInfo.Invoke(target, argArray);
             res = res ?? new Undefined();

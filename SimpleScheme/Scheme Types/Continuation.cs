@@ -8,6 +8,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// Represents a continuation.
+    /// Continuations are immutable.
     /// </summary>
     public sealed class Continuation : Procedure
     {

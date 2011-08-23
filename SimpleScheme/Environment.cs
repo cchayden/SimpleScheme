@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
 
@@ -36,6 +35,16 @@ namespace SimpleScheme
         private readonly SymbolTable symbolTable;
 
         /// <summary>
+        /// The interpreter.
+        /// </summary>
+        private readonly Interpreter interp;
+
+        /// <summary>
+        /// The lexically enclosing environment.
+        /// </summary>
+        private readonly Environment lexicalParent;
+
+        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("environment");
@@ -51,8 +60,8 @@ namespace SimpleScheme
         /// <param name="lexicalParent">The lexical parent environment.</param>
         public Environment(Interpreter interp, Environment lexicalParent)
         {
-            this.Interp = interp;
-            this.LexicalParent = lexicalParent;
+            this.interp = interp;
+            this.lexicalParent = lexicalParent;
             this.symbolTable = new SymbolTable(0);
             if (interp != NullInterp)
             {
@@ -81,8 +90,8 @@ namespace SimpleScheme
         /// <param name="lexicalParent">The lexical parent environment.</param>
         public Environment(Obj formals, Obj vals, Environment lexicalParent)
         {
-            this.Interp = lexicalParent.Interp;
-            this.LexicalParent = lexicalParent;
+            this.interp = lexicalParent.Interp;
+            this.lexicalParent = lexicalParent;
             this.symbolTable = new SymbolTable(formals, vals);
         }
         #endregion
@@ -94,12 +103,18 @@ namespace SimpleScheme
         ///   lexical parent, so that it can be accessed directly.
         /// This field is written only in the constructor -- it is never modified.
         /// </summary>
-        public Interpreter Interp { get; private set; }
+        public Interpreter Interp
+        {
+            get { return this.interp; }
+        }
 
         /// <summary>
         /// Gets the lexical parent environment.
         /// </summary>
-        public Environment LexicalParent { get; private set; }
+        public Environment LexicalParent
+        {
+            get { return lexicalParent; }
+        }
         #endregion
 
         #region Public Methods
@@ -199,7 +214,7 @@ namespace SimpleScheme
                     }
 
                     // if we have not found anything yet, look in the parent
-                    env = env.LexicalParent;
+                    env = env.lexicalParent;
                 }
             }
 
@@ -237,7 +252,7 @@ namespace SimpleScheme
                     }
 
                     // if we have not found anything yet, look in the parent
-                    env = env.LexicalParent;
+                    env = env.lexicalParent;
                 }
             }
 
@@ -273,7 +288,7 @@ namespace SimpleScheme
                     }
 
                     // if we have not found anything yet, look in the parent
-                    env = env.LexicalParent;
+                    env = env.lexicalParent;
                 }
             }
 
@@ -302,7 +317,7 @@ namespace SimpleScheme
                         sb.Append("-----\n");
                     }
 
-                    env = env.LexicalParent;
+                    env = env.lexicalParent;
                 }
             }
 
@@ -314,7 +329,7 @@ namespace SimpleScheme
         /// </summary>
         public void DumpEnv()
         {
-            this.Interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
+            this.interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
         }
 
         /// <summary>

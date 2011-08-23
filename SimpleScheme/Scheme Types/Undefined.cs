@@ -8,6 +8,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// Represents an undefined scheme value.
+    /// This type is immutable.
     /// </summary>
     public class Undefined : Printable
     {
@@ -16,15 +17,6 @@ namespace SimpleScheme
         /// The printable name of the undefined type.
         /// </summary>
         public const string Name = "undefined";
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the Undefined class.
-        /// </summary>
-        public Undefined()
-        {
-        }
         #endregion
 
         #region Public Static Methods

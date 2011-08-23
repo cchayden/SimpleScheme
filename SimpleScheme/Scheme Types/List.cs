@@ -146,7 +146,7 @@ namespace SimpleScheme
         {
             if (Pair.Is(pair))
             {
-                ((Pair)pair).First = newValue;
+                ((Pair)pair).SetFirst(newValue);
                 return new Undefined();
             }
 
@@ -163,7 +163,7 @@ namespace SimpleScheme
         {
             if (Pair.Is(pair))
             {
-                ((Pair)pair).Rest = newTail;
+                ((Pair)pair).SetRest(newTail);
                 return new Undefined();
             }
 
@@ -196,7 +196,7 @@ namespace SimpleScheme
             // Iterate down the list, building a list of the results.
             while (!EmptyList.Is(Rest(expr)))
             {
-                accum = (Pair)(accum.Rest = New(First(expr)));
+                accum = (Pair)accum.SetRest(New(First(expr)));
                 expr = Rest(expr);
             }
 
@@ -208,7 +208,7 @@ namespace SimpleScheme
                 ErrorHandlers.Error("ListStar: last argument is not a list: " + args);
             }
 
-            accum.Rest = rest;
+            accum.SetRest(rest);
             return Rest(result);
         }
 
@@ -263,7 +263,7 @@ namespace SimpleScheme
             expr = First(expr);
             while (Pair.Is(expr))
             {
-                accum = (Pair)(accum.Rest = New(fun(First(expr))));
+                accum = (Pair)accum.SetRest(New(fun(First(expr))));
                 expr = Rest(expr);
             }
 
@@ -398,7 +398,7 @@ namespace SimpleScheme
                 args = Rest(args);
             }
 
-            accum.Rest = First(args);
+            accum.SetRest(First(args));
 
             return Rest(result);
         }
@@ -415,7 +415,7 @@ namespace SimpleScheme
         {
             while (!EmptyList.Is(toCopy))
             {
-                tail.Rest = New(First(toCopy));
+                tail.SetRest(New(First(toCopy)));
                 toCopy = Rest(toCopy);
                 tail = (Pair)Rest(tail);
             }

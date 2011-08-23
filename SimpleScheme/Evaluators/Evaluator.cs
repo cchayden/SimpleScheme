@@ -27,13 +27,45 @@ namespace SimpleScheme
         #endregion
 
         #region Fields
+
+        /// <summary>
+        /// The expression begin evaluated.
+        /// </summary>
+        private Obj expr;
+
+        /// <summary>
+        /// The value returned by a procedure that we call.
+        /// </summary>
+        private Obj returnedExpr;
+
+        /// <summary>
+        /// The environment in which the evaluation takes place.
+        /// </summary>
+        private Environment env;
+
+        /// <summary>
+        /// The modified environment returned by a procedure we call.
+        /// </summary>
+        private Environment returnedEnv;
+
+        /// <summary>
+        /// The evaluator that called.  The evaluator we return to when we are done.
+        /// </summary>
+        private Evaluator caller;
+
+        /// <summary>
+        /// A flag indicating whether what we called returned synchronously, 
+        /// asynchronously, or caught a suspension.
+        /// </summary>
+        private ReturnType returnFlag;
+
         /// <summary>
         /// The program counter.
         /// Contains the function to execute next.
         /// This is the type for the evaluator functions.
         /// It takes no arguments and returns a Evaluator.
         /// These values are assigned to the pc.
-        /// Evaluators are meant to be static functions only.  This is because if an evaluator
+        /// Evaluators must be static functions only.  This is because if an evaluator
         ///   instance is bound to the evaluator, then it could not clone properly, so continuations
         ///   would not work.
         /// </summary>
@@ -60,11 +92,11 @@ namespace SimpleScheme
         /// <param name="caller">The caller evaluator.</param>
         protected Evaluator(Obj args, Environment env, Evaluator caller)
         {
-            this.Caller = caller;
-            this.Expr = args;
-            this.Env = env;
-            this.ReturnedExpr = new Undefined();
-            this.ReturnFlag = ReturnType.SynchronousReturn;
+            this.caller = caller;
+            this.expr = args;
+            this.env = env;
+            this.returnedExpr = new Undefined();
+            this.returnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
             this.traced = false;
         }
@@ -113,56 +145,66 @@ namespace SimpleScheme
         /// </summary>
         public Interpreter Interp
         {
-            get { return this.Env.Interp; }
+            get { return this.env.Interp; }
         }
 
         /// <summary>
         /// Gets the expression being evaluated.
         /// </summary>
-        public Obj Expr { get; private set; }
+        public Obj Expr 
+        { 
+            get { return this.expr; } 
+        }
 
         /// <summary>
         /// Gets the returned expression from the last call.
         /// </summary>
-        public Obj ReturnedExpr { get; private set; }
+        public Obj ReturnedExpr
+        {
+            get { return this.returnedExpr; }
+        }
 
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
         /// </summary>
-        public Environment Env { get; private set; }
+        public Environment Env 
+        {
+            get { return this.env; }
+        }
 
         /// <summary>
         /// Gets the returned environment from the last call.
         /// Most primitives do not change the environment, but some do.
         /// </summary>
-        public Environment ReturnedEnv { get; private set; }
+        public Environment ReturnedEnv
+        {
+            get { return this.returnedEnv; }
+        }
 
         /// <summary>
         /// Gets the caller of this evaluator.
         /// Immutable.
         /// </summary>
-        public Evaluator Caller { get; private set; }
+        public Evaluator Caller
+        {
+            get { return this.caller; }
+        }
 
         /// <summary>
         /// Gets the caller's caller.
         /// </summary>
         public Evaluator CallerCaller
         {
-            get { return this.Caller.Caller; }
-        }
-
-        /// <summary>
-        /// Gets the number of caught evaluations
-        /// </summary>
-        public int Caught
-        {
-            get { return this.caught; }
+            get { return this.caller.caller; }
         }
 
         /// <summary>
         /// Gets a flag indicating whether the return is synchronous, asynchronous, or catch.
         /// </summary>
-        public ReturnType ReturnFlag { get; private set; }
+        public ReturnType ReturnFlag
+        {
+            get { return returnFlag; }
+        }
 
         /// <summary>
         /// Gets a value indicating whether to catch suspended execution.
@@ -209,8 +251,8 @@ namespace SimpleScheme
         /// <returns>The next evaluator.  This is in the caller for return.</returns>
         public static Evaluator TransferToStep(Evaluator nextStep, Obj expr, Environment env)
         {
-            nextStep.ReturnedExpr = expr;
-            nextStep.ReturnedEnv = env;
+            nextStep.returnedExpr = expr;
+            nextStep.returnedEnv = env;
             return nextStep;
         }
         #endregion
@@ -248,7 +290,7 @@ namespace SimpleScheme
             while (s.Caller != null)
             {
                 Evaluator parent = (Evaluator)s.Caller.MemberwiseClone();
-                s.Caller = parent;
+                s.caller = parent;
                 s = s.Caller;
             }
 
@@ -377,7 +419,7 @@ namespace SimpleScheme
         /// <param name="vals">The values of the variables.</param>
         public void ReplaceEnvironment(Obj formals, Obj vals)
         {
-            this.Env = new Environment(formals, vals, this.Env.LexicalParent);
+            this.env = new Environment(formals, vals, this.Env.LexicalParent);
         }
 
         /// <summary>
@@ -386,17 +428,17 @@ namespace SimpleScheme
         /// <param name="parent">The lexically enclosing environment.</param>
         public void PushEmptyEnvironment(Environment parent)
         {
-            this.Env = new Environment(parent);
+            this.env = new Environment(parent);
         }
 
         /// <summary>
         /// Continue executing in the existing evaluator, but set the expr.
         /// </summary>
-        /// <param name="expr">The new expr value.</param>
+        /// <param name="exp">The new expr value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public Evaluator UpdateExpr(Obj expr)
+        public Evaluator UpdateExpr(Obj exp)
         {
-            this.Expr = expr;
+            this.expr = exp;
             return this;
         }
 
@@ -407,7 +449,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is this evaluator.</returns>
         public Evaluator StepDownExpr()
         {
-            this.Expr = List.Rest(this.Expr);
+            this.expr = List.Rest(this.Expr);
             return this;
         }
 
@@ -422,34 +464,23 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Decrement the caught counter.
+        /// Return the caught counter and set it to zero in an atomic operation.
         /// </summary>
         /// <returns>The new value of the caught flag.</returns>
-        public int DecrementCaught()
+        public int FetchAndResetCaught()
         {
-            Interlocked.Decrement(ref this.caught);
-            return this.caught;
-        }
-
-        /// <summary>
-        /// DecrementReset the caught counter.
-        /// </summary>
-        /// <returns>The new value of the caught flag.</returns>
-        public int ResetCaught()
-        {
-            this.caught = 0;
-            return this.caught;
+            return Interlocked.Exchange(ref this.caught, 0);
         }
 
         /// <summary>
         /// Continue executing in this evaluator, but set the returned expr.
         /// Usually invoked on an object's caller.  
         /// </summary>
-        /// <param name="expr">The returned value.</param>
+        /// <param name="exp">The returned value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public Evaluator UpdateReturnValue(Obj expr)
+        public Evaluator UpdateReturnValue(Obj exp)
         {
-            this.ReturnedExpr = expr;
+            this.returnedExpr = exp;
             return this;
         }
 
@@ -463,7 +494,7 @@ namespace SimpleScheme
         /// <returns>The current evaluator.</returns>
         public Evaluator UpdateCaller(Evaluator eval)
         {
-            this.Caller = eval;
+            this.caller = eval;
             return this;
         }
 
@@ -482,38 +513,38 @@ namespace SimpleScheme
         /// Return fram an evaluator.
         /// Assign the return value and return the caller task to resume.
         /// </summary>
-        /// <param name="expr">The value to save as the returned value.</param>
-        /// <param name="env">The environment to save as the returned environment.</param>
+        /// <param name="exp">The value to save as the returned value.</param>
+        /// <param name="envir">The environment to save as the returned environment.</param>
         /// <returns>The next evaluator, which is in the caller.</returns>
-        public Evaluator ReturnFromStep(Obj expr, Environment env)
+        public Evaluator ReturnFromStep(Obj exp, Environment envir)
         {
-            this.Caller.ReturnedExpr = expr;
-            this.Caller.ReturnedEnv = env;
-            return this.Caller;
+            this.caller.returnedExpr = exp;
+            this.caller.returnedEnv = envir;
+            return this.caller;
         }
 
         /// <summary>
         /// Return fram an evaluator, with the default environment
         /// </summary>
-        /// <param name="expr">The value to save as the returned value.</param>
+        /// <param name="exp">The value to save as the returned value.</param>
         /// <returns>The next evaluator, which is in the caller.</returns>
-        public Evaluator ReturnFromStep(Obj expr)
+        public Evaluator ReturnFromStep(Obj exp)
         {
-            this.Caller.ReturnedExpr = expr;
-            return this.Caller;
+            this.caller.returnedExpr = exp;
+            return this.caller;
         }
 
         /// <summary>
         /// Returns an expression along with return flag.
         /// </summary>
-        /// <param name="expr">The value to save as the returned value.</param>
+        /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="flag">The return type.</param>
         /// <returns>The next evaluator, which is in the caller.</returns>
-        public Evaluator ReturnFromStep(Obj expr, ReturnType flag)
+        public Evaluator ReturnFromStep(Obj exp, ReturnType flag)
         {
-            this.Caller.ReturnedExpr = expr;
-            this.Caller.ReturnFlag = flag;
-            return this.Caller;
+            this.caller.returnedExpr = exp;
+            this.caller.returnFlag = flag;
+            return this.caller;
         }
 
         /// <summary>
@@ -531,8 +562,8 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is in the caller.</returns>
         public Evaluator ReturnUndefined()
         {
-            this.Caller.ReturnedExpr = new Undefined();
-            return this.Caller;
+            this.caller.returnedExpr = new Undefined();
+            return this.caller;
         }
         #endregion
 

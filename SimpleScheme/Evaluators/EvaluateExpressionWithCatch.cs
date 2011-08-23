@@ -1,5 +1,4 @@
-﻿#define OLD
-// <copyright file="EvaluateExpressionWithCatch.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateExpressionWithCatch.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -11,10 +10,10 @@ namespace SimpleScheme
     /// Anything that this calls that returns a suspended evaluator will be "caught"
     ///   by this evaluator.
     /// This will only catch the first suspension -- subsequent ones go through.
-    /// Once caught, a special undefined with value is returned.
-    /// The final evaluation result is also returned as a different undefined value.
-    /// Evaluations can finish synchronously, without suspending, in which case they return
-    ///   the result of evaluating the given expression.
+    /// Once caught, Undefined is returned.
+    /// After suspension, the final evaluation result is returned along with a flag indicating its asynchronous nature.
+    /// Evaluations can finish synchronously, without suspending, in which case it returns
+    ///   in the normal way, with a return value.
     /// </summary>
     public sealed class EvaluateExpressionWithCatch : Evaluator
     {
@@ -97,25 +96,22 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator DoneStep(Evaluator s)
         {
-            // If we get here because a suspend was caught, then return a distinguished
-            //  value to the caller.  Make sure we do not catch any more suspensions
-            //  from the same evaluation, and reset the counter so we can recognize the
-            //  final return.
-            // If we get here because of a normal return, then wrap return value and return 
-            //  an appropriate catch code.
+            // If we get here because a suspend was caught, then return Undefined
+            // and set a return flag so that the caller can recognize it.
+            // Then do not catch any further suspensions.
+            // If we get here because of a normal or asynchronous return, then set
+            // the return value and set an appropriate flag value.
             var step = (EvaluateExpressionWithCatch)s;
-            if (s.Caught > 0)
+            if (s.FetchAndResetCaught() > 0)
             {
                 step.catchSuspended = false;
-                s.ResetCaught();
-                return s.ReturnFromStep(new Undefined(), ReturnType.CaughtSuspended);
+                return s.ReturnFromStep(s.ReturnedExpr, ReturnType.CaughtSuspended);
             }
 
             return s.ReturnFromStep(
                 s.ReturnedExpr,
                 step.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn);
         }
-
         #endregion
     }
 }

@@ -19,6 +19,19 @@ namespace SimpleScheme
         public const string Name = "pair";
         #endregion
 
+        #region Fields
+
+        /// <summary>
+        /// The first field of the pair.  This contains the cell's "value".
+        /// </summary>
+        private Obj first;
+
+        /// <summary>
+        /// The rest field of the pair.  This usually links to the next cell.
+        /// </summary>
+        private Obj rest;
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -28,8 +41,8 @@ namespace SimpleScheme
         /// referenced by this.</param>
         public Pair(Obj first, Obj rest)
         {
-            this.First = first;
-            this.Rest = rest;
+            this.first = first;
+            this.rest = rest;
         }
 
         /// <summary>
@@ -39,8 +52,8 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         public Pair(Obj first)
         {
-            this.First = first;
-            this.Rest = EmptyList.Instance;
+            this.first = first;
+            this.rest = EmptyList.Instance;
         }
 
         /// <summary>
@@ -49,21 +62,27 @@ namespace SimpleScheme
         /// </summary>
         public Pair()
         {
-            this.First = EmptyList.Instance;
-            this.Rest = EmptyList.Instance;
+            this.first = EmptyList.Instance;
+            this.rest = EmptyList.Instance;
         }
         #endregion
 
         #region Accessors
         /// <summary>
-        /// Gets or sets the first obj of the pair.
+        /// Gets the first obj of the pair.
         /// </summary>
-        public Obj First { get; set; }
+        public Obj First
+        {
+            get { return this.first; }
+        }
 
         /// <summary>
-        /// Gets or sets the rest of the objs in the list.
+        /// Gets the rest of the objs in the list.
         /// </summary>
-        public Obj Rest { get; set; }
+        public Obj Rest
+        {
+            get { return this.rest; }
+        }
         #endregion
 
         #region Public Static Methods
@@ -144,6 +163,27 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+
+        /// <summary>
+        /// Destructive setter of first cell.
+        /// </summary>
+        /// <param name="value">The new value for the first cell.</param>
+        /// <returns>The new value</returns>
+        public Obj SetFirst(Obj value)
+        {
+            return this.first = value;
+        }
+
+        /// <summary>
+        /// Destructive setter of rest cell.
+        /// </summary>
+        /// <param name="value">The new value for the rest cell.</param>
+        /// <returns>The new value</returns>
+        public Obj SetRest(Obj value)
+        {
+            return this.rest = value;
+        }
+
         /// <summary>
         /// Write the pair to the string builder.
         /// Handle some special forms separately.

@@ -7,6 +7,9 @@ namespace SimpleScheme
 
     /// <summary>
     /// Evaluate a sequence of exprs in parallel by evaluating each member.
+    /// Return Undefined.
+    /// This *could have been* defined to return the value of the final expr, but that could be unpredictable.
+    /// Another alternative could have been to return a list of all of the expr values
     /// </summary>
     public sealed class EvaluateParallel : Evaluator
     {
@@ -89,7 +92,7 @@ namespace SimpleScheme
             {
                 if (step.joined < step.forked)
                 {
-                    return new SuspendedEvaluator(s.ContinueHere(JoinStep));
+                    return new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(JoinStep));
                 }
 
                 return s.ReturnFromStep(new Undefined());

@@ -9,6 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Represents a macro definition.
     /// It is just a lambda with a different ToString.
+    /// It is effectively immutable.
     /// </summary>
     public sealed class Macro : Lambda
     {

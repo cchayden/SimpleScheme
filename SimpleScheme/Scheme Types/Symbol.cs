@@ -9,6 +9,7 @@ namespace SimpleScheme
     /// <summary>
     /// Handles scheme symbols.
     /// Smybols are represented by .NET strings.
+    /// Symbols are immutable.
     /// </summary>
     public static class Symbol
     {

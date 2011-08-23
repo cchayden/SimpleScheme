@@ -21,17 +21,22 @@ namespace SimpleScheme
         /// Initializes a new instance of the SuspendedEvaluator class.
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
         /// The caller is needed so that we can search for a catcher.
-        /// The Evaluator is given as the ReturnedExpr of the Evaluator.
+        /// The SuspendedEvaluator is given as the ReturnedExpr of the evaluaton, and of the whole Eval.
+        /// The AsyncResult can be extracted from this if necessary, but is NOT the final async result,
+        ///   just the intermediate result of this suspension.
+        /// AsyncResult is stored in Expr.
         /// </summary>
+        /// <param name="res">The IAsyncResult associated with the suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
-        public SuspendedEvaluator(Evaluator caller) : 
-            base(null, null, caller)
+        public SuspendedEvaluator(Obj res, Evaluator caller) : 
+            base(res, null, caller)
         {
             this.UpdateReturnValue(this);
         }
 
         /// <summary>
         /// Divert execution if there is a suspension handler.
+        /// Pass the async result to the resumed step.
         /// </summary>
         /// <returns>Null to return from main loop, or else the step to run next.</returns>
         public override Evaluator Divert()
@@ -46,7 +51,7 @@ namespace SimpleScheme
 
             // this evaluator wants to handle -- run it now
             step.IncrementCaught();
-            return step;
+            return step.UpdateReturnValue(this.Expr);  // the AsyncResult
         }
 
         /// <summary>

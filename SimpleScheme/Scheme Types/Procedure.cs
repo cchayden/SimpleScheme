@@ -26,6 +26,28 @@ namespace SimpleScheme
         private const string AnonymousProc = "anonymous procedure";
         #endregion
 
+        #region Fields
+
+        /// <summary>
+        /// The name of the procedure.
+        /// This is usually set in the constructor, but when a define primitive is applied to
+        ///   a lambda, the name is set to the defined symbol.  This can only change once.
+        /// </summary>
+        private string procedureName;
+
+        /// <summary>
+        /// The minimum number of args for the procedure.
+        /// Set only in the constructor here and in subclasses.
+        /// </summary>
+        private int minArgs;
+
+        /// <summary>
+        /// The maximum number of args for the procedure.
+        /// Set only in the constructor here and in subclasses.
+        /// </summary>
+        private int maxArgs;
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Procedure class, setting min and max args.
@@ -34,30 +56,20 @@ namespace SimpleScheme
         /// <param name="maxArgs">The maximum number of args.</param>
         protected Procedure(int minArgs, int maxArgs)
         {
-            this.ProcedureName = AnonymousProc;
-            this.MinArgs = minArgs;
-            this.MaxArgs = maxArgs;
+            this.procedureName = AnonymousProc;
+            this.minArgs = minArgs;
+            this.maxArgs = maxArgs;
         }
         #endregion
 
         #region Accessors
         /// <summary>
-        /// Gets or sets all Procedures have a name.  It can be set only by the subclass.
-        /// Can't figure out how to make this public rather than public.
+        /// Gets all Procedures have a name.  It can be set only by the subclass.
         /// </summary>
-        public string ProcedureName { get; protected set; }
-
-        /// <summary>
-        /// Gets or sets the minimum number of arguments permitted.
-        /// Set only during construction.
-        /// </summary>
-        protected int MinArgs { get; set; }
-
-        /// <summary>
-        /// Gets or sets the maximum number of arguments permitted.
-        /// Set only during construction.
-        /// </summary>
-        protected int MaxArgs { get; set; }
+        public string ProcedureName
+        {
+            get { return this.procedureName; }
+        }
         #endregion
 
         #region Public Static Methods
@@ -173,12 +185,34 @@ namespace SimpleScheme
         /// <param name="name">The name to assign it.</param>
         public void SetName(string name)
         {
-            if (this.ProcedureName == AnonymousProc)
+            if (this.procedureName == AnonymousProc)
             {
-                this.ProcedureName = name;
+                this.procedureName = name;
             }
         }
         #endregion
+
+        #region Protected Methods
+        /// <summary>
+        /// Set the min and max number of arguments accepted.
+        /// </summary>
+        /// <param name="minCount">The minimum number of args accepted.</param>
+        /// <param name="maxCount">The maximum number of args accepted.</param>
+        protected void SetMinMax(int minCount, int maxCount)
+        {
+            this.minArgs = minCount;
+            this.maxArgs = maxCount;
+        }
+
+        /// <summary>
+        /// Set the number of arguments accepted.
+        /// </summary>
+        /// <param name="count">The number of args accepted.</param>
+        protected void SetMinMax(int count)
+        {
+            this.minArgs = count;
+            this.maxArgs = count;
+        }
 
         /// <summary>
         /// Check the number of args passed.
@@ -188,18 +222,19 @@ namespace SimpleScheme
         protected void CheckArgs(Obj args, string tag)
         {
             int numArgs = List.Length(args);
-            if (numArgs < this.MinArgs)
+            if (numArgs < this.minArgs)
             {
                 ErrorHandlers.SemanticError(tag + ": too few args, " + numArgs + ", for " +
                                                             this.ProcedureName + ": " + args);
             }
 
-            if (numArgs > this.MaxArgs)
+            if (numArgs > this.maxArgs)
             {
                 ErrorHandlers.SemanticError(tag + ": too many args, " + numArgs + ", for " +
                                                             this.ProcedureName + ": " + args);
             }
         }
+        #endregion
 
         #region Private Static Methods
         /// <summary>

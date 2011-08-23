@@ -10,6 +10,7 @@ namespace SimpleScheme
     /// <summary>
     /// Handles scheme strings.
     /// Strings are represented as a character array.
+    /// Strings are mutable, butonly through the set! and fill! primitives.
     /// </summary>
     public static class SchemeString
     {

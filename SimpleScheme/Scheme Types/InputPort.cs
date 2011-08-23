@@ -10,6 +10,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// Represents an input port, a mechanism for reading input.
+    /// It is immutable.
     /// </summary>
     public sealed class InputPort : Printable
     {

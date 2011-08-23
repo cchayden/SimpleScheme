@@ -11,6 +11,7 @@ namespace SimpleScheme
     /// A lambda stores the environment and a program to run.
     /// It can be executed later, through Apply.
     /// The Macro class also derives from this.
+    /// This is effectively immutable.
     /// </summary>
     //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
     //// <r4rs section="4.1.4">body: expression ...)</r4rs>
@@ -173,14 +174,13 @@ namespace SimpleScheme
             {
                 if (EmptyList.Is(vars))
                 {
-                    this.MinArgs = this.MaxArgs = count;
+                    this.SetMinMax(count);
                     return;
                 }
 
                 if (!Pair.Is(vars))
                 {
-                    this.MinArgs = count;
-                    this.MaxArgs = Symbol.Is(vars) ? MaxInt : count;
+                    this.SetMinMax(count, Symbol.Is(vars) ? MaxInt : count);
                     return;
                 }
 

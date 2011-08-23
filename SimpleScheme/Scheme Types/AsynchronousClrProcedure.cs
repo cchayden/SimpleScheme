@@ -42,31 +42,14 @@ namespace SimpleScheme
         private AsynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
             : base(targetClassName, methodName)
         {
-            try
-            {
-                this.ArgClasses = this.ClassListBegin(argClassNames);
-                this.MaxArgs = this.MinArgs = this.ArgClasses.Count - 2;
-                Type cls = TypePrimitives.ToClass(ClassName);
-                string beginName = "Begin" + this.MethodName;
-                this.MethodInfo = cls.GetMethod(beginName, this.ArgClasses.ToArray());
-                if (this.MethodInfo == null)
-                {
-                    ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + beginName);
-                }
+            this.SetArgClasses(this.ClassListBegin(argClassNames));
+            this.SetMethodInfo("Begin" + this.MethodName, this.ArgClasses);
+            this.SetMinMax(this.ArgClasses.Count - 2);
 
-                Type[] endClasses = { typeof(IAsyncResult) };
-                string endName = "End" + this.MethodName;
-                this.endMethodInfo = cls.GetMethod(endName, endClasses);
-                if (this.endMethodInfo == null)
-                {
-                    ErrorHandlers.ClrError("Can't find method: " + ClassName + ":" + endName);
-                }
-            }
-            catch (TypeLoadException)
-            {
-                ErrorHandlers.ClrError("Bad class, can't load: " + ClassName);
-            }
+            List<Type> endClasses = new List<Type>(1) { typeof(IAsyncResult) };
+            this.endMethodInfo = this.GetMethodInfo("End" + this.MethodName, endClasses);
         }
+
         #endregion
 
         #region Public Static Methods
@@ -150,23 +133,13 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            Obj target;
-            Obj[] argArray;
-            if (this.MethodInfo.IsStatic)
-            {
-                target = new Undefined();
-                CheckArgs(args, "AsynchronousClrProcedure");
-                argArray = this.ToArgListBegin(args, new AsyncState(target, caller));
-            }
-            else
-            {
-                target = List.First(args);
-                CheckArgs(List.Rest(args), "AsynchronousClrProcedure");
-                argArray = this.ToArgListBegin(List.Rest(args), new AsyncState(target, caller));
-            }
+            bool isStatic = this.MethodInfo.IsStatic;
+            Obj target = isStatic ? new Undefined() : List.First(args);
+            CheckArgs(isStatic ? args : List.Rest(args), "AsynchronousClrProcedure");
+            Obj[] argArray = this.ToArgListBegin(isStatic ? args : List.Rest(args), new AsyncState(target, caller));
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return new SuspendedEvaluator(caller);
+            return new SuspendedEvaluator(res, caller);
         }
         #endregion
 

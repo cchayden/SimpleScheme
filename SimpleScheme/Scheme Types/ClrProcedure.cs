@@ -24,6 +24,31 @@ namespace SimpleScheme
         public new const string Name = "clr-procedure";
         #endregion
 
+        #region Fields
+
+        /// <summary>
+        /// The name of the class containing the CLR method.
+        /// </summary>
+        private readonly string className;
+
+        /// <summary>
+        /// The name of the CLR method.
+        /// </summary>
+        private readonly string methodName;
+
+        /// <summary>
+        /// The MethodInfo describing the method.
+        /// Immutable after construction.
+        /// </summary>
+        private MethodInfo methodInfo;
+
+        /// <summary>
+        /// A list of types, describing the method arguments.
+        /// Immutable after construction.
+        /// </summary>
+        private List<Type> argClasses;
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
@@ -38,9 +63,9 @@ namespace SimpleScheme
         protected ClrProcedure(Obj className, Obj methodName) :
             base(0, 0)
         {
-            this.ClassName = Printer.AsString(className, false);
-            this.MethodName = Printer.AsString(methodName, false);
-            this.ProcedureName = this.ClassName + "." + this.MethodName;
+            this.className = Printer.AsString(className, false);
+            this.methodName = Printer.AsString(methodName, false);
+            this.SetName(this.ClassName + "." + this.MethodName);
         }
         #endregion
 
@@ -48,22 +73,34 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the class containing the method to invoke.
         /// </summary>
-        protected string ClassName { get; private set; }
+        protected string ClassName
+        {
+            get { return this.className; }
+        }
 
         /// <summary>
         /// Gets the name of the method.
         /// </summary>
-        protected string MethodName { get; private set; }
+        protected string MethodName
+        {
+            get { return this.methodName; }
+        }
 
         /// <summary>
-        /// Gets or sets information about the CLR method to be called.
+        /// Gets information about the CLR method to be called.
         /// </summary>
-        protected MethodInfo MethodInfo { get; set; }
+        protected MethodInfo MethodInfo
+        {
+            get { return this.methodInfo; }
+        }
 
         /// <summary>
-        /// Gets or sets the types of the arguments.
+        /// Gets the types of the arguments.
         /// </summary>
-        protected List<Type> ArgClasses { get; set; }
+        protected List<Type> ArgClasses
+        {
+            get { return this.argClasses; }
+        }
         #endregion
 
         #region Public Static Methods
@@ -134,6 +171,55 @@ namespace SimpleScheme
         #endregion
 
         #region Protected Methods
+
+        /// <summary>
+        /// Look up the method info.
+        /// </summary>
+        /// <param name="theMethodName">The method name</param>
+        /// <param name="argClassList">The argument types.</param>
+        /// <returns>The method info for the method.</returns>
+        protected MethodInfo GetMethodInfo(string theMethodName, List<Type> argClassList)
+        {
+            try
+            {
+                Type cls = TypePrimitives.ToClass(this.className);
+                MethodInfo info = cls.GetMethod(theMethodName, argClassList.ToArray());
+                if (info == null)
+                {
+                    ErrorHandlers.ClrError("Can't find method: " + this.className + ":" + theMethodName);
+                    return null;
+                }
+
+                return info;
+            }
+            catch (TypeLoadException)
+            {
+                ErrorHandlers.ClrError("Bad class, can't load: " + this.className);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Look up the method info and store it.
+        /// Only called from within subclass constructors.
+        /// </summary>
+        /// <param name="theMethodName">The method name</param>
+        /// <param name="argClassList">The argument types.</param>
+        protected void SetMethodInfo(string theMethodName, List<Type> argClassList)
+        {
+            this.methodInfo = this.GetMethodInfo(theMethodName, argClassList);
+        }
+
+        /// <summary>
+        /// Sets the list of classes for the procedure arguments.
+        /// Only called from within subclass constructors.
+        /// </summary>
+        /// <param name="argClassList">The list of argument classes.</param>
+        protected void SetArgClasses(List<Type> argClassList)
+        {
+            this.argClasses = argClassList;
+        }
+
         /// <summary>
         /// Take a list of Type or type name elements and create a corresponding 
         ///   List of Type.

@@ -8,6 +8,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// This represents the empty list.
+    /// It is immutable.
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>

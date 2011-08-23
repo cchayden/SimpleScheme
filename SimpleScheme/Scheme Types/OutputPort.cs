@@ -16,6 +16,7 @@ namespace SimpleScheme
         #region Constants
         /// <summary>
         /// The printable name of the scheme output port type.
+        /// This is immutable.
         /// </summary>
         public const string Name = "output-port";
         #endregion

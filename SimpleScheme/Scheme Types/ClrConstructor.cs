@@ -38,9 +38,9 @@ namespace SimpleScheme
         {
             try
             {
-                this.ArgClasses = ClassList(argClassNames);
                 this.classType = TypePrimitives.ToClass(targetClassName);
-                this.MaxArgs = this.MinArgs = this.ArgClasses.Count;
+                this.SetArgClasses(ClassList(argClassNames));
+                this.SetMinMax(this.ArgClasses.Count);
             }
             catch (TypeLoadException)
             {

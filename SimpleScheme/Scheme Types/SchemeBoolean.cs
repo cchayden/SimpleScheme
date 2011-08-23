@@ -8,6 +8,7 @@ namespace SimpleScheme
 
     /// <summary>
     /// Operations on boolean values.
+    /// Booleans are immutable.
     /// </summary>
     public static class SchemeBoolean
     {
