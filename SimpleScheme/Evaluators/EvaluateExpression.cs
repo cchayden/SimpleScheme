@@ -1,5 +1,4 @@
-﻿#define OLD
-// <copyright file="EvaluateExpression.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateExpression.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme

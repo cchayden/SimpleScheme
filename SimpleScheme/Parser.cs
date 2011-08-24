@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.IO;
     using System.Text;
     using Obj = System.Object;
@@ -14,19 +15,19 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The character stream to read from.
-        /// </summary>
-        private readonly CharacterStream charStream = new CharacterStream();
-
-        /// <summary>
-        /// The token stream to read from.
-        /// </summary>
-        private readonly TokenStream tokStream = new TokenStream();
-
-        /// <summary>
         /// The TextReader we are reading from to get the input.
         /// </summary>
         private readonly TextReader inp;
+
+        /// <summary>
+        /// The character buffer to read from.
+        /// </summary>
+        private Tuple<bool, int> charBuffer = new Tuple<bool, int>(false, -1);
+
+        /// <summary>
+        /// The token buffer to read from.
+        /// </summary>
+        private Tuple<bool, object> tokBuffer = new Tuple<bool, object>(false, null);
 
         /// <summary>
         /// Used to make a transcript of the input.
@@ -83,7 +84,8 @@ namespace SimpleScheme
             this.logger = sb;
             try
             {
-                int ch = this.charStream.Get();
+                int ch = Get(this.charBuffer);
+                this.charBuffer = new Tuple<bool, int>(false, -1);
                 if (ch == -2)
                 {
                     ch = this.ReadNextChar();
@@ -126,7 +128,8 @@ namespace SimpleScheme
         public object NextToken()
         {
             // See if we should re-use a pushed token or character
-            object token = this.tokStream.GetPushedToken();
+            object token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
+            this.tokBuffer = new Tuple<bool, object>(false, null);
             if (token != null)
             {
                 return token;
@@ -165,7 +168,7 @@ namespace SimpleScheme
                         return ",@";
                     }
 
-                    this.charStream.Push(ch);
+                    this.charBuffer = new Tuple<bool, int>(true, ch);
                     return ",";
 
                 case ';':
@@ -204,14 +207,14 @@ namespace SimpleScheme
                             return SchemeBoolean.False;
 
                         case '(':
-                            this.charStream.Push('(');
+                            this.charBuffer = new Tuple<bool, int>(true, '(');
                             return Vector.FromList(this.Read());
 
                         case '\\':
                             ch = this.ReadNextChar();
                             if (ch == 's' || ch == 'S' || ch == 'n' || ch == 'N')
                             {
-                                this.charStream.Push(ch);
+                                this.charBuffer = new Tuple<bool, int>(true, ch);
                                 token = this.NextToken();
                                 if (token is string && (token as string).Length == 1)
                                 {
@@ -228,7 +231,7 @@ namespace SimpleScheme
                                         // this isn't really right
                                         // #\<char> is required to have delimiter after char
                                         ErrorHandlers.Warn("#\\<char> must be followed by delimiter");
-                                        this.tokStream.PushToken(token);
+                                        this.tokBuffer = new Tuple<bool, object>(true, token);
                                         return Character.As((char)ch);
                                 }
                             }
@@ -264,7 +267,7 @@ namespace SimpleScheme
                             ch != '(' && ch != ')' && ch != '\'' &&
                                  ch != ';' && ch != '"' && ch != ',' && ch != '`');
 
-                        this.charStream.Push(ch);
+                        this.charBuffer = new Tuple<bool, int>(true, ch);
                         if (c == '.' || c == '+' || c == '-' || (c >= '0' && c <= '9'))
                         {
                             double value;
@@ -279,6 +282,23 @@ namespace SimpleScheme
             }
         }
 
+        #endregion
+
+        #region Private Static Methods
+        /// <summary>
+        /// Get a character from the character buffer.
+        /// </summary>
+        /// <param name="bc">The character buffer.</param>
+        /// <returns>The buffered character.</returns>
+        private static int Get(Tuple<bool, int> bc)
+        {
+                if (bc.Item1)
+                {
+                    return bc.Item2 == -1 ? -1 : Character.As((char)bc.Item2);
+                }
+
+                return -2;
+        }
         #endregion
 
         #region Private Methods
@@ -341,7 +361,7 @@ namespace SimpleScheme
         /// <returns>The next character in the stream.</returns>
         private int Peek()
         {
-            int ch = this.charStream.Peek();
+            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -1;
             if (ch != -1)
             {
                 return ch;
@@ -349,7 +369,8 @@ namespace SimpleScheme
 
             try
             {
-                this.charStream.Push(ch = this.inp.Read());
+                ch = this.inp.Read();
+                this.charBuffer = new Tuple<bool, int>(true, ch);
                 return ch;
             }
             catch (IOException ex)
@@ -360,13 +381,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Pop a buffered character, if one is availab.e
+        /// Pop a buffered character, if one is available.
         /// Otherwise read one from the stream.
         /// </summary>
         /// <returns>The character read.</returns>
         private int ReadOrPop()
         {
-            int ch = this.charStream.Pop();
+            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -1;
+            this.charBuffer = new Tuple<bool, int>(false, -1);
             if (ch != -1)
             {
                 return ch;
@@ -389,7 +411,8 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private int ReadNextChar()
         {
-            int ch = this.charStream.Pop();
+            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -1;
+            this.charBuffer = new Tuple<bool, int>(false, -1);
             if (ch != -1)
             {
                     ErrorHandlers.IoError("Read bypassed pushed char.");
@@ -441,129 +464,8 @@ namespace SimpleScheme
                 return result;
             }
 
-            this.tokStream.PushToken(token);
+            this.tokBuffer = new Tuple<bool, object>(true, token);
             return Pair.Cons(this.Read(), this.ReadTail(true));
-        }
-        #endregion
-
-        #region Private Classes
-        /// <summary>
-        /// Manages a character stream where it is possible to peek ahead one
-        ///   character, or to push back a character that was already read.
-        /// </summary>
-        private class CharacterStream
-        {
-            /// <summary>
-            /// True if there is a pushed character.
-            /// </summary>
-            private bool isPushedChar; // = false;
-
-            /// <summary>
-            /// If there is a pushed character, this is it.
-            /// </summary>
-            private int pushedChar = -1;
-
-            /// <summary>
-            /// Push a character back into the input.
-            /// </summary>
-            /// <param name="ch">The character to push.</param>
-            public void Push(int ch)
-            {
-                this.isPushedChar = true;
-                this.pushedChar = ch;
-            }
-
-            /// <summary>
-            /// Get a pushed char, if present, or else return -1.
-            /// </summary>
-            /// <returns>The pushed character.</returns>
-            public int Pop()
-            {
-                if (this.isPushedChar)
-                {
-                    this.isPushedChar = false;
-                    return this.pushedChar;
-                }
-
-                return -1;
-            }
-
-            /// <summary>
-            /// Check to see if there is a pushed character.
-            /// If so, return it.
-            /// </summary>
-            /// <returns>The pushed character, or -1 if EOF, or -2 if there is no pushed character.</returns>
-            public int Get()
-            {
-                if (this.isPushedChar)
-                {
-                    this.isPushedChar = false;
-                    if (this.pushedChar == -1)
-                    {
-                        return -1;
-                    }
-
-                    return Character.As((char)this.pushedChar);
-                }
-
-                return -2;
-            }
-
-            /// <summary>
-            /// Take a peek at the next character, without consuming it.
-            /// If there is none, return -1.
-            /// </summary>
-            /// <returns>The next character (as an int).</returns>
-            public int Peek()
-            {
-                return this.isPushedChar ? this.pushedChar : -1;
-            }
-        }
-
-        /// <summary>
-        /// Handles tokens that have been read but pushed back on the input stream.
-        /// </summary>
-        private class TokenStream
-        {
-            /// <summary>
-            /// True if there is a pushed token.
-            /// </summary>
-            private bool isPushedToken; // = false;
-
-            /// <summary>
-            /// If there is a pushed token, this is it.
-            /// </summary>
-            private object pushedToken;
-
-            /// <summary>
-            /// Push the token back on the input.
-            /// </summary>
-            /// <param name="token">The token to push.</param>
-            public void PushToken(object token)
-            {
-                this.isPushedToken = true;
-                this.pushedToken = token;
-            }
-
-            /// <summary>
-            /// Get the pushed token, if available.
-            /// If not, return null.
-            /// </summary>
-            /// <returns>The pushed token, if available, otherwise null.</returns>
-            public object GetPushedToken()
-            {
-                return this.isPushedToken ? this.PopToken() : null;
-            }
-
-            /// <summary>
-            /// Get the token that had been pushed.
-            /// </summary>
-            /// <returns>The pushed token.</returns>
-            private object PopToken()
-            {
-                this.isPushedToken = false;
-                return this.pushedToken;
-            }
         }
         #endregion
     }

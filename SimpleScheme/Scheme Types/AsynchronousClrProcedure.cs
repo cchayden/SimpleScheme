@@ -136,7 +136,7 @@ namespace SimpleScheme
             bool isStatic = this.MethodInfo.IsStatic;
             Obj target = isStatic ? new Undefined() : List.First(args);
             CheckArgs(isStatic ? args : List.Rest(args), "AsynchronousClrProcedure");
-            Obj[] argArray = this.ToArgListBegin(isStatic ? args : List.Rest(args), new AsyncState(target, caller));
+            Obj[] argArray = this.ToArgListBegin(isStatic ? args : List.Rest(args), new Tuple<object, Evaluator>(target, caller));
 
             IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
             return new SuspendedEvaluator(res, caller);
@@ -184,41 +184,14 @@ namespace SimpleScheme
         private void CompletionMethod(IAsyncResult result)
         {
             object[] args = { result };
-            AsyncState state = (AsyncState)result.AsyncState;
-            Evaluator caller = state.Caller;
-            Obj res = this.endMethodInfo.Invoke(state.InvokedObject, args);
+            Tuple<object, Evaluator> state = (Tuple<object, Evaluator>)result.AsyncState;
+            Evaluator caller = state.Item2;
+            Obj res = this.endMethodInfo.Invoke(state.Item1, args);
             caller.UpdateReturnValue(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
             caller.EvalStep();
-        }
-
-        /// <summary>
-        /// Stores the async state needed to resume execution from the callback.
-        /// </summary>
-        private class AsyncState
-        {
-            /// <summary>
-            /// Initializes a new instance of the AsynchronousClrProcedure.AsyncState class.
-            /// </summary>
-            /// <param name="invokedObject">The object on which the EndXXX must be invoked.</param>
-            /// <param name="caller">The caller evaluator to resume.</param>
-            public AsyncState(object invokedObject, Evaluator caller)
-            {
-                this.InvokedObject = invokedObject;
-                this.Caller = caller;
-            }
-
-            /// <summary>
-            /// Gets the object to invoke the end method on.
-            /// </summary>
-            public object InvokedObject { get; private set; }
-
-            /// <summary>
-            /// Gets the caller evaluator to resume.
-            /// </summary>
-            public Evaluator Caller { get; private set; }
         }
         #endregion
     }
