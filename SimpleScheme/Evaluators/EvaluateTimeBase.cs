@@ -79,7 +79,8 @@ namespace SimpleScheme
             step.i++;
             if (step.i < step.counter)
             {
-                return step;
+                  return s.ContinueHere(Step1);
+//                return step;
             }
 
             step.stopwatch.Stop();

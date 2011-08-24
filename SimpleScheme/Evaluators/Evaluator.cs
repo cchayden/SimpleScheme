@@ -203,7 +203,7 @@ namespace SimpleScheme
         /// </summary>
         public ReturnType ReturnFlag
         {
-            get { return returnFlag; }
+            get { return this.returnFlag; }
         }
 
         /// <summary>

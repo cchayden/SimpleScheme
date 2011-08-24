@@ -340,6 +340,7 @@ namespace SimpleScheme
                     return EvaluateDo.Call(s.Expr, s.Env, s.Caller);
 
                 case "time":
+                    //// (time <expr>)
                     return EvaluateTime.Call(s.Expr, s.Env, s.Caller);
             }
 
