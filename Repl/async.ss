@@ -60,11 +60,11 @@
 ;(for-each get-content '("http://microsoft.com" "http://live.com" "http://wintellect.com" "http://chayden.net"))
 
 ; parallel
-; These are parallel because, AT THE TOP LEVEL, the REPL continues after getting Suspend.
-(get-content "http://microsoft.com")
-(get-content "http://live.com")  
-(get-content "http://wintellect.com")
-(p (get-content "http://chayden.net"))
+(parallel 
+  (get-content "http://microsoft.com")
+  (get-content "http://live.com")  
+  (get-content "http://wintellect.com")
+  (p (get-content "http://chayden.net")))
  
 
 (p "loaded")
