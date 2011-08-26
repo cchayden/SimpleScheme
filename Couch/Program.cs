@@ -1,7 +1,7 @@
 ﻿// <copyright file="Program.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
-namespace Couch
+namespace CouchExample
 {
     using System;
     using CouchLib;
