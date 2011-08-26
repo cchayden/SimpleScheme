@@ -15,13 +15,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncWCF", "AsyncWCF\AsyncWCF.csproj", "{57C55B91-23CF-4449-B186-4F4061DE24D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchExample", "Couch\CouchExample.csproj", "{047CC36C-1D0B-4907-94D8-77DCF0731CD2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Couch", "Couch", "{79EE205D-DADB-4FDB-983D-6AC144C56934}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitJson", "LitJson\LitJson.csproj", "{67F185EA-F7DE-437C-8D57-A7C1AACFD705}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchExample", "Couch\CouchExample\CouchExample.csproj", "{047CC36C-1D0B-4907-94D8-77DCF0731CD2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchLib", "CouchLib\CouchLib.csproj", "{D4199E94-C919-4360-8E27-1CFD5CA04895}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitJson", "Couch\LitJson\LitJson.csproj", "{67F185EA-F7DE-437C-8D57-A7C1AACFD705}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchDbTests", "CouchDbTests\CouchDbTests.csproj", "{D565FBD7-4232-4B67-A969-B7BF33E83195}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchLib", "Couch\CouchLib\CouchLib.csproj", "{D4199E94-C919-4360-8E27-1CFD5CA04895}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchDbTests", "Couch\CouchDbTests\CouchDbTests.csproj", "{D565FBD7-4232-4B67-A969-B7BF33E83195}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{B295EC63-7DCF-44EB-A9DA-6AEECC028814}"
 EndProject
@@ -46,8 +48,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parallel", "Examples\Parallel\Parallel.csproj", "{55423320-E45F-48C0-A6E6-935EF8E7148D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf", "Examples\Perf\Perf.csproj", "{F45E09F5-4512-4760-8536-016F968B180C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Couch", "Couch", "{79EE205D-DADB-4FDB-983D-6AC144C56934}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution

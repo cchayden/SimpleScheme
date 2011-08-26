@@ -51,7 +51,7 @@
       <Project>{67F185EA-F7DE-437C-8D57-A7C1AACFD705}</Project>
       <Name>LitJson</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SimpleScheme\SimpleScheme.csproj">
+    <ProjectReference Include="..\..\SimpleScheme\SimpleScheme.csproj">
       <Project>{0BE1BA31-6648-4A16-834C-C29AF39239F5}</Project>
       <Name>SimpleScheme</Name>
     </ProjectReference>
