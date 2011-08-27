@@ -143,7 +143,7 @@ namespace SimpleScheme
                 .DefinePrimitive("exact->inexact", (args, caller) => Num(List.First(args)), 1)
                 //// <r4rs section="6.5.5">(exp <z>)</r4rs>
                 .DefinePrimitive("exp", (args, caller) => Math.Exp(Num(List.First(args))), 1)
-                //// <r4rs section="6.5.5">(expt <z>)</r4rs>
+                //// <r4rs section="6.5.5">(expt <z1> <z2>)</r4rs>
                 .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
                 .DefinePrimitive("gcd", (args, caller) => EmptyList.Is(args) ? 0 : Gcd(args), 0, MaxInt)

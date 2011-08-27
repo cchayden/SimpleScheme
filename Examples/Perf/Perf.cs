@@ -5,7 +5,7 @@ class Perf
 {
     static void Main()
     {
-        Interpreter.New(new[] { "perf.ss" });
-        Console.ReadLine();
+        Interpreter.New(new[] { "perf.ss" })
+            .ReadEvalPrintLoop();
     }
 }

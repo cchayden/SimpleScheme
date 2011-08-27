@@ -1,5 +1,4 @@
-﻿#define OLDx
-// <copyright file="Parser.cs" company="Charles Hayden">
+﻿// <copyright file="Parser.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -37,6 +36,7 @@ namespace SimpleScheme
         private StringBuilder logger;
         #endregion
 
+        #region Static Fields
         private static readonly Dictionary<string, char> charNames = new Dictionary<string, char>
             {
                 { "nul", '\x0000' },
@@ -74,8 +74,11 @@ namespace SimpleScheme
                 { "del", '\x007f' },
                 { "sp", ' ' },
                 { "space", ' ' },
-                { "newline", '\n' }
+                { "tab", '\t' },
+                { "newline", '\n' },
+                { "return", '\r' }
             };
+        #endregion
 
         #region Constructor
         /// <summary>
@@ -479,17 +482,18 @@ namespace SimpleScheme
         private Obj ReadTail(bool dotOk)
         {
             object token = this.NextToken();
-            if (token as string == InputPort.Eof)
+            string tok = token as string;
+            if (tok == InputPort.Eof)
             {
                 return ErrorHandlers.IoError("EOF during read.");
             }
 
-            if (token as string == ")")
+            if (tok == ")")
             {
                 return EmptyList.Instance;  // there was no more
             }
 
-            if (token as string == ".")
+            if (tok == ".")
             {
                 if (!dotOk)
                 {
