@@ -72,13 +72,13 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                 .DefinePrimitive("begin", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "begin"), 0, MaxInt)
+                //// (parallel <expr> ...)
                 .DefinePrimitive("parallel", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "parallel"), 0, MaxInt)
-                .DefinePrimitive("parallel-join", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "parallel-join"), 0, MaxInt)
                 //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
                 .DefinePrimitive("case", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "case"), 0, MaxInt)
-                //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
+                //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... )</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>

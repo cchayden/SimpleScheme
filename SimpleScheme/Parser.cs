@@ -1,9 +1,11 @@
-﻿// <copyright file="Parser.cs" company="Charles Hayden">
+﻿#define OLDx
+// <copyright file="Parser.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Text;
     using Obj = System.Object;
@@ -34,6 +36,46 @@ namespace SimpleScheme
         /// </summary>
         private StringBuilder logger;
         #endregion
+
+        private static readonly Dictionary<string, char> charNames = new Dictionary<string, char>
+            {
+                { "nul", '\x0000' },
+                { "soh", '\x0001' },
+                { "stx", '\x0002' },
+                { "etx", '\x0003' },
+                { "eot", '\x0004' },
+                { "enq", '\x0005' },
+                { "ack", '\x0006' },
+                { "bel", '\x0007' },
+                { "bs",  '\x0008' },
+                { "ht",  '\x0009' },
+                { "nl",  '\x000a' },
+                { "vt",  '\x000b' },
+                { "np",  '\x000c' },
+                { "cr",  '\x000d' },
+                { "so",  '\x000e' },
+                { "si",  '\x000f' },
+                { "dle", '\x0010' },
+                { "dc1", '\x0011' },
+                { "dc2", '\x0012' },
+                { "dc3", '\x0013' },
+                { "dc4", '\x0014' },
+                { "nack", '\x0015' },
+                { "syn", '\x0016' },
+                { "etc", '\x0017' },
+                { "can", '\x0018' },
+                { "em",  '\x0019' },
+                { "sub", '\x001a' },
+                { "esc", '\x001b' },
+                { "fs",  '\x001c' },
+                { "gs",  '\x001d' },
+                { "rs",  '\x001e' },
+                { "us",  '\x001f' },
+                { "del", '\x007f' },
+                { "sp", ' ' },
+                { "space", ' ' },
+                { "newline", '\n' }
+            };
 
         #region Constructor
         /// <summary>
@@ -212,7 +254,7 @@ namespace SimpleScheme
 
                         case '\\':
                             ch = this.ReadNextChar();
-                            if (ch == 's' || ch == 'S' || ch == 'n' || ch == 'N')
+                            if (Char.IsLetter((char)ch))
                             {
                                 this.charBuffer = new Tuple<bool, int>(true, ch);
                                 token = this.NextToken();
@@ -221,19 +263,20 @@ namespace SimpleScheme
                                     return Character.As((char)ch);
                                 }
 
-                                switch (token as string)
+                                string tok = token as string;
+                                if (tok == null)
                                 {
-                                    case "space":
-                                        return Character.As(' ');
-                                    case "newline":
-                                        return Character.As('\n');
-                                    default:
-                                        // this isn't really right
-                                        // #\<char> is required to have delimiter after char
-                                        ErrorHandlers.Warn("#\\<char> must be followed by delimiter");
-                                        this.tokBuffer = new Tuple<bool, object>(true, token);
-                                        return Character.As((char)ch);
+                                    ErrorHandlers.Warn("#\\<Char> ill-formed");
+                                    return Character.As(' ');
                                 }
+                                tok = tok.ToLower();
+                                if (charNames.ContainsKey(tok))
+                                {
+                                    return Character.As(charNames[tok]);
+                                }
+
+                                this.tokBuffer = new Tuple<bool, object>(true, tok.Substring(1));
+                                return Character.As((char)ch);
                             }
 
                             return Character.As((char)ch);

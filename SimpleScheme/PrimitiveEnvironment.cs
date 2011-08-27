@@ -8,7 +8,10 @@ namespace SimpleScheme
     /// <summary>
     /// The primitive environment is "below" the global environment.
     /// It is the only environment allowed to have primitives.
-    /// It is separate from the global environment so that it can be shared between interpreter instances.
+    /// It is separate from the global environment so that it can be shared 
+    ///   between interpreter instances.
+    /// Normally, this should be set up at the beginning and not modified.  There
+    ///   is no provision for thread safety because it is expected to be read-only.
     /// </summary>
     public class PrimitiveEnvironment : Environment, IPrimitiveEnvironment
     {

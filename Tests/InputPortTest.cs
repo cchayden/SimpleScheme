@@ -163,7 +163,7 @@ namespace Tests
             {
                 InputPort_Accessor accessor = new InputPort_Accessor(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('s', accessor.parser.NextToken());
-                Assert.AreEqual("stop", accessor.parser.NextToken());
+                Assert.AreEqual("top", accessor.parser.NextToken());
             }
 
             using (StringReader reader = new StringReader("#\\s top"))
