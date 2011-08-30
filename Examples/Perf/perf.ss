@@ -1,7 +1,7 @@
 ;; perf.ss
 ;; performance measurements
 
-(define count 10000)
+(define count 1000000)
 (define (test f)
   (display (first (second (time-call f count))))
   (display #\tab) (p f) 
@@ -34,10 +34,42 @@
 (test (lambda () (null? '())))
 
 (p 'list)
-; to do
+(define x (list 'a 'b))
+(define y (list 'c 'd 'e))
+(test (lambda () (append x y)))
+(test (lambda () (assoc 'a x)))
+(test (lambda () (assq 'a x)))
+(test (lambda () (assv 'a x)))
+(test (lambda () (first x)))
+(test (lambda () (second x)))
+(test (lambda () (third y)))
+(test (lambda () (rest x)))
+(test (lambda () (cons 'z x)))
+(test (lambda () (length x)))
+(test (lambda () (list 1 2)))
+(test (lambda () (list-ref x 1)))
+(test (lambda () (list-tail x 1)))
+(test (lambda () (list? x)))
+(test (lambda () (member 'a x)))
+(test (lambda () (memq 'a x)))
+(test (lambda () (memv 'a x)))
+(test (lambda () (pair? x)))
+(test (lambda () (reverse x)))
+(test (lambda () (set-car! x 'v)))
+(test (lambda () (set-cdr! x 'w)))
 
 (p 'character)
-; to do
+(test (lambda () (char->integer #\a)))
+(test (lambda () (char-alphabetic? #\a)))
+(test (lambda () (char-ci<? #\a #\b)))
+(test (lambda () (char-downcase #\A)))
+(test (lambda () (char-lower-case? #\a)))
+(test (lambda () (char-numeric? #\1)))
+(test (lambda () (char-upcase #\a)))
+(test (lambda () (char-upper-case? #\A)))
+(test (lambda () (char-whitespace? #\space)))
+(test (lambda () (char<? #\a #\b)))
+(test (lambda () (char? #\a)))
 
 (p 'string)
 (define x "abc")

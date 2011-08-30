@@ -49,7 +49,12 @@ namespace SimpleScheme
         /// <param name="files">The files to read.</param>
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
-        private Interpreter(bool loadStandardMacros, PrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        private Interpreter(
+            bool loadStandardMacros, 
+            PrimitiveEnvironment primEnvironment, 
+            IEnumerable<string> files, 
+            TextReader reader, 
+            TextWriter writer)
         {
             this.Trace = false;
             this.Count = false;
@@ -94,7 +99,12 @@ namespace SimpleScheme
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
         /// <returns>A scheme interpreter.</returns>
-        private Interpreter(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer) :
+        private Interpreter(
+            bool loadStandardMacros, 
+            IPrimitiveEnvironment primEnvironment, 
+            IEnumerable<string> files, 
+            TextReader reader, 
+            TextWriter writer) :
             this(loadStandardMacros, primEnvironment as PrimitiveEnvironment, files, reader, writer)
         {
         }
@@ -206,7 +216,12 @@ namespace SimpleScheme
         /// <param name="reader">The input reader.</param>
         /// <param name="writer">The output writer.</param>
         /// <returns>A scheme interpreter.</returns>
-        public static IInterpreter New(bool loadStandardMacros, IPrimitiveEnvironment primEnvironment, IEnumerable<string> files, TextReader reader, TextWriter writer)
+        public static IInterpreter New(
+            bool loadStandardMacros, 
+            IPrimitiveEnvironment primEnvironment, 
+            IEnumerable<string> files, 
+            TextReader reader, 
+            TextWriter writer)
         {
             return new Interpreter(loadStandardMacros, primEnvironment, files, reader, writer);
         }
