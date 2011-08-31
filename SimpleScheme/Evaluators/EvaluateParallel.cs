@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Threading;
     using Obj = System.Object;
 
     /// <summary>
@@ -23,6 +24,11 @@ namespace SimpleScheme
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create(EvaluatorName);
+
+        /// <summary>
+        /// Used to lock when testing for return.
+        /// </summary>
+        private readonly object lockObj = new object();
 
         /// <summary>
         /// The count of evaluations that have been forked.
@@ -161,6 +167,8 @@ namespace SimpleScheme
         /// If it is caught suspension, count as fork.
         /// If this returns null, then processing continues.
         /// Otherwise, the evaluator returns what this function returns.
+        /// Be careful with forked and joined, because this could be executing simultaneously on
+        ///   multiple threads.
         /// </summary>
         /// <returns>The next step -- ended or a return.</returns>
         private Evaluator CheckForAsyncReturn()
@@ -169,12 +177,19 @@ namespace SimpleScheme
             {
                 case ReturnType.CaughtSuspended:
                     // caught an asynchronous suspension -- go on to the next expr
-                    this.forked++;
+                    Interlocked.Increment(ref this.forked);
                     break;
                 case ReturnType.AsynchronousReturn:
                     // return after suspension == end or return
-                    this.joined++;
-                    return this.joined < this.forked ? this.ReturnEnded() : this.ReturnFromStep(new Undefined());
+                    Interlocked.Increment(ref this.joined);
+                    bool returnNow;
+                    lock (this.lockObj)
+                    {
+                        returnNow = this.joined >= this.forked;
+                    }
+
+                    return returnNow ? this.ReturnFromStep(new Undefined()) : this.ReturnEnded();
+
                 case ReturnType.SynchronousReturn:
                     break;
             }
