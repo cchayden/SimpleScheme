@@ -157,7 +157,7 @@ namespace Tests
         /// </summary>
         [TestMethod]
         [DeploymentItem("SimpleScheme.dll")]
-        public void PopTokenTest1()
+        public void PopTokenTest()
         {
             using (StringReader reader = new StringReader("#\\stop"))
             {

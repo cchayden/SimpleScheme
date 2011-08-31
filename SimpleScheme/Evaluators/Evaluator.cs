@@ -272,6 +272,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Perform a shallow copy of the evaluator.
+        /// Subclass overrides this to provide specialized implementation.
+        /// </summary>
+        /// <returns>A copy of the evaluator.</returns>
+        public virtual Evaluator Clone()
+        {
+            return (Evaluator)this.MemberwiseClone();
+        }
+
+        /// <summary>
         /// Makes a copy of the whole chain of evaluation steps, from the current evaluator back to
         ///   the original evaluator.  This chain is saved as the continuation.  
         /// The cloned chain is linked up with each other to form a new chain.
@@ -285,11 +295,11 @@ namespace SimpleScheme
         /// <returns>A copy of the current evaluator.</returns>
         public Evaluator CloneChain()
         {
-            Evaluator ret = (Evaluator)this.MemberwiseClone();
+            Evaluator ret = this.Clone();
             Evaluator s = ret;
             while (s.Caller != null)
             {
-                Evaluator parent = (Evaluator)s.Caller.MemberwiseClone();
+                Evaluator parent = s.Caller.Clone();
                 s.caller = parent;
                 s = s.Caller;
             }

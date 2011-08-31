@@ -297,7 +297,7 @@ namespace Tests
         /// A test for parallel primitive
         /// </summary>
         [TestMethod]
-        public void ParallelClrTest()
+        public void ParallelTest()
         {
             this.Run("<undefined>", "parallel simple", "(parallel 1)");
 
@@ -401,6 +401,43 @@ namespace Tests
             Thread.Sleep(350);
             this.Run("(#t #t #t #t #t)", "parallel continue all 2", "res");
             Assert.AreEqual(5, sleepCounter, "parallel continue all 3");
+        }
+
+        /// <summary>
+        /// A test for parallel primitive with call/cc
+        /// </summary>
+        [TestMethod]
+        public void ParallelContinuationTest()
+        {
+            // all three sleep simultaneously
+            // one creates continuation
+            // verify continuation does not hang and executes the right number of times in each leg
+            sleepCounter = 0;
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallel continuation",
+               @"
+                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                (define sleep-caller (create-async))
+                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                (define (sleep duration) (async-sleep sleep-caller duration))
+                (define count1 0)
+                (define count2 0)
+                (define count3 0)
+                (define return 0)
+                (define done 0)
+                (begin
+                  (parallel (begin (sleep 100) (increment! count1))
+                            (begin (call/cc (lambda (cont) (set! return cont) 0)) (sleep 100) (increment! count2))
+                            (begin (sleep 100) (increment! count3)))
+                  (increment! done))
+            ");
+            Assert.AreEqual(0, sleepCounter);
+            this.Run("(0 0 0 0)", "parallel continuation", "(list count1 count2 count3 done)");
+            Thread.Sleep(120);
+            Assert.AreEqual(3, sleepCounter);
+            this.Run("(1 1 1 1)", "parallel continuation", "(list count1 count2 count3 done)");
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallel continuation", "(return 0)");
+            Thread.Sleep(120);
+            this.Run("(1 2 2 2)", "parallel continuation", "(list count1 count2 count3 done)");
         }
 
         /// <summary>

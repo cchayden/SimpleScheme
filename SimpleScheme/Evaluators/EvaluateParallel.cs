@@ -73,6 +73,22 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Override the copy operation so that we can reset the
+        ///   forked and joined counters.
+        /// In the copy, once it resumes, none of the suspended operations will come back to it.
+        /// But any new ones that it does will, so counting has to start over.
+        /// </summary>
+        /// <returns>The evaluator copy.</returns>
+        public override Evaluator Clone()
+        {
+            var copy = (EvaluateParallel)this.MemberwiseClone();
+            copy.forked = copy.joined = 0;
+            return copy;
+        }
+        #endregion
+
         #region Private Methods
         /// <summary>
         /// Evaluate expression step: see if we are done.
