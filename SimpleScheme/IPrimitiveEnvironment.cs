@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(object name, Primitive.Op operation, int minArgs, int maxArgs);
+        IPrimitiveEnvironment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs);
 
         /// <summary>
         /// Define a primitive in the environment.
@@ -28,6 +28,6 @@ namespace SimpleScheme
         /// <param name="operation">A function that performs the primitive operation.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(object name, Primitive.Op operation, int numberOfArgs);
+        IPrimitiveEnvironment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs);
     }
 }
