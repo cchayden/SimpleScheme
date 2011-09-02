@@ -135,8 +135,8 @@ namespace Tests
             this.TestNextToken("#i10", 10.0);
             this.TestNextToken("#d10", 10.0);
             this.TestNextToken("#d 10", 10.0);
-            this.TestNextToken("#b10", 10.0);
-            this.TestNextToken("#o10", 10.0);
+            this.TestNextToken("#b10", 2);
+            this.TestNextToken("#o10", 8);
             this.TestNextToken("#x10", 16);
             this.TestNextToken("#z10", 10.0);
             this.TestNextToken("#\\ ", " ");

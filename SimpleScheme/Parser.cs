@@ -172,13 +172,13 @@ namespace SimpleScheme
         /// Get the next word -- the next string of alphabetic characters.
         /// </summary>
         /// <returns>The next word.  Could be empty string.</returns>
-        public string NextWord()
+        public string NextWord(Func<char, bool> test)
         {
             StringBuilder sb = new StringBuilder();
             while (true)
             {
                 int ch = this.ReadOrPop();
-                if (! char.IsLetter((char)ch))
+                if (! test((char)ch))
                 {
                     this.PushCharBuffer(ch);
                     return sb.ToString();
@@ -188,29 +188,34 @@ namespace SimpleScheme
             }
         }
 
+        /// <summary>
+        /// Test for hex digit.
+        /// </summary>
+        /// <param name="ch">The character</param>
+        /// <returns>True if the character is an hex digit.</returns>
         private static bool IsHexDigit(char ch)
         {
             return char.IsDigit(ch) || (char.ToLower(ch) >= 'a' && char.ToLower(ch) <= 'f');
         }
 
         /// <summary>
-        /// Get the next hex word -- the next string of hexadecimal characters.
+        /// Test for octal digit.
         /// </summary>
-        /// <returns>The next word.  Could be empty string.</returns>
-        public string NextHexWord()
+        /// <param name="ch">The character</param>
+        /// <returns>True if the character is an octal digit.</returns>
+        private static bool IsOctalDigit(char ch)
         {
-            StringBuilder sb = new StringBuilder();
-            while (true)
-            {
-                int ch = this.ReadOrPop();
-                if (! IsHexDigit((char)ch))
-                {
-                    this.PushCharBuffer(ch);
-                    return sb.ToString();
-                }
+            return ch >= '0' && ch <= '7';
+        }
 
-                sb.Append((char)ch);
-            }
+        /// <summary>
+        /// Test for binary digit.
+        /// </summary>
+        /// <param name="ch">The character</param>
+        /// <returns>True if the character is a binary digit.</returns>
+        private static bool IsBinaryDigit(char ch)
+        {
+            return ch == '0' || ch == '1';
         }
 
         /// <summary>
@@ -307,7 +312,7 @@ namespace SimpleScheme
                             if (Char.IsLetter((char)ch))
                             {
                                 this.PushCharBuffer(ch);
-                                string tok = this.NextWord();
+                                string tok = this.NextWord(char.IsLetter);
                                 if (tok.Length == 1)
                                 {
                                     return Character.As((char)ch);
@@ -332,12 +337,14 @@ namespace SimpleScheme
                             return this.NextToken();
 
                         case 'b':
+                            return Convert.ToInt32(this.NextWord(IsBinaryDigit), 2);
+
                         case 'o':
-                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
-                            return this.NextToken();
+                            return Convert.ToInt32(this.NextWord(IsOctalDigit), 8);
 
                         case 'x':
-                            return Int32.Parse(this.NextHexWord(), NumberStyles.HexNumber);
+                            return Convert.ToInt32(this.NextWord(IsHexDigit), 16);
+                            return Int32.Parse(this.NextWord(IsHexDigit), NumberStyles.HexNumber);
 
                         default:
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
