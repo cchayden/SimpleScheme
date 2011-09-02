@@ -337,7 +337,6 @@ namespace SimpleScheme
                             return this.NextToken();
 
                         case 'x':
-                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
                             return Int32.Parse(this.NextHexWord(), NumberStyles.HexNumber);
 
                         default:
