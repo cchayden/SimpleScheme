@@ -5,7 +5,6 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
     using System.Text;
     using Obj = System.Object;
@@ -171,6 +170,7 @@ namespace SimpleScheme
         /// <summary>
         /// Get the next word -- the next string of alphabetic characters.
         /// </summary>
+        /// <param name="test">Predicate for letters that make up a word.  Use with IsHexDigit, char.IsLetter, etc.</param>
         /// <returns>The next word.  Could be empty string.</returns>
         public string NextWord(Func<char, bool> test)
         {
@@ -219,6 +219,28 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Test for symbol characters.  These characters make up symbols -- they are all the characters
+        ///   that are not otherwise special.
+        /// </summary>
+        /// <param name="ch">The character</param>
+        /// <returns>True if the character is a symbol character.</returns>
+        private static bool IsSymbolChar(char ch)
+        {
+            return !char.IsWhiteSpace(ch) && (short)ch != -1 && ch != '(' && ch != ')' 
+                && ch != '\'' && ch != ';' && ch != '"' && ch != ',' && ch != '`';
+        }
+
+        /// <summary>
+        /// Test for comment characters.  
+        /// </summary>
+        /// <param name="ch">The character</param>
+        /// <returns>True if the character is a comment character.</returns>
+        private static bool IsCommentChar(char ch)
+        {
+            return (short)ch != -1 && ch != '\n' && ch != '\r'; 
+        }
+
+        /// <summary>
         /// Gets the next token from the input stream.
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
@@ -244,21 +266,18 @@ namespace SimpleScheme
             switch (ch)
             {
                 case -1:
+                    // end of file
                     return InputPort.Eof;
 
                 case '(':
-                    return "(";
-
                 case ')':
-                    return ")";
-
-                case '\'':
-                    return "'";
-
                 case '`':
-                    return "`";
+                case '\'':
+                    // read punctuation
+                    return new string((char)ch, 1);
 
                 case ',':
+                    // read comma or unquote splicing
                     ch = this.ReadNextChar();
                     if (ch == '@')
                     {
@@ -269,14 +288,12 @@ namespace SimpleScheme
                     return ",";
 
                 case ';':
-                    while (ch != -1 && ch != '\n' && ch != '\r')
-                    {
-                        ch = this.ReadNextChar();
-                    }
-
+                    // skip comment
+                    this.NextWord(IsCommentChar);
                     return this.NextToken();
 
                 case '"':
+                    // read a string
                     {
                         StringBuilder buff = new StringBuilder { Length = 0 };
                         while ((ch = this.ReadNextChar()) != '"' & ch != -1)
@@ -293,6 +310,7 @@ namespace SimpleScheme
                     }
 
                 case '#':
+                    // read a boolean, vector, or character
                     switch (ch = this.ReadNextChar())
                     {
                         case 't':
@@ -344,7 +362,6 @@ namespace SimpleScheme
 
                         case 'x':
                             return Convert.ToInt32(this.NextWord(IsHexDigit), 16);
-                            return Int32.Parse(this.NextWord(IsHexDigit), NumberStyles.HexNumber);
 
                         default:
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
@@ -353,28 +370,23 @@ namespace SimpleScheme
 
                 default:
                     {
-                        StringBuilder buff = new StringBuilder { Length = 0 };
+                        // read a number or symbol
                         int c = ch;
-                        do
-                        {
-                            buff.Append((char)ch);
-                            ch = this.ReadNextChar();
-                        } 
-                        while (!char.IsWhiteSpace((char)ch) && ch != -1 && 
-                            ch != '(' && ch != ')' && ch != '\'' &&
-                            ch != ';' && ch != '"' && ch != ',' && ch != '`');
-
                         this.PushCharBuffer(ch);
-                        if (c == '.' || c == '+' || c == '-' || (c >= '0' && c <= '9'))
+                        string buf = this.NextWord(IsSymbolChar);
+
+                        // read a number
+                        if (char.IsDigit((char)c) || c == '.' || c == '+' || c == '-')
                         {
                             double value;
-                            if (double.TryParse(buff.ToString(), out value))
+                            if (double.TryParse(buf, out value))
                             {
                                 return value;
                             }
                         }
 
-                        return string.Intern(buff.ToString().ToLower());
+                        // read a symbol
+                        return string.Intern(buf.ToLower());
                     }
             }
         }
@@ -402,7 +414,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Puch the character into the buffer.
+        /// Push the character into the buffer.
         /// </summary>
         /// <param name="ch">The character to push.</param>
         private void PushCharBuffer(int ch)
@@ -432,7 +444,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Puch the character into the buffer.
+        /// Push the character into the buffer.
         /// </summary>
         /// <param name="token">The token to push.</param>
         private void PushTokenBuffer(object token)
@@ -553,7 +565,7 @@ namespace SimpleScheme
             int ch = this.GetCharFromBuffer();
             if (ch != -2)
             {
-                    ErrorHandlers.IoError("Read bypassed pushed char.");
+                ErrorHandlers.IoError("Read bypassed pushed char.");
             }
 
             ch = this.inp.Read();
