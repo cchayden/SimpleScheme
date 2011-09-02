@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Text;
     using Obj = System.Object;
@@ -14,29 +15,10 @@ namespace SimpleScheme
     /// </summary>
     public class Parser
     {
-        #region Fields
-        /// <summary>
-        /// The TextReader we are reading from to get the input.
-        /// </summary>
-        private readonly TextReader inp;
-
-        /// <summary>
-        /// The character buffer to read from.
-        /// </summary>
-        private Tuple<bool, int> charBuffer = new Tuple<bool, int>(false, -1);
-
-        /// <summary>
-        /// The token buffer to read from.
-        /// </summary>
-        private Tuple<bool, object> tokBuffer = new Tuple<bool, object>(false, null);
-
-        /// <summary>
-        /// Used to make a transcript of the input.
-        /// </summary>
-        private StringBuilder logger;
-        #endregion
-
         #region Static Fields
+        /// <summary>
+        /// Store the names and values of all named characters.
+        /// </summary>
         private static readonly Dictionary<string, char> charNames = new Dictionary<string, char>
             {
                 { "nul", '\x0000' },
@@ -78,6 +60,28 @@ namespace SimpleScheme
                 { "newline", '\n' },
                 { "return", '\r' }
             };
+        #endregion
+
+        #region Fields
+        /// <summary>
+        /// The TextReader we are reading from to get the input.
+        /// </summary>
+        private readonly TextReader inp;
+
+        /// <summary>
+        /// The character buffer to read from.
+        /// </summary>
+        private Tuple<bool, int> charBuffer = new Tuple<bool, int>(false, -1);
+
+        /// <summary>
+        /// The token buffer to read from.
+        /// </summary>
+        private Tuple<bool, object> tokBuffer = new Tuple<bool, object>(false, null);
+
+        /// <summary>
+        /// Used to make a transcript of the input.
+        /// </summary>
+        private StringBuilder logger;
         #endregion
 
         #region Constructor
@@ -129,8 +133,7 @@ namespace SimpleScheme
             this.logger = sb;
             try
             {
-                int ch = Get(this.charBuffer);
-                this.charBuffer = new Tuple<bool, int>(false, -1);
+                int ch = this.GetCharFromBuffer();
                 if (ch == -2)
                 {
                     ch = this.ReadNextChar();
@@ -166,6 +169,51 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Get the next word -- the next string of alphabetic characters.
+        /// </summary>
+        /// <returns>The next word.  Could be empty string.</returns>
+        public string NextWord()
+        {
+            StringBuilder sb = new StringBuilder();
+            while (true)
+            {
+                int ch = this.ReadOrPop();
+                if (! char.IsLetter((char)ch))
+                {
+                    this.PushCharBuffer(ch);
+                    return sb.ToString();
+                }
+
+                sb.Append((char)ch);
+            }
+        }
+
+        private static bool IsHexDigit(char ch)
+        {
+            return char.IsDigit(ch) || (char.ToLower(ch) >= 'a' && char.ToLower(ch) <= 'f');
+        }
+
+        /// <summary>
+        /// Get the next hex word -- the next string of hexadecimal characters.
+        /// </summary>
+        /// <returns>The next word.  Could be empty string.</returns>
+        public string NextHexWord()
+        {
+            StringBuilder sb = new StringBuilder();
+            while (true)
+            {
+                int ch = this.ReadOrPop();
+                if (! IsHexDigit((char)ch))
+                {
+                    this.PushCharBuffer(ch);
+                    return sb.ToString();
+                }
+
+                sb.Append((char)ch);
+            }
+        }
+
+        /// <summary>
         /// Gets the next token from the input stream.
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
@@ -173,8 +221,7 @@ namespace SimpleScheme
         public object NextToken()
         {
             // See if we should re-use a pushed token or character
-            object token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
-            this.tokBuffer = new Tuple<bool, object>(false, null);
+            object token = this.GetTokenFromBuffer();
             if (token != null)
             {
                 return token;
@@ -213,7 +260,7 @@ namespace SimpleScheme
                         return ",@";
                     }
 
-                    this.charBuffer = new Tuple<bool, int>(true, ch);
+                    this.PushCharBuffer(ch);
                     return ",";
 
                 case ';':
@@ -252,33 +299,28 @@ namespace SimpleScheme
                             return SchemeBoolean.False;
 
                         case '(':
-                            this.charBuffer = new Tuple<bool, int>(true, '(');
+                            this.PushCharBuffer(ch);
                             return Vector.FromList(this.Read());
 
                         case '\\':
                             ch = this.ReadNextChar();
                             if (Char.IsLetter((char)ch))
                             {
-                                this.charBuffer = new Tuple<bool, int>(true, ch);
-                                token = this.NextToken();
-                                if (token is string && (token as string).Length == 1)
+                                this.PushCharBuffer(ch);
+                                string tok = this.NextWord();
+                                if (tok.Length == 1)
                                 {
                                     return Character.As((char)ch);
                                 }
 
-                                string tok = token as string;
-                                if (tok == null)
-                                {
-                                    ErrorHandlers.Warn("#\\<Char> ill-formed");
-                                    return Character.As(' ');
-                                }
                                 tok = tok.ToLower();
                                 if (charNames.ContainsKey(tok))
                                 {
                                     return Character.As(charNames[tok]);
                                 }
 
-                                this.tokBuffer = new Tuple<bool, object>(true, tok.Substring(1));
+                                // At this point there is a token and also a buffered character
+                                this.PushTokenBuffer(tok.Substring(1));
                                 return Character.As((char)ch);
                             }
 
@@ -291,9 +333,12 @@ namespace SimpleScheme
 
                         case 'b':
                         case 'o':
-                        case 'x':
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
                             return this.NextToken();
+
+                        case 'x':
+                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
+                            return Int32.Parse(this.NextHexWord(), NumberStyles.HexNumber);
 
                         default:
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
@@ -311,9 +356,9 @@ namespace SimpleScheme
                         } 
                         while (!char.IsWhiteSpace((char)ch) && ch != -1 && 
                             ch != '(' && ch != ')' && ch != '\'' &&
-                                 ch != ';' && ch != '"' && ch != ',' && ch != '`');
+                            ch != ';' && ch != '"' && ch != ',' && ch != '`');
 
-                        this.charBuffer = new Tuple<bool, int>(true, ch);
+                        this.PushCharBuffer(ch);
                         if (c == '.' || c == '+' || c == '-' || (c >= '0' && c <= '9'))
                         {
                             double value;
@@ -330,20 +375,63 @@ namespace SimpleScheme
 
         #endregion
 
-        #region Private Static Methods
+        #region Character Buffer Methods
         /// <summary>
         /// Get a character from the character buffer.
         /// </summary>
-        /// <param name="bc">The character buffer.</param>
-        /// <returns>The buffered character.</returns>
-        private static int Get(Tuple<bool, int> bc)
+        /// <returns>The buffered character.  If no character is buffered, return -2.</returns>
+        private int GetCharFromBuffer()
         {
-                if (bc.Item1)
-                {
-                    return bc.Item2 == -1 ? -1 : Character.As((char)bc.Item2);
-                }
+            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -2;
+            this.ClearCharBuffer();
+            return ch;
+        }
 
-                return -2;
+        /// <summary>
+        /// Clear the character buffer.
+        /// </summary>
+        private void ClearCharBuffer()
+        {
+            this.charBuffer = new Tuple<bool, int>(false, -1);
+        }
+
+        /// <summary>
+        /// Puch the character into the buffer.
+        /// </summary>
+        /// <param name="ch">The character to push.</param>
+        private void PushCharBuffer(int ch)
+        {
+            this.charBuffer = new Tuple<bool, int>(true, ch);
+        }
+        #endregion
+
+        #region Token Buffer Methods
+        /// <summary>
+        /// Get a token from the token buffer.
+        /// </summary>
+        /// <returns>The buffered token.  If no token is buffered, return null.</returns>
+        private object GetTokenFromBuffer()
+        {
+            object token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
+            this.ClearTokenBuffer();
+            return token;
+        }
+
+        /// <summary>
+        /// Clear the token buffer.
+        /// </summary>
+        private void ClearTokenBuffer()
+        {
+            this.tokBuffer = new Tuple<bool, object>(false, null);
+        }
+
+        /// <summary>
+        /// Puch the character into the buffer.
+        /// </summary>
+        /// <param name="token">The token to push.</param>
+        private void PushTokenBuffer(object token)
+        {
+            this.tokBuffer = new Tuple<bool, object>(true, token);
         }
         #endregion
 
@@ -416,7 +504,7 @@ namespace SimpleScheme
             try
             {
                 ch = this.inp.Read();
-                this.charBuffer = new Tuple<bool, int>(true, ch);
+                this.PushCharBuffer(ch);
                 return ch;
             }
             catch (IOException ex)
@@ -433,9 +521,8 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private int ReadOrPop()
         {
-            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -1;
-            this.charBuffer = new Tuple<bool, int>(false, -1);
-            if (ch != -1)
+            int ch = this.GetCharFromBuffer();
+            if (ch != -2)
             {
                 return ch;
             }
@@ -457,9 +544,8 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private int ReadNextChar()
         {
-            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -1;
-            this.charBuffer = new Tuple<bool, int>(false, -1);
-            if (ch != -1)
+            int ch = this.GetCharFromBuffer();
+            if (ch != -2)
             {
                     ErrorHandlers.IoError("Read bypassed pushed char.");
             }
@@ -511,7 +597,7 @@ namespace SimpleScheme
                 return result;
             }
 
-            this.tokBuffer = new Tuple<bool, object>(true, token);
+            this.PushTokenBuffer(token);
             return Pair.Cons(this.Read(), this.ReadTail(true));
         }
         #endregion

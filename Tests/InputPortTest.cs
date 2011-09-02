@@ -137,7 +137,7 @@ namespace Tests
             this.TestNextToken("#d 10", 10.0);
             this.TestNextToken("#b10", 10.0);
             this.TestNextToken("#o10", 10.0);
-            this.TestNextToken("#x10", 10.0);
+            this.TestNextToken("#x10", 16);
             this.TestNextToken("#z10", 10.0);
             this.TestNextToken("#\\ ", " ");
             this.TestNextToken("#\\space", " ");
@@ -164,6 +164,14 @@ namespace Tests
                 InputPort_Accessor accessor = new InputPort_Accessor(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('s', accessor.parser.NextToken());
                 Assert.AreEqual("top", accessor.parser.NextToken());
+            }
+
+            using (StringReader reader = new StringReader("#\\stop#t"))
+            {
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, (Interpreter)this.interpreter);
+                Assert.AreEqual('s', accessor.parser.NextToken());
+                Assert.AreEqual("top", accessor.parser.NextToken());
+                Assert.AreEqual(true, accessor.parser.NextToken());
             }
 
             using (StringReader reader = new StringReader("#\\s top"))
@@ -299,6 +307,20 @@ namespace Tests
         /// <param name="input">The input string</param>
         /// <param name="expected">Expected value</param>
         private void TestNextToken(string input, double expected)
+        {
+            using (StringReader reader = new StringReader(input))
+            {
+                InputPort_Accessor accessor = new InputPort_Accessor(reader, (Interpreter)this.interpreter);
+                Assert.AreEqual(expected, accessor.parser.NextToken());
+            }
+        }
+
+        /// <summary>
+        /// Tests one case of NextToken when token in numeric
+        /// </summary>
+        /// <param name="input">The input string</param>
+        /// <param name="expected">Expected value</param>
+        private void TestNextToken(string input, int expected)
         {
             using (StringReader reader = new StringReader(input))
             {
