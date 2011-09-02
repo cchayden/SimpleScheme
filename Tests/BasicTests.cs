@@ -401,6 +401,25 @@ namespace Tests
             Thread.Sleep(350);
             this.Run("(#t #t #t #t #t)", "parallel continue all 2", "res");
             Assert.AreEqual(5, sleepCounter, "parallel continue all 3");
+
+            // verify parallel return value
+            sleepCounter = 0;
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallelreturn value",
+               @"
+                (begin
+                  (define res 0)
+                  (set! res (parallel (begin (sleep 100) 1)
+                                      (begin (sleep 100) 2)
+                                      (begin (sleep 100) 3))))
+            ");
+            this.Run("0", "parallel return value", "res");
+            Thread.Sleep(150);
+            this.Run("False", "parallel return value", 
+                @"(null? (and 
+                            (= (length res) 3) 
+                            (member 1 res) 
+                            (member 2 res) 
+                            (member 3 res)))");
         }
 
         /// <summary>

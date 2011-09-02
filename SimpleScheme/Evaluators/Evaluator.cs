@@ -488,9 +488,21 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The returned value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public Evaluator UpdateReturnValue(Obj exp)
+        public virtual Evaluator UpdateReturnValue(Obj exp)
         {
             this.returnedExpr = exp;
+            return this;
+        }
+        public virtual Evaluator UpdateReturnValue(Obj exp, Environment envir)
+        {
+            this.returnedExpr = exp;
+            this.returnedEnv = envir;
+            return this;
+        }
+        public virtual Evaluator UpdateReturnValue(Obj exp, ReturnType flag)
+        {
+            this.returnedExpr = exp;
+            this.returnFlag = flag;
             return this;
         }
 
@@ -525,23 +537,20 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="envir">The environment to save as the returned environment.</param>
-        /// <returns>The next evaluator, which is in the caller.</returns>
+        /// <returns>The next evaluator, which is the caller.</returns>
         public Evaluator ReturnFromStep(Obj exp, Environment envir)
         {
-            this.caller.returnedExpr = exp;
-            this.caller.returnedEnv = envir;
-            return this.caller;
+            return this.caller.UpdateReturnValue(exp, envir);
         }
 
         /// <summary>
         /// Return fram an evaluator, with the default environment
         /// </summary>
         /// <param name="exp">The value to save as the returned value.</param>
-        /// <returns>The next evaluator, which is in the caller.</returns>
+        /// <returns>The next evaluator, which is the caller.</returns>
         public Evaluator ReturnFromStep(Obj exp)
         {
-            this.caller.returnedExpr = exp;
-            return this.caller;
+            return this.caller.UpdateReturnValue(exp);
         }
 
         /// <summary>
@@ -549,12 +558,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="flag">The return type.</param>
-        /// <returns>The next evaluator, which is in the caller.</returns>
+        /// <returns>The next evaluator, which is the caller.</returns>
         public Evaluator ReturnFromStep(Obj exp, ReturnType flag)
         {
-            this.caller.returnedExpr = exp;
-            this.caller.returnFlag = flag;
-            return this.caller;
+            return this.caller.UpdateReturnValue(exp, flag);
         }
 
         /// <summary>
@@ -572,8 +579,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is in the caller.</returns>
         public Evaluator ReturnUndefined()
         {
-            this.caller.returnedExpr = new Undefined();
-            return this.caller;
+            return ReturnFromStep(new Undefined());
         }
         #endregion
 

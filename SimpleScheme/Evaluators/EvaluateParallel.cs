@@ -3,14 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Threading;
+    using System;
+    using System.Collections.Generic;
     using Obj = System.Object;
 
     /// <summary>
     /// Evaluate a sequence of exprs in parallel by evaluating each member.
-    /// Return Undefined.
-    /// This *could have been* defined to return the value of the final expr, but that could be unpredictable.
-    /// Another alternative could have been to return a list of all of the expr values
+    /// Return a list of the results, in the (reverse) order in which they are produced.
     /// </summary>
     public sealed class EvaluateParallel : Evaluator
     {
@@ -31,6 +30,11 @@ namespace SimpleScheme
         private readonly object lockObj = new object();
 
         /// <summary>
+        /// Accumulates the return values in a thread-safe way.
+        /// </summary>
+        private readonly Queue<Tuple<Obj, ReturnType>> returnQueue = new Queue<Tuple<Obj, ReturnType>>();
+
+        /// <summary>
         /// The count of evaluations that have been forked.
         /// A forked evaluation is one that has been suspended due to an async
         ///   operation, was caught, and execution continued in parallel.
@@ -47,6 +51,14 @@ namespace SimpleScheme
         /// The last needs to finish the parallel evaluation and continue.
         /// </summary>
         private int joined;
+
+        /// <summary>
+        /// Accumulate result here.
+        /// These are returned as the final result.
+        /// The results are accumulated as they are produced, and will not necessarily be 
+        ///   deterministic.
+        /// </summary>
+        private Obj accum;
         #endregion
 
         #region Constructor
@@ -60,7 +72,8 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.forked = this.joined = 0;
-            ContinueHere(EvalExprStep);
+            this.accum = EmptyList.Instance;
+            ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
         #endregion
@@ -75,6 +88,11 @@ namespace SimpleScheme
         /// <returns>The parallel evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
+            if (EmptyList.Is(expr))
+            {
+                return caller.ReturnFromStep(EmptyList.Instance);
+            }
+
             return new EvaluateParallel(expr, env, caller);
         }
         #endregion
@@ -93,33 +111,39 @@ namespace SimpleScheme
             copy.forked = copy.joined = 0;
             return copy;
         }
+
+        /// <summary>
+        /// Get a return value from EvaluateExpressionWithCatch, along with a flag.
+        /// Make sure it is done within a lock.
+        /// Store in a queue rather than in variables because this can be executed
+        ///   concurrently in several threads.
+        /// </summary>
+        /// <param name="exp">The value to save as the returned value.</param>
+        /// <param name="flag">The return flag.</param>
+        /// <returns>The next evaluator, which is the caller.</returns>
+        public override Evaluator UpdateReturnValue(Obj exp, ReturnType flag)
+        {
+            lock (this.lockObj)
+            {
+                this.returnQueue.Enqueue(new Tuple<object, ReturnType>(exp, flag));
+            }
+
+            return this;
+        }
         #endregion
 
         #region Private Methods
         /// <summary>
-        /// Evaluate expression step: see if we are done.
+        /// Initial step: see if we are done.
         /// If we are, return undefined.
-        /// If we are, evaluate the next expression.
+        /// If we are not, evaluate the first expression.
         /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
         ///   execution and halts the evaluation.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator.</returns>
-        private static Evaluator EvalExprStep(Evaluator s)
+        private static Evaluator InitialStep(Evaluator s)
         {
-            // Don't check for return because the only way to get here is from
-            //   LoopStep, and it already checked.
-            var step = (EvaluateParallel)s;
-            if (EmptyList.Is(s.Expr))
-            {
-                if (step.joined < step.forked)
-                {
-                    return new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(JoinStep));
-                }
-
-                return s.ReturnFromStep(new Undefined());
-            }
-
             return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
@@ -134,14 +158,28 @@ namespace SimpleScheme
         private static Evaluator LoopStep(Evaluator s)
         {
             var step = (EvaluateParallel)s;
-            Evaluator ar = step.CheckForAsyncReturn();
-            if (ar != null)
+            lock (step.lockObj)
             {
-                return ar;
-            }
+                step.FetchReturnValue();
+                Evaluator ar = step.CheckForAsyncReturn();
+                if (ar != null)
+                {
+                    return ar;
+                }
 
-            s.StepDownExpr();
-            return s.ContinueHere(EvalExprStep);
+                s.StepDownExpr();
+                if (EmptyList.Is(s.Expr))
+                {
+                    if (step.joined < step.forked)
+                    {
+                        return new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(JoinStep));
+                    }
+
+                    return s.ReturnFromStep(new Undefined());
+                }
+
+                return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            }
         }
 
         /// <summary>
@@ -155,20 +193,35 @@ namespace SimpleScheme
         private static Evaluator JoinStep(Evaluator s)
         {
             var step = (EvaluateParallel)s;
-            return step.CheckForAsyncReturn();
+            lock (step.lockObj)
+            {
+                step.FetchReturnValue();
+                return step.CheckForAsyncReturn();
+            }
         }
 
         /// <summary>
-        /// Check the return flag to see if it is a special async return value.
+        /// Get return value and flag from queue.
+        /// This MUST be called within the mutex.
+        /// </summary>
+        private void FetchReturnValue()
+        {
+            // Now it is safe to store return value and flag
+            Tuple<Obj, ReturnType> ret = this.returnQueue.Dequeue();
+            base.UpdateReturnValue(ret.Item1, ret.Item2);
+        }
+
+        /// <summary>
+        /// Check the return flag which has async result.
         /// These values are generated by EvaluateExpressionWithCatch and are used to communicate
         ///   a caught suspend and the subsequent final return.
-        /// If it is return after suspended, count as a join and either return ended or
-        ///   continue the evaluation.
+        /// If it is async return, count as a join and either return ended or
+        ///   return from the evaluation.
         /// If it is caught suspension, count as fork.
-        /// If this returns null, then processing continues.
-        /// Otherwise, the evaluator returns what this function returns.
-        /// Be careful with forked and joined, because this could be executing simultaneously on
-        ///   multiple threads.
+        /// If returns synchronously, then processing continues.
+        /// This must execute within a mutex.
+        /// Return accumulated results for all synchronous and asynchronous returns.
+        /// The returned result is nondeterministic -- it accumulates results as they are produced.
         /// </summary>
         /// <returns>The next step -- ended or a return.</returns>
         private Evaluator CheckForAsyncReturn()
@@ -177,20 +230,16 @@ namespace SimpleScheme
             {
                 case ReturnType.CaughtSuspended:
                     // caught an asynchronous suspension -- go on to the next expr
-                    Interlocked.Increment(ref this.forked);
+                    this.forked++;
                     break;
                 case ReturnType.AsynchronousReturn:
                     // return after suspension == end or return
-                    Interlocked.Increment(ref this.joined);
-                    bool returnNow;
-                    lock (this.lockObj)
-                    {
-                        returnNow = this.joined >= this.forked;
-                    }
-
-                    return returnNow ? this.ReturnFromStep(new Undefined()) : this.ReturnEnded();
+                    this.accum = Pair.Cons(this.ReturnedExpr, this.accum);
+                    this.joined++;
+                    return this.joined >= this.forked ? this.ReturnFromStep(this.accum) : this.ReturnEnded();
 
                 case ReturnType.SynchronousReturn:
+                    this.accum = Pair.Cons(this.ReturnedExpr, this.accum);
                     break;
             }
 
