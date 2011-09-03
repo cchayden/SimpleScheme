@@ -134,9 +134,7 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Initial step: see if we are done.
-        /// If we are, return undefined.
-        /// If we are not, evaluate the first expression.
+        /// Initial step: evaluate the first expression.
         /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
         ///   execution and halts the evaluation.
         /// </summary>
@@ -175,7 +173,7 @@ namespace SimpleScheme
                         return new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(JoinStep));
                     }
 
-                    return s.ReturnFromStep(new Undefined());
+                    return s.ReturnFromStep(step.accum);
                 }
 
                 return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));

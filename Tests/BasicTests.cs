@@ -1,4 +1,5 @@
-﻿// <copyright file="Basictests.cs" company="Charles Hayden">
+﻿#define OLD
+// <copyright file="Basictests.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace Tests
@@ -137,24 +138,26 @@ namespace Tests
         public void CallccTest()
         {
             this.Run("100", "call/cc", 
-                @"(define return 0)
-                  (define test (lambda ()
-                       (+ 1 (call/cc (lambda (cont) (set! return cont) 99)))))
-                  (test)"
+                @"(begin
+                    (define return 0)
+                    (define test (lambda ()
+                         (+ 1 (call/cc (lambda (cont) (set! return cont) 99)))))
+                    (test))"
             );
             this.Run("23", "call/cc return", "(return 22)");
             this.Run("34", "call/cc return", "(return 33)");
 
             this.Run("<undefined>", "call/cc seq", @"
-              (define return 0)
-              (define count 0)
-              (define x '(1 2 3 4 5 6 7 8))
-              (define show 
-                (lambda (x) 
-                  (set! count (+ 1 count))
-                  (if (= x 4)
-                       (call/cc (lambda (cont) (set! return cont) 4.5))
-                  x)))
+              (begin
+                (define return 0)
+                (define count 0)
+                (define x '(1 2 3 4 5 6 7 8))
+                (define show 
+                  (lambda (x) 
+                    (set! count (+ 1 count))
+                    (if (= x 4)
+                         (call/cc (lambda (cont) (set! return cont) 4.5))
+                    x))))
             ");
             this.Run("(1 2 3 4.5 5 6 7 8)", "call/cc seq map", "(map show x)");
             this.Run("8", "call/cc count", "count");
@@ -172,74 +175,84 @@ namespace Tests
         {
             // static method
             this.Run("True", "sync string equals", @"
+              (begin
                 (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
-                (str-equals 'xxx 'xxx)
+                (str-equals 'xxx 'xxx))
             ");
 
             this.Run("False", "sync string equals", @"
+              (begin
                 (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
-                (str-equals 'xxx 'yyy)
+                (str-equals 'xxx 'yyy))
             ");
 
             // member method -- no arg
             this.Run("xxx", "sync trim", @"
+              (begin
                 (define trim (method ""System.String"" ""Trim""))
-                (trim (string->symbol ""   xxx   ""))
+                (trim (string->symbol ""   xxx   "")))
             ");
 
             // member method with arg
             this.Run("xxx", "sync trim chars", @"
+              (begin
                 (define trim-chars (method ""System.String"" ""Trim"" ""char[]""))
-                (trim-chars 'yyyxxxyyy ""y"")
+                (trim-chars 'yyyxxxyyy ""y""))
             ");
 
             // property get
             this.Run("3", "sync length", @"
+              (begin
                 (define str-length (property-get ""System.String"" ""Length""))
-                (str-length 'xxx)
+                (str-length 'xxx))
             ");
 
             // new
             this.Run("System.Collections.ArrayList", "new array-list", @"
+              (begin
                 (define array-list (new ""System.Collections.ArrayList""))
-                array-list
+                array-list)
             ");
 
             // property get
             this.Run("0", "capacity array-list", @"
+              (begin
                 (define array-list (new ""System.Collections.ArrayList""))
                 (define capacity (property-get ""System.Collections.ArrayList"" ""Capacity""))
-                (capacity array-list)
+                (capacity array-list))
             ");
 
             // property-set
             this.Run("3", "capacity array-list", @"
+              (begin
                 (define array-list (new ""System.Collections.ArrayList""))
                 (define capacity (property-get ""System.Collections.ArrayList"" ""Capacity""))
                 (define capacity-set! (property-set ""System.Collections.ArrayList"" ""Capacity"" ""int""))
                 (capacity-set! array-list 3)
-                (capacity array-list)
+                (capacity array-list))
             ");
 
             // index get
             this.Run("1", "item array-list", @"
+              (begin
                 (define array-list (new ""System.Collections.ArrayList""))
                 (define add (method ""System.Collections.ArrayList"" ""Add"" ""object""))
                 (define item (index-get ""System.Collections.ArrayList"" ""int""))
                 (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""object"" ))
                 (add array-list 1)
-                (item array-list 0)
+                (item array-list 0))
             ");
 
             // index set
             this.Run("3", "item array-list", @"
+              (begin
                 (define array-list (new ""System.Collections.ArrayList""))
                 (define add (method ""System.Collections.ArrayList"" ""Add"" ""object""))
                 (define item (index-get ""System.Collections.ArrayList"" ""int""))
                 (define item-set! (index-set ""System.Collections.ArrayList"" ""int"" ""object"" ))
                 (add array-list 1)
                 (item-set! array-list 0 3)
-                (item array-list 0)
+                (item array-list 0))
             ");
         }
 
@@ -251,14 +264,16 @@ namespace Tests
         {
             // define constructor
             this.Run("<clr-constructor>", "define string constructor", @"
-                (define str-ctor (constructor ""string"" ""char[]""))
-                str-ctor
+                (begin
+                  (define str-ctor (constructor ""string"" ""char[]""))
+                  str-ctor)
             ");
 
             // use constructor
             this.Run("xxx", "construct string", @"
-                (define str-ctor (constructor ""string"" ""char[]""))
-                (str-ctor ""xxx"")
+                (begin
+                  (define str-ctor (constructor ""string"" ""char[]""))
+                  (str-ctor ""xxx""))
             ");
       }
 
@@ -271,26 +286,43 @@ namespace Tests
             // sync sleep
             sleepCounter = 0;
             this.Run("1", "sync sleep",
-               @"
-                (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
-                (define counter 0)
-                (define (delay-count x) (delay x) (set! counter (+ 1 counter)))
-                (delay-count 10)
-                counter
+               @"(begin
+                  (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
+                  (define counter 0)
+                  (define (delay-count x) (delay x) (set! counter (+ 1 counter)))
+                  (delay-count 10)
+                counter)
             ");
             Assert.AreEqual(1, sleepCounter, "sync");
 
             // async sleep
             sleepCounter = 0;
             this.Run("SimpleScheme.SuspendedEvaluator", "async sleep",
-               @"
-                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (async-sleep (create-async) 10)
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (async-sleep (create-async) 10))
             ");
             Assert.AreEqual(0, sleepCounter, "async before");
             Thread.Sleep(20);
             Assert.AreEqual(1, sleepCounter, "async after");
+        }
+
+        /// <summary>
+        /// A test for async interface to interpreter
+        /// </summary>
+        [TestMethod]
+        public void BeginEndTest()
+        {
+            // async sleep
+            sleepCounter = 0;
+            this.RunAsync("10", "begin/end async sleep",
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (async-sleep (create-async) 10))
+            ");
+            Assert.AreEqual(1, sleepCounter, "begin/end async after");
         }
 
         /// <summary>
@@ -299,16 +331,16 @@ namespace Tests
         [TestMethod]
         public void ParallelTest()
         {
-            this.Run("<undefined>", "parallel simple", "(parallel 1)");
+            this.Run("(1)", "parallel simple", "(parallel 1)");
 
             // make sure non-async calls work sequentially);
             this.Run("3", "parallel sequential",
-               @"
-                (define result 0)
-                (parallel (if (= result 0) (set! result 1))
-                          (if (= result 1) (set! result 2))
-                          (if (= result 2) (set! result 3)))
-                result
+               @"(begin
+                  (define result 0)
+                  (parallel (if (= result 0) (set! result 1))
+                            (if (= result 1) (set! result 2))
+                            (if (= result 2) (set! result 3)))
+                  result)
             ");
 
             // all three sleep simultaneously
@@ -316,15 +348,15 @@ namespace Tests
             // then wait and verify that all have completed
             sleepCounter = 0;
             this.Run("SimpleScheme.SuspendedEvaluator", "parallel concurrent",
-               @"
-                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define sleep-caller (create-async))
-                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (define (sleep duration) (async-sleep sleep-caller duration))
-                (define count 0)
-                (parallel (begin (sleep 100) (increment! count))
-                          (begin (sleep 100) (increment! count))
-                          (begin (sleep 100) (increment! count)))
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define sleep-caller (create-async))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define (sleep duration) (async-sleep sleep-caller duration))
+                  (define count 0)
+                  (parallel (begin (sleep 100) (increment! count))
+                            (begin (sleep 100) (increment! count))
+                            (begin (sleep 100) (increment! count))))
             ");
             Assert.AreEqual(0, sleepCounter);
             this.Run("0", "parallel concurrent", "count");
@@ -341,36 +373,36 @@ namespace Tests
             // it needs to halt after the parallel sleep, not continue
             sleepCounter = 0;
             this.Run("notyet", "parallel continue",
-               @"
-                (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
-                (define here #f)
-                (define result 0)
-                (parallel (begin (sleep 100))
-                          (begin (delay 200) (set! result (if here 'already 'notyet)))
-                          (begin (set! here #t)))
-                result
+               @"(begin
+                  (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
+                  (define here #f)
+                  (define result 0)
+                  (parallel (begin (sleep 100))
+                            (begin (delay 200) (set! result (if here 'already 'notyet)))
+                            (begin (set! here #t)))
+                  result)
             ");
             Assert.AreEqual(2, sleepCounter, "parallel continue ");
 
             // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
             this.Run("SimpleScheme.SuspendedEvaluator", "parallel continue all 1",
-               @"
-                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define sleep-caller (create-async))
-                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (define (sleep duration) (async-sleep sleep-caller duration))
-                (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define sleep-caller (create-async))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define (sleep duration) (async-sleep sleep-caller duration))
+                  (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
 
-                (define res 0)
-                (begin
-                  (define res1 #f)
-                  (define res2 #f)
-                  (define res3 #f)
-                  (parallel (begin (sleep 100) (set! res1 #t))
-                            (begin (sleep 100) (set! res2 #t))
-                            (begin (sleep 100) (set! res3 #t)))
-                  (set! res (list res1 res2 res3)))
+                  (define res 0)
+                  (begin
+                    (define res1 #f)
+                    (define res2 #f)
+                    (define res3 #f)
+                    (parallel (begin (sleep 100) (set! res1 #t))
+                              (begin (sleep 100) (set! res2 #t))
+                              (begin (sleep 100) (set! res3 #t)))
+                    (set! res (list res1 res2 res3))))
             ");
             Assert.AreEqual(0, sleepCounter, "parallel continue all 1");
             this.Run("0", "parallel continue all 2", "res");
@@ -381,20 +413,20 @@ namespace Tests
             // verify that all exprs in a parallel statement continue after the async expr is finished
             sleepCounter = 0;
             this.Run("SimpleScheme.SuspendedEvaluator", "parallel continue all 1",
-               @"
-                (define res 0)
-                (begin
-                  (define res1 #f)
-                  (define res2 #f)
-                  (define res3 #f)
-                  (define res4 #f)
-                  (define res5 #f)
-                  (parallel (begin (sleep 100) (set! res1 #t))
-                            (begin (sleep 100) (set! res2 #t))
-                            (begin (sleep 100) (set! res3 #t)
-                                   (sleep 100) (set! res4 #t)
-                                   (sleep 100) (set! res5 #t)))
-                  (set! res (list res1 res2 res3 res4 res5)))
+               @"(begin
+                  (define res 0)
+                  (begin
+                    (define res1 #f)
+                    (define res2 #f)
+                    (define res3 #f)
+                    (define res4 #f)
+                    (define res5 #f)
+                    (parallel (begin (sleep 100) (set! res1 #t))
+                              (begin (sleep 100) (set! res2 #t))
+                              (begin (sleep 100) (set! res3 #t)
+                                     (sleep 100) (set! res4 #t)
+                                     (sleep 100) (set! res5 #t)))
+                    (set! res (list res1 res2 res3 res4 res5))))
             ");
             Assert.AreEqual(0, sleepCounter, "parallel continue all 1");
             this.Run("0", "parallel continue all 2", "res");
@@ -404,7 +436,7 @@ namespace Tests
 
             // verify parallel return value
             sleepCounter = 0;
-            this.Run("SimpleScheme.SuspendedEvaluator", "parallelreturn value",
+            this.Run("SimpleScheme.SuspendedEvaluator", "parallel return value",
                @"
                 (begin
                   (define res 0)
@@ -423,6 +455,30 @@ namespace Tests
         }
 
         /// <summary>
+        /// A test for parallel primitive with large number of clauses
+        /// </summary>
+        [TestMethod]
+        public void LargeParallelTest()
+        {
+            // verify large parallel
+            sleepCounter = 0;
+            this.RunAsync("500", "large parallel",
+               @"(begin
+                   (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                   (define sleep-caller (create-async))
+                   (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                   (define (sleep duration) (async-sleep sleep-caller duration))
+                   (define res 0)
+                   (define (build-par n par) 
+                     (if (= n 0) par
+                       (cons (list 'begin '(sleep 100) n)
+                           (build-par (- n 1) par))))
+                   (define exp (cons 'parallel (build-par 500 '())))
+                   (length (eval exp)))
+            ");
+        }
+
+        /// <summary>
         /// A test for parallel primitive with call/cc
         /// </summary>
         [TestMethod]
@@ -433,21 +489,21 @@ namespace Tests
             // verify continuation does not hang and executes the right number of times in each leg
             sleepCounter = 0;
             this.Run("SimpleScheme.SuspendedEvaluator", "parallel continuation",
-               @"
-                (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
-                (define sleep-caller (create-async))
-                (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
-                (define (sleep duration) (async-sleep sleep-caller duration))
-                (define count1 0)
-                (define count2 0)
-                (define count3 0)
-                (define return 0)
-                (define done 0)
-                (begin
-                  (parallel (begin (sleep 100) (increment! count1))
-                            (begin (call/cc (lambda (cont) (set! return cont) 0)) (sleep 100) (increment! count2))
-                            (begin (sleep 100) (increment! count3)))
-                  (increment! done))
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define sleep-caller (create-async))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define (sleep duration) (async-sleep sleep-caller duration))
+                  (define count1 0)
+                  (define count2 0)
+                  (define count3 0)
+                  (define return 0)
+                  (define done 0)
+                  (begin
+                    (parallel (begin (sleep 100) (increment! count1))
+                              (begin (call/cc (lambda (cont) (set! return cont) 0)) (sleep 100) (increment! count2))
+                              (begin (sleep 100) (increment! count3)))
+                    (increment! done)))
             ");
             Assert.AreEqual(0, sleepCounter);
             this.Run("(0 0 0 0)", "parallel continuation", "(list count1 count2 count3 done)");
@@ -480,21 +536,34 @@ namespace Tests
         /// <returns>The value of the last expression.</returns>
         private Obj ReadAndEvaluate(string str) 
         {
-            using (StringReader reader = new StringReader(str))
-            {
-                InputPort inp = new InputPort(reader, (Interpreter)this.interpreter);
-                Obj last = EmptyList.Instance;
-                while (true)
-                {
-                    Obj x;
-                    if (InputPort.IsEof(x = inp.Read()))
-                    {
-                        return last;
-                    }
+            return this.interpreter.ReadEval(str);
+        }
 
-                    last = this.interpreter.Eval(x);
-                }
-            }
+        /// <summary>
+        /// Run a test asynchronously and check the result.
+        /// </summary>
+        /// <param name="expected">The expected result.</param>
+        /// <param name="label">The label to display.</param>
+        /// <param name="expr">The expression to evaluate.</param>
+        private void RunAsync(string expected, string label, string expr)
+        {
+            Obj res = this.ReadAndEvaluateAsync(expr);
+            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
+            Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
+            Assert.AreEqual(expected, actual, "Failed " + this.section);
+        }
+
+        /// <summary>
+        /// Read a string and evaluate it asynchronously.
+        /// </summary>
+        /// <param name="str">The string to read.</param>
+        /// <returns>The value of the last expression.</returns>
+        private Obj ReadAndEvaluateAsync(string str)
+        {
+            Obj expr = this.interpreter.Read(str);
+            IAsyncResult res =  this.interpreter.BeginEval(expr, null, null);
+            res.AsyncWaitHandle.WaitOne();
+            return this.interpreter.EndEval(res);
         }
     }
 }
