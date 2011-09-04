@@ -167,12 +167,15 @@ namespace SimpleScheme
                         step.forked++;
                         break;
                     case ReturnType.AsynchronousReturn:
-                        // return after suspension == end or return
+                        // return after suspension
+                        // Record return result and either end the thread or 
+                        //  return from the whole thing.
                         step.accum = Pair.Cons(step.ReturnedExpr, step.accum);
                         step.joined++;
-                        return step.joined >= step.forked ? step.ReturnFromStep(step.accum) : step.ReturnEnded();
+                        return (step.joined < step.forked || !EmptyList.Is(s.Expr)) ? step.ReturnEnded() : step.ReturnFromStep(step.accum);
 
                     case ReturnType.SynchronousReturn:
+                        // synchronous return
                         step.accum = Pair.Cons(step.ReturnedExpr, step.accum);
                         break;
                 }
@@ -180,12 +183,11 @@ namespace SimpleScheme
                 s.StepDownExpr();
                 if (EmptyList.Is(s.Expr))
                 {
-                    if (step.joined < step.forked)
-                    {
-                        return new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(LoopStep));
-                    }
-
-                    return s.ReturnFromStep(step.accum);
+                    // finished with expressions -- either suspend (if there is more pending) or
+                    //   return from the whole thing
+                    return step.joined < step.forked ? 
+                        new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(LoopStep)) : 
+                        s.ReturnFromStep(step.accum);
                 }
 
                 return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));

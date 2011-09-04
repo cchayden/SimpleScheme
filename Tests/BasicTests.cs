@@ -374,6 +374,10 @@ namespace Tests
             sleepCounter = 0;
             this.Run("notyet", "parallel continue",
                @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define sleep-caller (create-async))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define (sleep duration) (async-sleep sleep-caller duration))
                   (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
                   (define here #f)
                   (define result 0)
