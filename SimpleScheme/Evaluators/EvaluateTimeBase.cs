@@ -80,7 +80,6 @@ namespace SimpleScheme
             if (step.i < step.counter)
             {
                   return s.ContinueHere(Step1);
-//                return step;
             }
 
             step.stopwatch.Stop();

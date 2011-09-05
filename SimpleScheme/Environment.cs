@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
 
@@ -43,6 +44,8 @@ namespace SimpleScheme
         /// The lexically enclosing environment.
         /// </summary>
         private readonly Environment lexicalParent;
+
+        private readonly object lockObj = new object();
 
         /// <summary>
         /// The counter id.
@@ -174,7 +177,7 @@ namespace SimpleScheme
             if (Symbol.Is(var))
             {
                 string symbol = Symbol.As(var);
-                lock (this)
+                lock (lockObj)
                 {
                     this.symbolTable.Add(symbol, val);
 
@@ -203,7 +206,7 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            lock (this)
+            lock (lockObj)
             {
                 while (env != Empty)
                 {
@@ -242,7 +245,7 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            lock (this)
+            lock (lockObj)
             {
                 while (env != Empty)
                 {
@@ -261,8 +264,6 @@ namespace SimpleScheme
 
         /// <summary>
         /// Increment the variable.
-        /// This should be atomic.
-        /// TODO is this atomic?
         /// </summary>
         /// <param name="var">The symbol naming the variable to increment.</param>
         /// <returns>The incremented value.</returns>
@@ -277,7 +278,7 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            lock (this)
+            lock (lockObj)
             {
                 while (env != Empty)
                 {
@@ -306,7 +307,7 @@ namespace SimpleScheme
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
-            lock (this)
+            lock (lockObj)
             {
                 while (env != Empty && levels > 0)
                 {
@@ -345,6 +346,8 @@ namespace SimpleScheme
         #region Private Class
         /// <summary>
         /// The symbol table for the environment.
+        /// This is always accessed within a lock, so we can use Dictionary instead of
+        ///   the (presumably) more expensive ConcurrentDictionary.
         /// This is the single most expensive part of the code.
         /// Is there a way to make this faster?
         /// Most symbol tables are small, but the base environment with the primitives is large.
@@ -355,7 +358,7 @@ namespace SimpleScheme
             /// <summary>
             /// Stores symbols and their values.
             /// </summary>
-            private readonly ConcurrentDictionary<string, Obj> symbolTable;
+            private readonly Dictionary<string, Obj> symbolTable;
 
             /// <summary>
             /// Initializes a new instance of the Environment.SymbolTable class.
@@ -363,7 +366,7 @@ namespace SimpleScheme
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
             public SymbolTable(int count)
             {
-                this.symbolTable = new ConcurrentDictionary<string, Obj>(1, count);
+                this.symbolTable = new Dictionary<string, Obj>(count);
             }
 
             /// <summary>
@@ -373,7 +376,7 @@ namespace SimpleScheme
             /// <param name="vals">The list of values.</param>
             public SymbolTable(Obj symbols, Obj vals)
             {
-                this.symbolTable = new ConcurrentDictionary<string, Obj>(1, List.Length(symbols));
+                this.symbolTable = new Dictionary<string, Obj>(List.Length(symbols));
                 this.AddList(symbols, vals);
             }
 
@@ -395,14 +398,11 @@ namespace SimpleScheme
             /// <param name="val">The value.</param>
             public void Add(string symbol, Obj val)
             {
-                this.symbolTable.AddOrUpdate(symbol, val, (key, existingValue) => val);
+                this.symbolTable[symbol] = val;
             }
 
             /// <summary>
             /// Update a value in the symbol table.
-            /// This is not really thread safe -- there is no operation on the symbol table to update only
-            ///   if found.  But since items are never removed, some concurrent action that defines the symbol
-            ///   can have its value overwritten.
             /// </summary>
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
@@ -420,8 +420,6 @@ namespace SimpleScheme
 
             /// <summary>
             /// Increment the value for a symbol.
-            /// This is not really thread safe, since there is no operation on symbolTable to update only
-            ///   if the value is present.  Since items are never removed, AddOrUpdate can never add, only update.
             /// </summary>
             /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
             /// <param name="val">The new value.</param>
@@ -430,22 +428,18 @@ namespace SimpleScheme
             {
                 if (!this.symbolTable.TryGetValue(symbol, out val))
                 {
+                    // If not found, it is not an error, just keep looking.
                     return false;
                 }
 
-                val = this.symbolTable.AddOrUpdate(
-                    symbol,
-                    0,
-                    (key, existingValue) =>
-                        {
-                            if (!Number.Is(existingValue))
-                            {
-                                ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(existingValue));
-                                return 0;
-                            }
+                if (!Number.Is(val))
+                {
+                    // If it is found but is not a number, then that is an error.
+                    ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
+                    return false;
+                }
 
-                            return Number.As(existingValue) + 1;
-                        });
+                this.symbolTable[symbol] = Number.As(val) + 1;
                 return true;
             }
 

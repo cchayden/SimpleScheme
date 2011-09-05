@@ -455,6 +455,7 @@ namespace SimpleScheme
         /// <summary>
         /// Continue executing in the existing evaluator, but step
         ///   one element down the list.
+        /// If the expression is an empty list, then this is a no-op.
         /// </summary>
         /// <returns>The next evaluator, which is this evaluator.</returns>
         public Evaluator StepDownExpr()
