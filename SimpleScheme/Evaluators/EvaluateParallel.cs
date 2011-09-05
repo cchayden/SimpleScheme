@@ -107,9 +107,12 @@ namespace SimpleScheme
         /// <returns>The evaluator copy.</returns>
         public override Evaluator Clone()
         {
-            var copy = (EvaluateParallel)this.MemberwiseClone();
-            copy.forked = copy.joined = 0;
-            return copy;
+            lock (this.lockObj)
+            {
+                var copy = (EvaluateParallel)this.MemberwiseClone();
+                copy.forked = copy.joined = 0;
+                return copy;
+            }
         }
 
         /// <summary>
