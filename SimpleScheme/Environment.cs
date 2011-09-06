@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Text;
     using Obj = System.Object;
@@ -44,8 +43,6 @@ namespace SimpleScheme
         /// The lexically enclosing environment.
         /// </summary>
         private readonly Environment lexicalParent;
-
-        private readonly object lockObj = new object();
 
         /// <summary>
         /// The counter id.
@@ -116,7 +113,7 @@ namespace SimpleScheme
         /// </summary>
         public Environment LexicalParent
         {
-            get { return lexicalParent; }
+            get { return this.lexicalParent; }
         }
         #endregion
 
@@ -177,14 +174,11 @@ namespace SimpleScheme
             if (Symbol.Is(var))
             {
                 string symbol = Symbol.As(var);
-                lock (lockObj)
-                {
-                    this.symbolTable.Add(symbol, val);
+                this.symbolTable.Add(symbol, val);
 
-                    if (Procedure.Is(val))
-                    {
-                        Procedure.As(val).SetName(var.ToString());
-                    }
+                if (Procedure.Is(val))
+                {
+                    Procedure.As(val).SetName(var.ToString());
                 }
 
                 return;
@@ -206,19 +200,16 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            lock (lockObj)
+            while (env != Empty)
             {
-                while (env != Empty)
+                Obj val;
+                if (env.symbolTable.Lookup(symbol, out val))
                 {
-                    Obj val;
-                    if (env.symbolTable.Lookup(symbol, out val))
-                    {
-                        return val;
-                    }
-
-                    // if we have not found anything yet, look in the parent
-                    env = env.lexicalParent;
+                    return val;
                 }
+
+                // if we have not found anything yet, look in the parent
+                env = env.lexicalParent;
             }
 
             return ErrorHandlers.SemanticError("Unbound variable: " + symbol);
@@ -245,18 +236,15 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            lock (lockObj)
+            while (env != Empty)
             {
-                while (env != Empty)
+                if (env.symbolTable.Update(symbol, val))
                 {
-                    if (env.symbolTable.Update(symbol, val))
-                    {
-                        return val;
-                    }
-
-                    // if we have not found anything yet, look in the parent
-                    env = env.lexicalParent;
+                    return val;
                 }
+
+                // if we have not found anything yet, look in the parent
+                env = env.lexicalParent;
             }
 
             return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
@@ -278,19 +266,16 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            lock (lockObj)
+            while (env != Empty)
             {
-                while (env != Empty)
+                Obj val;
+                if (env.symbolTable.Increment(symbol, out val))
                 {
-                    Obj val;
-                    if (env.symbolTable.Increment(symbol, out val))
-                    {
-                        return val;
-                    }
-
-                    // if we have not found anything yet, look in the parent
-                    env = env.lexicalParent;
+                    return val;
                 }
+
+                // if we have not found anything yet, look in the parent
+                env = env.lexicalParent;
             }
 
             return ErrorHandlers.SemanticError("Unbound variable in set!: " + symbol);
@@ -307,19 +292,16 @@ namespace SimpleScheme
         {
             StringBuilder sb = new StringBuilder();
             Environment env = this;
-            lock (lockObj)
+            while (env != Empty && levels > 0)
             {
-                while (env != Empty && levels > 0)
+                env.symbolTable.Dump(indent, sb);
+                levels--;
+                if (levels > 0)
                 {
-                    env.symbolTable.Dump(indent, sb);
-                    levels--;
-                    if (levels > 0)
-                    {
-                        sb.Append("-----\n");
-                    }
-
-                    env = env.lexicalParent;
+                    sb.Append("-----\n");
                 }
+
+                env = env.lexicalParent;
             }
 
             return sb.ToString();
@@ -361,12 +343,19 @@ namespace SimpleScheme
             private readonly Dictionary<string, Obj> symbolTable;
 
             /// <summary>
+            /// Lock the symbol table before using -- may be concurrent.
+            /// Alternative: use ConcurrentDictionary.
+            /// </summary>
+            private readonly object lockObj;
+
+            /// <summary>
             /// Initializes a new instance of the Environment.SymbolTable class.
             /// </summary>
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
             public SymbolTable(int count)
             {
                 this.symbolTable = new Dictionary<string, Obj>(count);
+                this.lockObj = new object();
             }
 
             /// <summary>
@@ -377,6 +366,7 @@ namespace SimpleScheme
             public SymbolTable(Obj symbols, Obj vals)
             {
                 this.symbolTable = new Dictionary<string, Obj>(List.Length(symbols));
+                this.lockObj = new object();
                 this.AddList(symbols, vals);
             }
 
@@ -388,7 +378,10 @@ namespace SimpleScheme
             /// <returns>True if found in the symbol table, false if not found.</returns>
             public bool Lookup(string symbol, out Obj val)
             {
-                return this.symbolTable.TryGetValue(symbol, out val);
+                lock (this.lockObj)
+                {
+                    return this.symbolTable.TryGetValue(symbol, out val);
+                }
             }
 
             /// <summary>
@@ -398,7 +391,10 @@ namespace SimpleScheme
             /// <param name="val">The value.</param>
             public void Add(string symbol, Obj val)
             {
-                this.symbolTable[symbol] = val;
+                lock (this.lockObj)
+                {
+                    this.symbolTable[symbol] = val;
+                }
             }
 
             /// <summary>
@@ -409,13 +405,16 @@ namespace SimpleScheme
             /// <returns>True if the value was found and stored, false if not found.</returns>
             public bool Update(string symbol, Obj val)
             {
-                if (!this.symbolTable.ContainsKey(symbol))
+                lock (this.lockObj)
                 {
-                    return false;
-                }
+                    if (!this.symbolTable.ContainsKey(symbol))
+                    {
+                        return false;
+                    }
 
-                this.symbolTable[symbol] = val;
-                return true;
+                    this.symbolTable[symbol] = val;
+                    return true;
+                }
             }
 
             /// <summary>
@@ -426,21 +425,24 @@ namespace SimpleScheme
             /// <returns>True if the symbol was found (and incremented), false otherwise.</returns>
             public bool Increment(string symbol, out Obj val)
             {
-                if (!this.symbolTable.TryGetValue(symbol, out val))
+                lock (this.lockObj)
                 {
-                    // If not found, it is not an error, just keep looking.
-                    return false;
-                }
+                    if (!this.symbolTable.TryGetValue(symbol, out val))
+                    {
+                        // If not found, it is not an error, just keep looking.
+                        return false;
+                    }
 
-                if (!Number.Is(val))
-                {
-                    // If it is found but is not a number, then that is an error.
-                    ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
-                    return false;
-                }
+                    if (!Number.Is(val))
+                    {
+                        // If it is found but is not a number, then that is an error.
+                        ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
+                        return false;
+                    }
 
-                this.symbolTable[symbol] = Number.As(val) + 1;
-                return true;
+                    this.symbolTable[symbol] = Number.As(val) + 1;
+                    return true;
+                }
             }
 
             /// <summary>
@@ -450,10 +452,13 @@ namespace SimpleScheme
             /// <param name="sb">A string builder to write the dump into.</param>
             public void Dump(int indent, StringBuilder sb)
             {
-                string initial = new string(' ', indent);
-                foreach (var key in this.symbolTable.Keys)
+                lock (this.lockObj)
                 {
-                    sb.AppendFormat("{0}{1}: {2}\n", initial, key, this.symbolTable[key]);
+                    string initial = new string(' ', indent);
+                    foreach (var key in this.symbolTable.Keys)
+                    {
+                        sb.AppendFormat("{0}{1}: {2}\n", initial, key, this.symbolTable[key]);
+                    }
                 }
             }
 
