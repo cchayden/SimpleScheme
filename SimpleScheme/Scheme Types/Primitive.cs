@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
@@ -27,6 +28,11 @@ namespace SimpleScheme
         /// Tests arguments to see if they have the expected type.
         /// </summary>
         private static readonly ArgTypeTester tester = new ArgTypeTester();
+
+        /// <summary>
+        /// Maps the argument type checking values to a message.
+        /// </summary>
+        private static readonly Dictionary<ArgType, string> valueMessage;
         #endregion
 
         #region Fields
@@ -46,21 +52,64 @@ namespace SimpleScheme
         /// The argument types.
         /// Arguments are checked against these types, if they are supplied.
         /// </summary>
-        private readonly ValueType[] argTypes;
+        private readonly ArgType[] argTypes;
+
+        /// <summary>
+        /// The primitive description.
+        /// </summary>
+        private readonly string[] description;
         #endregion
 
-        #region Constructor
+        #region Constructors
+
+        /// <summary>
+        /// Initializes static members of the <see cref="Primitive"/> class.
+        /// </summary>
+        static Primitive()
+        {
+            valueMessage = new Dictionary<ArgType, string>
+                {
+                    { ArgType.Obj, "Object" },
+                    { ArgType.Pair, "Pair" },
+                    { ArgType.PairOrEmpty, "Pair or EmptyList" },
+                    { ArgType.PairOrSymbol, "Pair or Symbol" },
+                    { ArgType.Number, "Number" },
+                    { ArgType.Char, "Character" },
+                    { ArgType.CharOrEmpty, "Character or EmptyList" },
+                    { ArgType.String, "SchemeString" },
+                    { ArgType.StringOrSymbol, "SchemeString or Symbol" },
+                    { ArgType.Proc, "Procedure" },
+                    { ArgType.Vector, "Vector" },
+                    { ArgType.Symbol, "Symbol" },
+                    { ArgType.Boolean, "SchemeBoolean" },
+                    { ArgType.InputPort, "InputPort" },
+                    { ArgType.OutputPort, "OutputPort" },
+                    { ArgType.EmptyList, "EmptyList" },
+                    { ArgType.AsynchronousClrProcedure, "AsynchronousClrProcedure" },
+                    { ArgType.SynchronousClrProcedure, "SynchronousClrProcedure" },
+                    { ArgType.ClrConstructor, "ClrConstructor" },
+                    { ArgType.ClrObject, "ClrObject" },
+                    { ArgType.Continuation, "Continuation" },
+                    { ArgType.Lambda, "Lambda" },
+                    { ArgType.Macro, "Macro" },
+                    { ArgType.Eof, "Eof" },
+                    { ArgType.Undefined, "Undefined" }
+                };
+        }
+
         /// <summary>
         /// Initializes a new instance of the Primitive class.
         /// </summary>
         /// <param name="operation">The code to carry out the operation.</param>
+        /// <param name="description">The primitive description.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
-        public Primitive(Func<SchemeObject, Evaluator, SchemeObject> operation, int minArgs, int maxArgs, ValueType[] argTypes) :
+        public Primitive(Func<SchemeObject, Evaluator, SchemeObject> operation, string[] description, int minArgs, int maxArgs, ArgType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
+            this.description = description;
             this.argTypes = argTypes;
             if (maxArgs > 0 && argTypes.Length == 0)
             {
@@ -68,6 +117,144 @@ namespace SimpleScheme
             }
         }
         #endregion
+
+        /// <summary>
+        /// This enum contains all the types that values can have.  It also contains
+        /// a few combination types that are used in checking arguments to
+        /// primitives.
+        /// </summary>
+        public enum ArgType
+        {
+            /// <summary>
+            /// Any object is required.
+            /// Must be first.
+            /// </summary>
+            Obj,
+
+            /// <summary>
+            /// A pair is required..
+            /// </summary>
+            Pair,
+
+            /// <summary>
+            /// A pair or the empty object is required.
+            /// </summary>
+            PairOrEmpty,
+
+            /// <summary>
+            /// A pair or a symbol is required.
+            /// </summary>
+            PairOrSymbol,
+
+            /// <summary>
+            /// A number is required.
+            /// </summary>
+            Number,
+
+            /// <summary>
+            /// A character is required.
+            /// </summary>
+            Char,
+
+            /// <summary>
+            /// A character or the empty object is required.
+            /// </summary>
+            CharOrEmpty,
+
+            /// <summary>
+            /// A string is required.
+            /// </summary>
+            String,
+
+            /// <summary>
+            /// A string or symbol is required.
+            /// </summary>
+            StringOrSymbol,
+
+            /// <summary>
+            /// A procedure is required.  This includes macros and primitives, as well
+            /// as lambdas.
+            /// </summary>
+            Proc,
+
+            /// <summary>
+            /// A vector is required.
+            /// </summary>
+            Vector,
+
+            /// <summary>
+            /// A symbol is required.
+            /// </summary>
+            Symbol,
+
+            /// <summary>
+            /// A boolean is required.
+            /// </summary>
+            Boolean,
+
+            /// <summary>
+            /// An input port is required.
+            /// </summary>
+            InputPort,
+
+            /// <summary>
+            /// An output port is required.
+            /// </summary>
+            OutputPort,
+
+            //// The following are not used as primitive arguments.
+
+            /// <summary>
+            /// The empty list.
+            /// </summary>
+            EmptyList,
+
+            /// <summary>
+            /// An asynchronous clr procedure.
+            /// </summary>
+            AsynchronousClrProcedure,
+
+            /// <summary>
+            /// A synchronous clr procedure.
+            /// </summary>
+            SynchronousClrProcedure,
+
+            /// <summary>
+            /// A CLR constructor.
+            /// </summary>
+            ClrConstructor,
+
+            /// <summary>
+            /// A CLR object, created by a constructor
+            /// </summary>
+            ClrObject,
+
+            /// <summary>
+            /// A continuation.
+            /// </summary>
+            Continuation,
+
+            /// <summary>
+            /// A lambda.
+            /// </summary>
+            Lambda,
+
+            /// <summary>
+            /// A macro
+            /// </summary>
+            Macro,
+
+            /// <summary>
+            /// Eof object
+            /// </summary>
+            Eof,
+
+            /// <summary>
+            /// The undefined object.
+            /// Must be last.
+            /// </summary>
+            Undefined
+        }
 
         #region Public Methods
         /// <summary>
@@ -87,6 +274,17 @@ namespace SimpleScheme
         public override string ToString()
         {
             return "{" + this.ProcedureName + "}";
+        }
+
+        /// <summary>
+        /// Describe the primitive by returning its description fields.
+        /// </summary>
+        /// <returns>The primitive description.</returns>
+        public override string Describe()
+        {
+            var sb = new StringBuilder();
+            Array.ForEach(this.description, str => sb.AppendLine(str));
+            return sb.ToString();
         }
 
         /// <summary>
@@ -156,7 +354,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="arg">An argument passed to the primitive.</param>
         /// <param name="argType">The expected argument type.</param>
-        private void CheckArgType(SchemeObject arg, ValueType argType)
+        private void CheckArgType(SchemeObject arg, ArgType argType)
         {
             if (tester.Ok(arg, argType))
             {
@@ -164,11 +362,11 @@ namespace SimpleScheme
             }
 
             var msg = string.Format(
-                @"Primitive ""{0}"" invalid argument ""{1}"" type: {2} expected: {3}", 
+                @"Primitive ""{0}"" invalid argument ""{1}"". Got type: {2}. Expected type: {3}", 
                 this.ProcedureName, 
                 arg.ToString(true),
-                arg.TypeName,
-                argType);
+                arg.GetType().Name,
+                valueMessage[argType]);
             ErrorHandlers.SemanticError(msg);
         }
         #endregion
@@ -189,22 +387,22 @@ namespace SimpleScheme
             /// </summary>
             public ArgTypeTester()
             {
-                this.argPredicates = new Predicate<SchemeObject>[(int)ValueType.Undefined];
-                this.Set(ValueType.Obj, arg => true);
-                this.Set(ValueType.Pair, arg => arg is Pair);
-                this.Set(ValueType.PairOrEmpty, arg => arg is Pair || arg is EmptyList);
-                this.Set(ValueType.PairOrSymbol, arg => arg is Pair || arg is Symbol);
-                this.Set(ValueType.Number, arg => arg is Number);
-                this.Set(ValueType.Char, arg => arg is Character);
-                this.Set(ValueType.CharOrEmpty, arg => arg is Character || arg is EmptyList);
-                this.Set(ValueType.String, arg => arg is SchemeString);
-                this.Set(ValueType.StringOrSymbol, arg => arg is SchemeString || arg is Symbol);
-                this.Set(ValueType.Proc, arg => arg is Procedure);
-                this.Set(ValueType.Vector, arg => arg is Vector);
-                this.Set(ValueType.Boolean, arg => arg is SchemeBoolean);
-                this.Set(ValueType.Symbol, arg => arg is Symbol);
-                this.Set(ValueType.InputPort, arg => arg is InputPort);
-                this.Set(ValueType.OutputPort, arg => arg is OutputPort);
+                this.argPredicates = new Predicate<SchemeObject>[(int)ArgType.Undefined];
+                this.Set(ArgType.Obj, arg => true);
+                this.Set(ArgType.Pair, arg => arg is Pair);
+                this.Set(ArgType.PairOrEmpty, arg => arg is Pair || arg is EmptyList);
+                this.Set(ArgType.PairOrSymbol, arg => arg is Pair || arg is Symbol);
+                this.Set(ArgType.Number, arg => arg is Number);
+                this.Set(ArgType.Char, arg => arg is Character);
+                this.Set(ArgType.CharOrEmpty, arg => arg is Character || arg is EmptyList);
+                this.Set(ArgType.String, arg => arg is SchemeString);
+                this.Set(ArgType.StringOrSymbol, arg => arg is SchemeString || arg is Symbol);
+                this.Set(ArgType.Proc, arg => arg is Procedure);
+                this.Set(ArgType.Vector, arg => arg is Vector);
+                this.Set(ArgType.Boolean, arg => arg is SchemeBoolean);
+                this.Set(ArgType.Symbol, arg => arg is Symbol);
+                this.Set(ArgType.InputPort, arg => arg is InputPort);
+                this.Set(ArgType.OutputPort, arg => arg is OutputPort);
             }
 
             /// <summary>
@@ -213,9 +411,9 @@ namespace SimpleScheme
             /// <param name="arg">The actual argument.</param>
             /// <param name="argType">The expected argument type.</param>
             /// <returns>True if OK.</returns>
-            public bool Ok(SchemeObject arg, ValueType argType)
+            public bool Ok(SchemeObject arg, ArgType argType)
             {
-                return argType <= ValueType.Undefined && this.argPredicates[(int)argType](arg);
+                return argType <= ArgType.Undefined && this.argPredicates[(int)argType](arg);
             }
 
             /// <summary>
@@ -223,7 +421,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="t">The value type.</param>
             /// <param name="pred">The predicate.</param>
-            private void Set(ValueType t, Predicate<SchemeObject> pred)
+            private void Set(ArgType t, Predicate<SchemeObject> pred)
             {
                 this.argPredicates[(int)t] = pred;
             }

@@ -1,4 +1,9 @@
+(p (describe +))
+(p (describe 'abc))
+(p (describe "abc"))
+(p (describe #t))
+(p (describe (lambda (plus2 x) (+ 2 x))))
+(p (describe 5))
+(p (describe '()))
 
-(do ((vec (make-vector 5)) (i 0 (+ i 1)))
-	   ((= i 5) vec)
-	   (vector-set! vec i i))
+

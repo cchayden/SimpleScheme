@@ -44,16 +44,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Symbol); }
-        }
-        #endregion
-
         #region Public Properties
         /// <summary>
         /// Gets the symbol name.
@@ -191,18 +181,18 @@ namespace SimpleScheme
         public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
-                //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
                 .DefinePrimitive(
                     new Symbol("string->symbol"), 
+                    new[] { "6.4", "(string->symbol <string>)" }, 
                     (args, caller) => new Symbol(SchemeString.AsString(First(args))), 
                     1, 
-                    ValueType.String)
-                //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
                     new Symbol("symbol?"), 
+                    new[] { "6.4", "(symbol? <obj>)" }, 
                     (args, caller) => SchemeBoolean.Truth(First(args) is Symbol), 
                     1, 
-                    ValueType.Obj);
+                    Primitive.ArgType.Obj);
         }
         #endregion
 
@@ -229,6 +219,14 @@ namespace SimpleScheme
             buf.Append(this.name);
         }
 
+        /// <summary>
+        /// Describe a symbol by returning its value.
+        /// </summary>
+        /// <returns>The symbol as a string.</returns>
+        public override string Describe()
+        {
+            return this.ToString();
+        }
         /// <summary>
         /// Clear the cached environment information for the symbol
         /// </summary>

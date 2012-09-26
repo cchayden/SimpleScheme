@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
@@ -64,16 +63,6 @@ namespace SimpleScheme
         /// <returns>A vector of the objs filled with the fill object.</returns>
         private Vector(SchemeObject length, SchemeObject fill) : this(Number.AsInt(length), fill)
         {
-        }
-        #endregion
-
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Vector); }
         }
         #endregion
 
@@ -163,9 +152,10 @@ namespace SimpleScheme
             Type objType = array.GetType();
             if (!objType.IsArray)
             {
-                // TODO cch improve this error message.
-                ErrorHandlers.ClrError("Type conversion failed");
+                var msg = string.Format("Type conversion failed.  Expected array, got {0}", objType.GetType());
+                ErrorHandlers.ClrError(msg);
             }
+
             Array ar = (Array)array;
             Vector v = new Vector(ar.Length);
             for (int i = 0; i < ar.Length; i++)
@@ -186,68 +176,67 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
                 .DefinePrimitive(
-                        "list->vector",
+                        "list->vector", 
+                        new[] { "6.8", "(list->vector <vector>)" },
                         (args, caller) => FromList(First(args)), 
                         1, 
-                        ValueType.PairOrEmpty)
-                //// <r4rs section="6.8">(make-vector <k>)</r4rs>
-                //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
+                        Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
-                        "make-vector",
+                        "make-vector", 
+                        new[] { "6.8", "(make-vector <k>)", "(make-vector <k> <fill>)" },
                         (args, caller) => New(First(args), Second(args)), 
                         1, 
                         2, 
-                        ValueType.Number, 
-                        ValueType.Obj)
-                //// <r4rs section="6.8">(vector <obj> ...)</r4rs>
+                        Primitive.ArgType.Number, 
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "vector",
+                        "vector", 
+                        new[] { "6.8", "(vector <obj> ...)" },
                         (args, caller) => FromList(args), 
                         0, 
                         MaxInt, 
-                        ValueType.Obj)
-                //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "vector->list",
+                        "vector->list", 
+                        new[] { "6.8", "(vector->list <vector>)" },
                         (args, caller) => ToList((Vector)First(args)), 
                         1, 
-                        ValueType.Vector)
-                //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
+                        Primitive.ArgType.Vector)
                 .DefinePrimitive(
-                        "vector-fill",
+                        "vector-fill", 
+                        new[] { "6.8", "(vector-fill! <vector> <fill>)" },
                         (args, caller) => Fill((Vector)First(args), Second(args)), 
                         2, 
-                        ValueType.Vector, 
-                        ValueType.Obj)
-                //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
+                        Primitive.ArgType.Vector, 
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "vector-length",
+                        "vector-length", 
+                        new[] { "6.8", "(vector-length <vector>)" },
                         (args, caller) => (Number)((Vector)First(args)).Length,
                         1, 
-                        ValueType.Vector)
-                //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
+                        Primitive.ArgType.Vector)
                 .DefinePrimitive(
-                        "vector-ref",
+                        "vector-ref", 
+                        new[] { "6.8", "(vector-ref <vector> <k>)" },
                         (args, caller) => Get((Vector)First(args), Second(args)), 
                         2, 
-                        ValueType.Vector, 
-                        ValueType.Number)
-                //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
+                        Primitive.ArgType.Vector, 
+                        Primitive.ArgType.Number)
                 .DefinePrimitive(
-                        "vector-set!",
+                        "vector-set!", 
+                        new[] { "6.8", "(vector-set <vector> <k> <obj>)" },
                         (args, caller) => Set((Vector)First(args), Second(args), Third(args)), 
                         3, 
-                        ValueType.Vector, 
-                        ValueType.Number, 
-                        ValueType.Obj)
-                //// <r4rs section="6.8">(vector? <obj>)</r4rs>
+                        Primitive.ArgType.Vector, 
+                        Primitive.ArgType.Number, 
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive( 
-                        "vector?",
+                        "vector?", 
+                        new[] { "6.8", "(vector? <obj>)" },
                         (args, caller) => SchemeBoolean.Truth(First(args) is Vector), 
                         1, 
-                        ValueType.Obj);
+                        Primitive.ArgType.Obj);
         }
         #endregion
 

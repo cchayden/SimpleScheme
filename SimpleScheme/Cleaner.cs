@@ -25,7 +25,7 @@ namespace SimpleScheme
                 return x;
             }
 
-            switch (x.GetType().FullName)
+            switch (x.ClrTypeName)
             {
                 case "SimpleScheme.Vector":
                     ((Vector)x).Clean();

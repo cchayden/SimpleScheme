@@ -36,16 +36,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Scheme Type Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.OutputPort); }
-        }
-        #endregion
-
         #region Properties
         /// <summary>
         /// Gets the internal TextWriter object.
@@ -81,82 +71,67 @@ namespace SimpleScheme
             //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
 
             env
-                //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
                     "call-with-output-file",
+                    new[] {"6.10.1", "(call-with-output-file <string> <proc>)"}, 
                     EvaluateCallWithOutputFile.Call, 
                     2, 
-                    ValueType.String, 
-                    ValueType.Proc)
-                //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
+                    Primitive.ArgType.String, 
+                    Primitive.ArgType.Proc)
                 .DefinePrimitive(
-                    "close-output-port",
+                    "close-output-port", new[] { "6.10.1", "(close-output-port <port>)" },
                     (args, caller) => Port(First(args), caller.Interp.CurrentOutputPort).CloseOutputPort(), 
                     1, 
-                    ValueType.OutputPort)
-                //// <r4rs section="6.10.1">(current-output-port)</r4rs>
+                    Primitive.ArgType.OutputPort)
                 .DefinePrimitive(
-                    "current-output-port",
+                    "current-output-port", new[] { "6.10.1", "(current-output-port)" },
                     (args, caller) => caller.Interp.CurrentOutputPort, 
                     0)
-                //// <r4rs section="6.10.3">(display <obj>)</r4rs>
-                //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
                 .DefinePrimitive(
-                    "display",
+                    "display", new[] { "6.10.3", "(display <obj>)", "(display <obj> <port>)" },
                     (args, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).Display(First(args)), 
                     1, 
                     2,
-                    ValueType.Obj, 
-                    ValueType.OutputPort)
-                //// <r4rs section="6.10.3">(newline)</r4rs>
-                //// <r4rs section="6.10.3">(newline <port>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.OutputPort)
                 .DefinePrimitive(
-                    "newline",
+                    "newline", new[] { "6.10.3", "(newline)", "(newline <port>)" },
                     (args, caller) => Port(First(args), caller.Interp.CurrentOutputPort).Newline(), 
                     0, 
                     1, 
-                    ValueType.OutputPort)
-                //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
+                    Primitive.ArgType.OutputPort)
                 .DefinePrimitive(
-                    "open-output-file",
+                    "open-output-file", new[] { "6.10.1", "(open-output-file <filename>)" },
                     (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(First(args), caller.Interp), 
                     1, 
-                    ValueType.String)
-                //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "output-port?",
+                    "output-port?", new[] { "6.10.1", "(output-port? <obj>)" },
                     (args, caller) => SchemeBoolean.Truth(First(args) is OutputPort), 
                     1, 
-                    ValueType.Obj)
-                //// <r4rs section="6.10.3">(write <obj>)</r4rs>
-                //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "write",
+                    "write", new[] { "6.10.3", "(write <obj>)", "(write <obj> <port>)" },
                     (args, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).Write(First(args)), 
                     1, 
                     2, 
-                    ValueType.Obj, 
-                    ValueType.OutputPort)
-                //// (p <expr>)
-                //// (p <expr> <port>)
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.OutputPort)
                 .DefinePrimitive(
-                    "p",
+                    "p", new[] { "(p <expr>)", "(p <expr> <port>)" },
                     (args, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).P(First(args)), 
                     1, 
-                    ValueType.Obj, 
-                    ValueType.OutputPort)
-                //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
-                //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.OutputPort)
                 .DefinePrimitive(
-                    "write-char",
+                    "write-char", new[] { "6.10.3", "(write-char <char>)", "(write-char> <char> <port>)" },
                     (args, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).WriteChar(First(args)), 
                     1, 
                     2,
-                    ValueType.Char, 
-                    ValueType.OutputPort)
-                //// (dump-env)
+                    Primitive.ArgType.Char, 
+                    Primitive.ArgType.OutputPort)
                 .DefinePrimitive(
-                    "dump-env",
+                    "dump-env", new[] { "(dump-env)" },
                     (args, caller) => DumpEnv(caller.Env), 
                     0);
         }
@@ -220,6 +195,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region CLR Type Converters
         /// <summary>
         /// Convert to text writer
         /// </summary>
@@ -235,6 +211,7 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(typeof(OutputPort), obj);
             return null;
         }
+        #endregion
 
         #region Private Static Methods
         /// <summary>

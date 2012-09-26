@@ -43,18 +43,8 @@ namespace SimpleScheme
 
             if (this.classType == null)
             {
-                ErrorHandlers.ClrError("ValueType cannot be found: " + targetClassName);
+                ErrorHandlers.ClrError("Target type cannot be found in constructor: " + targetClassName);
             }
-        }
-        #endregion
-
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.ClrConstructor); }
         }
         #endregion
 
@@ -67,13 +57,13 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// (constructor <class-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                    "constructor",
+                    "constructor", 
+                    new[] { "(constructor <class-name> <arg-class-name> ...)" },
                     (args, caller) => new ClrConstructor(First(args).ToString(), Rest(args)),
                     1,
                     MaxInt, 
-                    ValueType.StringOrSymbol);
+                    Primitive.ArgType.StringOrSymbol);
         }
         #endregion
 

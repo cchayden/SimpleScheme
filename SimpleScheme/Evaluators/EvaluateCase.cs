@@ -98,7 +98,8 @@ namespace SimpleScheme
                 SchemeObject clause = First(step.clauses);
                 if (!(clause is Pair))
                 {
-                    return (Evaluator)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
+                    ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
+                    return null;
                 }
 
                 SchemeObject data = First(clause);

@@ -35,16 +35,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.SynchronousClrProcedure); }
-        }
-        #endregion
-
         #region Accessors
 
         /// <summary>
@@ -77,31 +67,31 @@ namespace SimpleScheme
         public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
-                //// (class <class-name>)
                 .DefinePrimitive(
-                    "class",
+                    "class", 
+                    new[] { "(class <class-name>)" },
                     (args, caller) => ClrObject.New(Class(First(args).ToString())), 
                     1, 
-                    ValueType.String)
-                //// (new <class-name>)
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "new",
+                    "new", 
+                    new[] { "(new <class-name>)" },
                     (args, caller) => ClrObject.New(New(First(args).ToString())), 
                     1, 
-                    ValueType.String)
-                //// (new-clr-array <class-name> <length>)
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "new-clr-array",
+                    "new-clr-array", 
+                    new[] { "(new-clr-array <class-name> <length>)" },
                     (args, caller) => ClrObject.New(NewArray(First(args).ToString(), (Number)Second(args))), 
                     2, 
-                    ValueType.String, 
-                    ValueType.Number)
-                //// (clr->native <obj>)
+                    Primitive.ArgType.String, 
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "clr->native",
+                    "clr->native", 
+                    new[] { "(clr->native <obj>)" },
                     (args, caller) => ClrObject.FromClrObject(First(args)), 
                     1, 
-                    ValueType.Obj);
+                    Primitive.ArgType.Obj);
         }
         #endregion
 
@@ -182,10 +172,10 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Take a list of ValueType or type name elements and create a corresponding 
-        ///   List of ValueType.
+        /// Take a list of ArgType or type name elements and create a corresponding 
+        ///   List of ArgType.
         /// </summary>
-        /// <param name="args">A list of ValueType or type name elements.  There may be more than this.</param>
+        /// <param name="args">A list of ArgType or type name elements.  There may be more than this.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
         protected List<Type> ClassList(SchemeObject args)
         {
@@ -268,15 +258,14 @@ namespace SimpleScheme
         /// <returns>A new instance of the class.</returns>
         private static object New(string className)
         {
-            Type type = className.ToClass();
+            Type type = Class(className);
             if (type == null)
             {
-                ErrorHandlers.ClrError("ValueType cannot be found: " + className);
+                ErrorHandlers.ClrError("ArgType cannot be found: " + className);
                 return null;
             }
 
-            Assembly assembly = type.Assembly;
-            return assembly.CreateInstance(type.FullName);
+            return type.Assembly.CreateInstance(type.FullName);
         }
 
         /// <summary>
@@ -289,8 +278,7 @@ namespace SimpleScheme
         /// <returns>An array of the given length.</returns>
         private static object NewArray(string className, SchemeObject length)
         {
-            Type type = className.ToClass();
-            return Array.CreateInstance(type, Number.AsInt(length));
+            return Array.CreateInstance(Class(className), Number.AsInt(length));
         }
         #endregion
     }

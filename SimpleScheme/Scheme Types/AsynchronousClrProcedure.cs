@@ -42,16 +42,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.AsynchronousClrProcedure); }
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the async clr procedure primitives.
@@ -61,13 +51,13 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// (method-async <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                   "method-async",
+                   "method-async", 
+                   new[] { "(method-async <target-class-name> <method-name> <arg-class-name> ...)" },
                    (args, caller) => new AsynchronousClrProcedure(First(args).ToString(), Second(args).ToString(), Rest(Rest(args))),
                    2,
                    MaxInt, 
-                   ValueType.StringOrSymbol);
+                   Primitive.ArgType.StringOrSymbol);
         }
         #endregion
 
@@ -133,11 +123,11 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Take a list of ValueType or type name elements and create a corresponding 
-        ///   array of ValueType.
+        /// Take a list of ArgType or type name elements and create a corresponding 
+        ///   array of ArgType.
         /// Add the extra async arguments for a Begin method.
         /// </summary>
-        /// <param name="args">A list of ValueType or type name elements.</param>
+        /// <param name="args">A list of ArgType or type name elements.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
         private List<Type> ClassListBegin(SchemeObject args)
         {

@@ -53,16 +53,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Lambda); }
-        }
-        #endregion
-
         #region Accessors
         /// <summary>
         /// Gets the environment in which to execute.

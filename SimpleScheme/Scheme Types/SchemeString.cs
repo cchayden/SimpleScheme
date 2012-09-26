@@ -78,16 +78,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.String); }
-        }
-        #endregion
-
         #region Accessors
         /// <summary>
         /// Gets the character array from the SchemeString.
@@ -199,169 +189,166 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// <r4rs section="6.7">(list->string <chars>)</r4rs>
                 .DefinePrimitive(
-                    "list->string",
+                    "list->string", 
+                    new[] { "6.7", "(list->string <chars>)" },
                     (args, caller) => ListToString(First(args)), 
                     1, 
-                    ValueType.PairOrEmpty)
-                //// <r4rs section="6.7">(make-string <k>)</r4rs>
-                //// <r4rs section="6.7">(make-string <k> <char>)</r4rs>
+                    Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
-                    "make-string",
+                    "make-string", 
+                    new[] { "6.7", "(make-string <k>)", "(make-string <k> <char>)" },
                     (args, caller) => New((Number)First(args), Second(args)), 
                     1, 
                     2, 
-                    ValueType.Number, 
-                    ValueType.CharOrEmpty)
-                //// <r4rs section="6.7">(string <char> ...)</r4rs>
+                    Primitive.ArgType.Number, 
+                    Primitive.ArgType.CharOrEmpty)
                 .DefinePrimitive(
-                    "string",
+                    "string", 
+                    new[] { "6.7", "(string <char> ...)" },
                     (args, caller) => ListToString(args), 
                     0, 
                     MaxInt,
-                    ValueType.Char)
-                //// <r4rs section="6.7">(string->list <string>)</r4rs>
+                    Primitive.ArgType.Char)
                 .DefinePrimitive(
-                    "string->list",
+                    "string->list", 
+                    new[] { "6.7", "(string->list <string>)" },
                     (args, caller) => ToList((SchemeString)First(args)), 
                     1, 
-                    ValueType.String)
-                //// <r4rs section="6.5.6">(string->number <number>)</r4rs>
-                //// <r4rs section="6.5.6">(string->number <number> <radix>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string->number",
+                    "string->number", 
+                    new[] { "6.5.6", "(string->number <number>)", "(string->number <number> <radix>)" },
                     (args, caller) => ToNumber(First(args), Second(args)),
                     1, 
                     2, 
-                    ValueType.String, 
-                    ValueType.Number)
-                //// <r4rs section="6.7">(string-append <string> ...)</r4rs>
+                    Primitive.ArgType.String, 
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "string-append",
+                    "string-append", 
+                    new[] { "6.7", "(string-append <string> ...)" },
                     (args, caller) => Append(args),
                     0, 
                     MaxInt,
-                    ValueType.String)
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-concat",
+                    "string-concat", 
+                    new[] { "(string-concat <string> ...)" },
                     (args, caller) => Append(First(args)), 
                     1, 
-                    ValueType.Pair)
-                //// <r4rs section="6.7">(string-ci<=? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "string-ci<=?",
+                    "string-ci<=?", new[] { "6.7", "(string-ci<=? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) <= 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-ci<? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-ci<?",
+                    "string-ci<?", 
+                    new[] { "6.7", "(string-ci<? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) < 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-ci=? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-ci=?",
+                    "string-ci=?", 
+                    new[] { "6.7", "(string-ci=? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) == 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-ci>=? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-ci>=?",
+                    "string-ci>=?", 
+                    new[] { "6.7", "(string-ci>=? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) >= 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-ci>? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-ci>?",
+                    "string-ci>?", 
+                    new[] { "6.7", "(string-ci>? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) > 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-copy <string>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-copy", 
+                    "string-copy", new[] { "6.7", "(string-copy <string>)" }, 
                     (args, caller) => Copy((SchemeString)First(args)), 
                     1, 
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-fill! <string> <char>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
                     "string-fill!", 
+                    new[] { "6.7", "(string-fill! <string> <char>)" }, 
                     (args, caller) => Fill((SchemeString)First(args), (Character)Second(args)), 
                     2, 
-                    ValueType.String, 
-                    ValueType.Char)
-                //// <r4rs section="6.7">(string-length <string>)</r4rs>
+                    Primitive.ArgType.String, 
+                    Primitive.ArgType.Char)
                 .DefinePrimitive(
                     "string-length", 
+                    new[] { "6.7", "(string-length <string>)" }, 
                     (args, caller) => (Number)Length(((SchemeString)First(args)).str),
                     1, 
-                    ValueType.String)
-                //// <r4rs section="6.7">(string-ref <string> <k>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string-ref",
+                    "string-ref", 
+                    new[] { "6.7", "(string-ref <string> <k>)" },
                     (args, caller) => (Character)((SchemeString)First(args)).str[Number.AsInt(Second(args))],
                     2,
-                    ValueType.String,
-                    ValueType.Number)
-                //// <r4rs section="6.7">(string-set! <string> <k> <char>)</r4rs>
+                    Primitive.ArgType.String,
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "string-set!",
+                    "string-set!", 
+                    new[] { "6.7", "(string-set! <string> <k> <char>)" },
                     (args, caller) => Set((SchemeString)First(args), (Number)Second(args), (Character)Third(args)),
                     3,
-                    ValueType.String,
-                    ValueType.Number,
-                    ValueType.Char)
-                //// <r4rs section="6.7">(string<=? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String,
+                    Primitive.ArgType.Number,
+                    Primitive.ArgType.Char)
                 .DefinePrimitive(
-                    "string<=?",
+                    "string<=?", 
+                    new[] { "6.7", "(string<=? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) <= 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string<?",
+                    "string<?", 
+                    new[] { "6.7", "(string<? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) < 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string=? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string=?",
+                    "string=?", 
+                    new[] { "6.7", "(string=? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) == 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string>=? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string>=?",
+                    "string>=?", 
+                    new[] { "6.7", "(string>=? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) >= 0),
                     2,
-                    ValueType.String)
-                //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string>?",
+                    "string>?", 
+                    new[] { "6.7", "(string<? <string1> <string2>)" },
                     (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) > 0),
                     2, 
-                    ValueType.String)
-                //// <r4rs section="6.7">(string? <obj>)</r4rs>
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                    "string?",
+                    "string?", 
+                    new[] { "6.7", "(string? <obj>)" },
                     (args, caller) => SchemeBoolean.Truth(First(args) is SchemeString), 
                     1, 
-                    ValueType.Obj)
-                //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
                     "substring", 
+                    new[] { "6.7", "(substring <string> <start> <end>)" }, 
                     (args, caller) => Substr((SchemeString)First(args), Second(args), Third(args)), 
                     3, 
-                    ValueType.String, 
-                    ValueType.Number, 
-                    ValueType.Number)
-                //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
+                    Primitive.ArgType.String, 
+                    Primitive.ArgType.Number, 
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
                     "symbol->string", 
+                    new[] { "6.4", "(symbol->string <symbol>)" }, 
                     (args, caller) => new SchemeString((Symbol)First(args)), 
                     1,
-                    ValueType.Symbol);
+                    Primitive.ArgType.Symbol);
         }
         #endregion
 
@@ -491,6 +478,15 @@ namespace SimpleScheme
             }
 
             buf.Append('"');
+        }
+
+        /// <summary>
+        /// Describe a scheme string by returning its value.
+        /// </summary>
+        /// <returns>The scheme string as a string.</returns>
+        public override string Describe()
+        {
+            return this.ToString();
         }
         #endregion
 

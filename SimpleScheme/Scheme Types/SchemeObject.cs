@@ -12,169 +12,17 @@ namespace SimpleScheme
     /// This inherits from List so that the static methods defined there will all be available without having
     ///   to be qualified.
     /// This also provides some type primitives, mostly as static methods.
-    /// The only methods a subclass has to implement are TypeName and PrintString.
+    /// The only method a subclass has to implement is PrintString.
     /// </summary>
     public abstract class SchemeObject : List
     {
         /// <summary>
-        /// The string names of the enum members.
+        /// Gets the CLR type name of the object.
         /// </summary>
-        private static readonly string[] valueTypeNames = new string[(int)ValueType.Undefined + 1];
-
-        /// <summary>
-        /// Initializes static members of the <see cref="SchemeObject"/> class. 
-        /// Maps between CLR type names and scheme object types.
-        /// </summary>
-        static SchemeObject()
-        {
-            for (var i = (int)ValueType.Obj; i < (int)ValueType.Undefined + 1; i++)
-            {
-                valueTypeNames[i] = ((ValueType)i).ToString();
-            }
+        public string ClrTypeName 
+        { 
+            get { return this.GetType().FullName; }
         }
-
-        /// <summary>
-        /// This enum contains all the types that values can have.  It also contains
-        /// a few combination types that are used in checking arguments to
-        /// primitives.
-        /// </summary>
-        public enum ValueType
-        {
-            /// <summary>
-            /// Any object is required.
-            /// Must be first.
-            /// </summary>
-            Obj,
-
-            /// <summary>
-            /// A pair is required..
-            /// </summary>
-            Pair,
-
-            /// <summary>
-            /// A pair or the empty object is required.
-            /// </summary>
-            PairOrEmpty,
-
-            /// <summary>
-            /// A pair or a symbol is required.
-            /// </summary>
-            PairOrSymbol,
-
-            /// <summary>
-            /// A number is required.
-            /// </summary>
-            Number,
-
-            /// <summary>
-            /// A character is required.
-            /// </summary>
-            Char,
-
-            /// <summary>
-            /// A character or the empty object is required.
-            /// </summary>
-            CharOrEmpty,
-
-            /// <summary>
-            /// A string is required.
-            /// </summary>
-            String,
-
-            /// <summary>
-            /// A string or symbol is required.
-            /// </summary>
-            StringOrSymbol,
-
-            /// <summary>
-            /// A procedure is required.  This includes macros and primitives, as well
-            /// as lambdas.
-            /// </summary>
-            Proc,
-
-            /// <summary>
-            /// A vector is required.
-            /// </summary>
-            Vector,
-
-            /// <summary>
-            /// A symbol is required.
-            /// </summary>
-            Symbol,
-
-            /// <summary>
-            /// A boolean is required.
-            /// </summary>
-            Boolean,
-
-            /// <summary>
-            /// An input port is required.
-            /// </summary>
-            InputPort,
-
-            /// <summary>
-            /// An output port is required.
-            /// </summary>
-            OutputPort,
-
-            //// The following are not used as primitive arguments.
-
-            /// <summary>
-            /// The empty list.
-            /// </summary>
-            EmptyList,
-
-            /// <summary>
-            /// An asynchronous clr procedure.
-            /// </summary>
-            AsynchronousClrProcedure,
-
-            /// <summary>
-            /// A synchronous clr procedure.
-            /// </summary>
-            SynchronousClrProcedure,
-
-            /// <summary>
-            /// A CLR constructor.
-            /// </summary>
-            ClrConstructor,
-
-            /// <summary>
-            /// A CLR object, created by a constructor
-            /// </summary>
-            ClrObject,
-
-            /// <summary>
-            /// A continuation.
-            /// </summary>
-            Continuation,
-
-            /// <summary>
-            /// A lambda.
-            /// </summary>
-            Lambda,
-
-            /// <summary>
-            /// A macro
-            /// </summary>
-            Macro,
-
-            /// <summary>
-            /// Eof object
-            /// </summary>
-            Eof,
-
-            /// <summary>
-            /// The undefined object.
-            /// Must be last.
-            /// </summary>
-            Undefined
-        }
-
-        /// <summary>
-        /// Gets the type name.
-        /// </summary>
-        public abstract string TypeName { get; }
 
         /// <summary>
         /// Print the value into the given buffer.
@@ -182,6 +30,15 @@ namespace SimpleScheme
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
         public abstract void PrintString(bool quoted, StringBuilder buf);
+
+        /// <summary>
+        /// Gets a string describing the object.
+        /// </summary>
+        /// <returns>The object description.</returns>
+        public virtual string Describe()
+        {
+            return string.Empty;
+        }
 
         /// <summary>
         /// Gets a CLR type from the given arg.
@@ -204,16 +61,6 @@ namespace SimpleScheme
             var buf = new StringBuilder();
             this.PrintString(quoted, buf);
             return buf.ToString();
-        }
-
-        /// <summary>
-        /// Gets the string name of the given value type.
-        /// </summary>
-        /// <param name="t">The value type.</param>
-        /// <returns>The type's string name.</returns>
-        public static string ValueTypeName(ValueType t) 
-        {
-            return valueTypeNames[(int)t];
         }
     }
 
@@ -320,14 +167,7 @@ namespace SimpleScheme
         /// <returns>The scheme type name.</returns>
         public static string SchemeTypeName(this object obj)
         {
-            string fullName = obj.GetType().FullName;
-            if (fullName == null)
-            {
-                return "unknown";
-            }
-
-            string name;
-            return typeTranslator.TryGetValue(fullName, out name) ? name : fullName;
+            return SchemeTypeName(obj.GetType());
         }
 
         /// <summary>

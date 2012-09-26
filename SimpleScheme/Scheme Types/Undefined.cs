@@ -37,16 +37,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Undefined); }
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Write the undefined object to the string builder.

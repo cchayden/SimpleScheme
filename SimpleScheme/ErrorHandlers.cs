@@ -35,13 +35,13 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// (error <message> ...)
                 .DefinePrimitive(
                     "error", 
+                    new[] { "(error <message> ...)" }, 
                     (args, caller) => Error(args.ToString(true)), 
                     0, 
                     MaxInt, 
-                    SchemeObject.ValueType.String);
+                    Primitive.ArgType.String);
         }
         #endregion
 
@@ -215,6 +215,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Exception Subclasses
         /// <summary>
         /// All exceptions thrown by the interpreter are of this class.
         /// </summary>
@@ -312,5 +313,6 @@ namespace SimpleScheme
             {
             }
         }
+        #endregion
     }
 }

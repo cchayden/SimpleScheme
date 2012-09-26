@@ -48,16 +48,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.InputPort); }
-        }
-        #endregion
-
         #region Internal Properties
         /// <summary>
         /// Gets the parser, for unit testing only.
@@ -95,81 +85,78 @@ namespace SimpleScheme
             //// <r4rs section="6.10.2">(char-ready? <port>)</r4rs>
 
             env
-                //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
                 .DefinePrimitive(
-                        "eof-object?",
+                        "eof-object?", 
+                        new[] { "6.10.2", "(eof-object? <obj>)" },
                         (args, caller) => SchemeBoolean.Truth(First(args) is Eof), 
                         1, 
-                        ValueType.Obj)
-                ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                       "call-with-input-file",
+                       "call-with-input-file", 
+                       new[] { "6.10.1", "(call-with-input-file <string> <proc>)" },
                        EvaluateCallWithInputFile.Call, 
                        2, 
-                       ValueType.String, 
-                       ValueType.Proc)
-                //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
+                       Primitive.ArgType.String, 
+                       Primitive.ArgType.Proc)
                 .DefinePrimitive(
-                        "close-input-port",
+                        "close-input-port", 
+                        new[] { "6.10.1", "(close-input-port <port>)" },
                         (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).CloseInputPort(), 
                         1, 
-                        ValueType.InputPort)
-                //// <r4rs section="6.10.1">(current-input-port)</r4rs>
+                        Primitive.ArgType.InputPort)
                 .DefinePrimitive(
-                        "current-input-port",
+                        "current-input-port", 
+                        new[] { "6.10.1", "(current-input-port)" },
                         (args, caller) => caller.Interp.CurrentInputPort, 
                         0)
-                //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
                 .DefinePrimitive(
-                        "input-port?",
+                        "input-port?", 
+                        new[] { "6.10.1", "(input-port? <obj>)" },
                         (args, caller) => SchemeBoolean.Truth(First(args) is InputPort), 
                         1, 
-                        ValueType.Obj)
-                //// <r4rs section="6.10.4">(load <filename>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "load",
+                        "load", 
+                        new[] { "6.10.4", "(load <filename>)" },
                         (args, caller) => LoadFile(First(args), caller.Interp), 
                         1, 
-                        ValueType.String)
-                //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
+                        Primitive.ArgType.String)
                 .DefinePrimitive(
-                        "open-input-file",
+                        "open-input-file", 
+                        new[] { "6.10.1", "(open-input-file <filename>)" },
                         (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args), caller.Interp), 
                         1,
-                        ValueType.String)
-                //// <r4rs section="6.10.2">(peek-char)</r4rs>
-                //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
+                        Primitive.ArgType.String)
                 .DefinePrimitive(
-                        "peek-char",
+                        "peek-char", 
+                        new[] { "6.10.2", "(peek-char)", "(peek-char <port>)" },
                         (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).PeekChar(), 
                         0, 
                         1, 
-                        ValueType.InputPort)
-                //// <r4rs section="6.10.2">(read)</r4rs>
-                //// <r4rs section="6.10.2">(read <port>)</r4rs>
+                        Primitive.ArgType.InputPort)
                 .DefinePrimitive(
-                        "read",
+                        "read", 
+                        new[] { "6.10.2", "(read)", "(read <port>)" },
                         (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).Read(), 
                         0, 
                         1, 
-                        ValueType.InputPort)
-                //// <r4rs section="6.10.2">(read-char)</r4rs>
-                //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
+                        Primitive.ArgType.InputPort)
                 .DefinePrimitive(
-                        "read-char",
+                        "read-char", 
+                        new[] { "6.10.2", "(read-char)", "(read-char <port>)" },
                         (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).ReadChar(), 
                         0, 
                         1, 
-                        ValueType.InputPort)
-                //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
+                        Primitive.ArgType.InputPort)
                 .DefinePrimitive(
-                        "transcript-on",
+                        "transcript-on", 
+                        new[] { "6.10.4", "(transcript-on <filename>)" },
                         (args, caller) => TranscriptOn(First(args), caller.Interp.Transcript), 
                         1, 
-                        ValueType.String)
-                //// <r4rs section="6.10.4">(transcript-off)</r4rs>
+                        Primitive.ArgType.String)
                 .DefinePrimitive(
-                        "transcript-off",
+                        "transcript-off", 
+                        new[] { "6.10.4", "(transcript-off)" },
                         (args, caller) => TranscriptOff(caller.Interp.Transcript), 
                         0);
         }
@@ -219,6 +206,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region CLR Type Converters
         /// <summary>
         /// Convert to text writer.
         /// </summary>
@@ -234,7 +222,7 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(typeof(InputPort), obj);
             return null;
         }
-        
+        #endregion
 
         #region Private Static Methods
         /// <summary>

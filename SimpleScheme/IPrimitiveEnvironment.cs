@@ -17,30 +17,23 @@ namespace SimpleScheme
         /// Define a primitive in the environment.
         /// </summary>
         /// <param name="name">The primitive name.  Must be a symbol.</param>
+        /// <param name="description"></param>
         /// <param name="operation">A function that performs the primitive operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(
-            Symbol name, 
-            Func<SchemeObject, Evaluator, SchemeObject> operation, 
-            int minArgs, 
-            int maxArgs, 
-            params SchemeObject.ValueType[] argTypes);
+        IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Func<SchemeObject, Evaluator, SchemeObject> operation, int minArgs, int maxArgs, params Primitive.ArgType[] argTypes);
 
         /// <summary>
         /// Define a primitive in the environment.
         /// </summary>
         /// <param name="name">The primitive name.  Must be a symbol.</param>
+        /// <param name="description"></param>
         /// <param name="operation">A function that performs the primitive operation.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(
-            Symbol name, 
-            Func<SchemeObject, Evaluator, SchemeObject> operation, 
-            int numberOfArgs, 
-            params SchemeObject.ValueType[] argTypes);
+        IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Func<SchemeObject, Evaluator, SchemeObject> operation, int numberOfArgs, params Primitive.ArgType[] argTypes);
     }
 }

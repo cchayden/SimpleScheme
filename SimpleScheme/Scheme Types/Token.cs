@@ -48,17 +48,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get
-            {
-                return "Token";
-            }
-        }
-
-        /// <summary>
         /// Gets a token.  Either retrieves an existing token instance,
         ///   or creates a new one.
         /// </summary>

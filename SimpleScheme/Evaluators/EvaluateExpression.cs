@@ -78,152 +78,136 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
                 .DefinePrimitive(
-                        "and",
+                        "and", 
+                        new[] { "4.2.1", "(and <test1> ...)" },
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, andSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Obj)
-                //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-                //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
                         "begin", 
+                        new[] { "4.2.3", "(begin <expression1> <expression2> ...)", "5.2", "(begin <definition1> <definition2> ...)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, beginSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Obj)
-                //// (parallel <expr> ...)
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
                         "parallel", 
+                        new[] { "(parallel <expr> ...)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, parallelSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Pair)
-                //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
-                //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
-                //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
+                        Primitive.ArgType.Pair)
                 .DefinePrimitive(
                         "case", 
+                        new[] { "4.2.1", 
+                            "(case <key> <clause1> <clause2> ...)", 
+                            "clause: ((<datum1> ...) <expression1> <expression2> ...)", 
+                            "else clause: (else <expression1> <expression2> ...)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, caseSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Pair)
-                //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... )</r4rs>
-                //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
-                //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
-                //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
+                        Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "cond", 
+                        "cond", new[] { "4.2.1", 
+                            "(cond <clause1> <clause2> ... )", 
+                            "clause: (<test> <expression>)", 
+                            "clause: (<test> => <recipient>)", 
+                            "else clause: (else <expression1> <expression2> ...)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, condSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Obj)
-                //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
-                //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
-                //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "define", 
+                        "define", new[] { "5.2", 
+                            "(define <variable> <expression>)", 
+                            "(define (<variable> <formals>) <body>)", 
+                            "(define (<variable> . <formal>) <body>)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, defineSym), 
                         0, 
                         MaxInt, 
-                        ValueType.PairOrSymbol)
-                //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
-                ////                           ...)
-                ////                           (<test> <expression> ...)
-                ////                         <command> ...)</r4rs>
+                        Primitive.ArgType.PairOrSymbol)
                 .DefinePrimitive(
-                        "do", 
+                        "do", new[] { "4.2.4", "(do ((variable1> <init1> <step1>) ...) (<test> <expression> ...) <command> ...)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, doSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Pair)
+                        Primitive.ArgType.Pair)
                 //// Instead of returning a value, return an evaulator that can be run to get the value
                 .DefinePrimitive(
-                        "eval",
+                        "eval", 
+                        new[] { "(eval <expr>)" },
                         (args, caller) => Call(First(args), caller.Env, caller), 
                         1, 
                         2, 
-                        ValueType.Obj)
-                //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
-                //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "if", 
+                        "if", new[] { "4.1.5", "(if <test> <consequent> <alternate>)", "(if <test> <consequent>)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, ifSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Obj)
-                //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
-                //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
-                //// <r4rs section="4.1.4">formals: <variable></r4rs>
-                //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "lambda",
+                        "lambda", 
+                        new[] { "4.1.4", 
+                            "(lambda <formals> <body>)", 
+                            "formals: (<variable1> ...)", 
+                            "formals: <variable>", 
+                            "formals: (<variable 1> ... <variable n-1> . <variable n>)" },
                         (args, caller) => EvalLambda(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
-                        ValueType.PairOrSymbol)
-                //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
-                //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
-                //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
-                //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
+                        Primitive.ArgType.PairOrSymbol)
                 .DefinePrimitive(
-                        "let", 
+                        "let", new[] { "4.2.2", "(let <bindings> <body>)", "(let <variable> <bindings> <body>)", "bindings: ((<variable1> <init1>) ...)", "body: <expression> ..." }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letSym), 
                         0, 
                         MaxInt, 
-                        ValueType.PairOrSymbol)
-                //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
-                //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
-                //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
+                        Primitive.ArgType.PairOrSymbol)
                 .DefinePrimitive(
-                        "let*", 
+                        "let*", new[] { "4.2.2", 
+                            "(let* <bindings> <body>)", 
+                            "bindings: ((<variable1> <init1>) ...)", 
+                            "body: <expression> ..." }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letstarSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Pair)
-                //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
-                //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
-                //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
+                        Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "letrec", 
+                        "letrec", new[] { "4.2.2", "(letrec <bindings> <body>)", "bindings: ((<variable1> <init1>) ...)", "body: <expression> ..." }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letrecSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Pair)
-                //// not defined in r4rs
+                        Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "macro",
+                        "macro", new[] { "(macro (variable1 ...) <body>)"  },
                         (args, caller) => EvalMacro(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
-                        ValueType.Pair)
-                //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
+                        Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "or", 
+                        "or", new[] { "4.2.1", "(or <test1> ...)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, orSym), 
                         0, 
                         MaxInt, 
-                        ValueType.Obj)
-                //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "quote",
+                        "quote", new[] { "4.1.2", "(quote <datum>)" },
                         EvalQuote, 
                         1, 
-                        ValueType.Obj)
-                //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "set!",
+                        "set!", new[] { "4.1.6", "(set! <variable> <expression>)" },
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, setSym),
                         2,
-                        ValueType.Symbol,
-                        ValueType.Pair)
-                //// (time <expr>)
+                        Primitive.ArgType.Symbol,
+                        Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "time", 
+                        "time", new[] { "(time <expr>)" }, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, timeSym), 
                         1, 
-                        ValueType.Obj);
+                        Primitive.ArgType.Obj);
         }
         #endregion
 
@@ -251,7 +235,8 @@ namespace SimpleScheme
                 //    is a corresponding value.
                 if (env == null)
                 {
-                    return (Evaluator)ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
+                    ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
+                    return null;
                 }
 
                 return caller.UpdateReturnValue(env.Lookup((Symbol)expr));

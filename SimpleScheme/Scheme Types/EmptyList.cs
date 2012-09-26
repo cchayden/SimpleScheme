@@ -39,16 +39,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.EmptyList); }
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Write the empty list to the string builder.

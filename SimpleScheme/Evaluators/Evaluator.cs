@@ -1,4 +1,5 @@
-﻿// <copyright file="Evaluator.cs" company="Charles Hayden">
+﻿#define FromSchemeObject
+// <copyright file="Evaluator.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -11,7 +12,11 @@ namespace SimpleScheme
     /// Evaluates expressions step by step.
     /// Base class for all other evaluators.
     /// </summary>
+#if  FromSchemeObject
     public class Evaluator : SchemeObject
+#else
+    public class Evaluator : List
+#endif
     {
         #region Constants
         /// <summary>
@@ -104,14 +109,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the evaluator type name.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return "<evaluator>"; }
-        }
-
-        /// <summary>
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
@@ -200,7 +197,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
+#if FromSchemeObject
         public override void PrintString(bool quoted, StringBuilder buf)
+#else
+        public void PrintString(bool quoted, StringBuilder buf)
+#endif
         {
             if (quoted)
             {

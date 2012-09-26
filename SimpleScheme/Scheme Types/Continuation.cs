@@ -34,16 +34,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Continuation); }
-        }
-        #endregion
-
         #region New
         /// <summary>
         /// Initializes a new instance of the Continuation class.

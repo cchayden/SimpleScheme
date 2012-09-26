@@ -36,6 +36,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        // TODO define "describe", "primitives"
         #region Public Methods
         /// <summary>
         /// Define a primitive, taking a variable number of arguments.
@@ -43,19 +44,15 @@ namespace SimpleScheme
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
+        /// <param name="description"></param>
         /// <param name="operation">The operation to perform.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(
-            Symbol name, 
-            Func<SchemeObject, Evaluator, SchemeObject> operation, 
-            int minArgs, 
-            int maxArgs, 
-            params SchemeObject.ValueType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Func<SchemeObject, Evaluator, SchemeObject> operation, int minArgs, int maxArgs, params Primitive.ArgType[] argTypes)
         {
-            this.Define(name, new Primitive(operation, minArgs, maxArgs, argTypes));
+            this.Define(name, new Primitive(operation, description, minArgs, maxArgs, argTypes));
             return this;
         }
 
@@ -65,18 +62,24 @@ namespace SimpleScheme
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
+        /// <param name="description"></param>
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(
-            Symbol name, 
-            Func<SchemeObject, Evaluator, SchemeObject> operation, 
-            int numberOfArgs, 
-            params SchemeObject.ValueType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Func<SchemeObject, Evaluator, SchemeObject> operation, int numberOfArgs, params Primitive.ArgType[] argTypes)
         {
-            this.Define(name, new Primitive(operation, numberOfArgs, numberOfArgs, argTypes));
+            this.Define(name, new Primitive(operation, description, numberOfArgs, numberOfArgs, argTypes));
             return this;
+        }
+
+        /// <summary>
+        /// Create a list of the primitives in the environment.
+        /// </summary>
+        /// <returns>A list of pairs containing the primitive name and value.</returns>
+        public SchemeObject ListPrimitives()
+        {
+            return this.ListEnv();
         }
         #endregion
 
@@ -106,22 +109,22 @@ namespace SimpleScheme
             ErrorHandlers.DefinePrimitives(this);
 
             this.DefinePrimitive(
-                    "exit",
+                    "exit", new[] { "" },
                     (args, caller) =>
-                    {
-                        System.Environment.Exit(List.First(args) is EmptyList ? 0 : Number.AsInt(List.First(args)));
-                        return Undefined.Instance;
-                    },
+                        {
+                            System.Environment.Exit(List.First(args) is EmptyList ? 0 : Number.AsInt(List.First(args)));
+                            return Undefined.Instance;
+                        },
                     0,
                     1, 
-                    SchemeObject.ValueType.Number)
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "time-call",
+                    "time-call", new[] { "" },
                     (args, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller), 
                     1, 
                     2, 
-                    SchemeObject.ValueType.Proc,
-                    SchemeObject.ValueType.Number);
+                    Primitive.ArgType.Proc,
+                    Primitive.ArgType.Number);
         }
         #endregion
     }

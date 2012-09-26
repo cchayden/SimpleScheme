@@ -27,16 +27,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Char); }
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the sync clr procedure primitives.
@@ -46,52 +36,52 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// (method <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                   "method",
+                   "method", 
+                   new[] { "(method <target-class-name> <method-name> <arg-class-name> ...)" },
                    (args, caller) => new SynchronousClrProcedure(
-                       First(args).ToString(),
-                       Second(args).ToString(),
-                       Rest(Rest(args))),
+                                         First(args).ToString(),
+                                         Second(args).ToString(),
+                                         Rest(Rest(args))),
                     2,
                     MaxInt, 
-                    ValueType.StringOrSymbol)
-                //// (property-get <target-class-name> <property-name>)
+                    Primitive.ArgType.StringOrSymbol)
                 .DefinePrimitive(
-                   "property-get",
+                   "property-get", 
+                   new[] { "(property-get <target-class-name> <property-name>)" },
                    (args, caller) => new SynchronousClrProcedure(
-                       First(args).ToString(),
-                       "get_" + Second(args).ToString(), 
-                       Rest(Rest(args))),
+                                         First(args).ToString(),
+                                         "get_" + Second(args).ToString(), 
+                                         Rest(Rest(args))),
                     2, 
-                    ValueType.String)
-                //// (property-set <target-class-name> <property-name> <arg-class-name>)
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                   "property-set",
+                   "property-set", 
+                   new[] { "(property-set <target-class-name> <property-name> <arg-class-name>)" },
                    (args, caller) => new SynchronousClrProcedure(
-                       First(args).ToString(), 
-                       "set_" + Second(args).ToString(), 
-                       Rest(Rest(args))),
+                                         First(args).ToString(), 
+                                         "set_" + Second(args).ToString(), 
+                                         Rest(Rest(args))),
                     3, 
-                    ValueType.String)
-                //// (index-get <target-class-name> <arg-class-name> <index-type>)
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                   "index-get",
+                   "index-get", 
+                   new[] { "(index-get <target-class-name> <arg-class-name> <index-type>)" },
                    (args, caller) => new SynchronousClrProcedure(
-                       First(args).ToString(), 
-                       "get_Item", 
-                       Rest(args)),
+                                         First(args).ToString(), 
+                                         "get_Item", 
+                                         Rest(args)),
                     2, 
-                    ValueType.String)
-                //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
+                    Primitive.ArgType.String)
                 .DefinePrimitive(
-                   "index-set",
+                   "index-set", 
+                   new[] { "(index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)" },
                    (args, caller) => new SynchronousClrProcedure(
-                       First(args).ToString(), 
-                       "set_Item",
-                       Rest(args)),
+                                         First(args).ToString(), 
+                                         "set_Item",
+                                         Rest(args)),
                     3, 
-                    ValueType.String);
+                    Primitive.ArgType.String);
         }
         #endregion
 
@@ -148,7 +138,6 @@ namespace SimpleScheme
 
             var argList = this.ToArgList(args, null);
             object res = this.MethodInfo.Invoke(target, argList);
-            // TODO cch convert from CLR to Scheme
             res = res ?? Undefined.Instance;
             return caller.UpdateReturnValue(ClrObject.FromClrObject(res));
         }

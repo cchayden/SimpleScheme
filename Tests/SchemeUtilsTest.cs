@@ -498,7 +498,7 @@ namespace Tests
             Assert.AreEqual("pair", (Pair.New(null, null)).SchemeTypeName());
             Assert.AreEqual("number", ((Number)1.0d).SchemeTypeName());
             Assert.AreEqual("string", ((SchemeString)"abc").SchemeTypeName());
-            Assert.AreEqual("primitive", (new Primitive((args, caller) => null, 0, 0, new SchemeObject.ValueType[0])).SchemeTypeName());
+            Assert.AreEqual("primitive", (new Primitive((args, caller) => null, new[] {""}, 0, 0, new Primitive.ArgType[0])).SchemeTypeName());
             Assert.AreEqual("input-port", (InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter)).SchemeTypeName());
             Assert.AreEqual("output-port", (OutputPort.New(new StringWriter(), (Interpreter)this.interpreter)).SchemeTypeName());
             Assert.AreEqual("empty-list", (EmptyList.Instance).SchemeTypeName());

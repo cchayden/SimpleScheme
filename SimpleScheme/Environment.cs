@@ -350,6 +350,15 @@ namespace SimpleScheme
         {
             return this.Dump(1, 0);
         }
+
+        /// <summary>
+        /// Make a list of all the values in the environment.
+        /// </summary>
+        /// <returns>The list of (name . value) pairs.</returns>
+        public SchemeObject ListEnv()
+        {
+            return this.symbolTable.ListEnv();
+        }
         #endregion
 
         #region SymbolTable
@@ -531,6 +540,24 @@ namespace SimpleScheme
                         sb.AppendFormat("{0}{1}: {2}\n", initial, this.names[i], this.values[i]);
                     }
                 }
+            }
+
+            /// <summary>
+            /// Create a list of (name . value) representing the symbol table.
+            /// </summary>
+            /// <returns>The name/value pairs.</returns>
+            public SchemeObject ListEnv()
+            {
+                SchemeObject result = EmptyList.Instance;
+                lock (this.lockObj)
+                {
+                    for (int i = 0; i < this.names.Count; i++)
+                    {
+                        result = List.Cons(List.Cons((SchemeString)this.names[i], this.values[i]), result);
+                    }
+                }
+
+                return result;
             }
 
             /// <summary>

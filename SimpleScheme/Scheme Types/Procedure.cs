@@ -49,16 +49,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Proc); }
-        }
-        #endregion
-
         #region Accessors
 
         /// <summary>
@@ -77,57 +67,57 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
-                //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
                 .DefinePrimitive(
-                        "apply",
+                        "apply", 
+                        new[] { "6.9", "(apply <proc> <args>)", "(apply <proc> <arg1> ... <args>)" },
                         (args, caller) => ((Procedure)First(args)).Apply(ListStar(Rest(args)), caller), 
                         2, 
                         MaxInt, 
-                        ValueType.Proc, 
-                        ValueType.Obj)
-                //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
+                        Primitive.ArgType.Proc, 
+                        Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "call-with-current-continuation",
+                        "call-with-current-continuation", 
+                        new[] { "6.9", "(call-with-current-continuation <proc>)" },
                         (args, caller) => ((Procedure)First(args)).CallCc(caller), 
                         1, 
-                        ValueType.Proc)
+                        Primitive.ArgType.Proc)
                 .DefinePrimitive(
-                        "call/cc",
+                        "call/cc", 
+                        new[] { "(call/cc <proc>)" },
                         (args, caller) => ((Procedure)First(args)).CallCc(caller), 
                         1, 
-                        ValueType.Proc)
+                        Primitive.ArgType.Proc)
 
-                //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
-                        "force",
+                        "force", 
+                        new[] { "6.9", "(force <promise>)" },
                         (args, caller) => Force((Procedure)First(args), caller), 
                         1, 
-                        ValueType.Proc)
-                //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
+                        Primitive.ArgType.Proc)
                 ////  Note: list(s) are optional and may be empty lists.
                 .DefinePrimitive(
-                        "for-each",
+                        "for-each", 
+                        new[] { "6.9", "(for-each <proc> <list1> <list2> ...)" },
                         (args, caller) => EvaluateMap.Call((Procedure)First(args), Rest(args), false, caller.Env, caller), 
                          1, 
                         MaxInt,
-                        ValueType.Proc, 
-                        ValueType.PairOrEmpty)
-                //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
+                        Primitive.ArgType.Proc, 
+                        Primitive.ArgType.PairOrEmpty)
                 ////  Note: list(s) are optional and may be empty lists.
                 .DefinePrimitive(
-                        "map",
+                        "map", 
+                        new[] { "6.9", "(map <proc> <list1> <list2> ...)" },
                         (args, caller) => EvaluateMap.Call((Procedure)First(args), Rest(args), true, caller.Env, caller), 
                         1, 
                         MaxInt, 
-                        ValueType.Proc, 
-                        ValueType.PairOrEmpty)
-                //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
+                        Primitive.ArgType.Proc, 
+                        Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
-                        "procedure?",
+                        "procedure?", 
+                        new[] { "6.9", "(procedure? <obj>)" },
                         (args, caller) => SchemeBoolean.Truth(First(args) is Procedure), 
                         1, 
-                        ValueType.Obj);
+                        Primitive.ArgType.Obj);
         }
         #endregion
 
@@ -140,6 +130,17 @@ namespace SimpleScheme
         public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
+        }
+
+        /// <summary>
+        /// Describe a procedure by returning its value.
+        /// </summary>
+        /// <returns>The procedure as a string.</returns>
+        public override string Describe()
+        {
+            var sb = new StringBuilder();
+            this.PrintString(false, sb);
+            return sb.ToString();
         }
 
         /// <summary>
@@ -269,7 +270,7 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private SchemeObject CallCc(Evaluator caller)
         {
-            return this.Apply(MakeList(Continuation.New(caller)), caller);
+            return this.Apply(List.MakeList(Continuation.New(caller)), caller);
         }
         #endregion
 

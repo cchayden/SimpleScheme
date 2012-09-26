@@ -46,16 +46,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Pair); }
-        }
-        #endregion
-
         #region Accessors
         /// <summary>
         /// Gets the first obj of the pair.

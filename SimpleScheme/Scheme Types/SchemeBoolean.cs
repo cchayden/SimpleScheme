@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// <summary>
         /// This is used to do equality tests for different types.
         /// </summary>
-        private static readonly Dictionary<Type, Func<SchemeObject, SchemeObject, SchemeBoolean>> equalMap;
+        private static readonly Dictionary<string, Func<SchemeObject, SchemeObject, SchemeBoolean>> equalMap;
         #endregion
 
         #region Fields
@@ -43,16 +43,16 @@ namespace SimpleScheme
         /// </summary>
         static SchemeBoolean()
         {
-            equalMap = new Dictionary<Type, Func<SchemeObject, SchemeObject, SchemeBoolean>>
+            equalMap = new Dictionary<string, Func<SchemeObject, SchemeObject, SchemeBoolean>>
                 {
-                    { typeof(EmptyList), (obj1, obj2) => obj2 is EmptyList ? True : False },
-                    { typeof(SchemeString), (obj1, obj2) => ((SchemeString)obj1).Equals(obj2) ? True : False },
-                    { typeof(Character), (obj1, obj2) => ((Character)obj1).Equals(obj2) ? True : False },
-                    { typeof(Vector), (obj1, obj2) => Vector.Equal((Vector)obj1, obj2) },
-                    { typeof(Pair), (obj1, obj2) => Pair.Equal((Pair)obj1, obj2) },
-                    { typeof(Symbol), (obj1, obj2) => ((Symbol)obj1).Equals(obj2) ? True : False },
-                    { typeof(SchemeBoolean), (obj1, obj2) => ((SchemeBoolean)obj1).Equals(obj2) ? True : False },
-                    { typeof(Number), (obj1, obj2) => ((Number)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.EmptyList", (obj1, obj2) => obj2 is EmptyList ? True : False },
+                    { "SimpleScheme.SchemeString", (obj1, obj2) => ((SchemeString)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.Character", (obj1, obj2) => ((Character)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.Vector", (obj1, obj2) => Vector.Equal((Vector)obj1, obj2) },
+                    { "SimpleScheme.Pair", (obj1, obj2) => Pair.Equal((Pair)obj1, obj2) },
+                    { "SimpleScheme.Symbol", (obj1, obj2) => ((Symbol)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.SchemeBoolean", (obj1, obj2) => ((SchemeBoolean)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.Number", (obj1, obj2) => ((Number)obj1).Equals(obj2) ? True : False },
                 };
         }
 
@@ -63,16 +63,6 @@ namespace SimpleScheme
         private SchemeBoolean(bool value)
         {
             this.value = value;
-        }
-        #endregion
-
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Boolean); }
         }
         #endregion
 
@@ -121,7 +111,7 @@ namespace SimpleScheme
         public static SchemeBoolean Equal(SchemeObject obj1, SchemeObject obj2)
         {
             Func<SchemeObject, SchemeObject, SchemeBoolean> action;
-            if (equalMap.TryGetValue(obj1.GetType(), out action))
+            if (equalMap.TryGetValue(obj1.ClrTypeName, out action))
             {
                 return action(obj1, obj2);
             }
@@ -206,25 +196,21 @@ namespace SimpleScheme
         public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
-                //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(First(args) is SchemeBoolean), 1, ValueType.Obj)
-                //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2, ValueType.Obj)
-                //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(First(args), Second(args))), 2, ValueType.Obj)
-                //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(First(args), Second(args))), 2, ValueType.Obj)
-                //// <r4rs section="6.1">(not <obj>)</r4rs>
+                .DefinePrimitive("boolean?", new[] { "6.1", "(boolean? <obj>)" }, (args, caller) => Truth(First(args) is SchemeBoolean), 1, Primitive.ArgType.Obj)
+                .DefinePrimitive("eq?", new[] { "6.2", "(eq? <obj1> <obj2>)" }, (args, caller) => Truth(Eqv(First(args), Second(args))), 2, Primitive.ArgType.Obj)
+                .DefinePrimitive("equal?", new[] { "6.2", "(equal? <obj1> <obj2>)" }, (args, caller) => Truth(Equal(First(args), Second(args))), 2, Primitive.ArgType.Obj)
+                .DefinePrimitive("eqv?", new[] { "6.2", "(eqv? <obj1> <obj2>)" }, (args, caller) => Truth(Eqv(First(args), Second(args))), 2, Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "not",
+                    "not", 
+                    new[] { "6.1", "(not <obj>" },
                     (args, caller) => Truth(First(args) is SchemeBoolean && ((SchemeBoolean)First(args)).Value == false), 
                     1, 
-                    ValueType.Obj)
-                //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(First(args) is EmptyList), 1, ValueType.Obj);
+                    Primitive.ArgType.Obj)
+                .DefinePrimitive("null?", new[] { "6.3", "(null? <obj>)" }, (args, caller) => Truth(First(args) is EmptyList), 1, Primitive.ArgType.Obj);
         }
         #endregion
 
+        #region CLR Type Converters
         /// <summary>
         /// Convert boolean.
         /// </summary>
@@ -240,6 +226,7 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(typeof(SchemeBoolean), x);
             return false;
         }
+        #endregion
 
         #region Equality
         /// <summary>
@@ -296,6 +283,15 @@ namespace SimpleScheme
         public override string ToString()
         {
             return this.value ? "True" : "False";
+        }
+
+        /// <summary>
+        /// Describe a boolean by returning its value.
+        /// </summary>
+        /// <returns>The boolean as a string.</returns>
+        public override string Describe()
+        {
+            return this.ToString();
         }
         #endregion
     }

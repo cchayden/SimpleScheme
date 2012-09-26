@@ -15,6 +15,7 @@ namespace SimpleScheme
     /// </summary>
     public class ClrObject : SchemeObject
     {
+        #region Fields
         /// <summary>
         /// Maps a type to a function that converts an instance of that type to a corresponding clr type.
         /// </summary>
@@ -29,7 +30,9 @@ namespace SimpleScheme
         /// The wrapped clrObject.
         /// </summary>
         private readonly object clrObject;
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Initializes static members of the <see cref="ClrObject"/> class. 
         /// </summary>
@@ -83,7 +86,6 @@ namespace SimpleScheme
                     { typeof(long[]), elem => Vector.New(elem) },
                     { typeof(short[]), elem => Vector.New(elem) },
                     { typeof(byte[]), elem => Vector.New(elem) },
-                    //{ typeof(char[]), elem => Vector.New(elem) },
                     { typeof(char[]), elem => SchemeString.New((char[])elem) },
                     { typeof(object[]), elem => Vector.New(elem) },
                 };
@@ -97,15 +99,7 @@ namespace SimpleScheme
         {
             this.clrObject = clrObject;
         }
-
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.ClrObject); }
-        }
+        #endregion
 
         /// <summary>
         /// Gets the clr object itself.
@@ -114,8 +108,6 @@ namespace SimpleScheme
         {
             get { return this.clrObject; }
         }
-
-        #endregion
 
         #region New
         /// <summary>
@@ -140,9 +132,10 @@ namespace SimpleScheme
         {
             if (elem is ClrObject)
             {
-                if (((ClrObject)elem).Value.GetType() == clrClass)
+                var value = ((ClrObject)elem).Value;
+                if (value.GetType() == clrClass)
                 {
-                    return ((ClrObject)elem).Value;
+                    return value;
                 }
             }
 

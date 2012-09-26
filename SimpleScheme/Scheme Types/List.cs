@@ -275,176 +275,151 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             env
-                //// <r4rs section="6.3">(append <list> ...)</r4rs>
                 .DefinePrimitive(
-                    "append",
+                    "append", new[] { "6.3", "(append <list> ...)" },
                     (args, caller) => Append(args), 
                     0, 
                     MaxInt, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "assoc", 
+                    "assoc", new[] { "6.3", "(assoc <obj> <alist>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Equal(x, y).Value), 
                     2,
-                    SchemeObject.ValueType.Obj, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "assq", 
+                    "assq", new[] { "(assq <obj> <alist>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2, 
-                    SchemeObject.ValueType.Obj, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(assv <obj> <alist>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "assv", 
+                    "assv", new[] { "6.3", "(assv <obj> <alist>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2, 
-                    SchemeObject.ValueType.Obj, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(car <pair>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                     "car", 
+                     "car", new[] { "6.3", "(car <pair>)" }, 
                      (args, caller) => First(First(args)), 
                      1, 
-                     SchemeObject.ValueType.Pair)
-                //// (first <pair>)
+                     Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "first", 
+                    "first", new[] { "(first <pair>)" }, 
                     (args, caller) => First(First(args)), 
                     1, 
-                    SchemeObject.ValueType.Pair)
-                //// (second <pair>)
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "second", 
+                    "second", new[] { "(second <pair>)" }, 
                     (args, caller) => Second(First(args)), 
                     1, 
-                    SchemeObject.ValueType.Pair)
-                //// (third <pair>)
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "third", 
+                    "third", new[] { "(third <pair>)" }, 
                     (args, caller) => Third(First(args)), 
                     1, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(cdr <pair>)</r4rs>
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "cdr", 
+                    "cdr", new[] { "6.3", "(cdr <pair>)" }, 
                     (args, caller) => Rest(First(args)),
                     1, 
-                    SchemeObject.ValueType.Pair)
-                //// (rest <pair>)
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "rest", 
+                    "rest", new[] { "(rest <pair>)" }, 
                     (args, caller) => Rest(First(args)), 
                     1, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(cons <obj1> <obj2>)</r4rs>
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "cons", 
+                    "cons", new[] { "6.3", "(cons <obj1> <obj2>)" }, 
                     (args, caller) => Cons(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(length <list> ...)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "length", 
+                    "length", new[] { "6.3", "(length <list> ...)" }, 
                     (args, caller) => (Number)ListLength(First(args)),
                     1, 
-                    SchemeObject.ValueType.PairOrEmpty)
-                //// <r4rs section="6.3">(list <obj> ...)</r4rs>
+                    Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
-                    "list", 
+                    "list", new[] { "6.3", "(list <obj> ...)" }, 
                     (args, caller) => args, 
                     0, 
                     MaxInt, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "list-ref", 
+                    "list-ref", new[] { "6.3", "(list-ref <list> <k>)" }, 
                     (args, caller) => ListRef(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Pair, 
-                    SchemeObject.ValueType.Number)
-                //// <r4rs section="6.3">(list-tail <list> <k>)</r4rs>
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "list-tail", 
+                    "list-tail", new[] { "6.3", "(list-tail <list> <k>)" }, 
                     (args, caller) => ListTail(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Pair, 
-                    SchemeObject.ValueType.Number)
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "list*",
+                    "list*", new[] { "(list* <obj> ...)" },
                     (args, caller) => ListStar(args), 
                     2, 
                     MaxInt, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(list? <obj>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "list?", 
+                    "list?", new[] { "6.3", "(list? <obj>)" }, 
                     (args, caller) => SchemeBoolean.Truth(IsList(First(args))), 
                     1, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "member", 
+                    "member", new[] { "6.3", "(member <obj> <list>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y).Value), 
                     2,
-                    SchemeObject.ValueType.Obj, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(memq <obj> <list>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "memq", 
+                    "memq", new[] { "6.3", "(memq <obj> <list>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2,
-                    SchemeObject.ValueType.Obj, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "memv", 
+                    "memv", new[] { "6.3", "(memv <obj> <list>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2,
-                    SchemeObject.ValueType.Obj, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(pair? <obj>)</r4rs>
+                    Primitive.ArgType.Obj, 
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "pair?", 
+                    "pair?", new[] { "6.3", "(pair? <obj>)" }, 
                     (args, caller) => SchemeBoolean.Truth(First(args) is Pair), 
                     1, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(reverse <list>)</r4rs>
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "reverse", 
+                    "reverse", new[] { "6.3", "(reverse <list>)" }, 
                     (args, caller) => ReverseList(First(args)), 
                     1, 
-                    SchemeObject.ValueType.Pair)
-                //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
+                    Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                    "set-car!", 
+                    "set-car!", new[] { "6.3", "(set-car! <pair> <obj>)" }, 
                     (args, caller) => SetFirst(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Pair, 
-                    SchemeObject.ValueType.Obj)
-                //// (set-first! <pair> <obj>)
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "set-first!", 
+                    "set-first!", new[] { "(set-first! <pair> <obj>)" }, 
                     (args, caller) => SetFirst(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Pair, 
-                    SchemeObject.ValueType.Obj)
-                //// <r4rs section="6.3">(set-cdr! <pair> <obj>)</r4rs>
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "set-cdr!", 
+                    "set-cdr!", new[] { "6.3", "(set-cdr! <pair> <obj>)" }, 
                     (args, caller) => SetRest(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Pair, 
-                    SchemeObject.ValueType.Obj)
-                //// (set-rest! <pair> <obj>)
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                    "set-rest!", 
+                    "set-rest!", new[] { "(set-rest! <pair> <obj>)" }, 
                     (args, caller) => SetRest(First(args), Second(args)), 
                     2, 
-                    SchemeObject.ValueType.Pair, 
-                    SchemeObject.ValueType.Obj);
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Obj);
 
             DefineAccessPrimitives(env, "aa");
             DefineAccessPrimitives(env, "ad");
@@ -479,7 +454,7 @@ namespace SimpleScheme
         private static void DefineAccessPrimitives(PrimitiveEnvironment env, string access)
         {
             string prim = "c" + access + "r";
-            env.DefinePrimitive(prim, (args, caller) => Cxr(prim, args), 1, SchemeObject.ValueType.Pair);
+            env.DefinePrimitive(prim, new[] { "6.3", "(" + prim + "<pair>)" }, (args, caller) => Cxr(prim, args), 1, Primitive.ArgType.Pair);
             if (access.Length >= 4)
             {
                 return;

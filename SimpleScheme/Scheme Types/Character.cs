@@ -48,16 +48,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SchemeType Accessors
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get { return ValueTypeName(ValueType.Char); }
-        }
-        #endregion
-
         #region Accessors
         /// <summary>
         /// Gets the character itself.
@@ -165,123 +155,124 @@ namespace SimpleScheme
         public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
-                //// <r4rs section="6.6">(char->integer <char>)</r4rs>
                 .DefinePrimitive(
-                        "char->integer",
+                        "char->integer", 
+                        new[] { "6.6", "(char->integer <char>)" },
                         (args, caller) => (Number)((Character)First(args)).C,
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-alphabetic?",
+                        "char-alphabetic?", 
+                        new[] { "6.6", "(char-alphabetic? <char>)" },
                         (args, caller) => SchemeBoolean.Truth(char.IsLetter(((Character)First(args)).C)), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                    "char-ci<=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) <= 0), 
-                    2, 
-                    ValueType.Char)
-                //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
+                        "char-ci<=?", 
+                        new[] { "6.6", "(char-ci<=? <char1> <char2>)" },
+                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) <= 0), 
+                        2, 
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-ci<?",
+                        "char-ci<?", 
+                        new[] { "6.6", "(char-ci<? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) < 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-ci=? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-ci=?",
+                        "char-ci=?", 
+                        new[] { "6.6", "(char-ci=? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) == 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-ci>=? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-ci>=?",
+                        "char-ci>=?", 
+                        new[] { "6.6", "(char-ci>=? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) >= 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-ci>?",
+                        "char-ci>?", 
+                        new[] { "6.6", "(char-ci>? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) > 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-downcase",
+                        "char-downcase", 
+                        new[] { "(char-downcase <char>)" },
                         (args, caller) => (Character)char.ToLower(((Character)First(args)).C), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-lower-case?",
+                        "char-lower-case?", 
+                        new[] { "6.6", "(char-lower-case? <letter>)" },
                         (args, caller) => SchemeBoolean.Truth(char.IsLower(((Character)First(args)).C)), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-numeric?",
+                        "char-numeric?", 
+                        new[] { "6.6", "(char-numeric? <char>)" },
                         (args, caller) => SchemeBoolean.Truth(char.IsDigit(((Character)First(args)).C)), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-upcase",
+                        "char-upcase", 
+                        new[] { "6.6", "(char-upcase <char>)" },
                         (args, caller) => (Character)char.ToUpper(((Character)First(args)).C), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-upper-case?",
+                        "char-upper-case?", 
+                        new[] { "6.6", "(char-upper-case? <letter>)" },
                         (args, caller) => SchemeBoolean.Truth(char.IsUpper(((Character)First(args)).C)), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char-whitespace?",
+                        "char-whitespace?", 
+                        new[] { "6.6", "(char-chitespace? <char>)" },
                         (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(((Character)First(args)).C)), 
                         1, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                       "char<=?",
+                       "char<=?", 
+                       new[] { "6.6", "(char<=? <char1> <char2>)" },
                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) <= 0), 
                        2, 
-                       ValueType.Char)
-                //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
+                       Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char<?",
+                        "char<?", 
+                        new[] { "6.6", "(char<? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) < 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char=? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char=?",
+                        "char=?", 
+                        new[] { "6.6", "(char=? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) == 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char>=? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char>=?",
+                        "char>=?", 
+                        new[] { "6.6", "(char>=? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) >= 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char>?",
+                        "char>?", 
+                        new[] { "6.6", "(char>? <char1> <char2>)" },
                         (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) > 0), 
                         2, 
-                        ValueType.Char)
-                //// <r4rs section="6.6">(char? <obj>)</r4rs>
+                        Primitive.ArgType.Char)
                 .DefinePrimitive(
-                        "char?",
+                        "char?", 
+                        new[] { "6.6", "(char? <obj>)" },
                         (args, caller) => SchemeBoolean.Truth(First(args) is Character), 
                         1, 
-                        ValueType.Obj);
+                        Primitive.ArgType.Obj);
         }
         #endregion
 
+        #region CLR Type Converters
         /// <summary>
         /// Conver to a char.
         /// </summary>
@@ -297,6 +288,7 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(typeof(Character), x);
             return '\0';
         }
+        #endregion
 
         #region Public Methods
         /// <summary>
@@ -319,6 +311,15 @@ namespace SimpleScheme
             {
                 buf.Append(this.c);
             }
+        }
+
+        /// <summary>
+        /// Describe a character by returning its value.
+        /// </summary>
+        /// <returns>The character as a string.</returns>
+        public override string Describe()
+        {
+            return this.ToString();
         }
         #endregion
 

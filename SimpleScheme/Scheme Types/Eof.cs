@@ -46,17 +46,6 @@ namespace SimpleScheme
 
         #region SchemeType Accessors
 
-        /// <summary>
-        /// Gets the name of the type.
-        /// </summary>
-        public override string TypeName
-        {
-            get
-            {
-                return ValueTypeName(ValueType.Eof);
-            }
-        }
-
         #endregion
 
         #region Public Methods

@@ -234,35 +234,47 @@ namespace SimpleScheme
         public static void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
-                //// (trace-on)
                 .DefinePrimitive(
-                    "trace-on",
+                    "trace-on", 
+                    new[] { "(trace-on)" },
                     (args, caller) => SetTraceFlag(caller, true), 
                     0)
-                //// (trace-off)
                 .DefinePrimitive(
-                    "trace-off",
+                    "trace-off", 
+                    new[] { "(trace-off)" },
                     (args, caller) => SetTraceFlag(caller, false), 
                     0)
-                //// (counters-on)
                 .DefinePrimitive(
-                    "counters-on",
+                    "counters-on", 
+                    new[] { "(counters-on)" },
                     (args, caller) => SetCountFlag(caller, true), 
                     0)
-                //// (counters-off)
                 .DefinePrimitive(
-                    "counters-off",
+                    "counters-off", 
+                    new[] { "(counters-off)" },
                     (args, caller) => SetCountFlag(caller, false), 
                     0)
-                //// (backtrace)
                 .DefinePrimitive(
-                    "backtrace",
+                    "backtrace", 
+                    new[] { "(backtrace)" },
                     (args, caller) => Backtrace(caller), 
                     0);
                 env.DefinePrimitive(
-                    "debug",
+                    "debug", 
+                    new[] { "(debug)" },
                     (args, caller) => Debug(caller), 
                     0);
+                env.DefinePrimitive(
+                    "list-primitives", 
+                    new[] { "(list-primitives)" },
+                    (args, caller) => caller.Interp.PrimEnvironment.ListPrimitives(), 
+                    0);
+                env.DefinePrimitive(
+                    "describe", 
+                    new[] { "(describe <obj>)" },
+                    (args, caller) => Describe(List.First(args)), 
+                    1, 
+                    Primitive.ArgType.Obj);
         }
         #endregion
 
@@ -714,6 +726,17 @@ namespace SimpleScheme
             caller.Interp.CurrentOutputPort.WriteLine("debug");
             return Undefined.Instance;
         }
+
+        /// <summary>
+        /// Return a description of the given object.
+        /// </summary>
+        /// <param name="obj">The object to describe.</param>
+        /// <returns>A description in a SchemeString.</returns>
+        private static SchemeObject Describe(SchemeObject obj)
+        {
+            string msg = string.Format("Type: {0}\nDescription: {1}", obj.GetType().Name, obj.Describe());
+            return SchemeString.New(msg);
+        }
         #endregion
 
         #region Unsafe Private Methods
@@ -735,7 +758,6 @@ namespace SimpleScheme
         private static SchemeObject UnsafeEndEval(IAsyncResult ar)
         {
             var res = ((AsyncResult<SchemeObject>)ar).EndInvoke();
-            // TODO cch should this be converted?
             return res;
         }
 
