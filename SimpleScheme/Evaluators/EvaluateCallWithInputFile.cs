@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a call-with-input-file expressions
     /// </summary>
-    public sealed class EvaluateCallWithInputFile : Evaluator
+    internal sealed class EvaluateCallWithInputFile : Evaluator
     {
         #region Fields
         /// <summary>
@@ -31,33 +31,34 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="port">The input port.</param>
         private EvaluateCallWithInputFile(SchemeObject args, Environment env, Evaluator caller, InputPort port)
-            : base(args, env, caller, counter)
+            : base(InitialStep, args, env, caller, counter)
         {
             this.port = port;
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call a new evaluator with an input file
         /// </summary>
         /// <param name="args">A pair, containing a filename and a proc to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Evaluator Call(SchemeObject args, Evaluator caller)
+        internal static Evaluator Call(SchemeObject args, Evaluator caller)
         {
             InputPort port = OpenInputFile(First(args), caller.Interp);
             return new EvaluateCallWithInputFile(args, caller.Env, caller, port);
         }
+        #endregion
 
+        #region Internal Static Methods
         /// <summary>
         /// Open a file for input.
         /// </summary>
         /// <param name="filename">The filename of the file to open.</param>
         /// <param name="interp">The interpreter.</param>
         /// <returns>The input port, used for reading.</returns>
-        public static InputPort OpenInputFile(SchemeObject filename, Interpreter interp)
+        internal static InputPort OpenInputFile(SchemeObject filename, Interpreter interp)
         {
             try
             {
@@ -74,7 +75,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Open the input file and apply the proc.  
         /// </summary>
@@ -83,8 +84,9 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateCallWithInputFile)s;
-            var proc = Second(s.Expr);
-            return ((Procedure)proc).Apply(MakeList(step.port), s.ContinueAt(CloseStep));
+            var proc = (Procedure)Second(s.Expr);
+            s.Pc = CloseStep;
+            return proc.Apply(MakeList(step.port), null, s, s);
         }
 
         /// <summary>
@@ -100,7 +102,9 @@ namespace SimpleScheme
                 step.port.Close();
             }
 
-            return step.ReturnFromStep(s.ReturnedExpr);
+            Evaluator caller = step.Caller;
+            caller.ReturnedExpr = s.ReturnedExpr;
+            return caller;
         }
         #endregion
     }

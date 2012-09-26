@@ -252,12 +252,12 @@ namespace Tests
             @"
             (let ((x '(1 3 5 7 9)))
      	       (do ((x x (cdr x))
-     		    (sum 0 (+ sum (car x))))
+     		        (sum 0 (+ sum (car x))))
      		   ((null? x) sum)))");
             this.Run("25", "do", 
             @"
             (let ((x '(1 3 5 7 9))
-                   (sum 0))
+                  (sum 0))
      	       (do ((x x (cdr x)))
     		       ((null? x))
     		       (set! sum (+ sum (car x))))

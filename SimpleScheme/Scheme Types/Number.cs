@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Utilities that have to do with numbers.
     /// Scheme numbers are preresented by .NET double.
     /// </summary>
-    public class Number : SchemeObject
+    public class Number : SchemeObject, IEquatable<Number>
     {
         #region Static Fields
         /// <summary>
@@ -107,7 +107,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
         /// Create a new number from a long.
         /// </summary>
@@ -290,8 +290,8 @@ namespace SimpleScheme
         /// <summary>
         /// Define the numeric primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             // not implemented
             //// <r4rs section="6.5.5">(numerator <q>)</r4rs>
@@ -305,303 +305,242 @@ namespace SimpleScheme
             //// <r4rs section="6.5.5">(angle <z>)</r4rs>
 
             const int MaxInt = int.MaxValue;
-            env
+            primEnv
                 .DefinePrimitive(
                     "*", 
                     new[] { "6.5.5", "(* <z1> ...)" },
-                    (args, caller) => Compute(args, (x, y) => x * y, 1.0),
-                    0, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compute(args, (x, y) => x * y, 1.0),
+                    new ArgsInfo(0, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "+", 
                     new[] { "6.5.5", "(+ <z1> ...)" },
-                    (args, caller) => Compute(args, (x, y) => x + y, 0.0),
-                    0, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compute(args, (x, y) => x + y, 0.0),
+                    new ArgsInfo(0, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "-", 
                     new[] { "6.5.5", "(- <z1> <z2>)", "(- <z>)" },
-                    (args, caller) => Compute(args, (x, y) => x - y, 0.0),
-                    1, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compute(args, (x, y) => x - y, 0.0),
+                    new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "/", 
                     new[] { "6.5.5", "(/ <z1> <z2>)", "(/ <z>)", "(/ <z1> <z2> ...)" },
-                    (args, caller) => Compute(args, (x, y) => x / y, 1.0),
-                    1, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compute(args, (x, y) => x / y, 1.0),
+                    new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "=", 
                     new[] { "6.5.5", "(= <z1> <z2> <z3> ...)" }, 
-                    (args, caller) => Compare(args, (x, y) => x == y), 
-                    2, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compare(args, (x, y) => x == y), 
+                    new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "<", 
                     new[] { "6.5.5", "(< <z1> <z2> <z3> ...)" }, 
-                    (args, caller) => Compare(args, (x, y) => x < y), 
-                    2, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compare(args, (x, y) => x < y), 
+                    new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     ">", 
                     new[] { "6.5.5", "(> <z1> <z2> <z3> ...)" }, 
-                    (args, caller) => Compare(args, (x, y) => x > y), 
-                    2, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compare(args, (x, y) => x > y), 
+                    new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "<=", 
                     new[] { "6.5.5", "(<= <z1> <z2> <z3> ...)" }, 
-                    (args, caller) => Compare(args, (x, y) => x <= y), 
-                    2, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compare(args, (x, y) => x <= y), 
+                    new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     ">=", 
                     new[] { "6.5.5", "(>= <z1> <z2> <z3> ...)" }, 
-                    (args, caller) => Compare(args, (x, y) => x >= y), 
-                    2, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compare(args, (x, y) => x >= y), 
+                    new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "abs", 
                     new[] { "6.5.5", "(abs <x>)" }, 
-                    (args, caller) => (Number)Math.Abs(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Abs(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "ceiling", 
                     new[] { "6.5.5", "(ceiling <x>)" }, 
-                    (args, caller) => (Number)Math.Ceiling(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Ceiling(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "floor", 
                     new[] { "6.5.5", "(floor <x>)" }, 
-                    (args, caller) => (Number)Math.Floor(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Floor(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "acos", 
                     new[] { "6.5.5", "(acos <z>)" }, 
-                    (args, caller) => (Number)Math.Acos(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Acos(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "asin", 
                     new[] { "6.5.5", "(asin <z>)" }, 
-                    (args, caller) => (Number)Math.Asin(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Asin(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "atan", 
                     new[] { "6.5.5", "(atan <z>)", "(atan <y> <x>)" }, 
-                    (args, caller) => (Number)Math.Atan(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Atan(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "complex?", 
                     new[] { "6.5.5", "(complex? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(First(args) is Number), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is Number), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "cos", 
                     new[] { "6.5.5", "(cos <z>)" }, 
-                    (args, caller) => (Number)Math.Cos(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Cos(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "even?", 
                     new[] { "6.5.5", "(even? <n>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(First(args))) % 2 == 0), 
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => SchemeBoolean.Truth(Math.Abs(Num(First(args))) % 2 == 0), 
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "exact?", 
                     new[] { "6.5.5", "(exact? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "exact->inexact", 
                     new[] { "6.5.5", "(exact->inexact <z>)" }, 
-                    (args, caller) => (Number)Num(First(args)),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Num(First(args)),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "exp", 
                     new[] { "6.5.5", "(exp <z>)" }, 
-                    (args, caller) => (Number)Math.Exp(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Exp(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "expt", 
                     new[] { "6.5.5", "(expt <z1> <z2>)" }, 
-                    (args, caller) => (Number)Expt(Num(First(args)), Num(Second(args))),
-                    2, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Expt(Num(First(args)), Num(Second(args))),
+                    new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "gcd", 
                     new[] { "6.5.5", "(gcd <n1> ...)" }, 
-                    (args, caller) => (Number)(args is EmptyList ? 0 : Gcd(args)),
-                    0, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)(args is EmptyList ? 0 : Gcd(args)),
+                    new ArgsInfo(0, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "inexact?", 
                     new[] { "6.5.5", "(inexact? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(!IsExact(First(args))), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(!IsExact(First(args))), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "inexact->exact", 
                     new[] { "6.5.5", "(inexact->exact <z>)" }, 
-                    (args, caller) => (Number)Num(First(args)),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Num(First(args)),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "integer->char", 
                     new[] { "6.6", "(integer->char <n>)" }, 
-                    (args, caller) => (Character)(char)(int)Num(First(args)), 
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Character)(char)(int)Num(First(args)), 
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "integer?", 
                     new[] { "6.5.5", "(integer? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "lcm", 
                     new[] { "6.5.5", "(lcm <n1> ...)" }, 
-                    (args, caller) => (Number)(args is EmptyList ? 1 : Lcm(args)),
-                    0, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)(args is EmptyList ? 1 : Lcm(args)),
+                    new ArgsInfo(0, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "log", 
                     new[] { "6.5.5", "(log <z>)" }, 
-                    (args, caller) => (Number)Math.Log(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Log(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "max", 
                     new[] { "6.5.5", "(max? <x1> <x2> ...)" }, 
-                    (args, caller) => Compute(args, Math.Max, Num(First(args))),
-                    1, 
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compute(args, Math.Max, Num(First(args))),
+                    new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "min", 
                     new[] { "6.5.5", "(min? <x1> <x2> ...)" }, 
-                    (args, caller) => Compute(args, Math.Min, Num(First(args))),
-                    1,
-                    MaxInt, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Compute(args, Math.Min, Num(First(args))),
+                    new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "modulo", 
                     new[] { "6.5.5", "(module <n1> <n2>)" }, 
-                    (args, caller) => (Number)Modulo(Num(First(args)), Num(Second(args))),
-                    2, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Modulo(Num(First(args)), Num(Second(args))),
+                    new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "negative?", 
                     new[] { "6.5.5", "(negative? <x>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(Num(First(args)) < 0), 
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => SchemeBoolean.Truth(Num(First(args)) < 0), 
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "number->string", 
                     new[] { "6.5.6", "(number->string <number>)", "(number->string <number> <radix>)" }, 
-                    (args, caller) => NumberToString(Num(First(args)), Second(args)), 
-                    1, 
-                    2, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => NumberToString(Num(First(args)), Second(args)), 
+                    new ArgsInfo(1, 2, ArgType.Number))
                 .DefinePrimitive(
                     "number?", 
                     new[] { "6.5.5", "(number? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(First(args) is Number), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is Number), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "odd?", 
                     new[] { "6.5.5", "(odd? <n>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(First(args))) % 2 != 0), 
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => SchemeBoolean.Truth(Math.Abs(Num(First(args))) % 2 != 0), 
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "positive?", 
                     new[] { "6.5.5", "(positive? <x>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(Num(First(args)) > 0), 
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => SchemeBoolean.Truth(Num(First(args)) > 0), 
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "quotient", 
                     new[] { "6.5.5", "(quotient <n1> <n2>)" }, 
-                    (args, caller) => (Number)Quotient(Num(First(args)), Num(Second(args))),
-                    2, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Quotient(Num(First(args)), Num(Second(args))),
+                    new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "rational?", 
                     new[] { "6.5.5", "(rational? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "real?", 
                     new[] { "6.5.5", "(real? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(IsExact(First(args))), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "remainder", 
                     new[] { "6.5.5", "(remainder <n1> <n2>)" }, 
-                    (args, caller) => (Number)((long)Num(First(args)) % (long)Num(Second(args))), 
-                    2, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)((long)Num(First(args)) % (long)Num(Second(args))), 
+                    new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "round", 
                     new[] { "6.5.5", "(round <x>)" }, 
-                    (args, caller) => (Number)Math.Round(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Round(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "sin", 
                     new[] { "6.5.5", "(sin <z>)" }, 
-                    (args, caller) => (Number)Math.Sin(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Sin(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "sqrt", 
                     new[] { "6.5.5", "(sqrt <z>)" }, 
-                    (args, caller) => (Number)Math.Sqrt(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Sqrt(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "tan", 
                     new[] { "6.5.5", "(tan <z>)" }, 
-                    (args, caller) => (Number)Math.Tan(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Math.Tan(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "truncate", 
                     new[] { "6.5.5", "(truncate <x>)" }, 
-                    (args, caller) => (Number)Truncate(Num(First(args))),
-                    1, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Number)Truncate(Num(First(args))),
+                    new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "zero?", 
                     new[] { "6.5.5", "(zero? <z>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(Num(First(args)) == 0), 
-                    1, 
-                    Primitive.ArgType.Number);
+                    (args, env, caller) => SchemeBoolean.Truth(Num(First(args)) == 0), 
+                    new ArgsInfo(1, ArgType.Number));
         }
         #endregion
 
@@ -655,15 +594,6 @@ namespace SimpleScheme
 
             return Num(this).ToString(CultureInfo.InvariantCulture);
         }
-
-        /// <summary>
-        /// Describe a number by returning its value.
-        /// </summary>
-        /// <returns>The number as a string.</returns>
-        public override string Describe()
-        {
-            return this.ToString();
-        }
         #endregion
 
         #region New
@@ -686,6 +616,17 @@ namespace SimpleScheme
             }
 
             return new Number(number);
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Describe a number by returning its value.
+        /// </summary>
+        /// <returns>The number as a string.</returns>
+        internal override string Describe()
+        {
+            return this.ToString();
         }
         #endregion
 

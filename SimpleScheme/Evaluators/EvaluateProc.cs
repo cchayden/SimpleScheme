@@ -3,12 +3,10 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
-    public sealed class EvaluateProc : Evaluator
+    internal sealed class EvaluateProc : Evaluator
     {
         #region Fields
         /// <summary>
@@ -27,28 +25,19 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateProc class.
         /// </summary>
+        /// <param name="fn">The function to apply.</param>
         /// <param name="args">The arguments to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        private EvaluateProc(SchemeObject args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
-            : base(args, env, caller, counter)
+        private EvaluateProc(Procedure fn, SchemeObject args, Environment env, Evaluator caller, bool evaluate)
+            : base(EvalArgsStep, args, env, caller, counter)
         {
             this.fn = fn;
-            if (evaluate)
-            {
-                this.ContinueAt(EvalArgsStep);
-            }
-            else
-            {
-                this.UpdateReturnValue(args); // as if EvalArgs returned this, the unevaluated args
-                this.ContinueAt(ApplyStep);
-            }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call apply proc evaluator after evaluating args.
         /// </summary>
@@ -57,38 +46,39 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Evaluator Call(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
+        internal static Evaluator Call(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
         {
-            return new EvaluateProc(args, env, caller, fn, true);
+            return new EvaluateProc(fn, args, env, caller, true);
         }
 
         /// <summary>
         /// Call apply proc evaluator, but do not evaluate arguments.
+        /// In this case, we can avoid having to instantiate an instance.
         /// </summary>
         /// <param name="fn">The function to apply.</param>
         /// <param name="args">The arguments to pass to fn.</param>
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Evaluator CallQuoted(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
+        internal static Evaluator CallQuoted(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
         {
-            return new EvaluateProc(args, env, caller, fn, false);
+            return fn.Apply(args, null, caller, caller);
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Provide TraceInfo: the name and the proc to execute.
         /// </summary>
         /// <returns>Trace info.</returns>
-        public override string TraceInfo()
+        internal override string TraceInfo()
         {
             string info = base.TraceInfo();
             return info == null ? null : info + " " + this.fn;
         }
         #endregion
 
-        #region Private Static Methods
+        #region Steps
         /// <summary>
         /// Begin by evaluating all the arguments.
         /// </summary>
@@ -96,7 +86,9 @@ namespace SimpleScheme
         /// <returns>Next action to evaluate the args.</returns>
         private static Evaluator EvalArgsStep(Evaluator s)
         {
-            return EvaluateList.Call(s.Expr, s.Env, s.ContinueAt(ApplyStep));
+            s.Pc = ApplyStep;
+// TODO fold EvaluateList steps into here
+            return EvaluateList.Call(s.Expr, s.Env, s);
         }
 
         /// <summary>
@@ -112,13 +104,13 @@ namespace SimpleScheme
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("evaluate-proc: {0} applied to {1}", fn.ProcedureName, s.ReturnedExpr));
+                    string.Format("evaluate-proc: {0} applied to {1}", fn.ProcedureName, s.ReturnedExpr));
             }
 #endif
 
             // Pass s.Caller to return to the caller rather than to here, since there is
             //  nothing left to do.
-            return fn.Apply(EnsureSchemeObject(s.ReturnedExpr), s.Caller);
+            return fn.Apply(s.ReturnedExpr, null, s.Caller, s);
         }
         #endregion
     }

@@ -47,7 +47,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">A text reader.</param>
         /// <param name="interp">The interpreter.</param>
-        public InputPort(TextReader inp, Interpreter interp)
+        private InputPort(TextReader inp, Interpreter interp)
         {
             this.inp = inp;
             this.transcript = interp.Transcript;
@@ -99,8 +99,8 @@ namespace SimpleScheme
         /// <summary>
         /// Define the input primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
@@ -108,81 +108,67 @@ namespace SimpleScheme
             //// <r4rs section="6.10.2">(char-ready?)</r4rs>
             //// <r4rs section="6.10.2">(char-ready? <port>)</r4rs>
 
-            env
+            primEnv
                 .DefinePrimitive(
                         "eof-object?", 
                         new[] { "6.10.2", "(eof-object? <obj>)" },
-                        (args, caller) => SchemeBoolean.Truth(First(args) is Eof), 
-                        1, 
-                        Primitive.ArgType.Obj)
+                        (args, env, caller) => SchemeBoolean.Truth(First(args) is Eof), 
+                        new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                        "call-with-input-file", 
                        new[] { "6.10.1", "(call-with-input-file <string> <proc>)" },
-                       EvaluateCallWithInputFile.Call, 
-                       2, 
-                       Primitive.ArgType.String, 
-                       Primitive.ArgType.Proc)
+                       (args, env, caller) => EvaluateCallWithInputFile.Call(args, caller), 
+                       new ArgsInfo(2, ArgType.String, ArgType.Proc))
                 .DefinePrimitive(
                         "close-input-port", 
                         new[] { "6.10.1", "(close-input-port <port>)" },
-                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).CloseInputPort(), 
-                        1, 
-                        Primitive.ArgType.InputPort)
+                        (args, env, caller) => Port(First(args), caller.Interp.CurrentInputPort).CloseInputPort(), 
+                        new ArgsInfo(1, ArgType.InputPort))
                 .DefinePrimitive(
                         "current-input-port", 
                         new[] { "6.10.1", "(current-input-port)" },
-                        (args, caller) => caller.Interp.CurrentInputPort, 
-                        0)
+                        (args, env, caller) => caller.Interp.CurrentInputPort, 
+                        new ArgsInfo(0))
                 .DefinePrimitive(
                         "input-port?", 
                         new[] { "6.10.1", "(input-port? <obj>)" },
-                        (args, caller) => SchemeBoolean.Truth(First(args) is InputPort), 
-                        1, 
-                        Primitive.ArgType.Obj)
+                        (args, env, caller) => SchemeBoolean.Truth(First(args) is InputPort), 
+                        new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                         "load", 
                         new[] { "6.10.4", "(load <filename>)" },
-                        (args, caller) => LoadFile(First(args), caller.Interp), 
-                        1, 
-                        Primitive.ArgType.String)
+                        (args, env, caller) => LoadFile(First(args), caller.Interp), 
+                        new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                         "open-input-file", 
                         new[] { "6.10.1", "(open-input-file <filename>)" },
-                        (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args), caller.Interp), 
-                        1,
-                        Primitive.ArgType.String)
+                        (args, env, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args), caller.Interp), 
+                        new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                         "peek-char", 
                         new[] { "6.10.2", "(peek-char)", "(peek-char <port>)" },
-                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).PeekChar(), 
-                        0, 
-                        1, 
-                        Primitive.ArgType.InputPort)
+                        (args, env, caller) => Port(First(args), caller.Interp.CurrentInputPort).PeekChar(), 
+                        new ArgsInfo(0, 1, ArgType.InputPort))
                 .DefinePrimitive(
                         "read", 
                         new[] { "6.10.2", "(read)", "(read <port>)" },
-                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).Read(), 
-                        0, 
-                        1, 
-                        Primitive.ArgType.InputPort)
+                        (args, env, caller) => Port(First(args), caller.Interp.CurrentInputPort).Read(), 
+                        new ArgsInfo(0, 1, ArgType.InputPort))
                 .DefinePrimitive(
                         "read-char", 
                         new[] { "6.10.2", "(read-char)", "(read-char <port>)" },
-                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).ReadChar(), 
-                        0, 
-                        1, 
-                        Primitive.ArgType.InputPort)
+                        (args, env, caller) => Port(First(args), caller.Interp.CurrentInputPort).ReadChar(), 
+                        new ArgsInfo(0, 1, ArgType.InputPort))
                 .DefinePrimitive(
                         "transcript-on", 
                         new[] { "6.10.4", "(transcript-on <filename>)" },
-                        (args, caller) => TranscriptOn(First(args), caller.Interp.Transcript), 
-                        1, 
-                        Primitive.ArgType.String)
+                        (args, env, caller) => TranscriptOn(First(args), caller.Interp.Transcript), 
+                        new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                         "transcript-off", 
                         new[] { "6.10.4", "(transcript-off)" },
-                        (args, caller) => TranscriptOff(caller.Interp.Transcript), 
-                        0);
+                        (args, env, caller) => TranscriptOff(caller.Interp.Transcript), 
+                        new ArgsInfo(0));
         }
         #endregion
 
@@ -202,7 +188,7 @@ namespace SimpleScheme
         /// If none given, uses the default input port.
         /// </summary>
         /// <returns>The expression read.</returns>
-        public SchemeObject Read()
+        internal SchemeObject Read()
         {
             var sb = new StringBuilder();
             SchemeObject expr = this.parser.ReadExpr(sb);
@@ -214,7 +200,7 @@ namespace SimpleScheme
         /// Close the input port.
         /// Closes the stream used by the parser.
         /// </summary>
-        public void Close()
+        internal void Close()
         {
             this.parser.Close();
         }
@@ -226,7 +212,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The text reader.</returns>
-        public static TextReader AsTextReader(SchemeObject obj)
+        internal static TextReader AsTextReader(SchemeObject obj)
         {
             if (obj is InputPort)
             {

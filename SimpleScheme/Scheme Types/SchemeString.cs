@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// Strings are represented as a character array.
     /// Strings are mutable, butonly through the set! and fill! primitives.
     /// </summary>
-    public class SchemeString : SchemeObject
+    public class SchemeString : SchemeObject, IEquatable<SchemeString>
     {
         #region Fields
         /// <summary>
@@ -205,172 +205,136 @@ namespace SimpleScheme
         /// <summary>
         /// Define the string primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             const int MaxInt = int.MaxValue;
-            env
+            primEnv
                 .DefinePrimitive(
                     "list->string", 
                     new[] { "6.7", "(list->string <chars>)" },
-                    (args, caller) => ListToString(First(args)), 
-                    1, 
-                    Primitive.ArgType.PairOrEmpty)
+                    (args, env, caller) => ListToString(First(args)), 
+                    new ArgsInfo(1, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                     "make-string", 
                     new[] { "6.7", "(make-string <k>)", "(make-string <k> <char>)" },
-                    (args, caller) => New((Number)First(args), Second(args)), 
-                    1, 
-                    2, 
-                    Primitive.ArgType.Number, 
-                    Primitive.ArgType.CharOrEmpty)
+                    (args, env, caller) => New((Number)First(args), Second(args)), 
+                    new ArgsInfo(1, 2, ArgType.Number, ArgType.CharOrEmpty))
                 .DefinePrimitive(
                     "string", 
                     new[] { "6.7", "(string <char> ...)" },
-                    (args, caller) => ListToString(args), 
-                    0, 
-                    MaxInt,
-                    Primitive.ArgType.Char)
+                    (args, env, caller) => ListToString(args), 
+                    new ArgsInfo(0, MaxInt, ArgType.Char))
                 .DefinePrimitive(
                     "string->list", 
                     new[] { "6.7", "(string->list <string>)" },
-                    (args, caller) => ToList((SchemeString)First(args)), 
-                    1, 
-                    Primitive.ArgType.String)
+                    (args, env, caller) => ToList((SchemeString)First(args)), 
+                    new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                     "string->number", 
                     new[] { "6.5.6", "(string->number <number>)", "(string->number <number> <radix>)" },
-                    (args, caller) => ToNumber(First(args), Second(args)),
-                    1, 
-                    2, 
-                    Primitive.ArgType.String, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => ToNumber(First(args), Second(args)),
+                    new ArgsInfo(1, 2, ArgType.String, ArgType.Number))
                 .DefinePrimitive(
                     "string-append", 
                     new[] { "6.7", "(string-append <string> ...)" },
-                    (args, caller) => Append(args),
-                    0, 
-                    MaxInt,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => Append(args),
+                    new ArgsInfo(0, MaxInt, ArgType.String))
                 .DefinePrimitive(
                     "string-concat", 
                     new[] { "(string-concat <string> ...)" },
-                    (args, caller) => Append(First(args)), 
-                    0, 
-                    MaxInt,
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => Append(First(args)), 
+                    new ArgsInfo(0, MaxInt, ArgType.Pair))
                 .DefinePrimitive(
-                    "string-ci<=?", new[] { "6.7", "(string-ci<=? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) <= 0),
-                    2,
-                    Primitive.ArgType.String)
+                    "string-ci<=?", 
+                    new[] { "6.7", "(string-ci<=? <string1> <string2>)" },
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) <= 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string-ci<?", 
                     new[] { "6.7", "(string-ci<? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) < 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) < 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string-ci=?", 
                     new[] { "6.7", "(string-ci=? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) == 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) == 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string-ci>=?", 
                     new[] { "6.7", "(string-ci>=? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) >= 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) >= 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string-ci>?", 
                     new[] { "6.7", "(string-ci>? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) > 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), true) > 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
-                    "string-copy", new[] { "6.7", "(string-copy <string>)" }, 
-                    (args, caller) => Copy((SchemeString)First(args)), 
-                    1, 
-                    Primitive.ArgType.String)
+                    "string-copy", 
+                    new[] { "6.7", "(string-copy <string>)" }, 
+                    (args, env, caller) => Copy((SchemeString)First(args)), 
+                    new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                     "string-fill!", 
                     new[] { "6.7", "(string-fill! <string> <char>)" }, 
-                    (args, caller) => Fill((SchemeString)First(args), (Character)Second(args)), 
-                    2, 
-                    Primitive.ArgType.String, 
-                    Primitive.ArgType.Char)
+                    (args, env, caller) => Fill((SchemeString)First(args), (Character)Second(args)), 
+                    new ArgsInfo(2, ArgType.String, ArgType.Char))
                 .DefinePrimitive(
                     "string-length", 
                     new[] { "6.7", "(string-length <string>)" }, 
-                    (args, caller) => (Number)Length(((SchemeString)First(args)).str),
-                    1, 
-                    Primitive.ArgType.String)
+                    (args, env, caller) => (Number)Length(((SchemeString)First(args)).str),
+                    new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                     "string-ref", 
                     new[] { "6.7", "(string-ref <string> <k>)" },
-                    (args, caller) => (Character)((SchemeString)First(args)).str[Number.AsInt(Second(args))],
-                    2,
-                    Primitive.ArgType.String,
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => (Character)((SchemeString)First(args)).str[Number.AsInt(Second(args))],
+                    new ArgsInfo(2, ArgType.String, ArgType.Number))
                 .DefinePrimitive(
                     "string-set!", 
                     new[] { "6.7", "(string-set! <string> <k> <char>)" },
-                    (args, caller) => Set((SchemeString)First(args), (Number)Second(args), (Character)Third(args)),
-                    3,
-                    Primitive.ArgType.String,
-                    Primitive.ArgType.Number,
-                    Primitive.ArgType.Char)
+                    (args, env, caller) => Set((SchemeString)First(args), (Number)Second(args), (Character)Third(args)),
+                    new ArgsInfo(3, ArgType.String, ArgType.Number, ArgType.Char))
                 .DefinePrimitive(
                     "string<=?", 
                     new[] { "6.7", "(string<=? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) <= 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) <= 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string<?", 
                     new[] { "6.7", "(string<? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) < 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) < 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string=?", 
                     new[] { "6.7", "(string=? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) == 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) == 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string>=?", 
                     new[] { "6.7", "(string>=? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) >= 0),
-                    2,
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) >= 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string>?", 
                     new[] { "6.7", "(string<? <string1> <string2>)" },
-                    (args, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) > 0),
-                    2, 
-                    Primitive.ArgType.String)
+                    (args, env, caller) => SchemeBoolean.Truth(Compare((SchemeString)First(args), (SchemeString)Second(args), false) > 0),
+                    new ArgsInfo(2, ArgType.String))
                 .DefinePrimitive(
                     "string?", 
                     new[] { "6.7", "(string? <obj>)" },
-                    (args, caller) => SchemeBoolean.Truth(First(args) is SchemeString), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is SchemeString), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "substring", 
                     new[] { "6.7", "(substring <string> <start> <end>)" }, 
-                    (args, caller) => Substr((SchemeString)First(args), Second(args), Third(args)), 
-                    3, 
-                    Primitive.ArgType.String, 
-                    Primitive.ArgType.Number, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Substr((SchemeString)First(args), Second(args), Third(args)), 
+                    new ArgsInfo(3, ArgType.String, ArgType.Number, ArgType.Number))
                 .DefinePrimitive(
                     "symbol->string", 
                     new[] { "6.4", "(symbol->string <symbol>)" }, 
-                    (args, caller) => new SchemeString((Symbol)First(args)), 
-                    1,
-                    Primitive.ArgType.Symbol);
+                    (args, env, caller) => new SchemeString((Symbol)First(args)), 
+                    new ArgsInfo(1, ArgType.Symbol));
         }
         #endregion
 
@@ -451,9 +415,9 @@ namespace SimpleScheme
         public override int GetHashCode()
         {
             int hash = 0;
-            for (int i = 0; i < this.str.Length; i++)
+            foreach (char t in this.str)
             {
-                hash += this.str[i];
+                hash += t;
             }
 
             return hash;
@@ -470,13 +434,41 @@ namespace SimpleScheme
         {
             return new string(this.str);
         }
+        #endregion
 
+        #region Internal Static Methods
+        /// <summary>
+        /// Convert a list of chars into a string.
+        /// </summary>
+        /// <param name="chars">The obj that is a list of chars.</param>
+        /// <returns>The caracter array made up of the chars.</returns>
+        internal static SchemeString ListToString(SchemeObject chars)
+        {
+            var str = new StringBuilder();
+            while (chars is Pair)
+            {
+                var ch = First(chars);
+                if (!(ch is Character))
+                {
+                    ErrorHandlers.TypeError(typeof(Character), ch);
+                    return null;
+                }
+
+                str.Append(((Character)ch).C);
+                chars = Rest(chars);
+            }
+
+            return new SchemeString(str);
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Write the string to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <returns>The SchemeString as a string.</returns>
-        public override string ToString(bool quoted)
+        internal override string ToString(bool quoted)
         {
             if (!quoted)
             {
@@ -507,35 +499,9 @@ namespace SimpleScheme
         /// Describe a scheme string by returning its value.
         /// </summary>
         /// <returns>The scheme string as a string.</returns>
-        public override string Describe()
+        internal override string Describe()
         {
             return this.ToString();
-        }
-        #endregion
-
-        #region Internal Static Methods
-        /// <summary>
-        /// Convert a list of chars into a string.
-        /// </summary>
-        /// <param name="chars">The obj that is a list of chars.</param>
-        /// <returns>The caracter array made up of the chars.</returns>
-        internal static SchemeString ListToString(SchemeObject chars)
-        {
-            var str = new StringBuilder();
-            while (chars is Pair)
-            {
-                var ch = First(chars);
-                if (!(ch is Character))
-                {
-                    ErrorHandlers.TypeError(typeof(Character), ch);
-                    return null;
-                }
-
-                str.Append(((Character)ch).C);
-                chars = Rest(chars);
-            }
-
-            return new SchemeString(str);
         }
         #endregion
 
@@ -695,24 +661,35 @@ namespace SimpleScheme
         private static SchemeObject ToNumber(SchemeObject val, SchemeObject bas)
         {
             int numberBase = bas is Number ? Number.AsInt(bas) : 10;
-            try
+            if (numberBase == 10)
             {
-                if (numberBase == 10)
+                double res;
+                if (double.TryParse(val.ToString(false), out res))
                 {
-                    return (Number)double.Parse(val.ToString(false));
+                    return (Number)res;
                 }
 
-                return (Number)Convert.ToInt64(val.ToString(false), numberBase);
-            }
-            catch (FormatException)
-            {
                 return (SchemeBoolean)false;
+            }
+
+            try
+            {
+                return (Number)Convert.ToInt64(val.ToString(false), numberBase);
             }
             catch (ArgumentException)
             {
                 return (SchemeBoolean)false;
             }
+            catch (FormatException)
+            {
+                return (SchemeBoolean)false;
+            }
+            catch (OverflowException)
+            {
+                return (SchemeBoolean)false;
+            }
         }
+
         #endregion
 
         #region Private Methods
@@ -732,28 +709,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extension class for SchemeString
-    /// </summary>
-    public static class SchemeStringExtension
-    {
-        /// <summary>
-        /// Convert to string
-        /// </summary>
-        /// <param name="x">The object.</param>
-        /// <returns>The corresponding string.</returns>
-        public static string AsString(this SchemeObject x)
-        {
-            if (x is SchemeString)
-            {
-                return SchemeString.AsString(x);
-            }
-
-            ErrorHandlers.TypeError(typeof(SchemeString), x);
-            return null;
-        }
-    } 
-    #endregion
 }

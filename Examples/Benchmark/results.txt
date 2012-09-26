@@ -1,5 +1,4 @@
-﻿chayden-pc2
-Debug
+﻿7/4/2010 chayden-pc2 Debug
 -----------------------------
 Running sum:10000:100
 ((25605 msec) (1562172 bytes))
@@ -34,7 +33,7 @@ Running mbrot:75:1
 Running triangl:22:1:1
 ((347937 msec) (1476068 bytes))
 
-Release
+7/4/2010 chayden-pc2 Release
 ------------------------------
 Running sum:10000:100
 ((8373 msec) (1735436 bytes))
@@ -70,8 +69,7 @@ Running triangl:22:1:1
 ((107447 msec) (1481312 bytes))
 
 
-Chayden-GW1
-Debug
+7/4/2010 chayden-GW1 Debug
 -----------------------------
 Running sum:10000:100
 ((42848 msec) (205656 bytes))
@@ -107,3 +105,115 @@ Running scheme:100
 ((18914 msec) (26812 bytes))
 Running triangl:22:1:1
 ((618098 msec) (327452 bytes))
+
+
+7/16/2012 chayden-pc2 Release
+------------------------------
+Running sum:10000:100
+name: sum:10000:100 count: 100 msec: 11563 mem: 1911156
+Running sumfp:1000000:1
+name: sumfp:1000000:1 count: 1 msec: 11743 mem: 1240572
+Running tak:18:12:6:17
+name: tak:18:12:6:17 count: 17 msec: 12027 mem: 307132
+Running takl:18:12:6:1
+name: takl:18:12:6:1 count: 1 msec: 6718 mem: 1609132
+Running ctak:18:12:6:17
+name: ctak:18:12:6:17 count: 17 msec: 30768 mem: 516236
+Running cpstak:18:12:6:17
+name: cpstak:18:12:6:17 count: 17 msec: 14853 mem: 561440
+Running ntakl:18:12:6:1
+name: ntakl:18:12:6:1 count: 1 msec: 5898 mem: 4445508
+Running deriv:40000
+name: deriv:40000 count: 40000 msec: 10453 mem: 3956120
+Running diviter:1000:2000
+name: diviter:1000:2000 count: 2000 msec: 10436 mem: 2464104
+Running divrec:1000:2000
+name: divrec:1000:2000 count: 2000 msec: 11612 mem: 4046584
+Running fft:65536:1
+name: fft:65536:1 count: 1 msec: 26726 mem: 1004184
+Running fib:27:1
+name: fib:27:1 count: 1 msec: 5398 mem: 1351644
+Running fibc:24:1
+name: fibc:24:1 count: 1 msec: 10620 mem: 2647404
+Running fibfp:27:1
+name: fibfp:27:1 count: 1 msec: 5710 mem: 1351340
+Running mbrot:75:1
+name: mbrot:75:1 count: 1 msec: 7823 mem: 1732696
+Running scheme:100
+name: scheme:100 count: 100 msec: 5524 mem: 2949776
+Running triangl:22:1:1
+name: triangl:22:1:1 count: 1 msec: 162916 mem: 1968784
+
+7/16/2012 chayden-pc2 Release  with perfmon
+------------------------------
+Running sum:10000:100
+name: sum:10000:100 count: 100 msec: 5513 mem: 2121132
+Running sumfp:1000000:1
+name: sumfp:1000000:1 count: 1 msec: 6057 mem: 1425088
+Running tak:18:12:6:17
+name: tak:18:12:6:17 count: 17 msec: 6028 mem: 308080
+Running takl:18:12:6:1
+name: takl:18:12:6:1 count: 1 msec: 2724 mem: 1609064
+Running ctak:18:12:6:17
+name: ctak:18:12:6:17 count: 17 msec: 15359 mem: 493752
+Running cpstak:18:12:6:17
+name: cpstak:18:12:6:17 count: 17 msec: 7534 mem: 557652
+Running ntakl:18:12:6:1
+name: ntakl:18:12:6:1 count: 1 msec: 2575 mem: 4443856
+Running deriv:40000
+name: deriv:40000 count: 40000 msec: 4105 mem: 4113564
+Running diviter:1000:2000
+name: diviter:1000:2000 count: 2000 msec: 4437 mem: 2485504
+Running divrec:1000:2000
+name: divrec:1000:2000 count: 2000 msec: 5241 mem: 4071700
+Running fft:65536:1
+name: fft:65536:1 count: 1 msec: 10930 mem: 840000
+Running fib:27:1
+name: fib:27:1 count: 1 msec: 2304 mem: 1350552
+Running fibc:24:1
+name: fibc:24:1 count: 1 msec: 5254 mem: 2730992
+Running fibfp:27:1
+name: fibfp:27:1 count: 1 msec: 2351 mem: 1349708
+Running mbrot:75:1
+name: mbrot:75:1 count: 1 msec: 3581 mem: 1732424
+Running scheme:100
+name: scheme:100 count: 100 msec: 2804 mem: 2948088
+Running triangl:22:1:1
+name: triangl:22:1:1 count: 1 msec: 75483 mem: 1970604
+
+7/20/2012 chayden-pc2 Release
+-------------------------------------------------
+Running sum:10000:100
+name: sum:10000:100 count: 100 msec: 4196 mem: 4308592
+Running sumfp:1000000:1
+name: sumfp:1000000:1 count: 1 msec: 3230 mem: 3668308
+Running tak:18:12:6:17
+name: tak:18:12:6:17 count: 17 msec: 4400 mem: 363972
+Running takl:18:12:6:1
+name: takl:18:12:6:1 count: 1 msec: 2577 mem: 1198552
+Running ctak:18:12:6:17
+name: ctak:18:12:6:17 count: 17 msec: 18140 mem: 278388
+Running cpstak:18:12:6:17
+name: cpstak:18:12:6:17 count: 17 msec: 5807 mem: 1634648
+Running ntakl:18:12:6:1
+name: ntakl:18:12:6:1 count: 1 msec: 2128 mem: 4032956
+Running deriv:40000
+name: deriv:40000 count: 40000 msec: 3874 mem: 3524760
+Running diviter:1000:2000
+name: diviter:1000:2000 count: 2000 msec: 3595 mem: 4158356
+Running divrec:1000:2000
+name: divrec:1000:2000 count: 2000 msec: 4256 mem: 4069808
+Running fft:65536:1
+name: fft:65536:1 count: 1 msec: 9300 mem: 3104520
+Running fib:27:1
+name: fib:27:1 count: 1 msec: 2130 mem: 317856
+Running fibc:24:1
+name: fibc:24:1 count: 1 msec: 4798 mem: 2224556
+Running fibfp:27:1
+name: fibfp:27:1 count: 1 msec: 2069 mem: 314348
+Running mbrot:75:1
+name: mbrot:75:1 count: 1 msec: 2616 mem: 2362444
+Running scheme:100
+name: scheme:100 count: 100 msec: 2132 mem: 2920736
+Running triangl:22:1:1
+name: triangl:22:1:1 count: 1 msec: 55797 mem: 3664296

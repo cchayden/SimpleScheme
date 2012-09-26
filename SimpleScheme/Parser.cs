@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// <summary>
     /// Parse scheme expressions.
     /// </summary>
-    public class Parser
+    internal class Parser
     {
         #region Constants
         /// <summary>
@@ -101,7 +101,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Parser class.
         /// </summary>
         /// <param name="inp">The input TextReader we are reading from.</param>
-        public Parser(TextReader inp)
+        internal Parser(TextReader inp)
         {
             this.inp = inp;
             this.lineBuffer = new LineBuffer(inp);
@@ -112,7 +112,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the current line number.
         /// </summary>
-        public int LineNumber
+        internal int LineNumber
         {
             get { return this.lineBuffer.LineNumber; }
         }
@@ -120,7 +120,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the internal TextReader object.
         /// </summary>
-        public TextReader Reader
+        internal TextReader Reader
         {
             get
             {
@@ -129,13 +129,13 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Read a complete expression.
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The expression that was read.</returns>
-        public SchemeObject ReadExpr(StringBuilder sb)
+        internal SchemeObject ReadExpr(StringBuilder sb)
         {
             this.logger = sb;
             return this.Read();
@@ -145,7 +145,7 @@ namespace SimpleScheme
         /// Take a peek at the next character, without consuming it.
         /// </summary>
         /// <returns>The next character (as a scheme character).</returns>
-        public SchemeObject PeekChar()
+        internal SchemeObject PeekChar()
         {
             int p = this.Peek();
             if (p == -1)
@@ -162,7 +162,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The character read, or EOF.</returns>
-        public SchemeObject ReadChar(StringBuilder sb)
+        internal SchemeObject ReadChar(StringBuilder sb)
         {
             this.logger = sb;
             try
@@ -190,7 +190,7 @@ namespace SimpleScheme
         /// <summary>
         /// Close the input port.
         /// </summary>
-        public void Close()
+        internal void Close()
         {
             try
             {
@@ -207,7 +207,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="test">Predicate for letters that make up a word.  Use with IsHexDigit, char.IsLetter, etc.</param>
         /// <returns>The next word.  Could be empty string.</returns>
-        public string NextWord(Func<char, bool> test)
+        internal string NextWord(Func<char, bool> test)
         {
             var sb = new StringBuilder();
             while (true)
@@ -228,7 +228,7 @@ namespace SimpleScheme
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
         /// <returns>The next token.</returns>
-        public SchemeObject NextToken()
+        internal SchemeObject NextToken()
         {
             // See if we should re-use a pushed token or character
             SchemeObject token = this.tokBuffer.Get();
@@ -329,7 +329,7 @@ namespace SimpleScheme
 
                                 // At this point there is a token and also a buffered character
                                 this.tokBuffer.Push(new Token(tok.Substring(1)));
-                                return Character.New((char)ch, this.LineNumber); // TODO
+                                return Character.New((char)ch, this.LineNumber); 
                             }
 
                             return Character.New((char)ch, this.LineNumber);
@@ -640,7 +640,7 @@ namespace SimpleScheme
             /// Get a character from the character buffer.
             /// </summary>
             /// <returns>The buffered character.  If no character is buffered, return -2.</returns>
-            public int Get()
+            internal int Get()
             {
                 int chr = this.present ? this.ch : -2;
                 this.Clear();
@@ -651,7 +651,7 @@ namespace SimpleScheme
             /// Push the character into the buffer.
             /// </summary>
             /// <param name="chr">The character to push.</param>
-            public void Push(int chr)
+            internal void Push(int chr)
             {
                 this.present = true;
                 this.ch = chr;
@@ -662,7 +662,7 @@ namespace SimpleScheme
             /// Otherwise, return -1;
             /// </summary>
             /// <returns>The char in the buffer, else -1.</returns>
-            public int Peek()
+            internal int Peek()
             {
                 return this.present ? this.ch : -1;
             }
@@ -698,7 +698,7 @@ namespace SimpleScheme
             /// Get a token from the token buffer.
             /// </summary>
             /// <returns>The buffered token.  If no token is buffered, return null.</returns>
-            public SchemeObject Get()
+            internal SchemeObject Get()
             {
                 SchemeObject token = this.present ? this.buffer : null;
                 this.Clear();
@@ -709,7 +709,7 @@ namespace SimpleScheme
             /// Push the character into the buffer.
             /// </summary>
             /// <param name="token">The token to push.</param>
-            public void Push(SchemeObject token)
+            internal void Push(SchemeObject token)
             {
                 this.present = true;
                 this.buffer = token;
@@ -761,7 +761,7 @@ namespace SimpleScheme
             /// <param name="inp">
             /// The inp.
             /// </param>
-            public LineBuffer(TextReader inp)
+            internal LineBuffer(TextReader inp)
             {
                 this.inp = inp;
                 this.buffer = string.Empty;
@@ -772,7 +772,7 @@ namespace SimpleScheme
             /// <summary>
             /// Gets the current line number.
             /// </summary>
-            public int LineNumber
+            internal int LineNumber
             {
                 get; private set;
             }
@@ -782,14 +782,15 @@ namespace SimpleScheme
             /// If this is coming from the Console, provide a prompt with the line number.
             /// </summary>
             /// <returns>The next character.  Returns -1 if end of file.</returns>
-            public int ReadCharacter()
+            internal int ReadCharacter()
             {
+                int ch;
                 if (this.inp == Console.In)
                 {
                     // special treatment for console input
                     while (this.pos >= this.buffer.Length)
                     {
-                        Console.Write(Prompt, this.LineNumber++);
+                        Console.Write(Prompt, this.LineNumber);
 
                         this.buffer = this.inp.ReadLine();
                         this.pos = 0;
@@ -802,11 +803,14 @@ namespace SimpleScheme
                         this.buffer += System.Environment.NewLine;
                     }
 
-                    return this.buffer[this.pos++];
+                    ch = this.buffer[pos++];
+                }
+                else
+                {
+                    // normal non-console input
+                    ch = this.inp.Read();
                 }
 
-                // normal non-console input
-                int ch = this.inp.Read();
                 if (ch == '\n')
                 {
                     this.LineNumber++;

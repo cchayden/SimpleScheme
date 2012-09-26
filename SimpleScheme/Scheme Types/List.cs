@@ -280,7 +280,7 @@ namespace SimpleScheme
         /// <summary>
         /// Traverse the given list, applying the given function to all elements.
         /// Create a list of the results.
-        /// This is purely iterative.
+        /// This is purely iterative.  It creates one extra (unnecessary) pair for simplicity.
         /// </summary>
         /// <param name="fun">The function to apply to each elment.</param>
         /// <param name="expr">The list to process.</param>
@@ -291,10 +291,38 @@ namespace SimpleScheme
             Pair accum = result;
 
             // Iterate down the list, taking the function and building a list of the results.
-            expr = First(expr);
             while (expr is Pair)
             {
-                accum = accum.SetRest(MakeList(fun(First(expr))));
+                accum = accum.SetRest(Cons(fun(First(expr)), EmptyList.Instance));
+                expr = Rest(expr);
+            }
+
+            return Rest(result);
+        }
+
+        /// <summary>
+        /// Make a copy of the given expression.
+        /// If the expression is not a list, then just return it.
+        /// This is used in connection with destructive operations where the original values
+        /// might need to be preserved.
+        /// </summary>
+        /// <param name="expr">The list to copy.</param>
+        /// <returns>A copy of the list.</returns>
+        public static SchemeObject Copy(SchemeObject expr)
+        {
+            // TODO is this needed?
+            if (!(expr is Pair))
+            {
+                return expr;
+            }
+
+            Pair result = MakeList();
+            Pair accum = result;
+
+            // Iterate down the list, building a list of the results.
+            while (expr is Pair)
+            {
+                accum = accum.SetRest(Cons(First(expr), EmptyList.Instance));
                 expr = Rest(expr);
             }
 
@@ -306,167 +334,132 @@ namespace SimpleScheme
         /// <summary>
         /// Define the list primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             const int MaxInt = int.MaxValue;
-            env
+            primEnv
                 .DefinePrimitive(
                     "append", new[] { "6.3", "(append <list> ...)" },
-                    (args, caller) => Append(args), 
-                    0, 
-                    MaxInt, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => Append(args), 
+                    new ArgsInfo(0, MaxInt, ArgType.Obj))
                 .DefinePrimitive(
                     "assoc", new[] { "6.3", "(assoc <obj> <alist>)" }, 
-                    (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Equal(x, y).Value), 
-                    2,
-                    Primitive.ArgType.Obj, 
-                    Primitive.ArgType.PairOrEmpty)
+                    (args, env, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Equal(x, y).Value), 
+                    new ArgsInfo(2, ArgType.Obj, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                     "assq", new[] { "(assq <obj> <alist>)" }, 
-                    (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
-                    2, 
-                    Primitive.ArgType.Obj, 
-                    Primitive.ArgType.PairOrEmpty)
+                    (args, env, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
+                    new ArgsInfo(2, ArgType.Obj, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                     "assv", new[] { "6.3", "(assv <obj> <alist>)" }, 
-                    (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
-                    2, 
-                    Primitive.ArgType.Obj, 
-                    Primitive.ArgType.PairOrEmpty)
+                    (args, env, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
+                    new ArgsInfo(2, ArgType.Obj, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                      "car", new[] { "6.3", "(car <pair>)" }, 
-                     (args, caller) => First(First(args)), 
-                     1, 
-                     Primitive.ArgType.Pair)
+                     (args, env, caller) => First(First(args)), 
+                     new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
                     "first", new[] { "(first <pair>)" }, 
-                    (args, caller) => First(First(args)), 
-                    1, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => First(First(args)), 
+                    new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
                     "second", new[] { "(second <pair>)" }, 
-                    (args, caller) => Second(First(args)), 
-                    1, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => Second(First(args)), 
+                    new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
                     "third", new[] { "(third <pair>)" }, 
-                    (args, caller) => Third(First(args)), 
-                    1, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => Third(First(args)), 
+                    new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
                     "nth", new[] { "(nth <pair> <n>)" }, 
-                    (args, caller) => Nth(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Nth(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Number))
                 .DefinePrimitive(
                     "cdr", new[] { "6.3", "(cdr <pair>)" }, 
-                    (args, caller) => Rest(First(args)),
-                    1, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => Rest(First(args)),
+                    new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
                     "rest", new[] { "(rest <pair>)" }, 
-                    (args, caller) => Rest(First(args)), 
-                    1, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => Rest(First(args)), 
+                    new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
                     "cons", new[] { "6.3", "(cons <obj1> <obj2>)" }, 
-                    (args, caller) => Cons(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => Cons(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Obj))
                 .DefinePrimitive(
                     "length", new[] { "6.3", "(length <list> ...)" }, 
-                    (args, caller) => (Number)ListLength(First(args)),
-                    1, 
-                    Primitive.ArgType.PairOrEmpty)
+                    (args, env, caller) => (Number)ListLength(First(args)),
+                    new ArgsInfo(1, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                     "list", new[] { "6.3", "(list <obj> ...)" }, 
-                    (args, caller) => args, 
-                    0, 
-                    MaxInt, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => args, 
+                    new ArgsInfo(0, MaxInt, ArgType.Obj))
                 .DefinePrimitive(
                     "list-ref", new[] { "6.3", "(list-ref <list> <k>)" }, 
-                    (args, caller) => ListRef(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => ListRef(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, 
+                    ArgType.Number))
                 .DefinePrimitive(
                     "list-tail", new[] { "6.3", "(list-tail <list> <k>)" }, 
-                    (args, caller) => ListTail(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => ListTail(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, 
+                    ArgType.Number))
                 .DefinePrimitive(
                     "list*", new[] { "(list* <obj> ...)" },
-                    (args, caller) => ListStar(args), 
-                    2, 
-                    MaxInt, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => ListStar(args), 
+                    new ArgsInfo(2, MaxInt, ArgType.Obj))
                 .DefinePrimitive(
                     "list?", new[] { "6.3", "(list? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(IsList(First(args))), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(IsList(First(args))), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "member", new[] { "6.3", "(member <obj> <list>)" }, 
-                    (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y).Value), 
-                    2,
-                    Primitive.ArgType.Obj, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y).Value), 
+                    new ArgsInfo(2, ArgType.Obj, 
+                    ArgType.Pair))
                 .DefinePrimitive(
                     "memq", new[] { "6.3", "(memq <obj> <list>)" }, 
-                    (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
-                    2,
-                    Primitive.ArgType.Obj, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
+                    new ArgsInfo(2, ArgType.Obj, 
+                    ArgType.Pair))
                 .DefinePrimitive(
                     "memv", new[] { "6.3", "(memv <obj> <list>)" }, 
-                    (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
-                    2,
-                    Primitive.ArgType.Obj, 
-                    Primitive.ArgType.Pair)
+                    (args, env, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
+                    new ArgsInfo(2, ArgType.Obj, 
+                    ArgType.Pair))
                 .DefinePrimitive(
                     "pair?", new[] { "6.3", "(pair? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(First(args) is Pair), 
-                    1, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is Pair), 
+                    new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
                     "reverse", new[] { "6.3", "(reverse <list>)" }, 
-                    (args, caller) => ReverseList(First(args)), 
-                    1, 
-                    Primitive.ArgType.PairOrEmpty)
+                    (args, env, caller) => ReverseList(First(args)), 
+                    new ArgsInfo(1, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                     "set-car!", new[] { "6.3", "(set-car! <pair> <obj>)" }, 
-                    (args, caller) => SetFirst(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SetFirst(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, 
+                    ArgType.Obj))
                 .DefinePrimitive(
                     "set-first!", new[] { "(set-first! <pair> <obj>)" }, 
-                    (args, caller) => SetFirst(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SetFirst(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, 
+                    ArgType.Obj))
                 .DefinePrimitive(
                     "set-cdr!", new[] { "6.3", "(set-cdr! <pair> <obj>)" }, 
-                    (args, caller) => SetRest(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Obj)
+                    (args, env, caller) => SetRest(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, 
+                    ArgType.Obj))
                 .DefinePrimitive(
                     "set-rest!", new[] { "(set-rest! <pair> <obj>)" }, 
-                    (args, caller) => SetRest(First(args), Second(args)), 
-                    2, 
-                    Primitive.ArgType.Pair, 
-                    Primitive.ArgType.Obj);
+                    (args, env, caller) => SetRest(First(args), Second(args)), 
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Obj));
 
-            DefineAccessPrimitives(env, "aa");
-            DefineAccessPrimitives(env, "ad");
-            DefineAccessPrimitives(env, "da");
-            DefineAccessPrimitives(env, "dd");
+            DefineAccessPrimitives(primEnv, "aa");
+            DefineAccessPrimitives(primEnv, "ad");
+            DefineAccessPrimitives(primEnv, "da");
+            DefineAccessPrimitives(primEnv, "dd");
         }
         #endregion
 
@@ -491,19 +484,27 @@ namespace SimpleScheme
         /// <summary>
         /// Define all the combinations of c([ad]+)r functions up to four levels.
         /// </summary>
-        /// <param name="env">The environment to define the functions in.</param>
+        /// <param name="primEnv">The environment to define the functions in.</param>
         /// <param name="access">The access string so far.</param>
-        private static void DefineAccessPrimitives(PrimitiveEnvironment env, string access)
+        private static void DefineAccessPrimitives(PrimitiveEnvironment primEnv, string access)
         {
             string prim = "c" + access + "r";
-            env.DefinePrimitive(prim, new[] { "6.3", "(" + prim + "<pair>)" }, (args, caller) => Cxr(prim, args), 1, Primitive.ArgType.Pair);
+            primEnv.DefinePrimitive(
+                prim, 
+                new[]
+                    {
+                        "6.3", "(" + prim + "<pair>)"
+                    }, 
+                (args, env, caller) => Cxr(prim, args), 
+                new ArgsInfo(1, 
+                ArgType.Pair));
             if (access.Length >= 4)
             {
                 return;
             }
 
-            DefineAccessPrimitives(env, access + "a");
-            DefineAccessPrimitives(env, access + "d");
+            DefineAccessPrimitives(primEnv, access + "a");
+            DefineAccessPrimitives(primEnv, access + "d");
         }
 
         /// <summary>

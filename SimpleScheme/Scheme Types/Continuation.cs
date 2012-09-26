@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Represents a continuation.
     /// Continuations are immutable.
     /// </summary>
-    public sealed class Continuation : Procedure
+    internal sealed class Continuation : Procedure
     {
         #region Fields
         /// <summary>
@@ -28,7 +28,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="eval">The continuation to return to when applied.</param>
         private Continuation(Evaluator eval) : 
-            base(1, 1)
+            base(null, new ArgsInfo(1, 1, false))
         {
             this.savedEvaluator = eval.CloneChain(); 
         }
@@ -69,12 +69,19 @@ namespace SimpleScheme
         ///   does not alter the evaluation, making it impossible to return back to the continuation.
         /// </summary>
         /// <param name="args">The value to return.</param>
+        /// <param name="env"></param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(SchemeObject args, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
-            this.CheckArgs(args, typeof(Continuation));
-            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), First(args), this.savedEvaluator.Env);
+#if Check
+            this.CheckArgCount(ListLength(args), args, "Continuation", caller);
+#endif
+            Evaluator nextStep = this.savedEvaluator.CloneChain();
+            nextStep.ReturnedExpr = First(args);
+            nextStep.ReturnedEnv = this.savedEvaluator.Env;
+            return nextStep;
         }
         #endregion
     }

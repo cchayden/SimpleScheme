@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Expand a macro.
     /// </summary>
-    public sealed class EvaluateExpandMacro : Evaluator
+    internal sealed class EvaluateExpandMacro : Evaluator
     {
         #region Fields
         /// <summary>
@@ -30,14 +30,13 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
         private EvaluateExpandMacro(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
-            : base(expr, env, caller, counter)
+            : base(ExpandStep, expr, env, caller, counter)
         {
             this.fn = fn;
-            this.ContinueAt(ExpandStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call an expand evaluator.
         /// This comes here with a macro (fn) and a set of macro arguments (args).
@@ -50,13 +49,13 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static Evaluator Call(Macro fn, SchemeObject args, Environment env, Evaluator caller)
+        internal static Evaluator Call(Macro fn, SchemeObject args, Environment env, Evaluator caller)
         {
             return new EvaluateExpandMacro(args, env, caller, fn);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Apply the macro to the arguments, expanding it.  
         /// </summary>
@@ -65,7 +64,8 @@ namespace SimpleScheme
         private static Evaluator ExpandStep(Evaluator s)
         {
             var step = (EvaluateExpandMacro)s;
-            return step.fn.Apply(s.Expr, s.ContinueAt(EvaluateStep));
+            s.Pc = EvaluateStep;
+            return step.fn.Apply(s.Expr, step.fn.Env, s, s);
         }
 
         /// <summary>
@@ -78,7 +78,9 @@ namespace SimpleScheme
         /// <returns>Return to caller with the expanded macro.</returns>
         private static Evaluator EvaluateStep(Evaluator s)
         {
-            return EvaluateExpression.Call(Cleaner.Clean(EnsureSchemeObject(s.ReturnedExpr)), s.Env, s.Caller);
+            SchemeObject obj = s.ReturnedExpr;
+            obj.Clean();
+            return EvaluateExpression.Call(obj, s.Env, s.Caller);
         }
         #endregion
     }

@@ -10,57 +10,56 @@ namespace SimpleScheme
     /// <summary>
     /// Debugging primitives
     /// </summary>
-    public class Debugging
+    internal sealed class Debugging
     {
         #region Define Primitives
         /// <summary>
         /// Define the counter primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            env
+            primEnv
                 .DefinePrimitive(
                     "trace-on", 
                     new[] { "(trace-on)" },
-                    (args, caller) => SetTraceFlag(caller, true), 
-                    0)
+                    (args, env, caller) => SetTraceFlag(caller, true), 
+                    new ArgsInfo(0))
                 .DefinePrimitive(
                     "trace-off", 
                     new[] { "(trace-off)" },
-                    (args, caller) => SetTraceFlag(caller, false), 
-                    0)
+                    (args, env, caller) => SetTraceFlag(caller, false), 
+                    new ArgsInfo(0))
                 .DefinePrimitive(
                     "counters-on", 
                     new[] { "(counters-on)" },
-                    (args, caller) => SetCountFlag(caller, true), 
-                    0)
+                    (args, env, caller) => SetCountFlag(caller, true), 
+                    new ArgsInfo(0))
                 .DefinePrimitive(
                     "counters-off", 
                     new[] { "(counters-off)" },
-                    (args, caller) => SetCountFlag(caller, false), 
-                    0)
+                    (args, env, caller) => SetCountFlag(caller, false), 
+                    new ArgsInfo(0))
                 .DefinePrimitive(
                     "backtrace", 
                     new[] { "(backtrace)" },
-                    (args, caller) => Backtrace(caller), 
-                    0);
-                env.DefinePrimitive(
+                    (args, env, caller) => Backtrace(caller), 
+                    new ArgsInfo(0))
+                .DefinePrimitive(
                     "debug", 
                     new[] { "(debug)" },
-                    (args, caller) => Debug(caller), 
-                    0);
-                env.DefinePrimitive(
+                    (args, env, caller) => Debug(caller), 
+                    new ArgsInfo(0))
+                .DefinePrimitive(
                     "list-primitives", 
                     new[] { "(list-primitives)" },
-                    (args, caller) => caller.Interp.PrimEnvironment.ListPrimitives(), 
-                    0);
-                env.DefinePrimitive(
+                    (args, env, caller) => caller.Interp.PrimEnvironment.ListPrimitives(), 
+                    new ArgsInfo(0))
+                .DefinePrimitive(
                     "describe", 
                     new[] { "(describe <obj>)" },
-                    (args, caller) => Describe(List.First(args)), 
-                    1, 
-                    Primitive.ArgType.Obj);
+                    (args, env, caller) => Describe(List.First(args)), 
+                    new ArgsInfo(1, ArgType.Obj));
         }
         #endregion
 

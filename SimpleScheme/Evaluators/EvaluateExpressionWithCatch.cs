@@ -13,7 +13,7 @@ namespace SimpleScheme
     /// Evaluations can finish synchronously, without suspending, in which case it returns
     ///   in the normal way, with a return value.
     /// </summary>
-    public sealed class EvaluateExpressionWithCatch : Evaluator
+    internal sealed class EvaluateExpressionWithCatch : Evaluator
     {
         #region Fields
         /// <summary>
@@ -36,10 +36,9 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpressionWithCatch(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(InitialStep, expr, env, caller, counter)
         {
             this.catchSuspended = true;
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -49,13 +48,13 @@ namespace SimpleScheme
         /// This is reset after we catch one, to let the others through.
         /// </summary>
         /// <returns>Whether we want to catch suspensions.</returns>
-        public override bool CatchSuspended
+        internal override bool CatchSuspended
         {
             get { return this.catchSuspended; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Creates an expression evaluator.
         /// </summary>
@@ -63,13 +62,13 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expression evaluator.</returns>
-        public static EvaluateExpressionWithCatch Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static EvaluateExpressionWithCatch Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateExpressionWithCatch(expr, env, caller);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Evaluate the expression.
         /// </summary>
@@ -77,7 +76,8 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpression.Call(s.Expr, s.Env, s.ContinueAt(DoneStep));
+            s.Pc = DoneStep;
+            return EvaluateExpression.Call(s.Expr, s.Env, s);
         }
 
         /// <summary>
@@ -94,15 +94,21 @@ namespace SimpleScheme
             // If we get here because of a normal or asynchronous return, then set
             // the return value and set an appropriate flag value.
             var step = (EvaluateExpressionWithCatch)s;
+            Evaluator caller = step.Caller;
+            caller.ReturnedExpr = s.ReturnedExpr;
+            ReturnType returnType;
             if (step.FetchAndResetCaught() > 0)
             {
                 step.catchSuspended = false;
-                return step.ReturnFromStep(s.ReturnedExpr, ReturnType.CaughtSuspended);
+                returnType = ReturnType.CaughtSuspended;
+            }
+            else
+            {
+                returnType = step.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn;
             }
 
-            return step.ReturnFromStep(
-                s.ReturnedExpr,
-                step.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn);
+            caller.UpdateReturnFlag(returnType);
+            return caller;
         }
         #endregion
     }

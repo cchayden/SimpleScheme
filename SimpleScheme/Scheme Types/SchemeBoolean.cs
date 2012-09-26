@@ -5,13 +5,12 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
 
     /// <summary>
     /// Operations on boolean values.
     /// Booleans are immutable.
     /// </summary>
-    public class SchemeBoolean : SchemeObject
+    public class SchemeBoolean : SchemeObject, IEquatable<SchemeBoolean>
     {
         #region Static Fields
         /// <summary>
@@ -46,13 +45,13 @@ namespace SimpleScheme
             equalMap = new Dictionary<string, Func<SchemeObject, SchemeObject, SchemeBoolean>>
                 {
                     { "SimpleScheme.EmptyList", (obj1, obj2) => obj2 is EmptyList ? True : False },
-                    { "SimpleScheme.SchemeString", (obj1, obj2) => ((SchemeString)obj1).Equals(obj2) ? True : False },
-                    { "SimpleScheme.Character", (obj1, obj2) => ((Character)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.SchemeString", (obj1, obj2) => obj1.Equals(obj2) ? True : False },
+                    { "SimpleScheme.Character", (obj1, obj2) => obj1.Equals(obj2) ? True : False },
                     { "SimpleScheme.Vector", (obj1, obj2) => Vector.Equal((Vector)obj1, obj2) },
                     { "SimpleScheme.Pair", (obj1, obj2) => Pair.Equal((Pair)obj1, obj2) },
-                    { "SimpleScheme.Symbol", (obj1, obj2) => ((Symbol)obj1).Equals(obj2) ? True : False },
-                    { "SimpleScheme.SchemeBoolean", (obj1, obj2) => ((SchemeBoolean)obj1).Equals(obj2) ? True : False },
-                    { "SimpleScheme.Number", (obj1, obj2) => ((Number)obj1).Equals(obj2) ? True : False },
+                    { "SimpleScheme.Symbol", (obj1, obj2) => obj1.Equals(obj2) ? True : False },
+                    { "SimpleScheme.SchemeBoolean", (obj1, obj2) => obj1.Equals(obj2) ? True : False },
+                    { "SimpleScheme.Number", (obj1, obj2) => obj1.Equals(obj2) ? True : False },
                 };
         }
 
@@ -152,15 +151,15 @@ namespace SimpleScheme
         /// <param name="obj1">The first obj.</param>
         /// <param name="obj2">The second obj.</param>
         /// <returns>True if they are equivalent.</returns>
-        public static SchemeBoolean Eqv(SchemeObject obj1, SchemeObject obj2)
+        internal static SchemeBoolean Eqv(SchemeObject obj1, SchemeObject obj2)
         {
             return
                 New(
                     obj1 == obj2 
-                    || (obj1 is SchemeBoolean && ((SchemeBoolean)obj1).Equals(obj2))
-                    || (obj1 is Number && ((Number)obj1).Equals(obj2))
-                    || (obj1 is Character && ((Character)obj1).Equals(obj2))
-                    || (obj1 is Symbol && ((Symbol)obj1).Equals(obj2)));
+                    || (obj1 is SchemeBoolean && obj1.Equals(obj2))
+                    || (obj1 is Number && obj1.Equals(obj2))
+                    || (obj1 is Character && obj1.Equals(obj2))
+                    || (obj1 is Symbol && obj1.Equals(obj2)));
         }
 
         /// <summary>
@@ -169,7 +168,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The obj to test.</param>
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
-        public static bool IsFalse(SchemeObject value)
+        internal static bool IsFalse(SchemeObject value)
         {
             return value is SchemeBoolean && !((SchemeBoolean)value).Value;
         }
@@ -180,7 +179,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The obj to test.</param>
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
-        public static bool IsTrue(SchemeObject value)
+        internal static bool IsTrue(SchemeObject value)
         {
             return value is SchemeBoolean && ((SchemeBoolean)value).Value;
         }
@@ -192,7 +191,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The obj to test.</param>
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        public static SchemeBoolean Truth(SchemeObject obj)
+        internal static SchemeBoolean Truth(SchemeObject obj)
         {
             return !IsFalse(obj) ? True : False;
         }
@@ -202,7 +201,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="b">The boolean value.</param>
         /// <returns>The SchemeBoolean value.</returns>
-        public static SchemeBoolean Truth(bool b)
+        internal static SchemeBoolean Truth(bool b)
         {
             return b ? True : False;
         }
@@ -213,21 +212,40 @@ namespace SimpleScheme
         /// <summary>
         /// Define the boolean primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            env
-                .DefinePrimitive("boolean?", new[] { "6.1", "(boolean? <obj>)" }, (args, caller) => Truth(First(args) is SchemeBoolean), 1, Primitive.ArgType.Obj)
-                .DefinePrimitive("eq?", new[] { "6.2", "(eq? <obj1> <obj2>)" }, (args, caller) => Truth(Eqv(First(args), Second(args))), 2, Primitive.ArgType.Obj)
-                .DefinePrimitive("equal?", new[] { "6.2", "(equal? <obj1> <obj2>)" }, (args, caller) => Truth(Equal(First(args), Second(args))), 2, Primitive.ArgType.Obj)
-                .DefinePrimitive("eqv?", new[] { "6.2", "(eqv? <obj1> <obj2>)" }, (args, caller) => Truth(Eqv(First(args), Second(args))), 2, Primitive.ArgType.Obj)
+            primEnv
+                .DefinePrimitive(
+                    "boolean?", 
+                    new[] { "6.1", "(boolean? <obj>)" }, 
+                    (args, env, caller) => Truth(First(args) is SchemeBoolean), 
+                    new ArgsInfo(1, ArgType.Obj))
+                .DefinePrimitive(
+                    "eq?", 
+                    new[] { "6.2", "(eq? <obj1> <obj2>)" }, 
+                    (args, env, caller) => Truth(Eqv(First(args), Second(args))), 
+                    new ArgsInfo(2, ArgType.Obj))
+                .DefinePrimitive(
+                    "equal?", 
+                    new[] { "6.2", "(equal? <obj1> <obj2>)" }, 
+                    (args, env, caller) => Truth(Equal(First(args), Second(args))), 
+                    new ArgsInfo(2, ArgType.Obj))
+                .DefinePrimitive(
+                    "eqv?", 
+                    new[] { "6.2", "(eqv? <obj1> <obj2>)" }, 
+                    (args, env, caller) => Truth(Eqv(First(args), Second(args))), 
+                    new ArgsInfo(2, ArgType.Obj))
                 .DefinePrimitive(
                     "not", 
                     new[] { "6.1", "(not <obj>" },
-                    (args, caller) => Truth(First(args) is SchemeBoolean && ((SchemeBoolean)First(args)).Value == false), 
-                    1, 
-                    Primitive.ArgType.Obj)
-                .DefinePrimitive("null?", new[] { "6.3", "(null? <obj>)" }, (args, caller) => Truth(First(args) is EmptyList), 1, Primitive.ArgType.Obj);
+                    (args, env, caller) => Truth(First(args) is SchemeBoolean && ((SchemeBoolean)First(args)).Value == false), 
+                    new ArgsInfo(1, ArgType.Obj))
+                .DefinePrimitive(
+                    "null?", 
+                    new[] { "6.3", "(null? <obj>)" }, 
+                    (args, env, caller) => Truth(First(args) is EmptyList), 
+                    new ArgsInfo(1, ArgType.Obj));
         }
         #endregion
 
@@ -237,7 +255,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding boolean.</returns>
-        public static bool AsBool(SchemeObject x)
+        internal static bool AsBool(SchemeObject x)
         {
             if (x is SchemeBoolean)
             {
@@ -288,16 +306,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the boolean to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <returns>The boolean as a string.</returns>
-        public override string ToString(bool quoted)
-        {
-            return this.value ? "#t" : "#f";
-        }
-
-        /// <summary>
         /// Convert the SchemeBoolean value to a string for printing.
         /// </summary>
         /// <returns>The boolean value as a string.</returns>
@@ -305,12 +313,24 @@ namespace SimpleScheme
         {
             return this.value ? "True" : "False";
         }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Write the boolean to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <returns>The boolean as a string.</returns>
+        internal override string ToString(bool quoted)
+        {
+            return this.value ? "#t" : "#f";
+        }
 
         /// <summary>
         /// Describe a boolean by returning its value.
         /// </summary>
         /// <returns>The boolean as a string.</returns>
-        public override string Describe()
+        internal override string Describe()
         {
             return this.ToString();
         }

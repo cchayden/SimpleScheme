@@ -10,15 +10,9 @@ namespace SimpleScheme
     /// </summary>
     //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-    public sealed class EvaluateIf : Evaluator
+    internal sealed class EvaluateIf : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "if"
-        /// </summary>
-        public static readonly Symbol IfSym = "if";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -33,13 +27,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateIf(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(EvalTestStep, expr, env, caller, counter)
         {
-            this.ContinueAt(EvalTestStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Creates an if evaluator.
         /// </summary>
@@ -47,13 +40,13 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateIf(expr, env, caller);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
@@ -61,7 +54,8 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(EvalAlternativeStep));
+            s.Pc = EvalAlternativeStep;
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
@@ -73,7 +67,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            SchemeObject toEvaluate = SchemeBoolean.Truth(EnsureSchemeObject(s.ReturnedExpr)).Value ? Second(s.Expr) : Third(s.Expr);
+            SchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? Second(s.Expr) : Third(s.Expr);
             return EvaluateExpression.Call(
                 toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }

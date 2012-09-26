@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
 
     /// <summary>
@@ -18,11 +19,6 @@ namespace SimpleScheme
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
         private readonly Evaluator halted;
-
-        /// <summary>
-        /// One of the parallel steps is ended
-        /// </summary>
-        private readonly Evaluator ended;
 
         /// <summary>
         /// The async result used in case the interpreter is called asynchronously.
@@ -58,7 +54,6 @@ namespace SimpleScheme
             this.CurrentCounters = new Counter();
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
             this.halted = new HaltedEvaluator(this.GlobalEnvironment);
-            this.ended = new EndedEvaluator(this.GlobalEnvironment);
             var echo = (writer != null) ? this.CurrentOutputPort : null;
             try
             {
@@ -121,52 +116,44 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the ended evaluator.
-        /// </summary>
-        public Evaluator Ended
-        {
-            get { return this.ended; }
-        }
-
-        /// <summary>
         /// Gets the global environment for the interpreter.
         /// </summary>
-        public Environment GlobalEnvironment { get; private set; }
+        internal Environment GlobalEnvironment { get; private set; }
 
         /// <summary>
         /// Gets the rimitive environment for the interpreter.
         /// </summary>
-        public PrimitiveEnvironment PrimEnvironment { get; private set; }
+        internal PrimitiveEnvironment PrimEnvironment { get; private set; }
 
         /// <summary>
         /// Gets the input port.
         /// </summary>
-        public InputPort CurrentInputPort { get; private set; }
+        internal InputPort CurrentInputPort { get; private set; }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        public OutputPort CurrentOutputPort { get; private set; }
+        internal OutputPort CurrentOutputPort { get; private set; }
 
         /// <summary>
         /// Gets the counters collection.
         /// </summary>
-        public Counter CurrentCounters { get; private set; }
+        internal Counter CurrentCounters { get; private set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
         /// </summary>
-        public bool Trace { get; set; }
+        internal bool Trace { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to count.
         /// </summary>
-        public bool Count { get; set; }
+        internal bool Count { get; set; }
 
         /// <summary>
         /// Gets the transcript logger.
         /// </summary>
-        public TranscriptLogger Transcript { get; private set; }
+        internal TranscriptLogger Transcript { get; private set; }
         #endregion
 
         #region Public Factory Methods
@@ -231,19 +218,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Set the asynchronous completion value, if we were
-        ///   doing an async call.
-        /// </summary>
-        /// <param name="returnedExpr">The value to return as the asynchronous result.</param>
-        public void SetComplete(SchemeObject returnedExpr)
-        {
-            if (this.asyncResult != null)
-            {
-                this.asyncResult.SetAsCompleted(returnedExpr, false);
-            }
-        }
-
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
         /// Catch any exceptions that may happen.
@@ -554,7 +528,20 @@ namespace SimpleScheme
 
         #endregion
 
-        #region Public Methods (Not Exposed)
+        #region Internal Methods
+        /// <summary>
+        /// Set the asynchronous completion value, if we were
+        ///   doing an async call.
+        /// </summary>
+        /// <param name="returnedExpr">The value to return as the asynchronous result.</param>
+        internal void SetComplete(SchemeObject returnedExpr)
+        {
+            if (this.asyncResult != null)
+            {
+                this.asyncResult.SetAsCompleted(returnedExpr, false);
+            }
+        }
+
         /// <summary>
         /// Evaluate an expression in an environment.
         /// Do it by executing a set of steps.
@@ -569,28 +556,29 @@ namespace SimpleScheme
 
         /// <summary>
         /// Perform steps until evaluation is complete or suspended.
+        /// Calling "a subroutine" does not recursively call EvalSteps.
+        /// A "call" is handled by creating a new evaluator and passing a step within it as the nextStep.
+        /// A "return" is handled by return a step in the "caller" as the next step.
         /// </summary>
-        /// <param name="step">The step to perform first.</param>
+        /// <param name="evaluator">The evaluator to execute first.</param>
         /// <returns>The evaluation result, or suspended evaluator.</returns>
-        internal SchemeObject EvalSteps(Evaluator step)
+        internal SchemeObject EvalSteps(Evaluator evaluator)
         {
+            Debug.Assert(evaluator != null, "SchemeObject:EvalSteps evaluator != null");
             while (true)
             {
-#if Check
-                if (step == null)
+                Evaluator nextEvaluator = evaluator.NextStep();
+                if (nextEvaluator == null)
                 {
-                    return ErrorHandlers.InternalError("PC bad value");
-                }
-#endif
-
-                Evaluator nextStep = step.NextStep();
-                if (nextStep == null)
-                {
-                    return step.ReturnedExpr;
+                    return evaluator.ReturnedExpr;
                 }
 
-                // run the step and capture the next step
-                step = nextStep.RunStep();
+                // Get the PC from the evaluator and call the action it points to, passing it the evaluator instance.
+                evaluator = nextEvaluator.Pc(nextEvaluator);
+                if (evaluator == null)
+                {
+                    return nextEvaluator.ReturnedExpr;
+                }
             }
         }
 
@@ -704,7 +692,7 @@ namespace SimpleScheme
 
             if (!this.asyncResult.IsCompleted)
             {
-                this.asyncResult.SetAsCompleted(EvaluatorOrObject.EnsureSchemeObject(res), true);
+                this.asyncResult.SetAsCompleted(res, true);
             }
 
             return this.asyncResult;

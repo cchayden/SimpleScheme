@@ -10,15 +10,9 @@ namespace SimpleScheme
     /// Evaluate a sequence of exprs in parallel by evaluating each member.
     /// Return a list of the results, in the (reverse) order in which they are produced.
     /// </summary>
-    public sealed class EvaluateParallel : Evaluator
+    internal sealed class EvaluateParallel : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "parallel"
-        /// </summary>
-        public static readonly Symbol ParallelSym = "parallel";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -69,15 +63,14 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateParallel(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(InitialStep, expr, env, caller, counter)
         {
             this.forked = this.joined = 0;
             this.accum = EmptyList.Instance;
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call the parallel evaluator.
         /// </summary>
@@ -85,18 +78,20 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The parallel evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             if (expr is EmptyList)
             {
-                return caller.ReturnFromStep(EmptyList.Instance);
+                caller = caller.Caller;
+                caller.ReturnedExpr = EmptyList.Instance;
+                return caller;
             }
 
             return new EvaluateParallel(expr, env, caller);
         }
         #endregion
 
-        #region Public Methods
+        #region Internal Methods
         /// <summary>
         /// Override the copy operation so that we can reset the
         ///   forked and joined counters.
@@ -104,7 +99,7 @@ namespace SimpleScheme
         /// But any new ones that it does will, so counting has to start over.
         /// </summary>
         /// <returns>The evaluator copy.</returns>
-        public override Evaluator Clone()
+        internal override Evaluator Clone()
         {
             lock (this.lockObj)
             {
@@ -115,26 +110,34 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Get a return value from EvaluateExpressionWithCatch, along with a flag.
+        /// Get a return type from EvaluateExpressionWithCatch, and also grab the current returnedExpr.
         /// Make sure it is done within a lock.
         /// Store in a queue rather than in variables because this can be executed
         ///   concurrently in several threads.
         /// </summary>
-        /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="flag">The return flag.</param>
-        /// <returns>The next evaluator, which is the caller.</returns>
-        internal override Evaluator UpdateReturnValue(SchemeObject exp, ReturnType flag)
+        internal override void UpdateReturnFlag(ReturnType flag)
         {
             lock (this.lockObj)
             {
-                this.returnQueue.Enqueue(new Tuple<SchemeObject, ReturnType>(exp, flag));
+                this.returnQueue.Enqueue(new Tuple<SchemeObject, ReturnType>(this.ReturnedExpr, flag));
             }
+        }
 
-            return this;
+        /// <summary>
+        /// Get return value and flag from queue.
+        /// This MUST be called within the mutex.
+        /// </summary>
+        private void FetchReturnValue()
+        {
+            // Now it is safe to store return value and flag
+            Tuple<SchemeObject, ReturnType> ret = this.returnQueue.Dequeue();
+            this.ReturnedExpr = ret.Item1;
+            base.UpdateReturnFlag(ret.Item2);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Initial step: evaluate the first expression.
         /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
@@ -144,7 +147,8 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
+            s.Pc = LoopStep;
+            return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
@@ -172,39 +176,43 @@ namespace SimpleScheme
                         // return after suspension
                         // Record return result and either end the thread or 
                         //  return from the whole thing.
-                        step.accum = Cons(EnsureSchemeObject(step.ReturnedExpr), step.accum);
+                        step.accum = Cons(step.ReturnedExpr, step.accum);
                         step.joined++;
-                        return (step.joined < step.forked || !(s.Expr is EmptyList)) ? step.ReturnEnded() : step.ReturnFromStep(step.accum);
+                        if (step.joined < step.forked || !(s.Expr is EmptyList))
+                        {
+                            step.ReturnedExpr = Undefined.Instance;
+                            return null;
+                        }
+
+                        Evaluator caller = step.Caller;
+                        caller.ReturnedExpr = step.accum;
+                        return caller;
 
                     case ReturnType.SynchronousReturn:
                         // synchronous return
-                        step.accum = Cons(EnsureSchemeObject(step.ReturnedExpr), step.accum);
+                        step.accum = Cons(step.ReturnedExpr, step.accum);
                         break;
                 }
 
-                s.StepDownExpr();
+                s.Expr = Rest(s.Expr);
                 if (s.Expr is EmptyList)
                 {
                     // finished with expressions -- either suspend (if there is more pending) or
                     //   return from the whole thing
-                    return step.joined < step.forked ? 
-                        new SuspendedEvaluator(EnsureSchemeObject(s.ReturnedExpr), s.ContinueAt(LoopStep)) : 
-                        step.ReturnFromStep(step.accum);
+                    if (step.joined < step.forked)
+                    {
+                        s.Pc = LoopStep;
+                        return new SuspendedEvaluator(s.ReturnedExpr, s);
+                    }
+
+                    Evaluator caller = step.Caller;
+                    caller.ReturnedExpr = step.accum;
+                    return caller;
                 }
 
-                return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
+                s.Pc = LoopStep;
+                return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s);
             }
-        }
-
-        /// <summary>
-        /// Get return value and flag from queue.
-        /// This MUST be called within the mutex.
-        /// </summary>
-        private void FetchReturnValue()
-        {
-            // Now it is safe to store return value and flag
-            Tuple<SchemeObject, ReturnType> ret = this.returnQueue.Dequeue();
-            base.UpdateReturnValue(ret.Item1, ret.Item2);
         }
         #endregion
     }

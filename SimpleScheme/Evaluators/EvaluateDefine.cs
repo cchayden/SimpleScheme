@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
@@ -12,15 +10,9 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate a define expression.
     /// </summary>
-    public sealed class EvaluateDefine : Evaluator
+    internal sealed class EvaluateDefine : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "define"
-        /// </summary>
-        public static readonly Symbol DefineSym = "define";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -35,13 +27,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateDefine(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(InitialStep, expr, env, caller, counter)
         {
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call a define evaluator.
         /// Handle the two forms of define.
@@ -53,26 +44,27 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             if (First(expr) is Pair)
             {
                 // Defun case -- create a lambda and bind it to the variable.
                 var symbol = First(First(expr));
-                if (!(symbol  is Symbol))
+                if (!(symbol is Symbol))
                 {
-                    ErrorHandlers.SemanticError(String.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)), null);
+                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)), null);
                 }
 
                 env.Define((Symbol)symbol, Lambda.New(Rest(First(expr)), Rest(expr), env));
-                return caller.UpdateReturnValue(Undefined.Instance);
+                caller.ReturnedExpr = Undefined.Instance;
+                return caller;
             }
 
             return new EvaluateDefine(expr, env, caller);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Start by evaluating the expression.
         /// </summary>
@@ -80,7 +72,8 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpression.Call(Second(s.Expr), s.Env, s.ContinueAt(StoreDefineStep));
+            s.Pc = StoreDefineStep;
+            return EvaluateExpression.Call(Second(s.Expr), s.Env, s);
         }
 
         /// <summary>
@@ -93,11 +86,13 @@ namespace SimpleScheme
             var symbol = First(s.Expr);
             if (!(symbol is Symbol))
             {
-                ErrorHandlers.SemanticError(String.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)), null);
+                ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)), null);
             }
 
-            s.Env.Define((Symbol)symbol, EnsureSchemeObject(s.ReturnedExpr));
-            return s.ReturnFromStep(Undefined.Instance);
+            s.Env.Define((Symbol)symbol, s.ReturnedExpr);
+            Evaluator caller = s.Caller;
+            caller.ReturnedExpr = Undefined.Instance;
+            return caller;
         }
 
         #endregion

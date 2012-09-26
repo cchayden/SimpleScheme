@@ -10,15 +10,9 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
     //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-    public sealed class EvaluateCond : Evaluator
+    internal sealed class EvaluateCond : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "cond"
-        /// </summary>
-        public static readonly Symbol CondSym = "cond";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -48,14 +42,13 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateCond(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(EvalClauseStep, expr, env, caller, counter)
         {
             this.clauses = expr;
-            this.ContinueAt(EvalClauseStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Calls a cond evaluator.
         /// </summary>
@@ -63,19 +56,20 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr is EmptyList)
             {
-                return caller.UpdateReturnValue((SchemeBoolean)false);
+                caller.ReturnedExpr = (SchemeBoolean)false;
+                return caller;
             }
 
             return new EvaluateCond(expr, env, caller);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Evaluates a clause.  This step starts by checking for special conditions
         ///   such as else or the end of the list.
@@ -91,10 +85,12 @@ namespace SimpleScheme
             if (clause is Symbol && clause.ToString() == "else")
             {
                 step.test = EmptyList.Instance;
-                return s.ContinueAt(EvalConsequentStep);
+                s.Pc = EvalConsequentStep;
+                return s;
             }
 
-            return EvaluateExpression.Call(First(step.clause), s.Env, s.ContinueAt(TestClauseStep));
+            s.Pc = TestClauseStep;
+            return EvaluateExpression.Call(First(step.clause), s.Env, s);
         }
 
         /// <summary>
@@ -108,19 +104,23 @@ namespace SimpleScheme
         private static Evaluator TestClauseStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            step.test = EnsureSchemeObject(s.ReturnedExpr);
+            step.test = s.ReturnedExpr;
             if (SchemeBoolean.Truth(step.test).Value)
             {
-                return s.ContinueAt(EvalConsequentStep);
+                s.Pc = EvalConsequentStep;
+                return s;
             }
 
             step.clauses = Rest(step.clauses);
             if (step.clauses is EmptyList)
             {
-                return step.ReturnFromStep(Undefined.Instance);
+                Evaluator caller = step.Caller;
+                caller.ReturnedExpr = Undefined.Instance;
+                return caller;
             }
 
-            return s.ContinueAt(EvalClauseStep);
+            s.Pc = EvalClauseStep;
+            return s;
         }
 
         /// <summary>
@@ -136,14 +136,17 @@ namespace SimpleScheme
             if (Rest(step.clause) is EmptyList)
             {
                 // no consequent: return the test as the result
-                return step.ReturnFromStep(step.test);
+                Evaluator caller = step.Caller;
+                caller.ReturnedExpr = step.test;
+                return caller;
             }
 
             var clause = Second(step.clause);
             if (clause is Symbol && clause.ToString() == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(Third(step.clause), s.Env, s.ContinueAt(ApplyRecipientStep));
+                s.Pc = ApplyRecipientStep;
+                return EvaluateExpression.Call(Third(step.clause), s.Env, s);
             }
 
             // evaluate and return the sequence of expressions directly

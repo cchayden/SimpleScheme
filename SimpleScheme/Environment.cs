@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Text;
 
     /// <summary>
@@ -34,11 +35,6 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("environment");
 
         /// <summary>
-        /// The symbol table for this enviornment.
-        /// </summary>
-        private readonly SymbolTable symbolTable;
-
-        /// <summary>
         /// The interpreter.
         /// </summary>
         private readonly Interpreter interp;
@@ -47,6 +43,11 @@ namespace SimpleScheme
         /// The lexically enclosing environment.
         /// </summary>
         private readonly Environment lexicalParent;
+
+        /// <summary>
+        /// The symbol table for this enviornment.
+        /// </summary>
+        private SymbolTable symbolTable;
         #endregion
 
         #region Constructors
@@ -110,7 +111,7 @@ namespace SimpleScheme
         ///   lexical parent, so that it can be accessed directly.
         /// This field is written only in the constructor -- it is never modified.
         /// </summary>
-        public Interpreter Interp
+        internal Interpreter Interp
         {
             get { return this.interp; }
         }
@@ -118,20 +119,19 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the lexical parent environment.
         /// </summary>
-        public Environment LexicalParent
+        internal Environment LexicalParent
         {
             get { return this.lexicalParent; }
         }
         #endregion
 
-        #region Public Methods
+        #region Interface Methods
         /// <summary>
         /// Add a new definition into the environment.
-        /// If a procedure is being added, set its name.
         /// Creates a new symbol through public interface instead of through parser.
         /// </summary>
-        /// <param name="var">This is a variable to add to the environment.</param>
-        /// <param name="val">This is the value of that variable.</param>
+        /// <param name="var">A variable to add to the environment.</param>
+        /// <param name="val">The value of that variable.</param>
         public void Define(string var, SchemeObject val)
         {
             try
@@ -144,10 +144,27 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Look up a symbol in the environment.
-        /// Creates a new symbol through public interface instead of through parser.
+        /// Set the value of a variable in the environment.
+        /// Var is the variable name.
+        /// Searches the chain of environments looking for a binding.
         /// </summary>
-        /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
+        /// <param name="var">The variable name.</param>
+        /// <param name="val">The new value for the variable.</param>
+        public void Set(string var, SchemeObject val)
+        {
+            try
+            {
+               this.Set(Symbol.New(var), val);
+            }
+            catch (ErrorHandlers.SchemeException)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Look up a symbol in the environment.
+        /// </summary>
+        /// <param name="var">The name of the variable to look up.  Must name a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
         public SchemeObject Lookup(string var)
         {
@@ -169,20 +186,22 @@ namespace SimpleScheme
         {
             return "Environment \n" + this.Dump();
         }
+        #endregion
 
+        #region Internal Methods
         /// <summary>
         /// Add a new definition into the environment.
         /// If a procedure is being added, set its name.
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        public void Define(Symbol var, SchemeObject val)
+        internal void Define(Symbol var, SchemeObject val)
         {
             this.symbolTable.Add(var, val);
 
             if (val is Procedure)
             {
-                ((Procedure)val).SetName(var.SymbolName);
+                ((Procedure)val).ProcedureName = var.SymbolName;
             }
         }
 
@@ -193,7 +212,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        public SchemeObject Lookup(Symbol var)
+        internal SchemeObject Lookup(Symbol var)
         {
             Environment env = this;
 
@@ -227,23 +246,30 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Set the value of a variable in the environment to a new value.
-        /// Var must be a string, the variable name.
-        /// Searches the symbol table first.
-        /// If not found, then searches the parent to find the value.
-        /// Then set it to the new value.
+        /// Add or update a symbol table entry at this level.
         /// </summary>
-        /// <param name="var">The variable name.</param>
-        /// <param name="val">The new value for the variable.</param>
-        /// <returns>The value that the variable was set to.</returns>
-        public SchemeObject Set(SchemeObject var, SchemeObject val)
+        /// <param name="symbol">The symbol to update.</param>
+        /// <param name="val">The new value.</param>
+        internal void Update(SchemeObject symbol, SchemeObject val)
         {
-            if (!(var is Symbol))
+            if (!(symbol is Symbol))
             {
-                return ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", var.ToString(true)), var);
+                ErrorHandlers.SemanticError(string.Format(@"Attempt to update a non-symbol: ""{0}""", symbol.ToString(true)), symbol);
             }
 
-            var symbol = (Symbol)var;
+            this.symbolTable.Add((Symbol)symbol, val);
+        }
+
+        /// <summary>
+        /// Set the value of a variable in the environment.
+        /// Var is the variable name.
+        /// Searches the chain of environments looking for a binding.
+        /// Used by set!
+        /// </summary>
+        /// <param name="symbol">The variable name.</param>
+        /// <param name="val">The new value for the variable.</param>
+        internal void Set(Symbol symbol, SchemeObject val)
+        {
             Environment env = this;
 
             // search down the chain of environments for a definition
@@ -257,14 +283,14 @@ namespace SimpleScheme
                 }
 
                 env.symbolTable.Update(symbol, val, level);
-                return val;
+                return;
             }
 
             while (env != emptyEnvironment)
             {
                 if (env.symbolTable.Update(symbol, val, level) != null)
                 {
-                    return val;
+                    return;
                 }
 
                 // if we have not found anything yet, look in the parent
@@ -272,7 +298,7 @@ namespace SimpleScheme
                 level++;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
+            ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
         }
 
         /// <summary>
@@ -280,7 +306,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The symbol naming the variable to increment.</param>
         /// <returns>The incremented value.</returns>
-        public SchemeObject Increment(SchemeObject var)
+        internal SchemeObject Increment(SchemeObject var)
         {
             if (!(var is Symbol))
             {
@@ -291,10 +317,9 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            int level = 0;
             while (env != emptyEnvironment)
             {
-                SchemeObject val = env.symbolTable.Increment(symbol, level);
+                SchemeObject val = env.symbolTable.Increment(symbol);
                 if (val != null)
                 {
                     return val;
@@ -302,7 +327,6 @@ namespace SimpleScheme
 
                 // if we have not found anything yet, look in the parent
                 env = env.lexicalParent;
-                level++;
             }
 
             return ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
@@ -315,7 +339,7 @@ namespace SimpleScheme
         /// <param name="levels">The number of levels to show.</param>
         /// <param name="indent">The number of characters to indent.</param>
         /// <returns>The environment stack, as a string.</returns>
-        public string Dump(int levels, int indent)
+        internal string Dump(int levels, int indent)
         {
             var sb = new StringBuilder();
             Environment env = this;
@@ -337,7 +361,7 @@ namespace SimpleScheme
         /// <summary>
         /// Dump the environment.
         /// </summary>
-        public void DumpEnv()
+        internal void DumpEnv()
         {
             this.interp.CurrentOutputPort.WriteLine(this.Dump(100, 0));
         }
@@ -346,7 +370,7 @@ namespace SimpleScheme
         /// Dump the top level environment.
         /// </summary>
         /// <returns>The environment, as a string.</returns>
-        public string Dump()
+        internal string Dump()
         {
             return this.Dump(1, 0);
         }
@@ -355,9 +379,38 @@ namespace SimpleScheme
         /// Make a list of all the values in the environment.
         /// </summary>
         /// <returns>The list of (name . value) pairs.</returns>
-        public SchemeObject ListEnv()
+        internal SchemeObject ListEnv()
         {
             return this.symbolTable.ListEnv();
+        }
+        #endregion
+
+        #region NameValuePair
+        /// <summary>
+        /// These make up symbol table entries.
+        /// </summary>
+        private struct NameValuePair
+        {
+            /// <summary>
+            /// The symbol name.
+            /// </summary>
+            internal readonly string Name;
+
+            /// <summary>
+            /// The symbol value.
+            /// </summary>
+            internal readonly SchemeObject Value;
+
+            /// <summary>
+            /// Initializes a new instance of the NameValuePair struct.
+            /// </summary>
+            /// <param name="name">The symbol name.</param>
+            /// <param name="value">The symbol value.</param>
+            internal NameValuePair(string name, SchemeObject value)
+            {
+                this.Name = name;
+                this.Value = value;
+            }
         }
         #endregion
 
@@ -366,17 +419,12 @@ namespace SimpleScheme
         /// A SymbolTable based on List.  This is inefficient for large symbol tables,
         /// but if the caller can remember the position, it can be more efficient.
         /// </summary>
-        public class SymbolTable
+        private struct SymbolTable
         {
             /// <summary>
-            /// Stores the symbols.
+            /// Stores the name/value pairs.
             /// </summary>
-            private readonly List<string> names;
-
-            /// <summary>
-            /// The values.
-            /// </summary>
-            private readonly List<SchemeObject> values;
+            private readonly List<NameValuePair> entries;
 
             /// <summary>
             /// Lock the symbol table before using -- may be concurrent.
@@ -385,23 +433,22 @@ namespace SimpleScheme
             private readonly object lockObj;
 
             /// <summary>
-            /// Initializes a new instance of the Environment.SymbolTable class and adds symbols.
+            /// Initializes a new instance of the Environment.SymbolTable struct and adds symbols.
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public SymbolTable(SchemeObject symbols, SchemeObject vals) : this(List.ListLength(symbols))
+            internal SymbolTable(SchemeObject symbols, SchemeObject vals) : this(List.ListLength(symbols))
             {
                 this.AddList(symbols, vals);
             }
 
             /// <summary>
-            /// Initializes a new instance of the Environment.SymbolTable class.
+            /// Initializes a new instance of the Environment.SymbolTable struct.
             /// </summary>
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
-            public SymbolTable(int count)
+            internal SymbolTable(int count)
             {
-                this.names = new List<string>(count);
-                this.values = new List<SchemeObject>(count);
+                this.entries = new List<NameValuePair>(count);
                 this.lockObj = new object();
             }
 
@@ -411,19 +458,17 @@ namespace SimpleScheme
             /// through the parent environment chain.
             /// </summary>
             /// <param name="symbol">The symbol to look up.</param>
-            /// <param name="level"></param>
+            /// <param name="level">The number of levels to travel to find the definition.  Cached in the symbol the
+            ///   first time it is looked up.</param>
             /// <returns>The value of the object looked up, null if not found.</returns>
-            public SchemeObject Lookup(Symbol symbol, int level)
+            internal SchemeObject Lookup(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
                     if (symbol.Located)
                     {
-                        if (level != symbol.Level)
-                        {
-                            return null;
-                        }
-                        return this.values[symbol.Pos];
+                        Debug.Assert(level == symbol.Level, "SymbolTable:Lookup level -- symbol.Level");
+                        return this.entries[symbol.Pos].Value;
                     }
 
                     var index = this.FindSymbol(symbol);
@@ -432,8 +477,8 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    symbol.Locate(index, level);
-                    return this.values[index];
+                    symbol.SetLocation(index, level);
+                    return this.entries[index].Value;
                 }
             }
 
@@ -444,33 +489,26 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            public void Add(Symbol symbol, SchemeObject val)
+            internal void Add(Symbol symbol, SchemeObject val)
             {
                 lock (this.lockObj)
                 {
-                    var index = this.FindSymbol(symbol);
-                    if (!SymbolFound(index))
-                    {
-                        this.names.Add(symbol.SymbolName);
-                        this.values.Add(val);
-                    }
-                    else
-                    {
-                        this.values[index] = val;
-                    }
+                    this.AddUnlocked(symbol, val);
                 }
             }
 
             /// <summary>
             /// Update a value in the symbol table.
             /// If the symbol is not defined, return false.
+            /// Cache the symbol location if not already done.
             /// </summary>
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
-            /// <param name="level"></param>
+            /// <param name="level">The number of levels to travel to find the definition</param>
             /// <returns>The new value, null if not found.</returns>
-            public SchemeObject Update(Symbol symbol, SchemeObject val, int level)
+            internal SchemeObject Update(Symbol symbol, SchemeObject val, int level)
             {
+                var entry = new NameValuePair(symbol.SymbolName, val);
                 lock (this.lockObj)
                 {
                     if (symbol.Located)
@@ -480,7 +518,7 @@ namespace SimpleScheme
                             return null;
                         }
 
-                        this.values[symbol.Pos] = val;
+                        this.entries[symbol.Pos] = entry;
                         return val;
                     }
 
@@ -490,19 +528,18 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    this.values[index] = val;
-                    symbol.Locate(index, level);
+                    this.entries[index] = entry;
+                    symbol.SetLocation(index, level);
                     return val;
                 }
             }
 
             /// <summary>
-            /// Increment the value for a symbol.
+            /// Increment the value for a symbol at this level.
             /// </summary>
             /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
-            /// <param name="level"></param>
-            /// <returns>TThe new value, null if not found.</returns>
-            public SchemeObject Increment(Symbol symbol, int level)
+            /// <returns>The new value, null if not found.</returns>
+            internal SchemeObject Increment(Symbol symbol)
             {
                 lock (this.lockObj)
                 {
@@ -512,7 +549,7 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    SchemeObject val = this.values[index];
+                    SchemeObject val = this.entries[index].Value;
                     if (!(val is Number))
                     {
                         // If it is found but is not a number, then that is an error.
@@ -520,7 +557,7 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    this.values[index] = (Number)(((Number)val).N + 1);
+                    this.entries[index] = new NameValuePair(symbol.SymbolName, (Number)(((Number)val).N + 1));
                     return val;
                 }
             }
@@ -530,14 +567,14 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="indent">The number of characters to indent.</param>
             /// <param name="sb">A string builder to write the dump into.</param>
-            public void Dump(int indent, StringBuilder sb)
+            internal void Dump(int indent, StringBuilder sb)
             {
                 lock (this.lockObj)
                 {
                     var initial = new string(' ', indent);
-                    for (int i = 0; i < this.names.Count; i++)
+                    foreach (var ent in this.entries)
                     {
-                        sb.AppendFormat("{0}{1}: {2}\n ", initial, this.names[i], this.values[i]);
+                        sb.AppendFormat("{0}{1}: {2}\n ", initial, ent.Name, ent.Value);
                     }
                 }
             }
@@ -546,14 +583,14 @@ namespace SimpleScheme
             /// Create a list of (name . value) representing the symbol table.
             /// </summary>
             /// <returns>The name/value pairs.</returns>
-            public SchemeObject ListEnv()
+            internal SchemeObject ListEnv()
             {
                 SchemeObject result = EmptyList.Instance;
                 lock (this.lockObj)
                 {
-                    for (int i = 0; i < this.names.Count; i++)
+                    foreach (var ent in this.entries)
                     {
-                        result = List.Cons(List.Cons((SchemeString)this.names[i], this.values[i]), result);
+                        result = List.Cons(List.Cons((SchemeString)ent.Name, ent.Value), result);
                     }
                 }
 
@@ -577,37 +614,81 @@ namespace SimpleScheme
             /// <returns>The symbol position, if found, otherwise -1.</returns>
             private int FindSymbol(Symbol symbol)
             {
-                return this.names.FindIndex(name => name == symbol.SymbolName);
+                string symbolName = symbol.SymbolName;
+                for (int i = 0; i < this.entries.Count; i++)
+                {
+                    if (this.entries[i].Name == symbolName)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+//              The following is slower because it creates a lambda that captures the symbolName.
+//              This is in the critical path, so use the more verbose choice.
+//              return this.entries.FindIndex(entry => entry.Name == symbolName);
             }
 
             /// <summary>
             /// Add a list of symbols and values.
-            /// The list of symbols and their values must be the same length.
+            /// If the list of symbols and vals is the same length, they are paired up.
+            /// If the list of symbols is shorter, a list of the rest of the vals are bound to the last symbol.
+            ///   This handles cases (2) and (3) in section 4.1.4 describing lambda formals.
+            /// If the list of symbols is longer, it is an error.
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
             private void AddList(SchemeObject symbols, SchemeObject vals)
             {
-                while (!(symbols is EmptyList))
+                lock (this.lockObj)
                 {
-                    if (symbols is Symbol)
+                    while (!(symbols is EmptyList))
                     {
-                        this.Add((Symbol)symbols, vals);
-                    }
-                    else
-                    {
-                        SchemeObject symbol = List.First(symbols);
-                        if (!(symbol is Symbol))
+                        if (symbols is Symbol)
                         {
-                            ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""",  symbol), symbol);
+                            // bind the symbol the the rest of the values
+                            this.AddUnlocked((Symbol)symbols, vals);
+                        }
+                        else
+                        {
+                            SchemeObject symbol = List.First(symbols);
+                            if (!(symbol is Symbol))
+                            {
+                                ErrorHandlers.SemanticError(
+                                    string.Format(@"Bad formal parameter: ""{0}""", symbol), symbol);
+                            }
+
+                            this.AddUnlocked((Symbol)symbol, List.First(vals));
                         }
 
-                        this.Add((Symbol)symbol, List.First(vals));
+                        symbols = List.Rest(symbols);
+                        vals = List.Rest(vals);
                     }
-
-                    symbols = List.Rest(symbols);
-                    vals = List.Rest(vals);
                 }
+            }
+
+            /// <summary>
+            /// Add a symbol and its value to the environment.
+            /// If the symbol is not defined in the environment, add it.
+            /// If the symbol is already defined in the envhronment, update its value.
+            /// The caller is responsible for locking.
+            /// </summary>
+            /// <param name="symbol">The symbol name.</param>
+            /// <param name="val">The value.</param>
+            private void AddUnlocked(Symbol symbol, SchemeObject val)
+            {
+                var index = this.FindSymbol(symbol);
+                if (!SymbolFound(index))
+                {
+                    this.entries.Add(new NameValuePair(symbol.SymbolName, val));
+                    index = this.entries.Count - 1;
+                }
+                else
+                {
+                    this.entries[index] = new NameValuePair(symbol.SymbolName, val);
+                }
+
+                symbol.SetLocation(index, 0);
             }
         }
         #endregion

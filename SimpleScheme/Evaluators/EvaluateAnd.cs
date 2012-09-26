@@ -8,13 +8,13 @@ namespace SimpleScheme
     /// If a value is #f then return it.  Otherwise return the last value.
     /// </summary>
     //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-    public sealed class EvaluateAnd : Evaluator
+    internal sealed class EvaluateAnd : Evaluator
     {
         #region Fields
         /// <summary>
         /// The Symbol "and"
         /// </summary>
-        public static readonly Symbol AndSym = "and";
+        internal static readonly Symbol AndSym = "and";
 
         /// <summary>
         /// The counter id.
@@ -30,13 +30,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateAnd(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(EvalTestStep, expr, env, caller, counter)
         {
-            this.ContinueAt(EvalTestStep);
         }
         #endregion
 
-        #region Public Methods
+        #region Call
         /// <summary>
         /// Create an and evaluator.
         /// </summary>
@@ -44,19 +43,20 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr is EmptyList)
             {
-                return caller.UpdateReturnValue((SchemeBoolean)true);
+                caller.ReturnedExpr = (SchemeBoolean)true;
+                return caller;
             }
 
             return new EvaluateAnd(expr, env, caller);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
@@ -71,7 +71,8 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
+            s.Pc = LoopStep;
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
@@ -82,13 +83,16 @@ namespace SimpleScheme
         /// <returns>The result, or this evaluator to loop back to previous step.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            if (SchemeBoolean.IsFalse(EnsureSchemeObject(s.ReturnedExpr)))
+            if (SchemeBoolean.IsFalse(s.ReturnedExpr))
             {
-                return s.ReturnFromStep((SchemeBoolean)false);
+                Evaluator caller = s.Caller;
+                caller.ReturnedExpr = (SchemeBoolean)false;
+                return caller;
             }
 
-            s.StepDownExpr();
-            return s.ContinueAt(EvalTestStep);
+            s.Expr = Rest(s.Expr);
+            s.Pc = EvalTestStep;
+            return s;
         }
         #endregion
     }

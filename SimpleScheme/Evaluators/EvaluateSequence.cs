@@ -7,15 +7,9 @@ namespace SimpleScheme
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
    //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-    public sealed class EvaluateSequence : Evaluator
+    internal sealed class EvaluateSequence : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "begin"
-        /// </summary>
-        public static readonly Symbol BeginSym = "begin";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -30,13 +24,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateSequence(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller, counter)
+            : base(EvalExprStep, expr, env, caller, counter)
         {
-            this.ContinueAt(EvalExprStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call the sequence evaluator.
         /// </summary>
@@ -44,13 +37,13 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateSequence(expr, env, caller);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Initial step: to see if we are done.
         /// If not, evaluate the next expression.
@@ -69,7 +62,8 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
+            s.Pc = LoopStep;
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
@@ -79,8 +73,9 @@ namespace SimpleScheme
         /// <returns>Immediately steps back.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            s.StepDownExpr();
-            return s.ContinueAt(EvalExprStep);
+            s.Expr = Rest(s.Expr);
+            s.Pc = EvalExprStep;
+            return s;
         }
         #endregion
     }

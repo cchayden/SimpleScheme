@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// This is an iterative, rather than a recursive one.
     /// </summary>
     //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-    public sealed class EvaluateMap : Evaluator
+    internal sealed class EvaluateMap : Evaluator
     {
         #region Fields
         /// <summary>
@@ -44,16 +44,14 @@ namespace SimpleScheme
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
         private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-            : base(expr, env, caller, counter)
+            : base(ApplyFunStep, expr, env, caller, counter)
         {
             this.proc = proc;
             this.result = result;
-
-            this.ContinueAt(ApplyFunStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call the map evaluator
         /// </summary>
@@ -63,18 +61,18 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The evaluator to execute.</returns>
-        public static Evaluator Call(Procedure proc, SchemeObject expr, bool returnResult, Environment env, Evaluator caller)
+        internal static Evaluator Call(Procedure proc, SchemeObject expr, bool returnResult, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
             if (expr is EmptyList)
             {
-                return caller.UpdateReturnValue(EmptyList.Instance);
+                caller.ReturnedExpr = EmptyList.Instance;
+                return caller;
             }
 
             if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + expr, null);
-                return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
             SchemeObject result = returnResult ? EmptyList.Instance : null;
@@ -82,7 +80,22 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Private Methods
+        #region Clone
+        /// <summary>
+        /// Clone the evaluator when we need to store a continuation.
+        /// Because we destructively modify result, we need to copy it as well.
+        /// </summary>
+        /// <returns>The cloned evaluator.</returns>
+        internal override Evaluator Clone()
+        {
+            var copy = (EvaluateMap)this.MemberwiseClone();
+            //// also copy result field
+            copy.result = Copy(this.result);
+            return copy;
+        }
+        #endregion
+
+        #region Steps
         /// <summary>
         /// Apply the map function to an element of the list and grab the result.
         /// </summary>
@@ -96,11 +109,15 @@ namespace SimpleScheme
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return step.proc.Apply(MapFun(First, MakeList(s.Expr)), s.ContinueAt(CollectAndLoopStep));
+                s.Pc = CollectAndLoopStep;
+                return step.proc.Apply(MapFun(First, s.Expr), null, s, s);
             }
 
             // if we are done, return the reversed result list
-            return step.ReturnFromStep(step.result != null ? ReverseList(step.result) : Undefined.Instance);
+            // We cannot do this destructively without breaking call/cc.
+            Evaluator caller = step.Caller;
+            caller.ReturnedExpr = step.result != null ? Pair.ReverseListInPlace(step.result) : Undefined.Instance;
+            return caller;
         }
 
         /// <summary>
@@ -116,12 +133,13 @@ namespace SimpleScheme
             if (step.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = Cons(EnsureSchemeObject(s.ReturnedExpr), step.result);
+                step.result = Cons(s.ReturnedExpr, step.result);
             }
 
             // Move down each of the lists
-            step.UpdateExpr(MapFun(Rest, MakeList(s.Expr)));
-            return s.ContinueAt(ApplyFunStep);
+            step.Expr = MapFun(Rest, s.Expr);
+            s.Pc = ApplyFunStep;
+            return s;
         }
         #endregion
     }

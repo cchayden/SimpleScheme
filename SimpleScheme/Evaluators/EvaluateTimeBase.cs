@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    public abstract class EvaluateTimeBase : Evaluator
+    internal abstract class EvaluateTimeBase : Evaluator
     {
         #region Fields
         /// <summary>
@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// <summary>
         /// The number of times to repeat the evaluation.
         /// </summary>
-        private int counter;
+        private readonly int counter;
 
         /// <summary>
         /// How far we are into the repeated evaluation.
@@ -45,16 +45,35 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="counterId">The counter id of the evaluator.</param>
         protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
-            : base(expr, env, caller, counterId)
+            : base(InitialStep, expr, env, caller, counterId)
         {
             this.counter = count;
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
-        #region Protected Static Methods
+        #region Protected Methods
+        /// <summary>
+        /// Step1 is defined in the derived classes.
+        /// </summary>
+        /// <returns>The next step to take.</returns>
+        protected abstract Evaluator EvaluateStep();
+        #endregion
+
+        #region Steps
+        /// <summary>
+        /// Start by setting up timers and counter.
+        /// </summary>
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Continue to next step.</returns>
+        private static Evaluator InitialStep(Evaluator s)
+        {
+            var step = (EvaluateTimeBase)s;
+            step.i = 0;
+            s.Pc = EvaluateStep;
+            return s;
+        }
         /// <summary>
         /// Subclass must provide an implementation.
         /// This evaluates the expression, in a way that is appropriate
@@ -62,9 +81,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>The next step.</returns>
-        protected static Evaluator Step1(Evaluator s)
+        protected static Evaluator EvaluateStep(Evaluator s)
         {
-            return ((EvaluateTimeBase)s).Step1();
+            return ((EvaluateTimeBase)s).EvaluateStep();
         }
 
         /// <summary>
@@ -75,45 +94,26 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Continue, or else give the timer results.</returns>
-        protected static Evaluator Step2(Evaluator s)
+        protected static Evaluator CompleteStep(Evaluator s)
         {
             var step = (EvaluateTimeBase)s;
             step.i++;
             if (step.i < step.counter)
             {
-                  return s.ContinueAt(Step1);
+                s.Pc = EvaluateStep;
+                return s;
             }
 
             step.stopwatch.Stop();
             long time = step.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - step.startMem;
-            return step.ReturnFromStep(
+            Evaluator caller = step.Caller;
+            caller.ReturnedExpr = 
                 MakeList(
-                    EnsureSchemeObject(s.ReturnedExpr),
+                    s.ReturnedExpr,
                     MakeList((Number)time,  (Symbol)"msec"),
-                    MakeList((Number)mem, (Symbol)"bytes")));
-        }
-        #endregion
-
-        #region Protected Methods
-        /// <summary>
-        /// Step1 is defined in the derived classes.
-        /// </summary>
-        /// <returns>The next step to take.</returns>
-        protected abstract Evaluator Step1();
-        #endregion
-
-        #region Private Static Methods
-        /// <summary>
-        /// Start by setting up timers and counter.
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>Continue to next step.</returns>
-        private static Evaluator InitialStep(Evaluator s)
-        {
-            var step = (EvaluateTimeBase)s;
-            step.i = 0;
-            return s.ContinueAt(Step1);
+                    MakeList((Number)mem, (Symbol)"bytes"));
+            return caller;
         }
         #endregion
     }

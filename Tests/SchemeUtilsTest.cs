@@ -343,6 +343,18 @@ namespace Tests
         }
 
         /// <summary>
+        /// A test for ReverseListInPlace
+        /// </summary>
+        [TestMethod]
+        public void ReverseTestInPlace()
+        {
+            var test = List.MakeList((Number)1, (Number)2);
+            var actual = Pair.ReverseListInPlace(test);
+            Assert.AreEqual(2.0, ((Number)List.First(actual)).N);
+            Assert.AreEqual(1.0, ((Number)List.First(List.Rest(actual))).N);
+        }
+
+        /// <summary>
         /// A test for Str
         /// </summary>
         [TestMethod]
@@ -496,14 +508,14 @@ namespace Tests
             Assert.AreEqual("boolean", ((SchemeBoolean)true).SchemeTypeName());
             Assert.AreEqual("symbol", ((Symbol)"sym").SchemeTypeName());
             Assert.AreEqual("character", ((Character)'c').SchemeTypeName());
-            Assert.AreEqual("vector", (Vector.New((Number)3, (Number)0)).SchemeTypeName());
-            Assert.AreEqual("pair", (Pair.New(null, null)).SchemeTypeName());
+            Assert.AreEqual("vector", Vector.New((Number)3, (Number)0).SchemeTypeName());
+            Assert.AreEqual("pair", Pair.New(null, null).SchemeTypeName());
             Assert.AreEqual("number", ((Number)1.0d).SchemeTypeName());
             Assert.AreEqual("string", ((SchemeString)"abc").SchemeTypeName());
-            Assert.AreEqual("primitive", (new Primitive((args, caller) => null, new[] {""}, 0, 0, new Primitive.ArgType[0])).SchemeTypeName());
-            Assert.AreEqual("input-port", (InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter)).SchemeTypeName());
-            Assert.AreEqual("output-port", (OutputPort.New(new StringWriter(), (Interpreter)this.interpreter)).SchemeTypeName());
-            Assert.AreEqual("empty-list", (EmptyList.Instance).SchemeTypeName());
+            Assert.AreEqual("primitive", (new Primitive("primitive", (args, env, caller) => null, new[] {string.Empty}, new ArgsInfo(0, 0, false, new ArgType[0]))).SchemeTypeName());
+            Assert.AreEqual("input-port", InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter).SchemeTypeName());
+            Assert.AreEqual("output-port", OutputPort.New(new StringWriter(), (Interpreter)this.interpreter).SchemeTypeName());
+            Assert.AreEqual("empty-list", EmptyList.Instance.SchemeTypeName());
         }
 
         /// <summary>

@@ -14,7 +14,7 @@ namespace SimpleScheme
     /// Tokens are generally scheme punctuation such as ( ) . , ' and `.
     /// They also include multi-char tokens such as ,@ and Eof.
     /// </summary>
-    public class Token : SchemeObject
+    internal class Token : SchemeObject
     {
         /// <summary>
         /// Cache of predefined tokens, used when possible.
@@ -42,7 +42,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="Token"/> class.
         /// </summary>
         /// <param name="value">The value.</param>
-        public Token(string value)
+        internal Token(string value)
         {
             this.value = value;
         }
@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="tok">The token (as a string).</param>
         /// <returns>The Token.</returns>
-        public static Token New(string tok)
+        internal static Token New(string tok)
         {
             Token t;
             if (tokens.TryGetValue(tok, out t))

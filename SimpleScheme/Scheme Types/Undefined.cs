@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
-
     /// <summary>
     /// Represents an undefined scheme value.
     /// This type is immutable.
@@ -37,19 +35,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Write the undefined object to the string builder.
-        /// If not quoted, write nothing.
-        /// One of the main reasons for this type is to suppress output.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <returns>If qupted, then <undefined> otherwise nothing.</undefined></returns>
-        public override string ToString(bool quoted)
-        {
-            return quoted ? this.ToString() : string.Empty;
-        }
-
+        #region Internal Methods
         /// <summary>
         /// Display the value as a string.
         /// Since there is nothing to show, at least give the type.
@@ -59,7 +45,20 @@ namespace SimpleScheme
         {
             return "<undefined>";
         }
+        #endregion
 
+        #region Internal Methods
+        /// <summary>
+        /// Write the undefined object to the string builder.
+        /// If not quoted, write nothing.
+        /// One of the main reasons for this type is to suppress output.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <returns>If qupted, then <undefined> otherwise nothing.</undefined></returns>
+        internal override string ToString(bool quoted)
+        {
+            return quoted ? this.ToString() : string.Empty;
+        }
         #endregion
     }
 }

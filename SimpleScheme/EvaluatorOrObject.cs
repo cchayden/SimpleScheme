@@ -13,21 +13,18 @@ namespace SimpleScheme
     {
         /// <summary>
         /// Make sure the EvaluatorOrObject is actually a SchemeObject.
-        /// In general, evaluation can produce either
-        /// (1) a value, or
-        /// (2) an Evaluator, which can be run to produce a value.
-        /// When the context demands an actual value, use this to ensure that this is the case.
-        /// </summary>
-        /// <param name="x">An evaluator or an object.</param>
+        /// It would be nice to define a conversion, but it is not allowed to 
+        /// define a conversion between base and derived classes.
         /// <returns>The object, otherwise throws an error.</returns>
-        public static SchemeObject EnsureSchemeObject(EvaluatorOrObject x)
+        /// </summary>
+        internal SchemeObject ToSchemeObject()
         {
-            if (x is SchemeObject)
+            if (this is SchemeObject)
             {
-                return (SchemeObject)x;
+                return (SchemeObject)this;
             }
 
-            ErrorHandlers.TypeError(typeof(SchemeObject), x);
+            ErrorHandlers.TypeError(typeof(SchemeObject), this);
             return null;
         }
 
@@ -36,6 +33,6 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <returns>The string representing the obj.</returns>
-        public abstract string ToString(bool quoted);
+        internal abstract string ToString(bool quoted);
     }
 }

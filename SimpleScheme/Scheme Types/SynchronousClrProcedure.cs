@@ -3,7 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
+    using System;
 
     /// <summary>
     /// Handles normal synchronous CLR method calls.
@@ -17,13 +17,18 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="methodName">The method to invoke.</param>
-        /// <param name="argClassNames">The types of each argument.</param>
-        public SynchronousClrProcedure(string targetClassName, string methodName, SchemeObject argClassNames)
-            : base(targetClassName, methodName)
+        /// <param name="instanceClass">The type of the instance argument.  Null if static or constructor.</param>
+        /// <param name="argClasses">The types of each argument.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        private SynchronousClrProcedure(string targetClassName, string methodName, Type instanceClass, Type[] argClasses, Evaluator caller)
+            : base(
+                targetClassName, 
+                methodName, 
+                GetMethodInfo(targetClassName, methodName, argClasses, caller), 
+                instanceClass,
+                argClasses, 
+                argClasses.Length)
         {
-            this.SetArgClasses(this.ClassList(argClassNames));
-            this.SetMethodInfo(this.MethodName, this.ArgClasses);
-            this.SetMinMax(this.ArgClasses.Count + (this.MethodInfo.IsStatic ? 0 : 1));
         }
         #endregion
 
@@ -31,57 +36,61 @@ namespace SimpleScheme
         /// <summary>
         /// Define the sync clr procedure primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             const int MaxInt = int.MaxValue;
-            env
+            primEnv
                 .DefinePrimitive(
                    "method", 
                    new[] { "(method <target-class-name> <method-name> <arg-class-name> ...)" },
-                   (args, caller) => new SynchronousClrProcedure(
+                   (args, env, caller) => new SynchronousClrProcedure(
                                          First(args).ToString(),
                                          Second(args).ToString(),
-                                         Rest(Rest(args))),
-                    2,
-                    MaxInt, 
-                    Primitive.ArgType.StringOrSymbol)
+                                         Class(First(args)),
+                                         ClassList(Rest(Rest(args))), 
+                                         caller),
+                    new ArgsInfo(1, MaxInt, ArgType.StringOrSymbol))
                 .DefinePrimitive(
                    "property-get", 
                    new[] { "(property-get <target-class-name> <property-name>)" },
-                   (args, caller) => new SynchronousClrProcedure(
+                   (args, env, caller) => new SynchronousClrProcedure(
                                          First(args).ToString(),
                                          "get_" + Second(args).ToString(), 
-                                         Rest(Rest(args))),
-                    2, 
-                    Primitive.ArgType.String)
+                                         Class(First(args)),
+                                         ClassList(Rest(Rest(args))), 
+                                         caller),
+                    new ArgsInfo(2, ArgType.StringOrSymbol))
                 .DefinePrimitive(
                    "property-set", 
                    new[] { "(property-set <target-class-name> <property-name> <arg-class-name>)" },
-                   (args, caller) => new SynchronousClrProcedure(
+                   (args, env, caller) => new SynchronousClrProcedure(
                                          First(args).ToString(), 
                                          "set_" + Second(args).ToString(), 
-                                         Rest(Rest(args))),
-                    3, 
-                    Primitive.ArgType.String)
+                                         Class(First(args)),
+                                         ClassList(Rest(Rest(args))), 
+                                         caller),
+                    new ArgsInfo(3,  ArgType.StringOrSymbol))
                 .DefinePrimitive(
                    "index-get", 
                    new[] { "(index-get <target-class-name> <arg-class-name> <index-type>)" },
-                   (args, caller) => new SynchronousClrProcedure(
+                   (args, env, caller) => new SynchronousClrProcedure(
                                          First(args).ToString(), 
                                          "get_Item", 
-                                         Rest(args)),
-                    2, 
-                    Primitive.ArgType.String)
+                                         Class(First(args)),
+                                         ClassList(Rest(args)), 
+                                         caller),
+                    new ArgsInfo(2, ArgType.StringOrSymbol))
                 .DefinePrimitive(
                    "index-set", 
                    new[] { "(index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)" },
-                   (args, caller) => new SynchronousClrProcedure(
+                   (args, env, caller) => new SynchronousClrProcedure(
                                          First(args).ToString(), 
                                          "set_Item",
-                                         Rest(args)),
-                    3, 
-                    Primitive.ArgType.String);
+                                         Class(First(args)),
+                                         ClassList(Rest(args)), 
+                                         caller),
+                    new ArgsInfo(3, ArgType.StringOrSymbol));
         }
         #endregion
 
@@ -102,34 +111,29 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
+        /// <param name="env">The environment of the application.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        public override Evaluator Apply(SchemeObject args, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
-            this.CheckArgs(args, typeof(SynchronousClrProcedure));
-            object target = null;
+            SchemeObject target = null;
             if (!this.MethodInfo.IsStatic)
             {
                 target = First(args);
                 args = Rest(args);
             }
 
-            if (target is ClrObject)
-            {
-                target = ((ClrObject)target).Value;
-            }
+#if Check
+            this.CheckArgCount(ListLength(args), args, "SynchronousClrProcedure", caller);
+#endif
 
-            // If the target is a Symbol or SchemeString, then get the string
-            // TODO cch do the same for Number, SchemeBoolean, etc.  Need a map like for arguments.
-            if (target is Symbol || target is SchemeString)
-            {
-                target = target.ToString();
-            }
-
-            var argList = this.ToArgList(args, null);
-            object res = this.MethodInfo.Invoke(target, argList);
+            var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
+            var argList = this.ToArgList(args, null, "SynchronousClrProcedure", caller);
+            object res = this.MethodInfo.Invoke(actualTarget, argList);
             res = res ?? Undefined.Instance;
-            return caller.UpdateReturnValue(ClrObject.FromClrObject(res));
+            returnTo.ReturnedExpr = ClrObject.FromClrObject(res);
+            return returnTo;
         }
         #endregion
     }

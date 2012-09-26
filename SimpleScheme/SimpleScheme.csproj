@@ -38,10 +38,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cleaner.cs" />
     <Compile Include="Debugging.cs" />
     <Compile Include="EvaluatorOrObject.cs" />
-    <Compile Include="Evaluators\EndedEvaluator.cs" />
     <Compile Include="Evaluators\EvaluateExpressionWithCatch.cs" />
     <Compile Include="Evaluators\HaltedEvaluator.cs" />
     <Compile Include="Evaluators\SuspendedEvaluator.cs" />
@@ -52,7 +50,6 @@
     <Compile Include="Counter.cs" />
     <Compile Include="Scheme Types\ClrObject.cs" />
     <Compile Include="Scheme Types\Eof.cs" />
-    <Compile Include="Scheme Types\ICleanable.cs" />
     <Compile Include="Scheme Types\ClrConstructor.cs" />
     <Compile Include="Scheme Types\EmptyList.cs" />
     <Compile Include="Evaluators\EvaluateAnd.cs">
@@ -78,6 +75,7 @@
     <Compile Include="Scheme Types\Continuation.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="Scheme Types\List.cs" />
+    <Compile Include="Scheme Types\SchemeObjectExtensions.cs" />
     <Compile Include="Scheme Types\SchemeString.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -113,6 +111,9 @@
     <Compile Include="TranscriptLogger.cs" />
     <Compile Include="Scheme Types\Undefined.cs" />
     <Compile Include="Scheme Types\Vector.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

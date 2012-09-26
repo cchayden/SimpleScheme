@@ -183,72 +183,56 @@ namespace SimpleScheme
         /// <summary>
         /// Define the vector primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             const int MaxInt = int.MaxValue;
-            env
+            primEnv
                 .DefinePrimitive(
                         "list->vector", 
                         new[] { "6.8", "(list->vector <vector>)" },
-                        (args, caller) => FromList(First(args)), 
-                        1, 
-                        Primitive.ArgType.PairOrEmpty)
+                        (args, env, caller) => FromList(First(args)), 
+                        new ArgsInfo(1, ArgType.PairOrEmpty))
                 .DefinePrimitive(
                         "make-vector", 
                         new[] { "6.8", "(make-vector <k>)", "(make-vector <k> <fill>)" },
-                        (args, caller) => New(First(args), Second(args)), 
-                        1, 
-                        2, 
-                        Primitive.ArgType.Number, 
-                        Primitive.ArgType.Obj)
+                        (args, env, caller) => New(First(args), Second(args)), 
+                        new ArgsInfo(1, 2, ArgType.Number, ArgType.Obj))
                 .DefinePrimitive(
                         "vector", 
                         new[] { "6.8", "(vector <obj> ...)" },
-                        (args, caller) => FromList(args), 
-                        0, 
-                        MaxInt, 
-                        Primitive.ArgType.Obj)
+                        (args, env, caller) => FromList(args), 
+                        new ArgsInfo(0, MaxInt,  ArgType.Obj))
                 .DefinePrimitive(
                         "vector->list", 
                         new[] { "6.8", "(vector->list <vector>)" },
-                        (args, caller) => ToList((Vector)First(args)), 
-                        1, 
-                        Primitive.ArgType.Vector)
+                        (args, env, caller) => ToList((Vector)First(args)), 
+                        new ArgsInfo(1, ArgType.Vector))
                 .DefinePrimitive(
                         "vector-fill", 
                         new[] { "6.8", "(vector-fill! <vector> <fill>)" },
-                        (args, caller) => Fill((Vector)First(args), Second(args)), 
-                        2, 
-                        Primitive.ArgType.Vector, 
-                        Primitive.ArgType.Obj)
+                        (args, env, caller) => Fill((Vector)First(args), Second(args)), 
+                        new ArgsInfo(2, ArgType.Vector, ArgType.Obj))
                 .DefinePrimitive(
                         "vector-length", 
                         new[] { "6.8", "(vector-length <vector>)" },
-                        (args, caller) => (Number)((Vector)First(args)).Length,
-                        1, 
-                        Primitive.ArgType.Vector)
+                        (args, env, caller) => (Number)((Vector)First(args)).Length,
+                        new ArgsInfo(1, ArgType.Vector))
                 .DefinePrimitive(
                         "vector-ref", 
                         new[] { "6.8", "(vector-ref <vector> <k>)" },
-                        (args, caller) => Get((Vector)First(args), Second(args)), 
-                        2, 
-                        Primitive.ArgType.Vector, 
-                        Primitive.ArgType.Number)
+                        (args, env, caller) => Get((Vector)First(args), Second(args)), 
+                        new ArgsInfo(2, ArgType.Vector, ArgType.Number))
                 .DefinePrimitive(
                         "vector-set!", 
                         new[] { "6.8", "(vector-set <vector> <k> <obj>)" },
-                        (args, caller) => Set((Vector)First(args), Second(args), Third(args)), 
-                        3, 
-                        Primitive.ArgType.Vector, 
-                        Primitive.ArgType.Number, 
-                        Primitive.ArgType.Obj)
+                        (args, env, caller) => Set((Vector)First(args), Second(args), Third(args)), 
+                        new ArgsInfo(3, ArgType.Vector, ArgType.Number, ArgType.Obj))
                 .DefinePrimitive( 
                         "vector?", 
                         new[] { "6.8", "(vector? <obj>)" },
-                        (args, caller) => SchemeBoolean.Truth(First(args) is Vector), 
-                        1, 
-                        Primitive.ArgType.Obj);
+                        (args, env, caller) => SchemeBoolean.Truth(First(args) is Vector), 
+                        new ArgsInfo(1, ArgType.Obj));
         }
         #endregion
 
@@ -291,7 +275,7 @@ namespace SimpleScheme
         /// <param name="vector">The vector to get from.</param>
         /// <param name="k">The index into the vector to get.</param>
         /// <returns>The vector element.</returns>
-        public static SchemeObject Get(Vector vector, SchemeObject k)
+        private static SchemeObject Get(Vector vector, SchemeObject k)
         {
             return vector[Number.AsInt(k)];
         }
@@ -303,7 +287,7 @@ namespace SimpleScheme
         /// <param name="index">The index into the vector to set.</param>
         /// <param name="obj">The new value to set.</param>
         /// <returns>Undefined value.</returns>
-        public static SchemeObject Set(Vector vector, SchemeObject index, SchemeObject obj)
+        private static SchemeObject Set(Vector vector, SchemeObject index, SchemeObject obj)
         {
             vector[Number.AsInt(index)] = obj;
             return Undefined.Instance;
@@ -489,65 +473,12 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the vector to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <returns>The vector as a string.</returns>
-        public override string ToString(bool quoted)
-        {
-            var buf = new StringBuilder();
-            buf.Append("#(");
-            if (this.vec.Length > 0)
-            {
-                foreach (SchemeObject v in this.vec)
-                {
-                    buf.Append(v.ToString(quoted));
-                    buf.Append(' ');
-                }
-
-                buf.Remove(buf.Length - 1, 1);
-            }
-
-            buf.Append(')');
-            return buf.ToString();
-        }
-
-        /// <summary>
         /// Display the vector as a string.
         /// </summary>
         /// <returns>The vector as a string.</returns>
         public override string ToString()
         {
             return this.ToString(false);
-        }
-
-        /// <summary>
-        /// Clean each element of the vector.
-        /// </summary>
-        public void Clean()
-        {
-            foreach (SchemeObject v in this.vec)
-            {
-                Cleaner.Clean(v);
-            }
-        }
-
-        /// <summary>
-        /// Convert the vector to an array of some specified CLR type. with the
-        ///   help of a converter function.
-        /// </summary>
-        /// <typeparam name="T">The type of the elements.</typeparam>
-        /// <param name="convert">A converter function.</param>
-        /// <returns>An array of the specified type.</returns>
-        public T[] AsArray<T>(Func<SchemeObject, T> convert)
-        {
-            var res = new T[this.vec.Length];
-            for (var i = 0; i < res.Length; i++)
-            {
-                res[i] = convert(this.vec[i]);
-            }
-
-            return res;
         }
         #endregion
 
@@ -567,6 +498,61 @@ namespace SimpleScheme
             }
 
             return result;
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Write the vector to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <returns>The vector as a string.</returns>
+        internal override string ToString(bool quoted)
+        {
+            var buf = new StringBuilder();
+            buf.Append("#(");
+            if (this.vec.Length > 0)
+            {
+                foreach (SchemeObject v in this.vec)
+                {
+                    buf.Append(v.ToString(quoted));
+                    buf.Append(' ');
+                }
+
+                buf.Remove(buf.Length - 1, 1);
+            }
+
+            buf.Append(')');
+            return buf.ToString();
+        }
+
+        /// <summary>
+        /// Clean each element of the vector.
+        /// </summary>
+        internal override void Clean()
+        {
+            foreach (SchemeObject v in this.vec)
+            {
+                v.Clean();
+            }
+        }
+
+        /// <summary>
+        /// Convert the vector to an array of some specified CLR type. with the
+        ///   help of a converter function.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="convert">A converter function.</param>
+        /// <returns>An array of the specified type.</returns>
+        internal T[] AsArray<T>(Func<SchemeObject, T> convert)
+        {
+            var res = new T[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = convert(this.vec[i]);
+            }
+
+            return res;
         }
         #endregion
 

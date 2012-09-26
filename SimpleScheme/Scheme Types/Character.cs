@@ -5,7 +5,6 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
 
     /// <summary>
     /// Handles a scheme character.
@@ -102,7 +101,7 @@ namespace SimpleScheme
         /// <param name="c">The char.</param>
         /// <param name="lineNumber">The line where the character is read.</param>
         /// <returns>The corresponding Character.</returns>
-        public static Character New(char c, int lineNumber)
+        internal static Character New(char c, int lineNumber)
         {
             Character res;
             if (fixedChars.TryGetValue(c, out res))
@@ -121,7 +120,7 @@ namespace SimpleScheme
         /// <param name="obj1">The first object (must be a scheme Character).</param>
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both the same character.</returns>
-        public static SchemeBoolean Equal(Character obj1, SchemeObject obj2)
+        internal static SchemeBoolean Equal(Character obj1, SchemeObject obj2)
         {
             if (!(obj2 is Character))
             {
@@ -143,142 +142,105 @@ namespace SimpleScheme
         /// <summary>
         /// Define the character primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            env
+            primEnv
                 .DefinePrimitive(
                         "char->integer", 
                         new[] { "6.6", "(char->integer <char>)" },
-                        (args, caller) => (Number)((Character)First(args)).C,
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => (Number)((Character)First(args)).C,
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-alphabetic?", 
                         new[] { "6.6", "(char-alphabetic? <char>)" },
-                        (args, caller) => SchemeBoolean.Truth(char.IsLetter(((Character)First(args)).C)), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(char.IsLetter(((Character)First(args)).C)), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-ci<=?", 
                         new[] { "6.6", "(char-ci<=? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) <= 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) <= 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char-ci<?", 
                         new[] { "6.6", "(char-ci<? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) < 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) < 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char-ci=?", 
                         new[] { "6.6", "(char-ci=? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) == 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) == 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char-ci>=?", 
                         new[] { "6.6", "(char-ci>=? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) >= 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) >= 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char-ci>?", 
                         new[] { "6.6", "(char-ci>? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) > 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), true) > 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char-downcase", 
                         new[] { "(char-downcase <char>)" },
-                        (args, caller) => (Character)char.ToLower(((Character)First(args)).C), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => (Character)char.ToLower(((Character)First(args)).C), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-lower-case?", 
                         new[] { "6.6", "(char-lower-case? <letter>)" },
-                        (args, caller) => SchemeBoolean.Truth(char.IsLower(((Character)First(args)).C)), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(char.IsLower(((Character)First(args)).C)), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-numeric?", 
                         new[] { "6.6", "(char-numeric? <char>)" },
-                        (args, caller) => SchemeBoolean.Truth(char.IsDigit(((Character)First(args)).C)), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(char.IsDigit(((Character)First(args)).C)), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-upcase", 
                         new[] { "6.6", "(char-upcase <char>)" },
-                        (args, caller) => (Character)char.ToUpper(((Character)First(args)).C), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => (Character)char.ToUpper(((Character)First(args)).C), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-upper-case?", 
                         new[] { "6.6", "(char-upper-case? <letter>)" },
-                        (args, caller) => SchemeBoolean.Truth(char.IsUpper(((Character)First(args)).C)), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(char.IsUpper(((Character)First(args)).C)), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                         "char-whitespace?", 
                         new[] { "6.6", "(char-chitespace? <char>)" },
-                        (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(((Character)First(args)).C)), 
-                        1, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(((Character)First(args)).C)), 
+                        new ArgsInfo(1, ArgType.Char))
                 .DefinePrimitive(
                        "char<=?", 
                        new[] { "6.6", "(char<=? <char1> <char2>)" },
-                       (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) <= 0), 
-                       2, 
-                       Primitive.ArgType.Char)
+                       (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) <= 0), 
+                       new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char<?", 
                         new[] { "6.6", "(char<? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) < 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) < 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char=?", 
                         new[] { "6.6", "(char=? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) == 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) == 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char>=?", 
                         new[] { "6.6", "(char>=? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) >= 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) >= 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char>?", 
                         new[] { "6.6", "(char>? <char1> <char2>)" },
-                        (args, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) > 0), 
-                        2, 
-                        Primitive.ArgType.Char)
+                        (args, env, caller) => SchemeBoolean.Truth(Compare((Character)First(args), (Character)Second(args), false) > 0), 
+                        new ArgsInfo(2, ArgType.Char))
                 .DefinePrimitive(
                         "char?", 
                         new[] { "6.6", "(char? <obj>)" },
-                        (args, caller) => SchemeBoolean.Truth(First(args) is Character), 
-                        1, 
-                        Primitive.ArgType.Obj);
-        }
-        #endregion
-
-        #region CLR Type Converters
-        /// <summary>
-        /// Conver to a char.
-        /// </summary>
-        /// <param name="x">The object.</param>
-        /// <returns>The corresponding char.</returns>
-        public static char AsChar(SchemeObject x)
-        {
-            if (x is Character)
-            {
-                return ((Character)x).C;
-            }
-
-            ErrorHandlers.TypeError(typeof(Character), x);
-            return '\0';
+                        (args, env, caller) => SchemeBoolean.Truth(First(args) is Character), 
+                        new ArgsInfo(1, ArgType.Obj));
         }
         #endregion
 
@@ -318,13 +280,31 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region CLR Type Converters
+        /// <summary>
+        /// Conver to a char.
+        /// </summary>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding char.</returns>
+        internal static char AsChar(SchemeObject x)
+        {
+            if (x is Character)
+            {
+                return ((Character)x).C;
+            }
+
+            ErrorHandlers.TypeError(typeof(Character), x);
+            return '\0';
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Return the character, possibly quoted, as a string.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <returns>The character as a string.</returns>
-        public override string ToString(bool quoted)
+        internal override string ToString(bool quoted)
         {
             string prefix = quoted ? "#\\" : string.Empty;
             if (this.c == ' ')
@@ -339,7 +319,7 @@ namespace SimpleScheme
         /// Describe a character by returning its value.
         /// </summary>
         /// <returns>The character as a string.</returns>
-        public override string Describe()
+        internal override string Describe()
         {
             return this.ToString();
         }

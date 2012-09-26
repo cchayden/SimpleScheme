@@ -3,21 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
     //// <r4rs section="4.1.6">(set <variable> <expression>)</r4rs>
-    public sealed class EvaluateSet : Evaluator
+    internal sealed class EvaluateSet : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "set!"
-        /// </summary>
-        public static readonly Symbol SetSym = "set!";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -44,15 +36,14 @@ namespace SimpleScheme
         /// <param name="lhs">The left hand side -- the variable to set.</param>
         /// <param name="rhs">The right hand side -- the new value.</param>
         private EvaluateSet(SchemeObject expr, Environment env, Evaluator caller, SchemeObject lhs, SchemeObject rhs)
-            : base(expr, env, caller, counter)
+            : base(InitialStep, expr, env, caller, counter)
         {
             this.lhs = lhs;
             this.rhs = rhs;
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Calls a set evaluator.
         /// </summary>
@@ -60,21 +51,20 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             SchemeObject lhs = First(expr);
             SchemeObject rhs = Second(expr);
             if (!(lhs is Symbol))
             {
-                ErrorHandlers.SemanticError(String.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs), null);
+                ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs), null);
             }
 
             return new EvaluateSet(expr, env, caller, lhs, rhs);
         }
-
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Evaluate the second expression (rhs).
         /// </summary>
@@ -83,7 +73,8 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateSet)s;
-            return EvaluateExpression.Call(step.rhs, s.Env, s.ContinueAt(SetStep));
+            s.Pc = SetStep;
+            return EvaluateExpression.Call(step.rhs, s.Env, s);
         }
 
         /// <summary>
@@ -95,8 +86,15 @@ namespace SimpleScheme
         private static Evaluator SetStep(Evaluator s)
         {
             var step = (EvaluateSet)s;
-            s.Env.Set(step.lhs, EnsureSchemeObject(s.ReturnedExpr));
-            return step.ReturnFromStep(Undefined.Instance);
+            if (!(step.lhs is Symbol))
+            {
+                ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", step.lhs.ToString(true)), step.lhs);
+            }
+
+            s.Env.Set((Symbol)step.lhs, s.ReturnedExpr);
+            Evaluator caller = s.Caller;
+            caller.ReturnedExpr = Undefined.Instance;
+            return caller;
         }
         #endregion
     }

@@ -7,15 +7,9 @@ namespace SimpleScheme
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    public sealed class EvaluateTime : EvaluateTimeBase
+    internal sealed class EvaluateTime : EvaluateTimeBase
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "time"
-        /// </summary>
-        public static readonly Symbol TimeSym = "time";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -35,7 +29,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call a timed evaluator.
         /// </summary>
@@ -43,22 +37,23 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateTime(expr, env, caller);
         }
         #endregion
 
-        #region Protected Methods
+        #region Steps
         /// <summary>
         /// Evaluate the given expression.  
         /// This evaluates the expression that is being timed.
         /// Test to see if we are done.
         /// </summary>
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
-        protected override Evaluator Step1()
+        protected override Evaluator EvaluateStep()
         {
-            return EvaluateExpression.Call(First(this.Expr), this.Env, this.ContinueAt(Step2));
+            this.Pc = CompleteStep;
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
         #endregion
     }

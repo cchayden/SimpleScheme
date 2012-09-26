@@ -17,6 +17,15 @@ namespace SimpleScheme
         void Define(string var, SchemeObject val);
 
         /// <summary>
+        /// Set the value of a variable in the environment to a new value.
+        /// Var is the variable name.
+        /// Searches the chain of environments looking for a binding.
+        /// </summary>
+        /// <param name="var">The variable name.</param>
+        /// <param name="val">The new value for the variable.</param>
+        void Set(string var, SchemeObject val);
+
+            /// <summary>
         /// Look up a variable in the environment.
         /// </summary>
         /// <param name="var">This must be a symbol.</param>

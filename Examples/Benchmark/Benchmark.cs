@@ -62,7 +62,7 @@ namespace Benchmark
                 }
             }
 
-            Console.ReadLine();
+            // Console.ReadLine();
         }
     }
 }

@@ -15,15 +15,9 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
     //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-    public sealed class EvaluateCase : Evaluator
+    internal sealed class EvaluateCase : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "case"
-        /// </summary>
-        public static readonly Symbol CaseSym = "case";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -54,14 +48,13 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="clauses">The case clauses.</param>
         private EvaluateCase(SchemeObject expr, Environment env, Evaluator caller, SchemeObject clauses)
-            : base(expr, env, caller, counter)
+            : base(EvalKeyStep, expr, env, caller, counter)
         {
             this.clauses = clauses;
-            this.ContinueAt(EvalKeyStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Creates a case evaluator.
         /// </summary>
@@ -69,13 +62,13 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The case evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateCase(expr, env, caller, Rest(expr));
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
@@ -83,7 +76,8 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalKeyStep(Evaluator s)
         {
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(CheckClauseStep));
+            s.Pc = CheckClauseStep;
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
@@ -97,7 +91,7 @@ namespace SimpleScheme
         private static Evaluator CheckClauseStep(Evaluator s)
         {
             var step = (EvaluateCase)s;
-            step.keyVal = EnsureSchemeObject(s.ReturnedExpr);
+            step.keyVal = s.ReturnedExpr;
             while (!(step.clauses is EmptyList))
             {
                 SchemeObject clause = First(step.clauses);
@@ -132,7 +126,9 @@ namespace SimpleScheme
             }
 
             // no clauses matched -- unspecified
-            return step.ReturnFromStep(Undefined.Instance);
+            Evaluator caller = step.Caller;
+            caller.ReturnedExpr = Undefined.Instance;
+            return caller;
         }
 
         /// <summary>
@@ -144,7 +140,9 @@ namespace SimpleScheme
             if (this.exprList is EmptyList)
             {
                 // if no expressions, return key value
-                return this.ReturnFromStep(this.keyVal);
+                Evaluator caller = this.Caller;
+                caller.ReturnedExpr = this.keyVal;
+                return caller;
             }
 
             // eval and return last expr

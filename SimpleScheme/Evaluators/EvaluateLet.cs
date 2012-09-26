@@ -11,15 +11,9 @@ namespace SimpleScheme
     //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
     //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
     //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-    public sealed class EvaluateLet : Evaluator
+    internal sealed class EvaluateLet : Evaluator
     {
         #region Fields
-
-        /// <summary>
-        /// The symbol "let"
-        /// </summary>
-        public static readonly Symbol LetSym = "let";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -58,17 +52,16 @@ namespace SimpleScheme
         /// <param name="vars">The variables to bind.</param>
         /// <param name="inits">The initial values of the variables.</param>
         private EvaluateLet(SchemeObject expr, Environment env, Evaluator caller, Symbol name, SchemeObject body, SchemeObject vars, SchemeObject inits)
-            : base(expr, env, caller, counter)
+            : base(InitialStep, expr, env, caller, counter)
         {
             this.name = name;
             this.body = body;
             this.vars = vars;
             this.inits = inits;
-            this.ContinueAt(InitialStep);
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call let evaluator.
         /// Start by checking the number of arguments.
@@ -79,18 +72,20 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             if (expr is EmptyList)
             {
                 ErrorHandlers.SemanticError("No arguments for let", null);
-                return caller.UpdateReturnValue(Undefined.Instance);
+                caller.ReturnedExpr = Undefined.Instance;
+                return caller;
             }
 
             if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let: " + expr, null);
-                return caller.UpdateReturnValue(Undefined.Instance);
+                caller.ReturnedExpr = Undefined.Instance;
+                return caller;
             }
 
             Symbol name = null;
@@ -111,16 +106,17 @@ namespace SimpleScheme
 
             if (body is EmptyList)
             {
-                return caller.UpdateReturnValue(Undefined.Instance);
+                caller.ReturnedExpr = Undefined.Instance;
+                return caller;
             }
 
-            SchemeObject vars = MapFun(First, MakeList(bindings));
-            SchemeObject inits = MapFun(Second, MakeList(bindings));
+            SchemeObject vars = MapFun(First, bindings);
+            SchemeObject inits = MapFun(Second, bindings);
             return new EvaluateLet(expr, env, caller, name, body, vars, inits);
         }
         #endregion
 
-        #region Private Methods
+        #region Steps
         /// <summary>
         /// Convert the let to a corresponding lambda.
         /// For a normal let, evaluate this lambda.
@@ -138,7 +134,8 @@ namespace SimpleScheme
             }
 
             // named let -- eval the inits in the outer environment
-            return EvaluateList.Call(step.inits, s.Env, s.ContinueAt(ApplyNamedLetStep));
+            s.Pc = ApplyNamedLetStep;
+            return EvaluateList.Call(step.inits, s.Env, s);
         }
 
         /// <summary>
@@ -154,7 +151,7 @@ namespace SimpleScheme
             var step = (EvaluateLet)s;
             Lambda fn = Lambda.New(step.vars, step.body, s.Env);
             fn.Env.Define(step.name, fn);   
-            return fn.Apply(EnsureSchemeObject(s.ReturnedExpr), s.Caller);
+            return fn.Apply(s.ReturnedExpr, fn.Env, s.Caller, s);
         }
         #endregion
     }

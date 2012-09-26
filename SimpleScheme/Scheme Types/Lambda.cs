@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
-
     /// <summary>
     /// A lambda stores the environment and a program to run.
     /// It can be executed later, through Apply.
@@ -16,7 +14,7 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
     //// <r4rs section="4.1.4">formals: <variable></r4rs>
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-    public class Lambda : Procedure
+    internal class Lambda : Procedure
     {
         #region Fields
         /// <summary>
@@ -44,12 +42,11 @@ namespace SimpleScheme
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
         protected Lambda(SchemeObject formalParameters, SchemeObject body, Environment env) :
-            base(0, 0)
+            base(null, new ArgsInfo(CountFormals(formalParameters)))
         {
             this.formalParameters = formalParameters;
             this.env = env;
             this.body = body;
-            this.ProcessFormals();
         }
         #endregion
 
@@ -57,7 +54,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the environment in which to execute.
         /// </summary>
-        public Environment Env
+        internal Environment Env
         {
             get { return this.env; }
         }
@@ -78,6 +75,19 @@ namespace SimpleScheme
         }
         #endregion
 
+        /// <summary>
+        /// Evaluate a lambda expression
+        /// </summary>
+        /// <param name="args">The lambda args.</param>
+        /// <param name="env">The execution environment.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>The lambda representing the expression.</returns>
+        internal static Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
+        {
+            caller.ReturnedExpr = New(First(args), Rest(args), env);
+            return caller;
+        }
+
         #region Public Methods
         /// <summary>
         /// Display the lambda as a string.  
@@ -86,19 +96,8 @@ namespace SimpleScheme
         /// <returns>The string form of the lambda.</returns>
         public override string ToString()
         {
+            // TODO display formals??
             return this.ToString("lambda");
-        }
-        #endregion
-        /// <summary>
-        /// Evaluate a lambda expression
-        /// </summary>
-        /// <param name="args">The lambda args.</param>
-        /// <param name="env">The execution environment.</param>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The lambda representing the expression.</returns>
-        public static Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
-        {
-            return caller.UpdateReturnValue(New(First(args), Rest(args), env));
         }
 
         /// <summary>
@@ -110,7 +109,7 @@ namespace SimpleScheme
         /// <param name="givenEnv">The environment to evaluate in.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
+        internal Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
         {
             return Rest(this.body) is EmptyList ? 
                 EvaluateExpression.Call(First(this.body), givenEnv, caller) : 
@@ -123,14 +122,21 @@ namespace SimpleScheme
         /// Creates a new environment, linked to the environment of the lambda itself (which should be the lexical parent).
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
+        /// <param name="useEnv">Environment in which to apply.  If null, use the lambda's environment.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(SchemeObject args, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Environment useEnv, Evaluator returnTo, Evaluator caller)
         {
-            this.CheckArgs(args, typeof(Lambda));
-            return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);
+#if Check
+            this.CheckArgCount(ListLength(args), args, "Lambda", caller);
+#endif
+            useEnv = useEnv ?? this.Env;
+            return this.ApplyWithtEnv(new Environment(this.formalParameters, args, useEnv), returnTo);
         }
+        #endregion
 
+        #region Private and Protected Methods
         /// <summary>
         /// Common printing logic for lambdas.
         /// </summary>
@@ -151,28 +157,33 @@ namespace SimpleScheme
         /// <summary>
         /// Extract the min amd max number of args allowed when calling the lambda.
         /// </summary>
-        private void ProcessFormals()
+        /// <param name="vars">The formal parameter list.</param>
+        /// <returns>The min and max argument counts.</returns>
+        private static int[] CountFormals(SchemeObject vars)
         {
             const int MaxInt = int.MaxValue;
-            int count = 0;
-            SchemeObject vars = this.formalParameters;
-            while (true)
+            if (vars is Symbol)
             {
-                if (vars is EmptyList)
-                {
-                    this.SetMinMax(count);
-                    return;
-                }
+                // variable: any number of arguments is permitted
+                return new[] { 0, MaxInt };
+            }
 
+            int count = 0;
+            while (!(vars is EmptyList))
+            {
+                // (var1 ... . varN): last arg gets all left over values
                 if (!(vars is Pair))
                 {
-                    this.SetMinMax(count, vars is Symbol ? MaxInt : count);
-                    return;
+                    return new[] { count, MaxInt };
                 }
 
                 vars = Rest(vars);
                 count++;
             }
+
+            // it was a list -- the exact count is required
+            return new[] { count, count };
         }
+        #endregion
     }
 }

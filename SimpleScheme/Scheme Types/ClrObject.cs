@@ -7,7 +7,6 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Text;
 
     /// <summary>
     /// Wraps a CLR object returned by invoking a constructor or CLR method.
@@ -18,11 +17,13 @@ namespace SimpleScheme
         #region Fields
         /// <summary>
         /// Maps a type to a function that converts an instance of that type to a corresponding clr type.
+        /// Here, we know the type that we need and have to convert the argument to that type.
         /// </summary>
         private static readonly Dictionary<Type, Func<SchemeObject, object>> toClrMap;
 
         /// <summary>
-        /// Map a type to a function that converts to an instance os that type.
+        /// Map a type to a function that converts to an instance of that type.
+        /// We got back some CLR object from a CLR call, and we need to convert it to something reasonable.
         /// </summary>
         private static readonly Dictionary<Type, Func<object, SchemeObject>> fromClrMap;
 
@@ -101,6 +102,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the clr object itself.
         /// </summary>
@@ -108,6 +110,7 @@ namespace SimpleScheme
         {
             get { return this.clrObject; }
         }
+        #endregion
 
         #region New
         /// <summary>
@@ -117,6 +120,11 @@ namespace SimpleScheme
         /// <returns>The ClrObject wrapper.</returns>
         public static ClrObject New(object clrObject)
         {
+            if (clrObject == null)
+            {
+                clrObject = Undefined.Instance;
+            }
+
             return new ClrObject(clrObject);
         }
         #endregion
@@ -139,7 +147,7 @@ namespace SimpleScheme
                 }
             }
 
-            if (toClrMap.ContainsKey(clrClass))
+            if (clrClass != null && toClrMap.ContainsKey(clrClass))
             {
                 return toClrMap[clrClass](elem);
             }

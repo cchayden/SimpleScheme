@@ -7,7 +7,7 @@ namespace SimpleScheme
     /// This evaluator is returned to suspend evaluation.
     /// It is used after calling an asynchronous operation.
     /// </summary>
-    public sealed class SuspendedEvaluator : Evaluator
+    internal sealed class SuspendedEvaluator : Evaluator
     {
         /// <summary>
         /// The counter id.
@@ -25,10 +25,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="res">The IAsyncResult associated with the suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
-        public SuspendedEvaluator(SchemeObject res, Evaluator caller) : 
-            base(res, null, caller, counter)
+        internal SuspendedEvaluator(SchemeObject res, Evaluator caller) : 
+            base(null, res, null, caller, counter)
         {
-            this.UpdateReturnValue(ClrObject.New(this));
+            this.ReturnedExpr = ClrObject.New(this);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace SimpleScheme
         /// Pass the async result to the resumed step.
         /// </summary>
         /// <returns>Null to return from main loop, or else the step to run next.</returns>
-        public override Evaluator NextStep()
+        internal override Evaluator NextStep()
         {
             // See if evaluator wants to handle
             Evaluator step = this.SearchForHandler();
@@ -48,7 +48,8 @@ namespace SimpleScheme
 
             // this evaluator wants to handle -- run it now
             step.IncrementCaught();
-            return step.UpdateReturnValue(this.Expr);  // the AsyncResult
+            step.ReturnedExpr = this.Expr;  // the AsyncResult
+            return step;
         }
 
         /// <summary>
@@ -56,9 +57,31 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <returns>The string representing the obj.</returns>
-        public override string ToString(bool quoted)
+        internal override string ToString(bool quoted)
         {
             return "<suspended-evaluator>";
         }
+
+        /// <summary>
+        /// When a step is suspended, check with each caller up the chain, seeing if any
+        ///   one of them want to resume.
+        /// </summary>
+        /// <returns>The evaluator that wants to handle suspension, orherwise null</returns>
+        private Evaluator SearchForHandler()
+        {
+            Evaluator step = this;
+            while (step != null)
+            {
+                if (step.CatchSuspended)
+                {
+                    return step;
+                }
+
+                step = step.Caller;
+            }
+
+            return null;
+        }
+
     }
 }

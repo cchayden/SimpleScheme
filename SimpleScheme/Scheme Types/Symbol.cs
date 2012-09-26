@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Text;
 
     /// <summary>
     /// Handles scheme symbols.
@@ -12,7 +11,7 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : SchemeObject, ICleanable, IEquatable<Symbol>
+    public class Symbol : SchemeObject, IEquatable<Symbol>
     {
         #region Fields
         /// <summary>
@@ -29,6 +28,12 @@ namespace SimpleScheme
         /// The number of lexical stsps out the smybol is bound.
         /// </summary>
         private int level;
+
+        /// <summary>
+        /// Marks a special form: a primitive that does not evaluate its arguments.
+        /// If the symbol is a special form, this is the action to take.
+        /// </summary>
+        private SpecialAction specialForm;
         #endregion
 
         #region Constructor
@@ -41,6 +46,7 @@ namespace SimpleScheme
             this.name = name;
             this.pos = -1;
             this.level = -1;
+            specialForm = null;
         }
 
         /// <summary>
@@ -68,7 +74,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets a value indicating whether a symbol have been located in an environment.
         /// </summary>
-        public bool Located
+        internal bool Located
         {
             get { return this.pos != -1; }
         }
@@ -76,7 +82,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets the position in the environment the symbol appears.
         /// </summary>
-        public int Pos
+        internal int Pos
         {
             get { return this.pos; }
             set { this.pos = value; }
@@ -85,10 +91,19 @@ namespace SimpleScheme
         /// <summary>
         /// Gets or sets the number of lexical levels out that the symbol apears in an environment.
         /// </summary>
-        public int Level
+        internal int Level
         {
             get { return this.level; }
             set { this.level = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets a the action for a special form.
+        /// </summary>
+        internal SpecialAction SpecialForm
+        {
+            get { return this.specialForm; }
+            set { this.specialForm = value; }
         }
         #endregion
 
@@ -125,6 +140,27 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Define Primitives
+        /// <summary>
+        /// Define the symbol primitives.
+        /// </summary>
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
+        {
+            primEnv
+                .DefinePrimitive(
+                    new Symbol("string->symbol"), 
+                    new[] { "6.4", "(string->symbol <string>)" }, 
+                    (args, env, caller) => new Symbol(SchemeString.AsString(First(args))), 
+                    new ArgsInfo(1, ArgType.String))
+                .DefinePrimitive(
+                    new Symbol("symbol?"), 
+                    new[] { "6.4", "(symbol? <obj>)" }, 
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is Symbol), 
+                    new ArgsInfo(1, ArgType.Obj));
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Test two symbols for equality.
@@ -140,17 +176,6 @@ namespace SimpleScheme
             }
 
             return obj1.ToString() == obj2.ToString();
-        }
-
-        /// <summary>
-        /// Provide the symbol as a string.
-        /// Used to avoid the overhead of virtual dispatch when we know we have a Symbol.
-        /// </summary>
-        /// <param name="sym">The symbol.</param>
-        /// <returns>The string contained in the Symbol.</returns>
-        public static string ToString(Symbol sym)
-        {
-            return sym.name;
         }
         #endregion
 
@@ -196,37 +221,33 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Define Primitives
+        #region Public Methods
         /// <summary>
-        /// Define the symbol primitives.
+        /// Provide the symbol as a string.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <returns>The symbol as a string.</returns>
+        public override string ToString()
         {
-            env
-                .DefinePrimitive(
-                    new Symbol("string->symbol"), 
-                    new[] { "6.4", "(string->symbol <string>)" }, 
-                    (args, caller) => new Symbol(SchemeString.AsString(First(args))), 
-                    1, 
-                    Primitive.ArgType.String)
-                .DefinePrimitive(
-                    new Symbol("symbol?"), 
-                    new[] { "6.4", "(symbol? <obj>)" }, 
-                    (args, caller) => SchemeBoolean.Truth(First(args) is Symbol), 
-                    1, 
-                    Primitive.ArgType.Obj);
+            return this.name;
+        }
+
+        /// <summary>
+        /// Clear the cached environment information for the symbol
+        /// </summary>
+        internal override void Clean()
+        {
+            this.pos = -1;
+            this.level = -1;
         }
         #endregion
 
-        #region Public Methods
-
+        #region Internal Methods
         /// <summary>
         /// Set the environment location of this symbol.
         /// </summary>
         /// <param name="p">The position in the environment.</param>
         /// <param name="lev">The environment level -- the number of lexical steps out.</param>
-        public void Locate(int p, int lev)
+        internal void SetLocation(int p, int lev)
         {
             this.pos = p;
             this.level = lev;
@@ -236,27 +257,9 @@ namespace SimpleScheme
         /// Describe a symbol by returning its value.
         /// </summary>
         /// <returns>The symbol as a string.</returns>
-        public override string Describe()
+        internal override string Describe()
         {
             return this.ToString();
-        }
-
-        /// <summary>
-        /// Clear the cached environment information for the symbol
-        /// </summary>
-        public void Clean()
-        {
-            this.pos = -1;
-            this.level = -1;
-        }
-
-        /// <summary>
-        /// Provide the symbol as a string.
-        /// </summary>
-        /// <returns>The symbol as a string.</returns>
-        public override string ToString()
-        {
-            return this.name;
         }
         #endregion
     }

@@ -8,7 +8,7 @@ namespace SimpleScheme
     /// This can evaluate the expression multiple times.
     /// The timing itself is donein EvaluateTimebase.
     /// </summary>
-    public sealed class EvaluateTimeCall : EvaluateTimeBase
+    internal sealed class EvaluateTimeCall : EvaluateTimeBase
     {
         #region Fields
         /// <summary>
@@ -31,7 +31,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region Call
         /// <summary>
         /// Call a timed evaluator.
         /// </summary>
@@ -40,14 +40,14 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the proc in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Evaluator Call(Procedure proc, SchemeObject count, Environment env, Evaluator caller)
+        internal static Evaluator Call(Procedure proc, SchemeObject count, Environment env, Evaluator caller)
         {
             int n = count is EmptyList ? 1 : Number.AsInt(count);
             return new EvaluateTimeCall(proc, n, env, caller);
         }
         #endregion
 
-        #region Protected Methods
+        #region Steps
         /// <summary>
         /// Evaluate the given expression.  
         /// This evaluates the expression that is being timed.
@@ -55,9 +55,10 @@ namespace SimpleScheme
         /// Caller ensures that first arg is a procedure.
         /// </summary>
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
-        protected override Evaluator Step1()
+        protected override Evaluator EvaluateStep()
         {
-            return ((Procedure)this.Expr).Apply(EmptyList.Instance, this.ContinueAt(Step2));
+            this.Pc = CompleteStep;
+            return ((Procedure)this.Expr).Apply(EmptyList.Instance, null, this, this);
         }
         #endregion
     }

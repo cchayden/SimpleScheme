@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    public class EmptyList : SchemeObject
+    internal class EmptyList : SchemeObject
     {
         /// <summary>
         /// The empty list is represented by a distinguished obj.
@@ -33,7 +33,7 @@ namespace SimpleScheme
         /// Gets the single instance.
         /// </summary>
         /// <returns>An empty list.</returns>
-        public static EmptyList Instance
+        internal static EmptyList Instance
         {
             get { return instance; }
         }

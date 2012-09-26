@@ -6,13 +6,13 @@ namespace SimpleScheme
     /// <summary>
     /// Defines a set of primitives that are defined in scheme.
     /// </summary>
-    public sealed class SchemePrimitives
+    internal sealed class SchemePrimitives
     {
         #region Constants
         /// <summary>
         /// Standard scheme macros
         /// </summary>
-        public const string Code =
+        internal const string Code =
         @"(define quasiquote
           (macro (x)
             (define (constant? exp)

@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// A pair consists of two cells, named FirstCell and RestCell.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public class Pair : SchemeObject, ICleanable
+    public class Pair : SchemeObject
     {
         #region Constructor
         /// <summary>
@@ -63,12 +63,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the first obj of the pair.
         /// </summary>
-        public SchemeObject FirstCell { get; private set; }
+        internal SchemeObject FirstCell { get; private set; }
 
         /// <summary>
         /// Gets the rest of the objs in the list.
         /// </summary>
-        public SchemeObject RestCell { get; private set; }
+        internal SchemeObject RestCell { get; private set; }
         #endregion
 
         #region New
@@ -130,7 +130,7 @@ namespace SimpleScheme
         /// <returns>True if they are both pairs and all elements are equal.</returns>
         public static SchemeBoolean Equal(Pair elem1, SchemeObject elem2)
         {
-            if (!(elem1 is Pair) || !(elem2 is Pair))
+            if (!(elem2 is Pair))
             {
                 return SchemeBoolean.False;
             }
@@ -160,13 +160,61 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Turn the pair into a string for display.
+        /// </summary>
+        /// <returns>A string representing the pair.</returns>
+        public override string ToString()
+        {
+            return this.ToString(true);
+        }
+        #endregion
 
+        #region Internal Methods
+        /// <summary>
+        /// Destructively reverse a list.
+        /// Use this with caution: it can mess up continuations.
+        /// It is safest to clone what you are going to destroy.
+        /// </summary>
+        /// <param name="expr">The list to reverse.</param>
+        /// <returns>The reversed list.</returns>
+        internal static SchemeObject ReverseListInPlace(SchemeObject expr)
+        {
+            SchemeObject prev = EmptyList.Instance;
+            SchemeObject curr = expr;
+            while (curr is Pair)
+            {
+                SchemeObject temp = ((Pair)curr).RestCell;
+                ((Pair)curr).RestCell = prev;
+                prev = curr;
+                curr = temp;
+            }
+
+            return prev;
+        }
+
+        /// <summary>
+        /// Cleam the whole list, by cleaning each element.
+        /// </summary>
+        internal override void Clean()
+        {
+            First(this).Clean();
+            var tail = Rest(this);
+            while (tail is Pair)
+            {
+                First(tail).Clean();
+                tail = Rest(tail);
+            }
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Destructive setter of first cell.
         /// </summary>
         /// <param name="value">The new value for the first cell.</param>
         /// <returns>The new value</returns>
-        public SchemeObject SetFirst(SchemeObject value)
+        internal SchemeObject SetFirst(SchemeObject value)
         {
             return this.FirstCell = value;
         }
@@ -178,7 +226,7 @@ namespace SimpleScheme
         /// <typeparam name="T">The type of the value and result.</typeparam>
         /// <param name="value">The new value for the rest cell.</param>
         /// <returns>The new value</returns>
-        public T SetRest<T>(T value) where T : SchemeObject
+        internal T SetRest<T>(T value) where T : SchemeObject
         {
             this.RestCell = value;
             return value;
@@ -191,7 +239,8 @@ namespace SimpleScheme
         /// Also, detect and handle improper lists.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
-        public override string ToString(bool quoted)
+        /// <returns>The pair as a string.</returns>
+        internal override string ToString(bool quoted)
         {
             var tail = Rest(this);
             if (tail is Pair && Rest(tail) is EmptyList)
@@ -252,29 +301,6 @@ namespace SimpleScheme
 
             buf.Append(')');
             return buf.ToString();
-        }
-
-        /// <summary>
-        /// Cleam the whole list, by cleaning each element.
-        /// </summary>
-        public void Clean()
-        {
-            Cleaner.Clean(First(this));
-            var tail = Rest(this);
-            while (tail is Pair)
-            {
-                Cleaner.Clean(First(tail));
-                tail = Rest(tail);
-            }
-        }
-
-        /// <summary>
-        /// Turn the pair into a string for display.
-        /// </summary>
-        /// <returns>A string representing the pair.</returns>
-        public override string ToString()
-        {
-            return this.ToString(true);
         }
         #endregion
     }

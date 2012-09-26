@@ -4,16 +4,14 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Collections.Generic;
     using System.Reflection;
-    using System.Text;
 
     /// <summary>
     /// Handles asynchronous CLR method calls.
     /// Call returns suspended, then on completion resumes execution.
     /// This class is immutable.
     /// </summary>
-    public sealed class AsynchronousClrProcedure : ClrProcedure
+    internal sealed class AsynchronousClrProcedure : ClrProcedure
     {
         #region Fields
         /// <summary>
@@ -29,16 +27,20 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="targetClassName">The class name of the CLR function.</param>
         /// <param name="methodName">The method name of the CLR function.</param>
-        /// <param name="argClassNames">The types of all method arguments.</param>
-        public AsynchronousClrProcedure(string targetClassName, string methodName, SchemeObject argClassNames)
-            : base(targetClassName, methodName)
+        /// <param name="instanceClass">The type of the instance argument.  Null if static or constructor.</param>
+        /// <param name="argClasses">The types of all method arguments.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        internal AsynchronousClrProcedure(string targetClassName, string methodName, Type instanceClass, Type[] argClasses, Evaluator caller)
+            : base(
+                targetClassName, 
+                methodName, 
+                GetMethodInfo(targetClassName, "Begin" + methodName, argClasses, caller), 
+                instanceClass,
+                argClasses, 
+                argClasses.Length - 1)
         {
-            this.SetArgClasses(this.ClassListBegin(argClassNames));
-            this.SetMethodInfo("Begin" + methodName, this.ArgClasses);
-            this.SetMinMax(this.ArgClasses.Count - 1);
-
-            var endClasses = new List<Type>(1) { typeof(IAsyncResult) };
-            this.endMethodInfo = this.GetMethodInfo("End" + methodName, endClasses);
+            var endClasses = new[] { typeof(IAsyncResult) };
+            this.endMethodInfo = GetMethodInfo(targetClassName, "End" + methodName, endClasses, caller);
         }
         #endregion
 
@@ -46,18 +48,21 @@ namespace SimpleScheme
         /// <summary>
         /// Define the async clr procedure primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static new void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
             const int MaxInt = int.MaxValue;
-            env
+            primEnv
                 .DefinePrimitive(
                    "method-async", 
                    new[] { "(method-async <target-class-name> <method-name> <arg-class-name> ...)" },
-                   (args, caller) => new AsynchronousClrProcedure(First(args).ToString(), Second(args).ToString(), Rest(Rest(args))),
-                   2,
-                   MaxInt, 
-                   Primitive.ArgType.StringOrSymbol);
+                   (args, env, caller) => new AsynchronousClrProcedure(
+                       First(args).ToString(), 
+                       Second(args).ToString(), 
+                       Class(First(args)),
+                       ClassListBegin(Rest(Rest(args))), 
+                       caller),
+                   new ArgsInfo(2, MaxInt, ArgType.StringOrSymbol));
         }
         #endregion
 
@@ -78,34 +83,28 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
+        /// <param name="env">The environment of the application.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(SchemeObject args, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
-            this.CheckArgs(args, typeof(AsynchronousClrProcedure));
-            object target = null;
+#if Check
+            this.CheckArgCount(ListLength(args), args, "AsynchronousClrProcedure", caller);
+#endif
+            SchemeObject target = null;
             if (!this.MethodInfo.IsStatic)
             {
                 target = First(args);
                 args = Rest(args);
             }
 
-            if (target is ClrObject)
-            {
-                target = ((ClrObject)target).Value;
-            }
-
-            // TODO cch call ToClr
-            if (target is Symbol || target is SchemeString)
-            {
-                target = target.ToString();
-            } 
-            
-            var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(target, caller));
-            var res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
+            var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
+            var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(actualTarget, returnTo), caller);
+            var res = this.MethodInfo.Invoke(actualTarget, argArray) as IAsyncResult;
 
             // res is not converted because it is IAsyncResult -- convert in completion method
-            return new SuspendedEvaluator(ClrObject.New(res), caller);
+            return new SuspendedEvaluator(ClrObject.New(res), returnTo);
         }
         #endregion
 
@@ -117,12 +116,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of ArgType or type name elements.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
-        private List<Type> ClassListBegin(SchemeObject args)
+        private static Type[] ClassListBegin(SchemeObject args)
         {
-            List<Type> array = ClassList(args);
-            array.Add(((Symbol)"System.AsyncCallback").ToClass());
-            array.Add(((Symbol)"System.Object").ToClass());
-
+            Type[] array = ClassList(args, 2);
+            array[array.Length - 2] = typeof(AsyncCallback);
+            array[array.Length - 1] = typeof(object);
             return array;
         }
 
@@ -135,11 +133,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
         /// <param name="state">State, passed on to completion function.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private object[] ToArgListBegin(SchemeObject args, object state)
+        private object[] ToArgListBegin(SchemeObject args, object state, Evaluator caller)
         {
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
-            return this.ToArgList(args, additionalArgs);
+            return this.ToArgList(args, additionalArgs, "AsynchronousClrProcedure", caller);
         }
 
         /// <summary>
@@ -154,7 +153,7 @@ namespace SimpleScheme
             Evaluator caller = state.Item2;
             object res = this.endMethodInfo.Invoke(state.Item1, args);
             res = res ?? Undefined.Instance;
-            state.Item2.UpdateReturnValue(ClrObject.FromClrObject(res));
+            state.Item2.ReturnedExpr = ClrObject.FromClrObject(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.

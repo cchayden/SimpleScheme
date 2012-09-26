@@ -61,7 +61,7 @@ namespace SimpleScheme
         {
             foreach (Type t in primitiveTypes)
             {
-                primitiveInitializers.Add(t.GetMethod("DefinePrimitives", new[] { typeof(PrimitiveEnvironment) }));
+                primitiveInitializers.Add(t.GetMethod("DefinePrimitives", BindingFlags.Static | BindingFlags.NonPublic, null,  new[] { typeof(PrimitiveEnvironment) }, null));
             }
         }
 
@@ -93,25 +93,20 @@ namespace SimpleScheme
         /// <summary>
         /// Define the counter primitives.
         /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            env
+            primEnv
                 .DefinePrimitive(
                     "exit",
                     new[] { "(exit)" },
-                    Exit,
-                    0,
-                    1,
-                    Primitive.ArgType.Number)
+                    (args, env, caller) => Exit(args, caller),
+                    new ArgsInfo(0, 1, ArgType.Number))
                 .DefinePrimitive(
                     "time-call",
                     new[] { "(time-call <thunk>)", "(time-call <thunk> <count>)" },
-                    (args, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller),
-                    1,
-                    2,
-                    Primitive.ArgType.Proc,
-                    Primitive.ArgType.Number);
+                    (args, env, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller),
+                    new ArgsInfo(1, 2, ArgType.Proc, ArgType.Number));
         }
         #endregion
 
@@ -124,30 +119,11 @@ namespace SimpleScheme
         /// <param name="name">The primitive name.</param>
         /// <param name="description">An array of strings describing the primitive.</param>
         /// <param name="operation">The operation to perform.</param>
-        /// <param name="minArgs">The minimum number of arguments.</param>
-        /// <param name="maxArgs">The maximum number of arguments.</param>
-        /// <param name="argTypes">The argument types.</param>
+        /// <param name="argsInfo">Information about primitive args.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, int minArgs, int maxArgs, params Primitive.ArgType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, ArgsInfo argsInfo)
         {
-            this.Define(name, new Primitive(operation, description, minArgs, maxArgs, argTypes));
-            return this;
-        }
-
-        /// <summary>
-        /// Define a primitive, taking a fixed number of arguments.
-        /// Creates a Primitive and puts it in the environment associated 
-        ///    with the given name.
-        /// </summary>
-        /// <param name="name">The primitive name.</param>
-        /// <param name="description">Describes the primitive.</param>
-        /// <param name="operation">The operation to perform.</param>
-        /// <param name="numberOfArgs">The number of arguments.</param>
-        /// <param name="argTypes">The argument types.</param>
-        /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, int numberOfArgs, params Primitive.ArgType[] argTypes)
-        {
-            this.Define(name, new Primitive(operation, description, numberOfArgs, numberOfArgs, argTypes));
+            this.Define(name, new Primitive(name.SymbolName, operation, description, argsInfo));
             return this;
         }
 
@@ -155,7 +131,7 @@ namespace SimpleScheme
         /// Create a list of the primitives in the environment.
         /// </summary>
         /// <returns>A list of pairs containing the primitive name and value.</returns>
-        public SchemeObject ListPrimitives()
+        internal SchemeObject ListPrimitives()
         {
             return this.ListEnv();
         }
