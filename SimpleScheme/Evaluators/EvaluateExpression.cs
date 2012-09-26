@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// The main evaluator for expressions.
     /// </summary>
@@ -12,21 +10,20 @@ namespace SimpleScheme
     public sealed class EvaluateExpression : Evaluator
     {
         #region Constants
-        private static readonly Symbol andSym = Symbol.New("and");
-        private static readonly Symbol beginSym = Symbol.New("begin");
-        private static readonly Symbol parallelSym = Symbol.New("parallel");
-        private static readonly Symbol caseSym = Symbol.New("case");
-        private static readonly Symbol condSym = Symbol.New("cond");
-        private static readonly Symbol defineSym = Symbol.New("define");
-        private static readonly Symbol doSym = Symbol.New("do");
-        private static readonly Symbol ifSym = Symbol.New("if");
-        private static readonly Symbol letSym = Symbol.New("let");
-        private static readonly Symbol letstarSym = Symbol.New("let*");
-        private static readonly Symbol letrecSym = Symbol.New("letrec");
-        private static readonly Symbol orSym = Symbol.New("or");
-        private static readonly Symbol setSym = Symbol.New("set!");
-        private static readonly Symbol timeSym = Symbol.New("time");
-
+        private static readonly Symbol andSym = "and";
+        private static readonly Symbol beginSym = "begin";
+        private static readonly Symbol parallelSym = "parallel";
+        private static readonly Symbol caseSym = "case";
+        private static readonly Symbol condSym = "cond";
+        private static readonly Symbol defineSym = "define";
+        private static readonly Symbol doSym = "do";
+        private static readonly Symbol ifSym = "if";
+        private static readonly Symbol letSym = "let";
+        private static readonly Symbol letstarSym = "let*";
+        private static readonly Symbol letrecSym = "letrec";
+        private static readonly Symbol orSym = "or";
+        private static readonly Symbol setSym = "set!";
+        private static readonly Symbol timeSym = "time";
         #endregion
 
         #region Fields
@@ -43,7 +40,7 @@ namespace SimpleScheme
         /// <summary>
         /// The function to evaluate.
         /// </summary>
-        private readonly Obj fn;
+        private readonly ISchemeObject fn;
         #endregion
 
         #region Constructor
@@ -57,18 +54,18 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to evaluate.</param>
-        private EvaluateExpression(Obj args, Environment env, Evaluator caller, Obj fn)
+        private EvaluateExpression(ISchemeObject args, Environment env, Evaluator caller, ISchemeObject fn)
             : base(args, env, caller)
         {
             this.fn = fn;
 
-            ContinueHere(InitialStep);
+            this.ContinueHere(InitialStep);
             if (caller.Interp.Trace)
             {
                 caller.Interp.CurrentOutputPort.WriteLine(string.Format("evaluate: {0} {1}", fn, args));
             }
 
-            IncrementCounter(counter);
+            this.IncrementCounter(counter);
         }
         #endregion
 
@@ -86,7 +83,7 @@ namespace SimpleScheme
             env
                 //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
                 .DefinePrimitive(
-                        andSym,
+                        "and",
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, andSym), 
                         0, 
                         MaxInt, 
@@ -94,14 +91,14 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                 .DefinePrimitive(
-                        beginSym, 
+                        "begin", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, beginSym), 
                         0, 
                         MaxInt, 
                         TypePrimitives.ValueType.Obj)
                 //// (parallel <expr> ...)
                 .DefinePrimitive(
-                        parallelSym, 
+                        "parallel", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, parallelSym), 
                         0, 
                         MaxInt, 
@@ -110,7 +107,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
                 .DefinePrimitive(
-                        caseSym, 
+                        "case", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, caseSym), 
                         0, 
                         MaxInt, 
@@ -120,7 +117,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
                 .DefinePrimitive(
-                        condSym, 
+                        "cond", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, condSym), 
                         0, 
                         MaxInt, 
@@ -129,7 +126,7 @@ namespace SimpleScheme
                 //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
                 .DefinePrimitive(
-                        defineSym, 
+                        "define", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, defineSym), 
                         0, 
                         MaxInt, 
@@ -139,22 +136,22 @@ namespace SimpleScheme
                 ////                           (<test> <expression> ...)
                 ////                         <command> ...)</r4rs>
                 .DefinePrimitive(
-                        doSym, 
+                        "do", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, doSym), 
                         0, 
                         MaxInt, 
                         TypePrimitives.ValueType.Pair)
                 //// Instead of returning a value, return an evaulator that can be run to get the value
                 .DefinePrimitive(
-                        Symbol.New("eval"), 
-                        (args, caller) => Call(args.First(), caller.Env, caller), 
+                        "eval",
+                        (args, caller) => Call(List.First(args), caller.Env, caller), 
                         1, 
                         2, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                 //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
                 .DefinePrimitive(
-                        ifSym, 
+                        "if", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, ifSym), 
                         0, 
                         MaxInt, 
@@ -164,7 +161,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.1.4">formals: <variable></r4rs>
                 //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("lambda"), 
+                        "lambda",
                         (args, caller) => EvalLambda(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
@@ -174,7 +171,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
                 .DefinePrimitive(
-                        letSym, 
+                        "let", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letSym), 
                         0, 
                         MaxInt, 
@@ -183,7 +180,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
                 .DefinePrimitive(
-                        letstarSym, 
+                        "let*", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letstarSym), 
                         0, 
                         MaxInt, 
@@ -192,41 +189,41 @@ namespace SimpleScheme
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
                 .DefinePrimitive(
-                        letrecSym, 
+                        "letrec", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letrecSym), 
                         0, 
                         MaxInt, 
                         TypePrimitives.ValueType.Pair)
                 //// not defined in r4rs
                 .DefinePrimitive(
-                        Symbol.New("macro"), 
+                        "macro",
                         (args, caller) => EvalMacro(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         TypePrimitives.ValueType.Pair)
                 //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
                 .DefinePrimitive(
-                        orSym, 
+                        "or", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, orSym), 
                         0, 
                         MaxInt, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("quote"), 
+                        "quote",
                         (args, caller) => EvalQuote(args, caller), 
                         1, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
                 .DefinePrimitive(
-                    setSym,
-                    (args, caller) => new EvaluateExpression(args, caller.Env, caller, setSym),
-                    2,
-                    TypePrimitives.ValueType.Symbol,
-                    TypePrimitives.ValueType.Pair)
+                        "set!",
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, setSym),
+                        2,
+                        TypePrimitives.ValueType.Symbol,
+                        TypePrimitives.ValueType.Pair)
                 //// (time <expr>)
                 .DefinePrimitive(
-                        timeSym, 
+                        "time", 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, timeSym), 
                         1, 
                         TypePrimitives.ValueType.Obj);
@@ -244,13 +241,13 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.
             //
             // First look for a symbol.
-            if (expr.IsSymbol())
+            if (expr is Symbol)
             {
                 // Evaluate a symbol by looking it up in the environment.
                 // It should correspond to a variable name, for which there 
@@ -264,7 +261,7 @@ namespace SimpleScheme
             }
 
             // Look for all other non-pair forms.
-            if (!expr.IsPair())
+            if (!(expr is Pair))
             {
                 // If we are evaluating something that is not a pair, 
                 //    it must be a constant.
@@ -274,9 +271,9 @@ namespace SimpleScheme
 
             // Break apart and evaluate the fn and args
             // Handle special forms that do not need an actual evaluation.
-            Obj fn = expr.First();
-            Obj args = expr.Rest();
-            if (fn.IsSymbol())
+            ISchemeObject fn = List.First(expr);
+            ISchemeObject args = List.Rest(expr);
+            if (fn is Symbol)
             {
                 switch (fn.ToString())
                 {
@@ -311,9 +308,9 @@ namespace SimpleScheme
         /// <param name="args">The args to quote.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The quoted expression.</returns>
-        private static Evaluator EvalQuote(Obj args, Evaluator caller)
+        private static Evaluator EvalQuote(ISchemeObject args, Evaluator caller)
         {
-            return caller.UpdateReturnValue(args.First());
+            return caller.UpdateReturnValue(List.First(args));
         }
 
         /// <summary>
@@ -323,9 +320,9 @@ namespace SimpleScheme
         /// <param name="env">The execution environment.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The lambda representing the expression.</returns>
-        private static Evaluator EvalLambda(Obj args, Environment env, Evaluator caller)
+        private static Evaluator EvalLambda(ISchemeObject args, Environment env, Evaluator caller)
         {
-            return caller.UpdateReturnValue(Lambda.New(args.First(), args.Rest(), env));
+            return caller.UpdateReturnValue(Lambda.New(List.First(args), List.Rest(args), env));
         }
 
         /// <summary>
@@ -335,9 +332,9 @@ namespace SimpleScheme
         /// <param name="env">The execution environment.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The macro representing the expression.</returns>
-        private static Evaluator EvalMacro(Obj args, Environment env, Evaluator caller)
+        private static Evaluator EvalMacro(ISchemeObject args, Environment env, Evaluator caller)
         {
-            return caller.UpdateReturnValue(Macro.New(args.First(), args.Rest(), env));
+            return caller.UpdateReturnValue(new Macro(List.First(args), List.Rest(args), env));
         }
         #endregion
 
@@ -358,7 +355,7 @@ namespace SimpleScheme
             //// <r4rs section="4.2.5">(delay <expression>)</r4rs>
 
             // Look for one of the special forms. 
-            if (step.fn.IsSymbol())
+            if (step.fn is Symbol)
             {
                 switch (step.fn.ToString())
                 {
@@ -470,10 +467,10 @@ namespace SimpleScheme
         /// <param name="env">The environment.</param>
         /// <param name="caller">Return to this caller.</param>
         /// <returns>The next step to execute.</returns>
-        private static Evaluator Increment(Obj expr, Environment env, Evaluator caller)
+        private static Evaluator Increment(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            Obj lhs = expr.First();
-            if (!lhs.IsSymbol())
+            ISchemeObject lhs = List.First(expr);
+            if (!(lhs is Symbol))
             {
                 ErrorHandlers.SemanticError(string.Format(@"Increment: first argument must be a symbol.  Got: ""{0}""", lhs));
             }
@@ -490,7 +487,7 @@ namespace SimpleScheme
         private static Evaluator ApplyProcStep(Evaluator s)
         {
             // Come here after evaluating fn
-            if (!s.ReturnedExpr.IsProcedure())
+            if (!(s.ReturnedExpr is Procedure))
             {
                 ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", s.ReturnedExpr));
             }

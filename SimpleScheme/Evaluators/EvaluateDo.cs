@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a do expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -29,27 +27,27 @@ namespace SimpleScheme
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private readonly Obj vars;
+        private readonly ISchemeObject vars;
 
         /// <summary>
         /// The list of initializers.
         /// </summary>
-        private readonly Obj inits;
+        private readonly ISchemeObject inits;
 
         /// <summary>
         /// This list of step expressions.
         /// </summary>
-        private readonly Obj steps;
+        private readonly ISchemeObject steps;
 
         /// <summary>
         /// The expression list following the test
         /// </summary>
-        private readonly Obj exprs;
+        private readonly ISchemeObject exprs;
 
         /// <summary>
         /// The commands to execute each time through.
         /// </summary>
-        private readonly Obj commands;
+        private readonly ISchemeObject commands;
 
         /// <summary>
         /// The test proc to execute each time around.
@@ -70,7 +68,7 @@ namespace SimpleScheme
         /// <param name="exprs">The expressions.</param>
         /// <param name="commands">The commands.</param>
         /// <param name="testProc">The test proc to execute each interation.</param>
-        private EvaluateDo(Obj expr, Environment env, Evaluator caller, Obj vars, Obj inits, Obj steps, Obj exprs, Obj commands, Lambda testProc)
+        private EvaluateDo(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject vars, ISchemeObject inits, ISchemeObject steps, ISchemeObject exprs, ISchemeObject commands, Lambda testProc)
             : base(expr, env, caller)
         {
             this.vars = vars;
@@ -96,36 +94,36 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             // Test for errors before creating the object.
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
                 ErrorHandlers.SemanticError("No body for do");
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            if (!expr.IsPair())
+            if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            Obj bindings = expr.First();
-            Obj vars = List.MapFun(List.First, bindings.MakeList());
-            Obj inits = List.MapFun(List.Second, bindings.MakeList());
-            Obj steps = List.MapFun(ThirdOrFirst, bindings.MakeList());
-            Obj exprs = expr.Second().Rest();
-            Obj commands = expr.Rest().Rest();
+            ISchemeObject bindings = List.First(expr);
+            ISchemeObject vars = List.MapFun(List.First, List.MakeList(bindings));
+            ISchemeObject inits = List.MapFun(List.Second, List.MakeList(bindings));
+            ISchemeObject steps = List.MapFun(ThirdOrFirst, List.MakeList(bindings));
+            ISchemeObject exprs = List.Rest(List.Second(expr));
+            ISchemeObject commands = List.Rest(List.Rest(expr));
 
-            Obj test = expr.Second().First();
-            if (test.IsEmptyList())
+            ISchemeObject test = List.First(List.Second(expr));
+            if (test is EmptyList)
             {
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             // prepare test proc to execute each time through
-            Lambda testProc = Lambda.New(vars, test.MakeList(), env);
+            Lambda testProc = Lambda.New(vars, List.MakeList(test), env);
             EvaluateDo eval = new EvaluateDo(expr, env, caller, vars, inits, steps, exprs, commands, testProc);
 
             // push an empty environment, to hold the iteration variables
@@ -141,10 +139,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The list to start with.</param>
         /// <returns>The third, if it exists, otherwise the first.</returns>
-        private static Obj ThirdOrFirst(Obj x)
+        private static ISchemeObject ThirdOrFirst(ISchemeObject x)
         {
-            Obj res = x.Third();
-            return res.IsEmptyList() ? x.First() : res;
+            ISchemeObject res = List.Third(x);
+            return res is EmptyList ? List.First(x) : res;
         }
 
         /// <summary>
@@ -186,7 +184,7 @@ namespace SimpleScheme
                 // Evaluate exprs and return the value of the last
                 //   in the environment of the vars.
                 // If no exprs, unspecified.
-                if (step.exprs.IsEmptyList())
+                if (step.exprs is EmptyList)
                 {
                     return step.ReturnUndefined();
                 }

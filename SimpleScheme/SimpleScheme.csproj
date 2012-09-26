@@ -48,6 +48,8 @@
     <Compile Include="Scheme Types\Character.cs" />
     <Compile Include="CompletedAsyncResult.cs" />
     <Compile Include="Counter.cs" />
+    <Compile Include="Scheme Types\ClrObject.cs" />
+    <Compile Include="Scheme Types\Eof.cs" />
     <Compile Include="Scheme Types\ICleanable.cs" />
     <Compile Include="Scheme Types\ClrConstructor.cs" />
     <Compile Include="Scheme Types\EmptyList.cs" />
@@ -68,7 +70,7 @@
     <Compile Include="Parser.cs" />
     <Compile Include="PrimitiveEnvironment.cs" />
     <Compile Include="Printer.cs" />
-    <Compile Include="Scheme Types\ISchemeType.cs" />
+    <Compile Include="Scheme Types\ISchemeObject.cs" />
     <Compile Include="Scheme Types\IPrintable.cs" />
     <Compile Include="Scheme Types\SchemeBoolean.cs" />
     <Compile Include="Scheme Types\Lambda.cs" />
@@ -107,6 +109,7 @@
     <Compile Include="ErrorHandlers.cs" />
     <Compile Include="Scheme Types\Symbol.cs" />
     <Compile Include="Scheme Types\SynchronousClrProcedure.cs" />
+    <Compile Include="Scheme Types\Token.cs" />
     <Compile Include="TranscriptLogger.cs" />
     <Compile Include="TypePrimitives.cs" />
     <Compile Include="Scheme Types\Undefined.cs" />

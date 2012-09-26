@@ -5,7 +5,6 @@ namespace SimpleScheme
 {
     using System.Collections.Generic;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Represents the interpreter environment.
@@ -89,7 +88,7 @@ namespace SimpleScheme
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        public Environment(Obj formals, Obj vals, Environment lexicalParent)
+        public Environment(ISchemeObject formals, ISchemeObject vals, Environment lexicalParent)
         {
             this.interp = lexicalParent.Interp;
             this.lexicalParent = lexicalParent;
@@ -134,11 +133,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        public void Define(string var, Obj val)
+        public void Define(string var, ISchemeObject val)
         {
             try
             {
-               this.Define(Symbol.New(var), val);
+               this.Define(var, val);
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -151,11 +150,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        public Obj Lookup(string var)
+        public ISchemeObject Lookup(string var)
         {
             try
             {
-               return this.Lookup(Symbol.New(var));
+               return this.Lookup(var);
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -178,11 +177,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        public void Define(Symbol var, Obj val)
+        public void Define(Symbol var, ISchemeObject val)
         {
             this.symbolTable.Add(var, val);
 
-            if (val.IsProcedure())
+            if (val is Procedure)
             {
                 val.AsProcedure().SetName(var.SymbolName);
             }
@@ -195,7 +194,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        public Obj Lookup(Symbol var)
+        public ISchemeObject Lookup(Symbol var)
         {
             Environment env = this;
 
@@ -214,7 +213,7 @@ namespace SimpleScheme
 
             while (env != EmptyEnvironment)
             {
-                Obj val = env.symbolTable.Lookup(var, level);
+                ISchemeObject val = env.symbolTable.Lookup(var, level);
                 if (val != null)
                 {
                     return val;
@@ -238,9 +237,9 @@ namespace SimpleScheme
         /// <param name="var">The variable name.</param>
         /// <param name="val">The new value for the variable.</param>
         /// <returns>The value that the variable was set to.</returns>
-        public Obj Set(Obj var, Obj val)
+        public ISchemeObject Set(ISchemeObject var, ISchemeObject val)
         {
-            if (!var.IsSymbol())
+            if (!(var is Symbol))
             {
                 return ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", Printer.AsString(var)));
             }
@@ -282,9 +281,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The symbol naming the variable to increment.</param>
         /// <returns>The incremented value.</returns>
-        public Obj Increment(Obj var)
+        public ISchemeObject Increment(ISchemeObject var)
         {
-            if (!var.IsSymbol())
+            if (!(var is Symbol))
             {
                 return ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-symbol: ""{0}""", Printer.AsString(var)));
             }
@@ -296,7 +295,7 @@ namespace SimpleScheme
             int level = 0;
             while (env != EmptyEnvironment)
             {
-                Obj val = env.symbolTable.Increment(symbol, level);
+                ISchemeObject val = env.symbolTable.Increment(symbol, level);
                 if (val != null)
                 {
                     return val;
@@ -369,7 +368,7 @@ namespace SimpleScheme
             /// <summary>
             /// The values.
             /// </summary>
-            private readonly List<object> values;
+            private readonly List<ISchemeObject> values;
 
             /// <summary>
             /// Lock the symbol table before using -- may be concurrent.
@@ -382,7 +381,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public SymbolTable(Obj symbols, Obj vals) : this(symbols.ListLength())
+            public SymbolTable(ISchemeObject symbols, ISchemeObject vals) : this(List.ListLength(symbols))
             {
                 this.AddList(symbols, vals);
             }
@@ -394,7 +393,7 @@ namespace SimpleScheme
             public SymbolTable(int count)
             {
                 this.names = new List<string>(count);
-                this.values = new List<object>(count);
+                this.values = new List<ISchemeObject>(count);
                 this.lockObj = new object();
             }
 
@@ -406,7 +405,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to look up.</param>
             /// <param name="level"></param>
             /// <returns>The value of the object looked up, null if not found.</returns>
-            public object Lookup(Symbol symbol, int level)
+            public ISchemeObject Lookup(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
@@ -437,7 +436,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            public void Add(Symbol symbol, Obj val)
+            public void Add(Symbol symbol, ISchemeObject val)
             {
                 lock (this.lockObj)
                 {
@@ -462,7 +461,7 @@ namespace SimpleScheme
             /// <param name="val">The new value.</param>
             /// <param name="level"></param>
             /// <returns>The new value, null if not found.</returns>
-            public object Update(Symbol symbol, object val, int level)
+            public ISchemeObject Update(Symbol symbol, ISchemeObject val, int level)
             {
                 lock (this.lockObj)
                 {
@@ -495,7 +494,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
             /// <param name="level"></param>
             /// <returns>TThe new value, null if not found.</returns>
-            public object Increment(Symbol symbol, int level)
+            public ISchemeObject Increment(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
@@ -505,15 +504,15 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    Obj val = this.values[index];
-                    if (!val.IsNumber())
+                    ISchemeObject val = this.values[index];
+                    if (!(val is Number))
                     {
                         // If it is found but is not a number, then that is an error.
                         ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-number: ""{0}""", Printer.AsString(val)));
                         return null;
                     }
 
-                    this.values[index] = Number.New(val.AsNumber().N + 1);
+                    this.values[index] = (Number)(val.AsNumber().N + 1);
                     return val;
                 }
             }
@@ -561,27 +560,27 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            private void AddList(Obj symbols, Obj vals)
+            private void AddList(ISchemeObject symbols, ISchemeObject vals)
             {
-                while (!symbols.IsEmptyList())
+                while (!(symbols is EmptyList))
                 {
-                    if (symbols.IsSymbol())
+                    if (symbols is Symbol)
                     {
                         this.Add(symbols.AsSymbol(), vals);
                     }
                     else
                     {
-                        Obj symbol = symbols.First();
-                        if (!symbol.IsSymbol())
+                        ISchemeObject symbol = List.First(symbols);
+                        if (!(symbol is Symbol))
                         {
                             ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""",  symbol));
                         }
 
-                        this.Add(symbol.AsSymbol(), vals.First());
+                        this.Add(symbol.AsSymbol(), List.First(vals));
                     }
 
-                    symbols = symbols.Rest();
-                    vals = vals.Rest();
+                    symbols = List.Rest(symbols);
+                    vals = List.Rest(vals);
                 }
             }
         }

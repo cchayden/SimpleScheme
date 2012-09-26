@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using Obj = System.Object;
 
     /// <summary>
     /// The interface for the SimpleScheme primitive environment.
@@ -25,7 +24,7 @@ namespace SimpleScheme
         /// <returns>The environment.</returns>
         IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<Obj, Evaluator, Obj> operation, 
+            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
             int minArgs, 
             int maxArgs, 
             params TypePrimitives.ValueType[] argTypes);
@@ -40,7 +39,7 @@ namespace SimpleScheme
         /// <returns>The environment.</returns>
         IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<Obj, Evaluator, Obj> operation, 
+            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
             int numberOfArgs, 
             params TypePrimitives.ValueType[] argTypes);
     }

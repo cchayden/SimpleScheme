@@ -5,11 +5,8 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Reflection;
     using System.Text;
-
-    using Obj = System.Object;
 
     /// <summary>
     /// Executes a function provided in the CLR.
@@ -29,12 +26,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The name of the class containing the method.</param>
         /// <param name="methodName">The name of the CLR method.</param>
-        protected ClrProcedure(Obj className, Obj methodName) :
+        protected ClrProcedure(ISchemeObject className, ISchemeObject methodName) :
             base(0, 0)
         {
-            this.ClassName = Printer.AsString(className, false);
-            this.MethodName = Printer.AsString(methodName, false);
-            this.SetName(this.ClassName + "." + this.MethodName);
+            this.ClassName = (Symbol)Printer.AsString(className, false);
+            this.MethodName = (Symbol)Printer.AsString(methodName, false);
+            this.SetName(className + "." + methodName);
         }
         #endregion
 
@@ -53,12 +50,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the class containing the method to invoke.
         /// </summary>
-        protected string ClassName { get; private set; }
+        protected ISchemeObject ClassName { get; private set; }
 
         /// <summary>
         /// Gets the name of the method.
         /// </summary>
-        protected string MethodName { get; private set; }
+        protected ISchemeObject MethodName { get; private set; }
 
         /// <summary>
         /// Gets information about the CLR method to be called.
@@ -72,9 +69,6 @@ namespace SimpleScheme
 
         #endregion
 
-        #region Public Static Methods
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the clr procedure primitives.
@@ -85,20 +79,20 @@ namespace SimpleScheme
             env
                 //// (class <class-name>)
                 .DefinePrimitive(
-                    Symbol.New("class"), 
-                    (args, caller) => Class(args.First()), 
+                    "class",
+                    (args, caller) => ClrObject.New(Class(List.First(args))), 
                     1, 
                     TypePrimitives.ValueType.String)
                 //// (new <class-name>)
                 .DefinePrimitive(
-                    Symbol.New("new"), 
-                    (args, caller) => New(args.First()), 
+                    "new",
+                    (args, caller) => ClrObject.New(New(List.First(args))), 
                     1, 
                     TypePrimitives.ValueType.String)
                 //// (new-array <class-name> <length>)
                 .DefinePrimitive(
-                    Symbol.New("new-array"), 
-                    (args, caller) => NewArray(args.First(), args.Second()), 
+                    "new-array",
+                    (args, caller) => ClrObject.New(NewArray(List.First(args), List.Second(args))), 
                     2, 
                     TypePrimitives.ValueType.String, 
                     TypePrimitives.ValueType.Number);
@@ -187,15 +181,15 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of ValueType or type name elements.  There may be more than this.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
-        protected List<Type> ClassList(Obj args)
+        protected List<Type> ClassList(ISchemeObject args)
         {
-            int n = args.ListLength();
+            int n = List.ListLength(args);
             var array = new List<Type>(n);
 
-            while (args.IsPair())
+            while (args is Pair)
             {
-                array.Add(TypePrimitives.ToClass(args.First()));
-                args = args.Rest();
+                array.Add(TypePrimitives.ToClass(List.First(args)));
+                args = List.Rest(args);
             }
 
             return array;
@@ -208,11 +202,12 @@ namespace SimpleScheme
         ///    what is expected.
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
-        /// <param name="additionalArgs">A list of the additional args, not supplied by the caller.</param>
+        /// <param name="additionalArgs">A list of the additional args, not supplied by the caller. 
+        /// These are part of the asynchronous calling pattern.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        protected object[] ToArgList(object args, object[] additionalArgs)
+        protected object[] ToArgList(ISchemeObject args, object[] additionalArgs)
         {
-            int n = args.ListLength();
+            int n = List.ListLength(args);
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
@@ -224,96 +219,17 @@ namespace SimpleScheme
 
             var array = new object[n + additionalN];
 
-            int i = 0;
             int a = 0;
-            while (args.IsPair())
+            while (args is Pair)
             {
-                Obj elem = args.First();
-                if (this.ArgClasses[i] == typeof(int))
-                {
-                    array[a++] = elem.AsInt();
-                }
-                else if (this.ArgClasses[i] == typeof(string))
-                {
-                    array[a++] = Printer.AsString(elem, false);
-                }
-                else if (this.ArgClasses[i] == typeof(bool))
-                {
-                    array[a++] = elem.AsBoolean();
-                }
-                else if (this.ArgClasses[i] == typeof(double))
-                {
-                    array[a++] = elem.AsDouble();
-                }
-                else if (this.ArgClasses[i] == typeof(float))
-                {
-                    array[a++] = elem.AsFloat();
-                }
-                else if (this.ArgClasses[i] == typeof(short))
-                {
-                    array[a++] = elem.AsShort();
-                }
-                else if (this.ArgClasses[i] == typeof(byte))
-                {
-                    array[a++] = elem.AsByte();
-                }
-                else if (this.ArgClasses[i] == typeof(char))
-                {
-                    array[a++] = elem.AsChar();
-                }
-                else if (this.ArgClasses[i] == typeof(TextReader))
-                {
-                    array[a++] = elem.AsTextReader();
-                }
-                else if (this.ArgClasses[i] == typeof(TextWriter))
-                {
-                    array[a++] = elem.AsTextWriter();
-                }
-                else if (this.ArgClasses[i] == typeof(char[]))
-                {
-                    array[a++] = Printer.AsString(elem, false).ToCharArray();
-                }
-                else if (this.ArgClasses[i] == typeof(object[]))
-                {
-                    array[a++] = elem.AsVector().AsObjectArray();
-                }
-                else if (this.ArgClasses[i] == typeof(int[]))
-                {
-                    array[a++] = elem.AsVector().AsIntArray();
-                }
-                else if (this.ArgClasses[i] == typeof(byte[]))
-                {
-                    array[a++] = elem.AsVector().AsByteArray();
-                }
-                else if (this.ArgClasses[i] == typeof(short[]))
-                {
-                    array[a++] = elem.AsVector().AsShortArray();
-                }
-                else if (this.ArgClasses[i] == typeof(long[]))
-                {
-                    array[a++] = elem.AsVector().AsLongArray();
-                }
-                else if (this.ArgClasses[i] == typeof(float[]))
-                {
-                    array[a++] = elem.AsVector().AsFloatArray();
-                }
-                else if (this.ArgClasses[i] == typeof(double[]))
-                {
-                    array[a++] = elem.AsVector().AsDoubleArray();
-                }
-                else
-                {
-                    array[a++] = elem;
-                }
-
-                i++;
-                args = args.Rest();
+                array[a] = ClrObject.ToClrObject(List.First(args), this.ArgClasses[a]);
+                a++;
+                args = List.Rest(args);
             }
 
-            // required by style cop
             if (additionalArgs != null)    
             {
-                for (i = 0; i < additionalN; i++)
+                for (int i = 0; i < additionalN; i++)
                 {
                     array[a++] = additionalArgs[i];
                 }
@@ -330,7 +246,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The class name.  May have to be assembly-qualified.</param>
         /// <returns>The type object.</returns>
-        private static Obj Class(Obj className)
+        private static Type Class(ISchemeObject className)
         {
             return TypePrimitives.ToClass(className);
         }
@@ -344,7 +260,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The class name.</param>
         /// <returns>A new instance of the class.</returns>
-        private static Obj New(Obj className)
+        private static object New(ISchemeObject className)
         {
             Type type = TypePrimitives.ToClass(className);
             if (type == null)
@@ -365,7 +281,7 @@ namespace SimpleScheme
         /// <param name="className">The class name of the array elements.</param>
         /// <param name="length">The array length.</param>
         /// <returns>An array of the given length.</returns>
-        private static Obj NewArray(Obj className, Obj length)
+        private static object NewArray(ISchemeObject className, ISchemeObject length)
         {
             Type type = TypePrimitives.ToClass(className);
             return Array.CreateInstance(type, length.AsInt());
@@ -384,7 +300,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a CLR procedure.</returns>
-        public static bool IsClrProcedure(this Obj obj)
+        public static bool IsClrProcedure(this ISchemeObject obj)
         {
             return obj is ClrProcedure;
         }
@@ -394,7 +310,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a clr procedure.</returns>
-        public static ClrProcedure AsClrProcedure(this Obj obj)
+        public static ClrProcedure AsClrProcedure(this ISchemeObject obj)
         {
             var asClrProcedure = obj as ClrProcedure;
             if (asClrProcedure != null)

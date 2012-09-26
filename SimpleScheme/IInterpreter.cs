@@ -35,14 +35,14 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The object that was read</returns>
-        object Read(string str);
+        ISchemeObject Read(string str);
 
         /// <summary>
         /// Read a single expression from the input port.
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The object that was read.</returns>
-        object Read(InputPort inp);
+        ISchemeObject Read(InputPort inp);
         #endregion
 
         #region Evaluate Methods
@@ -51,7 +51,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        object Eval(object expr);
+        ISchemeObject Eval(ISchemeObject expr);
 
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
@@ -59,7 +59,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate, a s a string.</param>
         /// <returns>The result of the evaluation.</returns>
         /// <returns></returns>
-        object EvalStr(string expr);
+        ISchemeObject EvalStr(string expr);
 
         /// <summary>
         /// Begin an asynchronous evaluation.  This may return before the evaluation is complete.
@@ -68,14 +68,14 @@ namespace SimpleScheme
         /// <param name="cb">The callback.  This is called when the evaluation is complete.</param>
         /// <param name="state">State passed to the evaluator.</param>
         /// <returns>Async result, used to get the resulteval .</returns>
-        IAsyncResult BeginEval(object expr, AsyncCallback cb, object state);
+        IAsyncResult BeginEval(ISchemeObject expr, AsyncCallback cb, object state);
 
         /// <summary>
         /// Wrap up after an asynchronous evaluation.
         /// </summary>
         /// <param name="ar">The async results, used to get the evaluation result.</param>
         /// <returns>The evaluation result.</returns>
-        object EndEval(IAsyncResult ar);
+        ISchemeObject EndEval(IAsyncResult ar);
         #endregion
 
         #region Print Methods
@@ -84,7 +84,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>A string representing the object value.</returns>
-        string Print(object obj);
+        string Print(ISchemeObject obj);
         #endregion
 
         #region Read/Eval Methods
@@ -93,7 +93,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The value of the evaluated expression.</returns>
-        object ReadEval(InputPort inp);
+        ISchemeObject ReadEval(InputPort inp);
 
         /// <summary>
         /// Load the program, contained in the given string, and execute it.
@@ -134,6 +134,6 @@ namespace SimpleScheme
         /// Load a file and evaluate the expressions in it.
         /// </summary>
         /// <param name="fileName">The file to load.</param>
-        void LoadFile(object fileName);
+        void LoadFile(ISchemeObject fileName);
     }
 }

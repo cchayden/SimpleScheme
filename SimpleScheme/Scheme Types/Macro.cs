@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Represents a macro definition.
@@ -20,7 +19,7 @@ namespace SimpleScheme
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        private Macro(Obj parms, Obj body, Environment env)
+        public Macro(ISchemeObject parms, ISchemeObject body, Environment env)
             : base(parms, body, env)
         {
         }
@@ -36,31 +35,21 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
-        /// Creates a new instance of the Macro class.
+        /// Initializes a new instance of the Macro class.
         /// </summary>
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        /// <returns>A new macro.</returns>
-        public static new Macro New(Obj parms, Obj body, Environment env)
+        /// <returns>A new Macro.</returns>
+        public static new Macro New(ISchemeObject parms, ISchemeObject body, Environment env)
         {
             return new Macro(parms, body, env);
         }
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static new bool Is(Obj obj)
-        {
-            return obj is Macro;
-        }
-
         /// <summary>
         /// Write the macro to the string builder.
         /// </summary>
@@ -80,7 +69,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Evaluate(Obj args, Environment env, Evaluator caller)
+        public override Evaluator Evaluate(ISchemeObject args, Environment env, Evaluator caller)
         {
             return EvaluateExpandMacro.Call(this, args, env, caller);
         }
@@ -104,23 +93,13 @@ namespace SimpleScheme
     public static class MacroExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme macro.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme macro.</returns>
-        public static bool IsMacro(this Obj obj)
-        {
-            return Macro.Is(obj);
-        }
-
-        /// <summary>
         /// Convert object to macro.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a macro.</returns>
-        public static Macro AsMacro(Obj obj)
+        public static Macro AsMacro(ISchemeObject obj)
         {
-            if (Macro.Is(obj))
+            if (obj is Macro)
             {
                 return (Macro)obj;
             }

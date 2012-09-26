@@ -5,12 +5,11 @@ namespace SimpleScheme
 {
     using System.IO;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public class OutputPort : IPrintable, ISchemeType
+    public class OutputPort : IPrintable, ISchemeObject
     {
         #region Fields
         /// <summary>
@@ -57,19 +56,9 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is OutputPort;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the OutputPort class.
+        /// Initializes a new instance of the OutputPort class.
         /// </summary>
         /// <param name="outp">The TextWriter to write output to.</param>
         /// <param name="interp">The interpreter.</param>
@@ -78,6 +67,7 @@ namespace SimpleScheme
         {
             return new OutputPort(outp, interp);
         }
+
         #endregion
 
         #region Define Primitives
@@ -93,27 +83,27 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("call-with-output-file"), 
+                    "call-with-output-file",
                     EvaluateCallWithOutputFile.Call, 
                     2, 
                     TypePrimitives.ValueType.String, 
                     TypePrimitives.ValueType.Proc)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("close-output-port"), 
-                    (args, caller) => Port(args.First(), caller.Interp.CurrentOutputPort).CloseOutputPort(), 
+                    "close-output-port",
+                    (args, caller) => Port(List.First(args), caller.Interp.CurrentOutputPort).CloseOutputPort(), 
                     1, 
                     TypePrimitives.ValueType.Port)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("current-output-port"), 
+                    "current-output-port",
                     (args, caller) => caller.Interp.CurrentOutputPort, 
                     0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("display"), 
-                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).Display(args.First()), 
+                    "display",
+                    (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Display(List.First(args)), 
                     1, 
                     2,
                     TypePrimitives.ValueType.Obj, 
@@ -121,50 +111,50 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("newline"), 
-                    (args, caller) => Port(args.First(), caller.Interp.CurrentOutputPort).Newline(), 
+                    "newline",
+                    (args, caller) => Port(List.First(args), caller.Interp.CurrentOutputPort).Newline(), 
                     0, 
                     1, 
                     TypePrimitives.ValueType.Port)
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("open-output-file"), 
-                    (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(args.First(), caller.Interp), 
+                    "open-output-file",
+                    (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args), caller.Interp), 
                     1, 
                     TypePrimitives.ValueType.String)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("output-port?"), 
-                    (args, caller) => SchemeBoolean.Truth(args.First().IsOutputPort()), 
+                    "output-port?",
+                    (args, caller) => SchemeBoolean.Truth(List.First(args) is OutputPort), 
                     1, 
                     TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("write"), 
-                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).Write(args.First()), 
+                    "write",
+                    (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Write(List.First(args)), 
                     1, 
                     2, 
                     TypePrimitives.ValueType.Obj, 
                     TypePrimitives.ValueType.Port)
                 //// (p <expr>)
                 .DefinePrimitive(
-                    Symbol.New("p"), 
-                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).P(args.First()), 
+                    "p",
+                    (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).P(List.First(args)), 
                     1, 
                     TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("write-char"), 
-                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).WriteChar(args.First()), 
+                    "write-char",
+                    (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).WriteChar(List.First(args)), 
                     1, 
                     2,
                     TypePrimitives.ValueType.Char, 
                     TypePrimitives.ValueType.Port)
                 //// (dump-env)
                 .DefinePrimitive(
-                    Symbol.New("dump-env"), 
+                    "dump-env",
                     (args, caller) => DumpEnv(caller.Env), 
                     0);
         }
@@ -237,9 +227,9 @@ namespace SimpleScheme
         /// <param name="port">The port to use, if supplied.</param>
         /// <param name="curr">The current output port.</param>
         /// <returns>The port to use.</returns>
-        private static OutputPort Port(Obj port, OutputPort curr)
+        private static OutputPort Port(ISchemeObject port, OutputPort curr)
         {
-            return port.IsEmptyList() ? curr : port.AsOutputPort();
+            return port is EmptyList ? curr : port.AsOutputPort();
         }
 
         /// <summary>
@@ -247,10 +237,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="env">The environment to dump.</param>
         /// <returns>Undefined instance.</returns>
-        private static Obj DumpEnv(Environment env)
+        private static ISchemeObject DumpEnv(Environment env)
         {
             env.DumpEnv();
-            return Undefined.New();
+            return Undefined.Instance;
         }
         #endregion
 
@@ -260,10 +250,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The obj to print.</param>
         /// <returns>Undefined value.</returns>
-        private Obj P(Obj x)
+        private ISchemeObject P(ISchemeObject x)
         {
             this.WriteLine(Printer.AsString(x, false));
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -272,10 +262,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to write.</param>
         /// <returns>The undefined object.</returns>
-        private Obj Display(Obj expr)
+        private ISchemeObject Display(ISchemeObject expr)
         {
             this.Write(Printer.AsString(expr, false));
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -284,10 +274,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to write.</param>
         /// <returns>The undefined object.</returns>
-        private Obj Write(Obj expr)
+        private ISchemeObject Write(ISchemeObject expr)
         {
             this.Write(Printer.AsString(expr, true));
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -297,30 +287,30 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to write.</param>
         /// <returns>The undefined object.</returns>
-        private Obj WriteChar(Obj expr)
+        private ISchemeObject WriteChar(ISchemeObject expr)
         {
             this.Write(Printer.AsString(expr, false));
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
         /// Close the output port.
         /// </summary>
         /// <returns>Undefined instance.</returns>
-        private Obj CloseOutputPort()
+        private ISchemeObject CloseOutputPort()
         {
             this.Close();
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
         /// Display a newline on the output port.
         /// </summary>
         /// <returns>Undefined instance.</returns>
-        private Obj Newline()
+        private ISchemeObject Newline()
         {
             this.Write(this.outp.NewLine);
-            return Undefined.New();
+            return Undefined.Instance;
         }
         #endregion
     }
@@ -332,23 +322,13 @@ namespace SimpleScheme
     public static class OutputPortExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme output port.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme output port.</returns>
-        public static bool IsOutputPort(this Obj obj)
-        {
-            return OutputPort.Is(obj);
-        }
-
-        /// <summary>
         /// Convert to output port
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The output port.</returns>
-        public static OutputPort AsOutputPort(this Obj obj)
+        public static OutputPort AsOutputPort(this ISchemeObject obj)
         {
-            if (OutputPort.Is(obj))
+            if (obj is OutputPort)
             {
                 return (OutputPort)obj;
             }
@@ -362,9 +342,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The text writer.</returns>
-        public static TextWriter AsTextWriter(this Obj obj)
+        public static TextWriter AsTextWriter(this ISchemeObject obj)
         {
-            if (OutputPort.Is(obj))
+            if (obj is OutputPort)
             {
                 return ((OutputPort)obj).Writer;
             }

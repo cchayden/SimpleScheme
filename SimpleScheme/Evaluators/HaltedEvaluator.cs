@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// This evaluator is returned to halt evaluation.

@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
@@ -33,7 +31,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateDefine(Obj expr, Environment env, Evaluator caller)
+        private EvaluateDefine(ISchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(InitialStep);
@@ -53,19 +51,19 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The define evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            if (expr.First().IsPair())
+            if (List.First(expr) is Pair)
             {
                 // Defun case -- create a lambda and bind it to the variable.
-                var symbol = expr.First().First();
-                if (!symbol.IsSymbol())
+                var symbol = List.First(List.First(expr));
+                if (!(symbol  is Symbol))
                 {
                     ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", Printer.AsString(symbol)));
                 }
 
-                env.Define(symbol.AsSymbol(), Lambda.New(expr.First().Rest(), expr.Rest(), env));
-                return caller.UpdateReturnValue(Undefined.New());
+                env.Define(symbol.AsSymbol(), Lambda.New(List.Rest(List.First(expr)), List.Rest(expr), env));
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             return new EvaluateDefine(expr, env, caller);
@@ -80,7 +78,7 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpression.Call(s.Expr.Second(), s.Env, s.ContinueHere(StoreDefineStep));
+            return EvaluateExpression.Call(List.Second(s.Expr), s.Env, s.ContinueHere(StoreDefineStep));
         }
 
         /// <summary>
@@ -90,8 +88,8 @@ namespace SimpleScheme
         /// <returns>Execution continues in the caller.</returns>
         private static Evaluator StoreDefineStep(Evaluator s)
         {
-            var symbol = s.Expr.First();
-            if (!symbol.IsSymbol())
+            var symbol = List.First(s.Expr);
+            if (!(symbol is Symbol))
             {
                 ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", Printer.AsString(symbol)));
             }

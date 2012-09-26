@@ -6,13 +6,12 @@ namespace SimpleScheme
     using System;
     using System.Text;
     using System.Threading;
-    using Obj = System.Object;
 
     /// <summary>
     /// Evaluates expressions step by step.
     /// Base class for all other evaluators.
     /// </summary>
-    public class Evaluator : IPrintable
+    public class Evaluator : IPrintable, ISchemeObject
     {
         #region Constants
         /// <summary>
@@ -59,12 +58,12 @@ namespace SimpleScheme
         /// <param name="args">The expression to evaluate.</param>
         /// <param name="env">The evaluator environment.</param>
         /// <param name="caller">The caller evaluator.</param>
-        protected Evaluator(Obj args, Environment env, Evaluator caller)
+        protected Evaluator(ISchemeObject args, Environment env, Evaluator caller)
         {
             this.CallerCaller = caller;
             this.Expr = args;
             this.Env = env;
-            this.ReturnedExpr = Undefined.New();
+            this.ReturnedExpr = Undefined.Instance;
             this.ReturnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
             this.traced = false;
@@ -105,6 +104,15 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Gets the evaluator type name.
+        /// </summary>
+        public string TypeName
+        {
+            // TODO cch return better result here
+            get { return "xxx"; }
+        }
+
+        /// <summary>
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
@@ -120,12 +128,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the expression being evaluated.
         /// </summary>
-        public object Expr { get; private set; }
+        public ISchemeObject Expr { get; private set; }
 
         /// <summary>
         /// Gets the returned expression from the last call.
         /// </summary>
-        public object ReturnedExpr { get; private set; }
+        public ISchemeObject ReturnedExpr { get; private set; }
 
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
@@ -180,7 +188,7 @@ namespace SimpleScheme
         /// <param name="expr">The value to save as the returned value.</param>
         /// <param name="env">The environment to save as the returned environment.</param>
         /// <returns>The next evaluator.  This is in the caller for return.</returns>
-        public static Evaluator TransferToStep(Evaluator nextStep, Obj expr, Environment env)
+        public static Evaluator TransferToStep(Evaluator nextStep, ISchemeObject expr, Environment env)
         {
             nextStep.ReturnedExpr = expr;
             nextStep.ReturnedEnv = env;
@@ -315,7 +323,7 @@ namespace SimpleScheme
         /// Call the interpreter in the environment to start evaluating steps.
         /// </summary>
         /// <returns>The return value of the evaluation (or halted or suspended).</returns>
-        public Obj EvalStep()
+        public ISchemeObject EvalStep()
         {
             return this.Env.Interp.EvalSteps(this);
         }
@@ -357,7 +365,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="formals">The environment variable names.</param>
         /// <param name="vals">The values of the variables.</param>
-        public void ReplaceEnvironment(Obj formals, Obj vals)
+        public void ReplaceEnvironment(ISchemeObject formals, ISchemeObject vals)
         {
             this.Env = new Environment(formals, vals, this.Env.LexicalParent);
         }
@@ -376,7 +384,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The new expr value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public Evaluator UpdateExpr(Obj exp)
+        public Evaluator UpdateExpr(ISchemeObject exp)
         {
             this.Expr = exp;
             return this;
@@ -390,7 +398,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is this evaluator.</returns>
         public Evaluator StepDownExpr()
         {
-            this.Expr = this.Expr.Rest();
+            this.Expr = List.Rest(this.Expr);
             return this;
         }
 
@@ -419,7 +427,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The returned value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public virtual Evaluator UpdateReturnValue(Obj exp)
+        public virtual Evaluator UpdateReturnValue(ISchemeObject exp)
         {
             this.ReturnedExpr = exp;
             return this;
@@ -431,7 +439,7 @@ namespace SimpleScheme
         /// <param name="exp">The return value</param>
         /// <param name="envir">The returned environment.</param>
         /// <returns>The next evaluator.</returns>
-        public virtual Evaluator UpdateReturnValue(Obj exp, Environment envir)
+        public virtual Evaluator UpdateReturnValue(ISchemeObject exp, Environment envir)
         {
             this.ReturnedExpr = exp;
             this.ReturnedEnv = envir;
@@ -444,7 +452,7 @@ namespace SimpleScheme
         /// <param name="exp">The return value.</param>
         /// <param name="flag">The return type.</param>
         /// <returns>The next evaluator.</returns>
-        public virtual Evaluator UpdateReturnValue(Obj exp, ReturnType flag)
+        public virtual Evaluator UpdateReturnValue(ISchemeObject exp, ReturnType flag)
         {
             this.ReturnedExpr = exp;
             this.ReturnFlag = flag;
@@ -483,7 +491,7 @@ namespace SimpleScheme
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="envir">The environment to save as the returned environment.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public Evaluator ReturnFromStep(Obj exp, Environment envir)
+        public Evaluator ReturnFromStep(ISchemeObject exp, Environment envir)
         {
             return this.CallerCaller.UpdateReturnValue(exp, envir);
         }
@@ -493,7 +501,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The value to save as the returned value.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public Evaluator ReturnFromStep(Obj exp)
+        public Evaluator ReturnFromStep(ISchemeObject exp)
         {
             return this.CallerCaller.UpdateReturnValue(exp);
         }
@@ -504,7 +512,7 @@ namespace SimpleScheme
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="flag">The return type.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public Evaluator ReturnFromStep(Obj exp, ReturnType flag)
+        public Evaluator ReturnFromStep(ISchemeObject exp, ReturnType flag)
         {
             return this.CallerCaller.UpdateReturnValue(exp, flag);
         }
@@ -524,7 +532,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is in the caller.</returns>
         public Evaluator ReturnUndefined()
         {
-            return ReturnFromStep(Undefined.New());
+            return ReturnFromStep(Undefined.Instance);
         }
         #endregion
 
@@ -555,7 +563,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder buf)
         {
             buf.AppendFormat("Exaluator {0}\n", TypePrimitives.SchemeTypeName(this));
-            string exp = this.Expr.IsEmptyList() ? "()" : this.Expr.ToString();
+            string exp = this.Expr is EmptyList ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {

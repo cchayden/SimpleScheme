@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Represents a continuation.
@@ -45,9 +44,9 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
-        /// Creates a new instance of the Continuation class.
+        /// Initializes a new instance of the Continuation class.
         /// The evaluator and its chain of evaluators back to the beginning have to be cloned because they
         ///   hold information about the progress of the evaluation.  When the evaluation proceeds
         ///   these evaluators might be altered, damaging the ability to continue, which is what makes the
@@ -62,16 +61,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static new bool Is(Obj obj)
-        {
-            return obj is Continuation;
-        }
-
         /// <summary>
         /// Write the continuation to the string builder.
         /// </summary>
@@ -102,10 +91,10 @@ namespace SimpleScheme
         /// <param name="args">The value to return.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(Obj args, Evaluator caller)
+        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(Continuation));
-            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), args.First(), this.savedEvaluator.Env);
+            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), List.First(args), this.savedEvaluator.Env);
         }
         #endregion
     }
@@ -117,23 +106,13 @@ namespace SimpleScheme
     public static class ContinuationExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme continuation.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme continuation.</returns>
-        public static bool IsContinuation(this Obj obj)
-        {
-            return Continuation.Is(obj);
-        }
-
-        /// <summary>
         /// Convert an object to a continuation.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The continuation.</returns>
-        public static Continuation AsContinuation(Obj obj)
+        public static Continuation AsContinuation(ISchemeObject obj)
         {
-            if (Continuation.Is(obj))
+            if (obj is Continuation)
             {
                 return (Continuation)obj;
             }

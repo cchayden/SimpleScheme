@@ -8,8 +8,6 @@ namespace SimpleScheme
     using System.Reflection;
     using System.Text;
 
-    using Obj = System.Object;
-
     /// <summary>
     /// Handles asynchronous CLR method calls.
     /// Call returns suspended, then on completion resumes execution.
@@ -32,7 +30,7 @@ namespace SimpleScheme
         /// <param name="targetClassName">The class name of the CLR function.</param>
         /// <param name="methodName">The method name of the CLR function.</param>
         /// <param name="argClassNames">The types of all method arguments.</param>
-        private AsynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
+        public AsynchronousClrProcedure(ISchemeObject targetClassName, ISchemeObject methodName, ISchemeObject argClassNames)
             : base(targetClassName, methodName)
         {
             this.SetArgClasses(this.ClassListBegin(argClassNames));
@@ -54,30 +52,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static new bool Is(Obj obj)
-        {
-            return obj is AsynchronousClrProcedure;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the AsynchronousClrProcedure class.
-        /// </summary>
-        /// <param name="targetClassName">The class name of the CLR function.</param>
-        /// <param name="methodName">The method name of the CLR function.</param>
-        /// <param name="argClassNames">The types of all method arguments.</param>
-        /// <returns>A new AsynchronousClrProcedure</returns>
-        public static AsynchronousClrProcedure New(Obj targetClassName, Obj methodName, Obj argClassNames)
-        {
-            return new AsynchronousClrProcedure(targetClassName, methodName, argClassNames);
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the async clr procedure primitives.
@@ -89,8 +63,8 @@ namespace SimpleScheme
             env
                 //// (method-async <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                   Symbol.New("method-async"),
-                   (args, caller) => new AsynchronousClrProcedure(args.First(), args.Second(), args.Rest().Rest()),
+                   "method-async",
+                   (args, caller) => new AsynchronousClrProcedure(List.First(args), List.Second(args), List.Rest(List.Rest(args))),
                    2,
                    MaxInt, 
                    TypePrimitives.ValueType.String);
@@ -129,24 +103,29 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(Obj args, Evaluator caller)
+        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(AsynchronousClrProcedure));
             object target = null;
             if (!this.MethodInfo.IsStatic)
             {
-                target = args.First();
-                args = args.Rest();
+                target = List.First(args);
+                args = List.Rest(args);
             }
 
-            if (target != null && target.IsSymbol())
+            if (target is ClrObject)
+            {
+                target = ((ClrObject)target).Value;
+            }
+
+            if (target is Symbol || target is SchemeString)
             {
                 target = target.ToString();
-            }
+            } 
             
             var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(target, caller));
             var res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
-            return new SuspendedEvaluator(res, caller);
+            return new SuspendedEvaluator(ClrObject.New(res), caller);
         }
         #endregion
 
@@ -158,11 +137,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of ValueType or type name elements.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
-        private List<Type> ClassListBegin(Obj args)
+        private List<Type> ClassListBegin(ISchemeObject args)
         {
             List<Type> array = ClassList(args);
-            array.Add(TypePrimitives.ToClass("System.AsyncCallback"));
-            array.Add(TypePrimitives.ToClass("System.Object"));
+            array.Add(TypePrimitives.ToClass((Symbol)"System.AsyncCallback"));
+            array.Add(TypePrimitives.ToClass((Symbol)"System.Object"));
 
             return array;
         }
@@ -177,7 +156,7 @@ namespace SimpleScheme
         /// <param name="args">A list of the method arguments.</param>
         /// <param name="state">State, passed on to completion function.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private object[] ToArgListBegin(object args, object state)
+        private object[] ToArgListBegin(ISchemeObject args, object state)
         {
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
             return this.ToArgList(args, additionalArgs);
@@ -193,8 +172,8 @@ namespace SimpleScheme
             object[] args = { result };
             var state = (Tuple<object, Evaluator>)result.AsyncState;
             Evaluator caller = state.Item2;
-            Obj res = this.endMethodInfo.Invoke(state.Item1, args);
-            state.Item2.UpdateReturnValue(res);
+            object res = this.endMethodInfo.Invoke(state.Item1, args);
+            state.Item2.UpdateReturnValue(ClrObject.New(res));
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
@@ -214,9 +193,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a synchronous CLR procedure.</returns>
-        public static bool IsAsynchronousClrProcedure(this Obj obj)
+        public static bool IsAsynchronousClrProcedure(this ISchemeObject obj)
         {
-            return AsynchronousClrProcedure.Is(obj);
+            return obj is AsynchronousClrProcedure;
         }
 
         /// <summary>
@@ -224,9 +203,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a asynchronous clr procedure.</returns>
-        public static AsynchronousClrProcedure AsAsynchronousClrProcedure(Obj obj)
+        public static AsynchronousClrProcedure AsAsynchronousClrProcedure(ISchemeObject obj)
         {
-            if (AsynchronousClrProcedure.Is(obj))
+            if (obj is AsynchronousClrProcedure)
             {
                 return (AsynchronousClrProcedure)obj;
             }

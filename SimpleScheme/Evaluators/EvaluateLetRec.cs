@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a letrec expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -28,28 +26,28 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly Obj body;
+        private readonly ISchemeObject body;
 
         /// <summary>
         /// The list of formal parameters to pass to the final lambda.
         /// This is variable1, variable2, ...
         /// </summary>
-        private readonly Obj formals;
+        private readonly ISchemeObject formals;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private Obj vars;
+        private ISchemeObject vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private Obj inits;
+        private ISchemeObject inits;
 
         /// <summary>
         /// Accumulate the list of init vals here for later assignment.
         /// </summary>
-        private Obj vals;
+        private ISchemeObject vals;
         #endregion
 
         #region Constructor
@@ -62,14 +60,14 @@ namespace SimpleScheme
         /// <param name="body">The let body.</param>
         /// <param name="vars">The variables to be bound.</param>
         /// <param name="inits">The initialization expressions.</param>
-        private EvaluateLetRec(Obj expr, Environment env, Evaluator caller, Obj body, Obj vars, Obj inits)
+        private EvaluateLetRec(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject body, ISchemeObject vars, ISchemeObject inits)
             : base(expr, env, caller)
         {
             this.body = body;
             this.vars = vars;
             this.inits = inits;
             this.formals = vars;
-            this.vals = EmptyList.New();
+            this.vals = EmptyList.Instance;
             ContinueHere(EvalInitStep);
             IncrementCounter(counter);
         }
@@ -83,30 +81,30 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            if (!expr.IsPair())
+            if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad arg list for letrec: " + expr);
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            Obj body = expr.Rest();
-            if (body.IsEmptyList())
+            ISchemeObject body = List.Rest(expr);
+            if (body is EmptyList)
             {
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            Obj bindings = expr.First();
-            Obj formals = List.MapFun(List.First, bindings.MakeList());
-            Obj inits = List.MapFun(List.Second, bindings.MakeList());
-            Obj initVals = List.Fill(formals.ListLength(), Undefined.New());
+            ISchemeObject bindings = List.First(expr);
+            ISchemeObject formals = List.MapFun(List.First, List.MakeList(bindings));
+            ISchemeObject inits = List.MapFun(List.Second, List.MakeList(bindings));
+            ISchemeObject initVals = List.Fill(List.ListLength(formals), Undefined.Instance);
 
             return new EvaluateLetRec(expr, new Environment(formals, initVals, env), caller, body, formals, inits);
         }
@@ -121,12 +119,12 @@ namespace SimpleScheme
         private static Evaluator EvalInitStep(Evaluator s)
         {
             var step = (EvaluateLetRec)s;
-            if (step.inits.IsEmptyList())
+            if (step.inits is EmptyList)
             {
                 return s.ContinueHere(ApplyProcStep);
             }
 
-            Lambda fun = Lambda.New(step.formals, step.inits.First().MakeList(), s.Env);  
+            Lambda fun = Lambda.New(step.formals, List.MakeList(List.First(step.inits)), s.Env);  
             return fun.ApplyWithtEnv(s.Env, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -140,9 +138,9 @@ namespace SimpleScheme
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
             var step = (EvaluateLetRec)s;
-            step.vals = s.ReturnedExpr.Cons(step.vals);
-            step.vars = step.vars.Rest();
-            step.inits = step.inits.Rest();
+            step.vals = List.Cons(s.ReturnedExpr, step.vals);
+            step.vars = List.Rest(step.vars);
+            step.inits = List.Rest(step.inits);
             return s.ContinueHere(EvalInitStep);
         }
 
@@ -156,14 +154,14 @@ namespace SimpleScheme
             var step = (EvaluateLetRec)s;
 
             // assign the inits into the env
-            Obj var = step.formals;
-            Obj vals = step.vals.ReverseList();
-            int n = step.formals.ListLength();
+            ISchemeObject var = step.formals;
+            ISchemeObject vals = List.ReverseList(step.vals);
+            int n = List.ListLength(step.formals);
             for (int i = 0; i < n; i++)
             {
-                s.Env.Set(var.First(), vals.First());
-                var = var.Rest();
-                vals = vals.Rest();
+                s.Env.Set(List.First(var), List.First(vals));
+                var = List.Rest(var);
+                vals = List.Rest(vals);
             }
 
             // apply the fun to the vals and return

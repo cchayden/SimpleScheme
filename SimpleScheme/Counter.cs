@@ -6,7 +6,6 @@ namespace SimpleScheme
     using System.Collections.Generic;
     using System.Text;
     using System.Threading;
-    using Obj = System.Object;
 
     /// <summary>
     /// Handles perf counters.
@@ -19,17 +18,17 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counterNames are stored here.
-        /// </summary>
-        private static readonly Dictionary<string, int> counterNames = new Dictionary<string, int>();
-
-        /// <summary>
         /// The maximum number of counters supported.
         /// Increase this if more counters are added and the increment function
         ///   starts throwing index out of bounds exceptions.
         /// It would be better if this was determined automatically, but that is expensive.
         /// </summary>
         private const int MaxCounters = 30;
+
+        /// <summary>
+        /// The counterNames are stored here.
+        /// </summary>
+        private static readonly Dictionary<string, int> counterNames = new Dictionary<string, int>();
 
         /// <summary>
         /// The actual counters.
@@ -59,23 +58,23 @@ namespace SimpleScheme
             env
                 //// (dump-counters)
                 .DefinePrimitive(
-                    Symbol.New("dump-counters"), 
+                    "dump-counters",
                     (args, caller) => caller.Interp.CurrentCounters.DumpCounters(caller.Interp.CurrentOutputPort), 
                     0)
                 //// (get-counters)
                 .DefinePrimitive(
-                    Symbol.New("get-counters"), 
+                    "get-counters",
                     (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 
                     0)
                 //// (get-counter <name>)
                 .DefinePrimitive(
-                    Symbol.New("get-counter"), 
-                    (args, caller) => caller.Interp.CurrentCounters.GetCounter(args.First()), 
+                    "get-counter",
+                    (args, caller) => caller.Interp.CurrentCounters.GetCounter(List.First(args)), 
                     1, 
                     TypePrimitives.ValueType.String)
                 //// (reset-counters)
                 .DefinePrimitive(
-                    Symbol.New("reset-counters"), 
+                    "reset-counters",
                     (args, caller) => caller.Interp.CurrentCounters.ResetCounters(), 
                     0);
         }
@@ -125,27 +124,27 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="port">The port to dump to.</param>
         /// <returns>The result is unspecified.</returns>
-        private Obj DumpCounters(OutputPort port)
+        private ISchemeObject DumpCounters(OutputPort port)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             this.Dump(sb);
             port.WriteLine(sb.ToString());
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
         /// Get the counters, as a list of name/count pairs.
         /// </summary>
         /// <returns>The list of counterName/count pairs.</returns>
-        private Obj GetCounters()
+        private ISchemeObject GetCounters()
         {
-            Obj res = EmptyList.New();
+            ISchemeObject res = EmptyList.Instance;
             foreach (var kvp in counterNames)
             {
                 int count = this.counters[kvp.Value];
                 if (count > 0)
                 {
-                    res = kvp.Key.Cons(count).Cons(res);
+                    res = List.Cons(List.Cons((Symbol)kvp.Key, (Number)count), res);
                 }
             }
 
@@ -157,15 +156,15 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The counter name.</param>
         /// <returns>The counter value.</returns>
-        private Obj GetCounter(Obj name)
+        private ISchemeObject GetCounter(ISchemeObject name)
         {
             string counterName = name.ToString();
             if (counterNames.ContainsKey(counterName))
             {
-                return this.counters[counterNames[counterName]];
+                return (Number)this.counters[counterNames[counterName]];
             }
 
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -190,14 +189,14 @@ namespace SimpleScheme
         /// Do not delete counter names.
         /// </summary>
         /// <returns>The result is unspecified.</returns>
-        private Obj ResetCounters()
+        private ISchemeObject ResetCounters()
         {
             for (int i = 0; i < this.counters.Length; i++)
             {
                 this.counters[i] = 0;
             }
 
-            return Undefined.New();
+            return Undefined.Instance;
         }
         #endregion
     }

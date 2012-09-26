@@ -1,4 +1,4 @@
-﻿// <copyright file="ISchemeType.cs" company="Charles Hayden">
+﻿// <copyright file="ISchemeObject.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,7 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// All scheme types implement this interface.
     /// </summary>
-    interface ISchemeType
+    public interface ISchemeObject
     {
         /// <summary>
         /// Gets the type name.
@@ -14,3 +14,5 @@ namespace SimpleScheme
         string TypeName { get; }
     }
 }
+
+// TODO cch Merge with IPrintable

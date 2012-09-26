@@ -6,7 +6,6 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using Obj = System.Object;
 
     /// <summary>
     /// The scheme interpreter instance.
@@ -35,7 +34,7 @@ namespace SimpleScheme
         /// <summary>
         /// The async result used in case the interpreter is called asynchronously.
         /// </summary>
-        private AsyncResult<object> asyncResult;
+        private AsyncResult<ISchemeObject> asyncResult;
         #endregion
 
         #region Constructors
@@ -79,7 +78,7 @@ namespace SimpleScheme
                 {
                     foreach (string file in files)
                     {
-                        this.LoadFile(file);
+                        this.LoadFile((Symbol)file);
                     }
                 }
             }
@@ -237,31 +236,31 @@ namespace SimpleScheme
             env
                 //// (trace-on)
                 .DefinePrimitive(
-                    Symbol.New("trace-on"), 
+                    "trace-on",
                     (args, caller) => SetTraceFlag(caller, true), 
                     0)
                 //// (trace-off)
                 .DefinePrimitive(
-                    Symbol.New("trace-off"), 
+                    "trace-off",
                     (args, caller) => SetTraceFlag(caller, false), 
                     0)
                 //// (counters-on)
                 .DefinePrimitive(
-                    Symbol.New("counters-on"), 
+                    "counters-on",
                     (args, caller) => SetCountFlag(caller, true), 
                     0)
                 //// (counters-off)
                 .DefinePrimitive(
-                    Symbol.New("counters-off"), 
+                    "counters-off",
                     (args, caller) => SetCountFlag(caller, false), 
                     0)
                 //// (backtrace)
                 .DefinePrimitive(
-                    Symbol.New("backtrace"), 
+                    "backtrace",
                     (args, caller) => Backtrace(caller), 
                     0);
                 env.DefinePrimitive(
-                    Symbol.New("debug"), 
+                    "debug",
                     (args, caller) => Debug(caller), 
                     0);
         }
@@ -273,7 +272,7 @@ namespace SimpleScheme
         ///   doing an async call.
         /// </summary>
         /// <param name="returnedExpr">The value to return as the asynchronous result.</param>
-        public void SetComplete(Obj returnedExpr)
+        public void SetComplete(ISchemeObject returnedExpr)
         {
             if (this.asyncResult != null)
             {
@@ -287,7 +286,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Obj Eval(Obj expr)
+        public ISchemeObject Eval(ISchemeObject expr)
         {
             this.asyncResult = null;
             try
@@ -297,7 +296,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.New();
+                return Undefined.Instance;
             }
         }
 
@@ -306,7 +305,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Obj EvalStr(string str)
+        public ISchemeObject EvalStr(string str)
         {
             try
             {
@@ -315,7 +314,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.New();
+                return Undefined.Instance;
             }
         }
 
@@ -327,7 +326,7 @@ namespace SimpleScheme
         /// <param name="cb">Call this when evaluation is complete.</param>
         /// <param name="state">Pass this through for the callback function.</param>
         /// <returns>Async result, used to monitor progress.</returns>
-        public IAsyncResult BeginEval(Obj expr, AsyncCallback cb, object state)
+        public IAsyncResult BeginEval(ISchemeObject expr, AsyncCallback cb, object state)
         {
             this.asyncResult = null;
             try
@@ -347,7 +346,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="ar">Async result from callback.</param>
         /// <returns>The expression value.</returns>
-        public object EndEval(IAsyncResult ar)
+        public ISchemeObject EndEval(IAsyncResult ar)
         {
             try
             {
@@ -364,7 +363,7 @@ namespace SimpleScheme
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        public Obj ReadEvalPrint()
+        public ISchemeObject ReadEvalPrint()
         {
             this.asyncResult = null;
             try
@@ -374,7 +373,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.New();
+                return Undefined.Instance;
             }
         }
 
@@ -387,20 +386,20 @@ namespace SimpleScheme
             this.asyncResult = null;
             try
             {
-                Obj expr;
+                ISchemeObject expr;
                 this.CurrentOutputPort.Write(Prompt);
                 this.CurrentOutputPort.Flush();
-                if (InputPort.IsEof(expr = this.CurrentInputPort.Read()))
+                if ((expr = this.CurrentInputPort.Read()) is Eof)
                 {
-                    return new CompletedAsyncResult<string>(InputPort.Eof);
+                    return new CompletedAsyncResult<Eof>(Eof.Instance);
                 }
 
                 return this.UnsafeBeginEval(
                     expr,
                     ar =>
                         {
-                            object val = UnsafeEndEval(ar);
-                            if (val != Undefined.New())
+                            ISchemeObject val = UnsafeEndEval(ar);
+                            if (val != Undefined.Instance)
                             {
                                 string output = Printer.AsString(val, false);
                                 this.CurrentOutputPort.WriteLine(output);
@@ -426,8 +425,8 @@ namespace SimpleScheme
         {
             while (true)
             {
-                Obj expr = this.ReadEvalPrint();
-                if (ReferenceEquals(expr, InputPort.Eof))
+                ISchemeObject expr = this.ReadEvalPrint();
+                if (ReferenceEquals(expr, Eof.Instance))
                 {
                     return;
                 }
@@ -442,7 +441,7 @@ namespace SimpleScheme
         /// If any of them are asynchronous, then the evaluation is NOT blocked, but continues on.
         /// </summary>
         /// <param name="fileName">The filename.</param>
-        public void LoadFile(Obj fileName)
+        public void LoadFile(ISchemeObject fileName)
         {
             string name = "-- bad file name";
             try
@@ -469,7 +468,7 @@ namespace SimpleScheme
         {
             try
             {
-                using (StringReader reader = new StringReader(str))
+                using (var reader = new StringReader(str))
                 {
                     this.Load(InputPort.New(reader, this));
                 }
@@ -485,7 +484,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The object that was read.</returns>
-        public Obj Read(InputPort inp)
+        public ISchemeObject Read(InputPort inp)
         {
             try
             {
@@ -494,7 +493,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.New();
+                return Undefined.Instance;
             }
         }
 
@@ -503,7 +502,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The object that was read</returns>
-        public Obj Read(string str)
+        public ISchemeObject Read(string str)
         {
             try
             {
@@ -512,7 +511,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.New();
+                return Undefined.Instance;
             }
         }
 
@@ -521,7 +520,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Obj ReadEval(InputPort inp)
+        public ISchemeObject ReadEval(InputPort inp)
         {
             try
             {
@@ -530,7 +529,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return Undefined.New();
+                return Undefined.Instance;
             }
         }
 
@@ -549,7 +548,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return String.Empty;
+                return string.Empty;
             }
         }
 
@@ -568,7 +567,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return String.Empty;
+                return string.Empty;
             }
         }
 
@@ -577,7 +576,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to print.</param>
         /// <returns>The string representing the object.</returns>
-        public string Print(Obj obj)
+        public string Print(ISchemeObject obj)
         {
             try
             {
@@ -600,7 +599,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Obj Eval(Obj expr, Environment env)
+        public ISchemeObject Eval(ISchemeObject expr, Environment env)
         {
             return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
@@ -610,7 +609,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended evaluator.</returns>
-        public Obj EvalSteps(Evaluator step)
+        public ISchemeObject EvalSteps(Evaluator step)
         {
             while (true)
             {
@@ -619,7 +618,7 @@ namespace SimpleScheme
                     return ErrorHandlers.InternalError("PC bad value");
                 }
 
-                Obj toReturn = step.ReturnedExpr;
+                ISchemeObject toReturn = step.ReturnedExpr;
                 if ((step = step.Divert()) == null)
                 {
                     return toReturn;
@@ -638,15 +637,15 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port.</param>
         /// <returns>Undefined instance.</returns>
-        public Obj Load(InputPort inp)
+        public ISchemeObject Load(InputPort inp)
         {
             while (true)
             {
-                Obj input;
-                if (InputPort.IsEof(input = inp.Read()))
+                ISchemeObject input;
+                if ((input = inp.Read()) is Eof)
                 {
                     inp.Close();
-                    return Undefined.New();
+                    return Undefined.Instance;
                 }
 
                 this.Eval(input);
@@ -674,10 +673,10 @@ namespace SimpleScheme
         /// <param name="caller">The calling evaluator.</param>
         /// <param name="flag">The new trace state.</param>
         /// <returns>Undefined object.</returns>
-        private static Obj SetTraceFlag(Evaluator caller, bool flag)
+        private static ISchemeObject SetTraceFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Trace = flag;
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -686,10 +685,10 @@ namespace SimpleScheme
         /// <param name="caller">The calling evaluator.</param>
         /// <param name="flag">The new count state.</param>
         /// <returns>Undefined object.</returns>
-        private static Obj SetCountFlag(Evaluator caller, bool flag)
+        private static ISchemeObject SetCountFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Count = flag;
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -697,22 +696,21 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The caller.</param>
         /// <returns>Undefined result.</returns>
-        private static Obj Backtrace(Evaluator caller)
+        private static ISchemeObject Backtrace(Evaluator caller)
         {
             caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
         /// Display whatever debug information is defined
         /// </summary>
-        /// <param name="caller"></param>
-        /// <returns></returns>
-        private static Object Debug(Evaluator caller)
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>Undefined object.</returns>
+        private static ISchemeObject Debug(Evaluator caller)
         {
-            string msg = "debug";
-            caller.Interp.CurrentOutputPort.WriteLine(msg);
-            return Undefined.New();
+            caller.Interp.CurrentOutputPort.WriteLine("debug");
+            return Undefined.Instance;
         }
         #endregion
 
@@ -722,9 +720,20 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The object that was read.</returns>
-        private static Obj UnsafeRead(InputPort inp)
+        private static ISchemeObject UnsafeRead(InputPort inp)
         {
             return inp.Read();
+        }
+
+        /// <summary>
+        /// End asynchronous evaluation and get the result.
+        /// </summary>
+        /// <param name="ar">Async result from callback.</param>
+        /// <returns>The expression value.</returns>
+        private static ISchemeObject UnsafeEndEval(IAsyncResult ar)
+        {
+            var res = ((AsyncResult<ISchemeObject>)ar).EndInvoke();
+            return res;
         }
 
         /// <summary>
@@ -732,9 +741,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The string to read from.</param>
         /// <returns>The object that was read.</returns>
-        private Obj UnsafeRead(string str)
+        private ISchemeObject UnsafeRead(string str)
         {
-            using (StringReader reader = new StringReader(str))
+            using (var reader = new StringReader(str))
             {
                 return UnsafeRead(InputPort.New(reader, this));
             }
@@ -745,7 +754,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        private Obj UnsafeEval(Obj expr)
+        private ISchemeObject UnsafeEval(ISchemeObject expr)
         {
             return this.Eval(expr, this.GlobalEnvironment);
         }
@@ -757,10 +766,10 @@ namespace SimpleScheme
         /// <param name="cb">Call this when evaluation is complete.</param>
         /// <param name="state">Pass this through for the callback function.</param>
         /// <returns>Async result, used to monitor progress.</returns>
-        private IAsyncResult UnsafeBeginEval(Obj expr, AsyncCallback cb, object state)
+        private IAsyncResult UnsafeBeginEval(ISchemeObject expr, AsyncCallback cb, object state)
         {
-            this.asyncResult = new AsyncResult<object>(cb, state);
-            Obj res = this.Eval(expr, this.GlobalEnvironment);
+            this.asyncResult = new AsyncResult<ISchemeObject>(cb, state);
+            ISchemeObject res = this.Eval(expr, this.GlobalEnvironment);
             if (res is SuspendedEvaluator)
             {
                 return this.asyncResult;
@@ -775,31 +784,21 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// End asynchronous evaluation and get the result.
-        /// </summary>
-        /// <param name="ar">Async result from callback.</param>
-        /// <returns>The expression value.</returns>
-        private static object UnsafeEndEval(IAsyncResult ar)
-        {
-            return ((AsyncResult<object>)ar).EndInvoke();
-        }
-
-        /// <summary>
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        private Obj UnsafeReadEvalPrint()
+        private ISchemeObject UnsafeReadEvalPrint()
         {
-            Obj expr;
+            ISchemeObject expr;
             this.CurrentOutputPort.Write(Prompt);
             this.CurrentOutputPort.Flush();
-            if (InputPort.IsEof(expr = this.CurrentInputPort.Read()))
+            if ((expr = this.CurrentInputPort.Read()) is Eof)
             {
-                return InputPort.Eof;
+                return Eof.Instance;
             }
 
-            Obj val = this.UnsafeEval(expr);
-            if (val != Undefined.New())
+            ISchemeObject val = this.UnsafeEval(expr);
+            if (val != Undefined.Instance)
             {
                 string output = Printer.AsString(val, false);
                 if (output.Length > 0)

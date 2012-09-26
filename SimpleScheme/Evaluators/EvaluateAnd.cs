@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a sequence by evaluating each member.
     /// If a value is #f then return it.  Otherwise return the last value.
@@ -31,7 +29,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateAnd(Obj expr, Environment env, Evaluator caller)
+        private EvaluateAnd(ISchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(EvalTestStep);
@@ -47,12 +45,12 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The and evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
-                return caller.UpdateReturnValue(SchemeBoolean.True);
+                return caller.UpdateReturnValue((SchemeBoolean)true);
             }
 
             return new EvaluateAnd(expr, env, caller);
@@ -67,14 +65,14 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            if (s.Expr.Rest().IsEmptyList())
+            if (List.Rest(s.Expr) is EmptyList)
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(s.Expr.First(), s.Env, s.Caller);
+                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -87,7 +85,7 @@ namespace SimpleScheme
         {
             if (SchemeBoolean.IsFalse(s.ReturnedExpr))
             {
-                return s.ReturnFromStep(SchemeBoolean.False);
+                return s.ReturnFromStep((SchemeBoolean)false);
             }
 
             s.StepDownExpr();

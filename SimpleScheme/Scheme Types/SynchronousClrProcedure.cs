@@ -3,8 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Handles normal synchronous CLR method calls.
@@ -19,11 +19,11 @@ namespace SimpleScheme
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="methodName">The method to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        private SynchronousClrProcedure(Obj targetClassName, Obj methodName, Obj argClassNames)
+        public SynchronousClrProcedure(ISchemeObject targetClassName, ISchemeObject methodName, ISchemeObject argClassNames)
             : base(targetClassName, methodName)
         {
             this.SetArgClasses(this.ClassList(argClassNames));
-            this.SetMethodInfo(this.MethodName, this.ArgClasses);
+            this.SetMethodInfo(this.MethodName.ToString(), this.ArgClasses);
             this.SetMinMax(this.ArgClasses.Count + (this.MethodInfo.IsStatic ? 0 : 1));
         }
         #endregion
@@ -38,30 +38,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static new bool Is(Obj obj)
-        {
-            return obj is SynchronousClrProcedure;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the SynchronousClrProcedure class.
-        /// </summary>
-        /// <param name="targetClassName">The class of the object to invoke.</param>
-        /// <param name="methodName">The method to invoke.</param>
-        /// <param name="argClassNames">The types of each argument.</param>
-        /// <returns>The SynchronousClrProcedure.</returns>
-        public static SynchronousClrProcedure New(Obj targetClassName, Obj methodName, Obj argClassNames)
-        {
-            return new SynchronousClrProcedure(targetClassName, methodName, argClassNames);
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the sync clr procedure primitives.
@@ -73,48 +49,48 @@ namespace SimpleScheme
             env
                 //// (method <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                   Symbol.New("method"),
-                   (args, caller) => New(
-                       Printer.AsString(args.First(), false), 
-                       Printer.AsString(args.Second(), false), 
-                       args.Rest().Rest()),
+                   "method",
+                   (args, caller) => new SynchronousClrProcedure(
+                       (Symbol)Printer.AsString(List.First(args), false),
+                       (Symbol)Printer.AsString(List.Second(args), false),
+                       List.Rest(List.Rest(args))),
                     2,
                     MaxInt, 
                     TypePrimitives.ValueType.String)
                 //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
-                   Symbol.New("property-get"),
-                   (args, caller) => New(
-                       Printer.AsString(args.First(), false), 
-                       "get_" + Printer.AsString(args.Second(), false), 
-                       args.Rest().Rest()),
+                   "property-get",
+                   (args, caller) => new SynchronousClrProcedure(
+                       (Symbol)Printer.AsString(List.First(args), false),
+                       (Symbol)("get_" + Printer.AsString(List.Second(args), false)), 
+                       List.Rest(List.Rest(args))),
                     2, 
                     TypePrimitives.ValueType.String)
                 //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
-                   Symbol.New("property-set"),
-                   (args, caller) => New(
-                       Printer.AsString(args.First(), false), 
-                       "set_" + Printer.AsString(args.Second(), false), 
-                       args.Rest().Rest()),
+                   "property-set",
+                   (args, caller) => new SynchronousClrProcedure(
+                       (Symbol)Printer.AsString(List.First(args), false), 
+                       (Symbol)("set_" + Printer.AsString(List.Second(args), false)), 
+                       List.Rest(List.Rest(args))),
                     3, 
                     TypePrimitives.ValueType.String)
                 //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
-                   Symbol.New("index-get"),
-                   (args, caller) => New(
-                       Printer.AsString(args.First(), false), 
-                       "get_Item", 
-                       args.Rest()),
+                   "index-get",
+                   (args, caller) => new SynchronousClrProcedure(
+                       (Symbol)Printer.AsString(List.First(args), false), 
+                       (Symbol)"get_Item", 
+                       List.Rest(args)),
                     2, 
                     TypePrimitives.ValueType.String)
                 //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
-                   Symbol.New("index-set"),
-                   (args, caller) => New(
-                       Printer.AsString(args.First(), false), 
-                       "set_Item", 
-                       args.Rest()),
+                   "index-set",
+                   (args, caller) => new SynchronousClrProcedure(
+                       (Symbol)Printer.AsString(List.First(args), false), 
+                       (Symbol)"set_Item",
+                       List.Rest(args)),
                     3, 
                     TypePrimitives.ValueType.String);
         }
@@ -149,24 +125,31 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        public override Evaluator Apply(Obj args, Evaluator caller)
+        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(SynchronousClrProcedure));
             object target = null;
             if (!this.MethodInfo.IsStatic)
             {
-                target = args.First();
-                args = args.Rest();
+                target = List.First(args);
+                args = List.Rest(args);
             }
 
-            if (target != null && target.IsSymbol())
+            if (target is ClrObject)
+            {
+                target = ((ClrObject)target).Value;
+            }
+
+            // TODO cch what is this for ?
+            if (target is Symbol || target is SchemeString)
             {
                 target = target.ToString();
             }
 
-            var res = this.MethodInfo.Invoke(target, this.ToArgList(args, null));
-            res = res ?? Undefined.New();
-            return caller.UpdateReturnValue(res);
+            var argList = this.ToArgList(args, null);
+            Object res = this.MethodInfo.Invoke(target, argList);
+            res = res ?? Undefined.Instance;
+            return caller.UpdateReturnValue(ClrObject.New(res));
         }
         #endregion
     }
@@ -177,23 +160,13 @@ namespace SimpleScheme
     public static class SynchronousClrProcedureExtension
     {
         /// <summary>
-        /// Tests whether to given object is a synchronous CLR procedure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a synchronous CLR procedure.</returns>
-        public static bool IsSynchronousClrProcedure(this Obj obj)
-        {
-            return SynchronousClrProcedure.Is(obj);
-        }
-
-        /// <summary>
         /// Convert object to synchronous clr procedure.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a synchronous clr procedure.</returns>
-        public static SynchronousClrProcedure AsSynchronousClrProcedure(this Obj obj)
+        public static SynchronousClrProcedure AsSynchronousClrProcedure(this ISchemeObject obj)
         {
-            if (SynchronousClrProcedure.Is(obj))
+            if (obj is SynchronousClrProcedure)
             {
                 return (SynchronousClrProcedure)obj;
             }

@@ -6,8 +6,6 @@ namespace SimpleScheme
 {
     using System;
 
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
@@ -40,7 +38,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        private EvaluateProc(Obj args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
+        private EvaluateProc(ISchemeObject args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
             : base(args, env, caller)
         {
             this.fn = fn;
@@ -67,7 +65,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Evaluator Call(Procedure fn, Obj args, Environment env, Evaluator caller)
+        public static Evaluator Call(Procedure fn, ISchemeObject args, Environment env, Evaluator caller)
         {
             return new EvaluateProc(args, env, caller, fn, true);
         }
@@ -80,7 +78,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Evaluator CallQuoted(Procedure fn, Obj args, Environment env, Evaluator caller)
+        public static Evaluator CallQuoted(Procedure fn, ISchemeObject args, Environment env, Evaluator caller)
         {
             return new EvaluateProc(args, env, caller, fn, false);
         }
@@ -121,7 +119,7 @@ namespace SimpleScheme
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("{0}: ({1} {2})", EvaluatorName, fn.ProcedureName, s.ReturnedExpr.First()));
+                    String.Format("{0}: ({1} {2})", EvaluatorName, fn.ProcedureName, List.First(s.ReturnedExpr)));
             }
 
             // Pass s.Caller to return to the caller rather than to here, since there is

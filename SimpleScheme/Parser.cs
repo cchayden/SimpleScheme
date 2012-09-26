@@ -7,7 +7,6 @@ namespace SimpleScheme
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Parse scheme expressions.
@@ -18,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// Store the names and values of all named characters.
         /// </summary>
-        private static readonly Dictionary<string, char> charNames = new Dictionary<string, char>
+        private static readonly Dictionary<string, char> CharNames = new Dictionary<string, char>
             {
                 { "nul", '\x0000' },
                 { "soh", '\x0001' },
@@ -75,7 +74,7 @@ namespace SimpleScheme
         /// <summary>
         /// The token buffer to read from.
         /// </summary>
-        private Tuple<bool, object> tokBuffer = new Tuple<bool, object>(false, null);
+        private Tuple<bool, ISchemeObject> tokBuffer = new Tuple<bool, ISchemeObject>(false, null);
 
         /// <summary>
         /// Used to make a transcript of the input.
@@ -100,7 +99,7 @@ namespace SimpleScheme
         /// </summary>
         public TextReader Reader
         { 
-            get { return this.inp;}
+            get { return this.inp; }
         }
         #endregion
 
@@ -110,7 +109,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The expression that was read.</returns>
-        public Obj ReadExpr(StringBuilder sb)
+        public ISchemeObject ReadExpr(StringBuilder sb)
         {
             this.logger = sb;
             return this.Read();
@@ -120,15 +119,15 @@ namespace SimpleScheme
         /// Take a peek at the next character, without consuming it.
         /// </summary>
         /// <returns>The next character (as a scheme character).</returns>
-        public Obj PeekChar()
+        public ISchemeObject PeekChar()
         {
             int p = this.Peek();
             if (p == -1)
             {
-                return InputPort.Eof;
+                return Eof.Instance;
             }
 
-            return Character.New((char)p);
+            return (Character)(char)p;
         }
 
         /// <summary>
@@ -137,7 +136,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The character read, or EOF.</returns>
-        public object ReadChar(StringBuilder sb)
+        public ISchemeObject ReadChar(StringBuilder sb)
         {
             this.logger = sb;
             try
@@ -150,15 +149,15 @@ namespace SimpleScheme
 
                 if (ch == -1)
                 {
-                    return InputPort.Eof;
+                    return Eof.Instance;
                 }
 
-                return Character.New((char)ch);
+                return (Character)(char)ch;
             }
             catch (IOException ex)
             {
                 ErrorHandlers.Warn("On input, exception: " + ex);
-                return InputPort.Eof;
+                return Eof.Instance;
             }
         }
 
@@ -184,11 +183,11 @@ namespace SimpleScheme
         /// <returns>The next word.  Could be empty string.</returns>
         public string NextWord(Func<char, bool> test)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             while (true)
             {
                 int ch = this.ReadOrPop();
-                if (! test((char)ch))
+                if (!test((char)ch))
                 {
                     this.PushCharBuffer(ch);
                     return sb.ToString();
@@ -198,6 +197,166 @@ namespace SimpleScheme
             }
         }
 
+        /// <summary>
+        /// Gets the next token from the input stream.
+        /// Gets a pushed token if there is one, otherwise reads from the input.
+        /// </summary>
+        /// <returns>The next token.</returns>
+        public ISchemeObject NextToken()
+        {
+            // See if we should re-use a pushed token or character
+            ISchemeObject token = this.GetTokenFromBuffer();
+            if (token != null)
+            {
+                return token;
+            }
+
+            int ch = this.ReadOrPop();
+
+            // Skip whitespace
+            while (char.IsWhiteSpace((char)ch))
+            {
+                ch = this.ReadNextChar();
+            }
+
+            // See what kind of non-whitespace character we got
+            switch (ch)
+            {
+                case -1:
+                    // end of file
+                    return Token.Eof;
+
+                case '(':
+                    return Token.Lparen;
+                case ')':
+                    return Token.Rparen;
+                case '`':
+                    return Token.BackQuote;
+                case '\'':
+                    return Token.SingleQuote;
+
+                case ',':
+                    // read comma or unquote splicing
+                    ch = this.ReadNextChar();
+                    if (ch == '@')
+                    {
+                        return Token.Splice;
+                    }
+
+                    this.PushCharBuffer(ch);
+                    return Token.Comma;
+
+                case ';':
+                    // skip comment
+                    this.NextWord(IsCommentChar);
+                    return this.NextToken();
+
+                case '"':
+                    // read a string
+                    {
+                        var buff = new StringBuilder { Length = 0 };
+                        while ((ch = this.ReadNextChar()) != '"' & ch != -1)
+                        {
+                            buff.Append((char)((ch == '\\') ? this.ReadNextChar() : ch));
+                        }
+
+                        if (ch == -1)
+                        {
+                            ErrorHandlers.Warn("EOF inside of a string.");
+                        }
+
+                        return (SchemeString)buff;
+                    }
+
+                case '#':
+                    // read a boolean, vector, number, or character
+                    switch (ch = this.ReadNextChar())
+                    {
+                        case 't':
+                        case 'T':
+                            return (SchemeBoolean)true;
+
+                        case 'f':
+                        case 'F':
+                            return (SchemeBoolean)false;
+
+                        case '(':
+                            this.PushCharBuffer(ch);
+                            return Vector.FromList(this.Read());
+
+                        case '\\':
+                            ch = this.ReadNextChar();
+                            if (char.IsLetter((char)ch))
+                            {
+                                this.PushCharBuffer(ch);
+                                string tok = this.NextWord(char.IsLetter);
+                                if (tok.Length == 1)
+                                {
+                                    return (Character)(char)ch;
+                                }
+
+                                tok = tok.ToLower();
+                                if (CharNames.ContainsKey(tok))
+                                {
+                                    return (Character)CharNames[tok];
+                                }
+
+                                // At this point there is a token and also a buffered character
+                                this.PushTokenBuffer(new Token(tok.Substring(1)));
+                                return (Character)(char)ch;
+                            }
+
+                            return (Character)(char)ch;
+
+                        case 'e':
+                        case 'i':
+                        case 'd':
+                            return (Number)Convert.ToInt32(this.NextWord(IsDecimalDigit), 10);
+
+                        case 'b':
+                            return (Number)Convert.ToInt32(this.NextWord(IsBinaryDigit), 2);
+
+                        case 'o':
+                            return (Number)Convert.ToInt32(this.NextWord(IsOctalDigit), 8);
+
+                        case 'x':
+                            return (Number)Convert.ToInt32(this.NextWord(IsHexDigit), 16);
+
+                        default:
+                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
+                            return this.NextToken();
+                    }
+
+                default:
+                    {
+                        // read a number or symbol
+                        int c = ch;
+                        this.PushCharBuffer(ch);
+                        string buf = this.NextWord(IsSymbolChar);
+
+                        // read a number
+                        if (char.IsDigit((char)c) || c == '.' || c == '+' || c == '-')
+                        {
+                            double value;
+                            if (double.TryParse(buf, out value))
+                            {
+                                return (Number)value;
+                            }
+                        }
+
+                        if (buf == ".")
+                        {
+                            return Token.Dot;
+                        }
+
+                        // read a symbol
+                        return (Symbol)buf.ToLower();
+                    }
+            }
+        }
+        #endregion
+
+        #region Private Methods
         /// <summary>
         /// Test for hex digit.
         /// </summary>
@@ -259,163 +418,6 @@ namespace SimpleScheme
         {
             return (short)ch != -1 && ch != '\n' && ch != '\r'; 
         }
-
-        /// <summary>
-        /// Gets the next token from the input stream.
-        /// Gets a pushed token if there is one, otherwise reads from the input.
-        /// </summary>
-        /// <returns>The next token.</returns>
-        public object NextToken()
-        {
-            // See if we should re-use a pushed token or character
-            object token = this.GetTokenFromBuffer();
-            if (token != null)
-            {
-                return token;
-            }
-
-            int ch = this.ReadOrPop();
-
-            // Skip whitespace
-            while (char.IsWhiteSpace((char)ch))
-            {
-                ch = this.ReadNextChar();
-            }
-
-            // See what kind of non-whitespace character we got
-            switch (ch)
-            {
-                case -1:
-                    // end of file
-                    return InputPort.Eof;
-
-                case '(':
-                case ')':
-                case '`':
-                case '\'':
-                    // read punctuation
-                    return new string((char)ch, 1);
-
-                case ',':
-                    // read comma or unquote splicing
-                    ch = this.ReadNextChar();
-                    if (ch == '@')
-                    {
-                        return ",@";
-                    }
-
-                    this.PushCharBuffer(ch);
-                    return ",";
-
-                case ';':
-                    // skip comment
-                    this.NextWord(IsCommentChar);
-                    return this.NextToken();
-
-                case '"':
-                    // read a string
-                    {
-                        StringBuilder buff = new StringBuilder { Length = 0 };
-                        while ((ch = this.ReadNextChar()) != '"' & ch != -1)
-                        {
-                            buff.Append((char)((ch == '\\') ? this.ReadNextChar() : ch));
-                        }
-
-                        if (ch == -1)
-                        {
-                            ErrorHandlers.Warn("EOF inside of a string.");
-                        }
-
-                        return SchemeString.New(buff);
-                    }
-
-                case '#':
-                    // read a boolean, vector, number, or character
-                    switch (ch = this.ReadNextChar())
-                    {
-                        case 't':
-                        case 'T':
-                            return SchemeBoolean.True;
-
-                        case 'f':
-                        case 'F':
-                            return SchemeBoolean.False;
-
-                        case '(':
-                            this.PushCharBuffer(ch);
-                            return Vector.FromList(this.Read());
-
-                        case '\\':
-                            ch = this.ReadNextChar();
-                            if (Char.IsLetter((char)ch))
-                            {
-                                this.PushCharBuffer(ch);
-                                string tok = this.NextWord(char.IsLetter);
-                                if (tok.Length == 1)
-                                {
-                                    return Character.New((char)ch);
-                                }
-
-                                tok = tok.ToLower();
-                                if (charNames.ContainsKey(tok))
-                                {
-                                    return Character.New(charNames[tok]);
-                                }
-
-                                // At this point there is a token and also a buffered character
-                                this.PushTokenBuffer(tok.Substring(1));
-                                return Character.New((char)ch);
-                            }
-
-                            return Character.New((char)ch);
-
-                        case 'e':
-                        case 'i':
-                        case 'd':
-                            return Number.New(Convert.ToInt32(this.NextWord(IsDecimalDigit), 10));
-
-                        case 'b':
-                            return Number.New(Convert.ToInt32(this.NextWord(IsBinaryDigit), 2));
-
-                        case 'o':
-                            return Number.New(Convert.ToInt32(this.NextWord(IsOctalDigit), 8));
-
-                        case 'x':
-                            return Number.New(Convert.ToInt32(this.NextWord(IsHexDigit), 16));
-
-                        default:
-                            ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
-                            return this.NextToken();
-                    }
-
-                default:
-                    {
-                        // read a number or symbol
-                        int c = ch;
-                        this.PushCharBuffer(ch);
-                        string buf = this.NextWord(IsSymbolChar);
-
-                        // read a number
-                        if (char.IsDigit((char)c) || c == '.' || c == '+' || c == '-')
-                        {
-                            double value;
-                            if (double.TryParse(buf, out value))
-                            {
-                                return Number.New(value);
-                            }
-                        }
-
-                        if (buf == ".")
-                        {
-                            return buf;
-                        }
-
-                        // read a symbol
-                        return Symbol.New(buf.ToLower());
-                    }
-            }
-        }
-
         #endregion
 
         #region Character Buffer Methods
@@ -453,9 +455,9 @@ namespace SimpleScheme
         /// Get a token from the token buffer.
         /// </summary>
         /// <returns>The buffered token.  If no token is buffered, return null.</returns>
-        private object GetTokenFromBuffer()
+        private ISchemeObject GetTokenFromBuffer()
         {
-            object token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
+            ISchemeObject token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
             this.ClearTokenBuffer();
             return token;
         }
@@ -465,16 +467,16 @@ namespace SimpleScheme
         /// </summary>
         private void ClearTokenBuffer()
         {
-            this.tokBuffer = new Tuple<bool, object>(false, null);
+            this.tokBuffer = new Tuple<bool, ISchemeObject>(false, null);
         }
 
         /// <summary>
         /// Push the character into the buffer.
         /// </summary>
         /// <param name="token">The token to push.</param>
-        private void PushTokenBuffer(object token)
+        private void PushTokenBuffer(ISchemeObject token)
         {
-            this.tokBuffer = new Tuple<bool, object>(true, token);
+            this.tokBuffer = new Tuple<bool, ISchemeObject>(true, token);
         }
         #endregion
 
@@ -485,40 +487,44 @@ namespace SimpleScheme
         /// Warns about extra right parentheses and dots.
         /// </summary>
         /// <returns>The expression as a list.</returns>
-        private Obj Read()
+        private ISchemeObject Read()
         {
             try
             {
-                object token = this.NextToken();
+                ISchemeObject token = this.NextToken();
 
-                switch (token as string)
+                if (token is Token)
                 {
-                    case "(":
-                        token = this.ReadTail(false);
-                        break;
+                    switch (token.ToString())
+                    {
+                        case "#EOF!":
+                            token = Eof.Instance;
+                            break;
+                        case "(":
+                            token = this.ReadTail(false);
+                            break;
 
-                    case ")":
-                        ErrorHandlers.Warn("Extra ) ignored.");
-                        token = this.Read();
-                        break;
-                    case ".":
-                        ErrorHandlers.Warn("Extra . ignored.");
-                        token = this.Read();
-                        break;
-                    case "'": 
-                        token = Symbol.New("quote").MakeList(this.Read());
-                        break;
-                    case "`":
-                        token = Symbol.New("quasiquote").MakeList(this.Read());
-                        break;
-                    case ",": 
-                        token = Symbol.New("unquote").MakeList(this.Read());
-                        break;
-                    case ",@": 
-                        token = Symbol.New("unquote-splicing").MakeList(this.Read());
-                        break;
-                    default:
-                        break;
+                        case ")":
+                            ErrorHandlers.Warn("Extra ) ignored.");
+                            token = this.Read();
+                            break;
+                        case ".":
+                            ErrorHandlers.Warn("Extra . ignored.");
+                            token = this.Read();
+                            break;
+                        case "'":
+                            token = List.MakeList((Symbol)"quote", this.Read());
+                            break;
+                        case "`":
+                            token = List.MakeList((Symbol)"quasiquote", this.Read());
+                            break;
+                        case ",":
+                            token = List.MakeList((Symbol)"unquote", this.Read());
+                            break;
+                        case ",@":
+                            token = List.MakeList((Symbol)"unquote-splicing", this.Read());
+                            break;
+                    }
                 }
 
                 return token;
@@ -608,40 +614,43 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="dotOk">True if a dot is OK at this point.</param>
         /// <returns>A list of the tokens read.</returns>
-        private Obj ReadTail(bool dotOk)
+        private ISchemeObject ReadTail(bool dotOk)
         {
-            object token = this.NextToken();
-            string tok = token as string;
-            if (tok == InputPort.Eof)
+            ISchemeObject token = this.NextToken();
+            if (token is Token)
             {
-                return ErrorHandlers.IoError("EOF during read.");
-            }
-
-            if (tok == ")")
-            {
-                return EmptyList.New();  // there was no more
-            }
-
-            if (tok == ".")
-            {
-                if (!dotOk)
+                string tok = token.ToString();
+                if (tok == "#EOF!")
                 {
-                    ErrorHandlers.Warn("Dot not allowed here, ignored.");
-                    return this.ReadTail(false);
+                    return ErrorHandlers.IoError("EOF during read.");
                 }
 
-                object result = this.Read();
-                token = this.NextToken();
-                if (token as string != ")")
+                if (tok == ")")
                 {
-                    ErrorHandlers.Warn("Expecting ')' got " + token + " after dot");
+                    return EmptyList.Instance; // there was no more
                 }
 
-                return result;
+                if (tok == ".")
+                {
+                    if (!dotOk)
+                    {
+                        ErrorHandlers.Warn("Dot not allowed here, ignored.");
+                        return this.ReadTail(false);
+                    }
+
+                    ISchemeObject result = this.Read();
+                    token = this.NextToken();
+                    if (!(token is Token) || token.ToString() != ")")
+                    {
+                        ErrorHandlers.Warn("Expecting ')' got " + token + " after dot");
+                    }
+
+                    return result;
+                }
             }
 
             this.PushTokenBuffer(token);
-            return this.Read().Cons(this.ReadTail(true));
+            return List.Cons(this.Read(), this.ReadTail(true));
         }
         #endregion
     }

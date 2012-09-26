@@ -1,6 +1,6 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="R4RSTest.cs" company="">
-// TODO: Update copyright text.
+// <copyright file="R4RSTest.cs" company="Charles Hayden">
+// Copyright © 2011 by Charles Hayden.
 // </copyright>
 // -----------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ namespace Tests
         [DeploymentItem("r4rstest.scm"), TestMethod]
         public void FullTest()
         {
-            this.interpreter.LoadFile("r4rstest.scm");
+            this.interpreter.LoadFile((Symbol)"r4rstest.scm");
         }
     }
 }

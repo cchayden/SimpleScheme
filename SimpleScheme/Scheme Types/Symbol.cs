@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Handles scheme symbols.
@@ -12,7 +11,7 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : IPrintable, ICleanable, ISchemeType
+    public class Symbol : IPrintable, ICleanable, ISchemeObject
     {
         #region Fields
         /// <summary>
@@ -90,41 +89,43 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
-        /// Identifies objects of this scheme type.
+        /// Converts a string into a Smybol.
         /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
+        /// <param name="name">The string.</param>
+        /// <returns>The corresponding Symbol.</returns>
+        public static implicit operator Symbol(string name)
         {
-            return obj is Symbol;
+            return New(name);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the Symbol class.
+        /// </summary>
+        /// <param name="name">The value of the symbol.</param>
+        /// <returns>A new Smybol.</returns>
+        public static Symbol New(string name)
+        {
+            return new Symbol(name);
+        }
+        #endregion
+
+        #region Public Static Methods
         /// <summary>
         /// Test two symbols for equality.
         /// </summary>
         /// <param name="obj1">The first symbol.</param>
         /// <param name="obj2">The second symbol.</param>
         /// <returns>True if they are both symbols and represent the same symbol.</returns>
-        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(ISchemeObject obj1, ISchemeObject obj2)
         {
-            if (!obj1.IsSymbol() || !obj2.IsSymbol())
+            if (!(obj1 is Symbol) || !(obj2 is Symbol))
             {
-                return SchemeBoolean.False;
+                return false;
             }
 
-            return obj1.ToString() == obj2.ToString() ? SchemeBoolean.True : SchemeBoolean.False;
-        }
-
-        /// <summary>
-        /// Create a new symbol with the given name.
-        /// </summary>
-        /// <param name="name">The symbol name.</param>
-        /// <returns>The new symbol</returns>
-        public static Symbol New(string name)
-        {
-            return new Symbol(name);
+            return obj1.ToString() == obj2.ToString();
         }
         #endregion
 
@@ -138,14 +139,14 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
                 .DefinePrimitive(
-                    New("string->symbol"), 
-                    (args, caller) => New(SchemeString.AsString(args.First())), 
+                    new Symbol("string->symbol"), 
+                    (args, caller) => new Symbol(SchemeString.AsString(List.First(args))), 
                     1, 
                     TypePrimitives.ValueType.String)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
                 .DefinePrimitive(
-                    New("symbol?"), 
-                    (args, caller) => SchemeBoolean.Truth(args.First().IsSymbol()), 
+                    new Symbol("symbol?"), 
+                    (args, caller) => SchemeBoolean.Truth(List.First(args) is Symbol), 
                     1, 
                     TypePrimitives.ValueType.Obj);
         }
@@ -201,24 +202,14 @@ namespace SimpleScheme
     public static class SymbolExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme symbol.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme symbol.</returns>
-        public static bool IsSymbol(this Obj obj)
-        {
-            return Symbol.Is(obj);
-        }
-
-        /// <summary>
         /// Check that the object is a symbol.
         /// The actual symbol name is contained in the Symbol.
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding symbol.</returns>
-        public static Symbol AsSymbol(this Obj x)
+        public static Symbol AsSymbol(this ISchemeObject x)
         {
-            if (Symbol.Is(x))
+            if (x is Symbol)
             {
                 return (Symbol)x;
             }

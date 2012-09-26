@@ -4,13 +4,12 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : IPrintable, ICleanable, ISchemeType
+    public sealed class Pair : IPrintable, ICleanable, ISchemeObject
     {
         #region Constructor
         /// <summary>
@@ -19,7 +18,7 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
-        public Pair(Obj first, Obj rest)
+        private Pair(ISchemeObject first, ISchemeObject rest)
         {
             this.First = first;
             this.Rest = rest;
@@ -30,20 +29,20 @@ namespace SimpleScheme
         /// Make a one-element list.
         /// </summary>
         /// <param name="first">The first object.</param>
-        public Pair(Obj first)
+        private Pair(ISchemeObject first)
         {
             this.First = first;
-            this.Rest = EmptyList.New();
+            this.Rest = EmptyList.Instance;
         }
 
         /// <summary>
-        /// Initializes a new instance of the Pair class.
+        /// Prevents a default instance of the <see cref="Pair"/> class from being created. 
         /// Make an empty list.
         /// </summary>
-        public Pair()
+        private Pair()
         {
-            this.First = EmptyList.New();
-            this.Rest = EmptyList.New();
+            this.First = EmptyList.Instance;
+            this.Rest = EmptyList.Instance;
         }
         #endregion
 
@@ -61,25 +60,50 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the first obj of the pair.
         /// </summary>
-        public object First { get; private set; }
+        public ISchemeObject First { get; private set; }
 
         /// <summary>
         /// Gets the rest of the objs in the list.
         /// </summary>
-        public object Rest { get; private set; }
+        public ISchemeObject Rest { get; private set; }
+        #endregion
+
+        #region New
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
+        /// Make an empty list.
+        /// </summary>
+        /// <returns>A new Pair.</returns>
+        public static Pair New()
+        {
+            return new Pair();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
+        /// Make a one-element list.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <returns>A new Pair.</returns>
+        public static Pair New(ISchemeObject first)
+        {
+            return new Pair(first);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <param name="rest">The rest of the objs in the list are 
+        /// referenced by this.</param>
+        /// <returns>A new Pair.</returns>
+        public static Pair New(ISchemeObject first, ISchemeObject rest)
+        {
+            return new Pair(first, rest);
+        }
         #endregion
 
         #region Public Static Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Pair;
-        }
-
         /// <summary>
         /// Tests whether two pairs are equal.
         /// The first object must be a pair.
@@ -88,11 +112,11 @@ namespace SimpleScheme
         /// <param name="obj1">The first object (must be a pair).</param>
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both pairs and all elements are equal.</returns>
-        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(ISchemeObject obj1, ISchemeObject obj2)
         {
-            if (!obj2.IsPair())
+            if (!(obj2 is Pair))
             {
-                return SchemeBoolean.False;
+                return (SchemeBoolean)false;
             }
 
             var pair1 = obj1.AsPair();
@@ -100,15 +124,15 @@ namespace SimpleScheme
 
             while (true)
             {
-                if (!SchemeBoolean.Equal(pair1.First(), pair2.First()).Value)
+                if (!SchemeBoolean.Equal(List.First(pair1), List.First(pair2)).Value)
                 {
-                    return SchemeBoolean.False;
+                    return (SchemeBoolean)false;
                 }
 
-                obj1 = pair1.Rest();
-                obj2 = pair2.Rest();
+                obj1 = List.Rest(pair1);
+                obj2 = List.Rest(pair2);
 
-                if (!obj1.IsPair() || !obj2.IsPair())
+                if (!(obj1 is Pair) || !(obj2 is Pair))
                 {
                     return SchemeBoolean.Equal(obj1, obj2);
                 }
@@ -126,7 +150,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The new value for the first cell.</param>
         /// <returns>The new value</returns>
-        public Obj SetFirst(Obj value)
+        public ISchemeObject SetFirst(ISchemeObject value)
         {
             return this.First = value;
         }
@@ -136,7 +160,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="value">The new value for the rest cell.</param>
         /// <returns>The new value</returns>
-        public Obj SetRest(Obj value)
+        public ISchemeObject SetRest(ISchemeObject value)
         {
             return this.Rest = value;
         }
@@ -151,15 +175,15 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public void PrintString(bool quoted, StringBuilder buf)
         {
-            Obj tail = this.Rest();
-            if (tail.IsPair() && tail.Rest().IsEmptyList())
+            ISchemeObject tail = List.Rest(this);
+            if (tail is Pair && List.Rest(tail) is EmptyList)
             {
                 string special = null;
 
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
-                var curr = this.First();
-                if (curr.IsSymbol())
+                var curr = List.First(this);
+                if (curr is Symbol)
                 {
                     switch (curr.ToString())
                     {
@@ -183,28 +207,28 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    Printer.PrintString(this.Second(), quoted, buf);
+                    Printer.PrintString(List.Second(this), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            Printer.PrintString(this.First(), quoted, buf);
+            Printer.PrintString(List.First(this), quoted, buf);
 
             int len = 0;
-            while (tail.IsPair())
+            while (tail is Pair)
             {
                 buf.Append(' ');
-                Printer.PrintString(tail.First(), quoted, buf);
-                Obj oldTail = tail;
-                tail = tail.Rest();
+                Printer.PrintString(List.First(tail), quoted, buf);
+                ISchemeObject oldTail = tail;
+                tail = List.Rest(tail);
                 len++;
                 if (tail == oldTail)
                 {
                     // this is a circular structure -- truncate
                     buf.Append(" ... [circular list]");
-                    tail = EmptyList.New();
+                    tail = EmptyList.Instance;
                     break;
                 }
 
@@ -212,12 +236,12 @@ namespace SimpleScheme
                 {
                     // maybe this is a circular structure -- truncate
                     buf.Append(" ... [too long]");
-                    tail = EmptyList.New();
+                    tail = EmptyList.Instance;
                     break;
                 }
             }
 
-            if (!tail.IsEmptyList())
+            if (!(tail is EmptyList))
             {
                 buf.Append(" . ");
                 Printer.PrintString(tail, quoted, buf);
@@ -231,12 +255,12 @@ namespace SimpleScheme
         /// </summary>
         public void Clean()
         {
-            Cleaner.Clean(this.First());
-            var tail = this.Rest();
-            while (tail.IsPair())
+            Cleaner.Clean(List.First(this));
+            var tail = List.Rest(this);
+            while (tail is Pair)
             {
-                Cleaner.Clean(tail.First());
-                tail = tail.Rest();
+                Cleaner.Clean(List.First(tail));
+                tail = List.Rest(tail);
             }
         }
 
@@ -258,23 +282,13 @@ namespace SimpleScheme
     public static class PairExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme pair.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme pair.</returns>
-        public static bool IsPair(this Obj obj)
-        {
-            return Pair.Is(obj);
-        }
-
-        /// <summary>
         /// Convert an object into a pair.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a pair.</returns>
-        public static Pair AsPair(this Obj obj)
+        public static Pair AsPair(this ISchemeObject obj)
         {
-            if (Pair.Is(obj))
+            if (obj is Pair)
             {
                 return (Pair)obj;
             }

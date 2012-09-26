@@ -3,10 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
-    using System.Collections.Generic;
-    using Obj = System.Object;
 
     /// <summary>
     /// In charge of printing values.
@@ -23,7 +20,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The obj to convert.</param>
         /// <returns>The string representing the obj.</returns>
-        public static string AsString(Obj x)
+        public static string AsString(ISchemeObject x)
         {
             return AsString(x, true);
         }
@@ -34,7 +31,7 @@ namespace SimpleScheme
         /// <param name="x">The obj to convert.</param>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <returns>The string representing the obj.</returns>
-        public static string AsString(Obj x, bool quoted)
+        public static string AsString(ISchemeObject x, bool quoted)
         {
             var buf = new StringBuilder();
             PrintString(x, quoted, buf);
@@ -49,21 +46,15 @@ namespace SimpleScheme
         /// <param name="x">The obj to convert.</param>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void PrintString(Obj x, bool quoted, StringBuilder buf)
+        public static void PrintString(ISchemeObject x, bool quoted, StringBuilder buf)
         {
-            if (x == null)
-            {
-                return;
-            }
-
             if (x is IPrintable)
             {
                 ((IPrintable)x).PrintString(quoted, buf);
             }
             else
             {
-                // use the built-in ToString
-                buf.Append(x);   
+                ErrorHandlers.PrintError(x);
             }
         }
 
@@ -72,11 +63,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to get the type name of.</param>
         /// <returns>The type name.</returns>
-        public static string TypeName(Obj obj)
+        public static string TypeName(ISchemeObject obj)
         {
-            if (obj is ISchemeType)
+            if (obj is ISchemeObject)
             {
-                return ((ISchemeType)obj).TypeName;
+                return ((ISchemeObject)obj).TypeName;
             }
 
             return "Unknown";

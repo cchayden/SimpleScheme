@@ -3,9 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
-    using Obj = System.Object;
-
     /// <summary>
     /// In charge of cleaning values.
     /// Recurse into objects that have substructure.
@@ -21,7 +18,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object to clean.</param>
         /// <returns>The cleaned object.</returns>
-        public static Obj Clean(Obj x)
+        public static ISchemeObject Clean(ISchemeObject x)
         {
             if (x == null)
             {

@@ -5,7 +5,6 @@ namespace SimpleScheme
 {
     using System;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// A lambda stores the environment and a program to run.
@@ -24,28 +23,18 @@ namespace SimpleScheme
         /// <summary>
         /// A list of variable names, to be matched with values later.
         /// </summary>
-        private readonly Obj formalParameters;
+        private readonly ISchemeObject formalParameters;
 
         /// <summary>
         /// The program to execute.
         /// </summary>
-        private readonly Obj body;
+        private readonly ISchemeObject body;
 
         /// <summary>
         /// The environment in which to execute.
         /// </summary>
         private readonly Environment env;
         #endregion
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public new static bool Is(Obj obj)
-        {
-            return obj is Lambda;
-        }
 
         #region Constructor
         /// <summary>
@@ -55,7 +44,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        protected Lambda(Obj formalParameters, Obj body, Environment env) :
+        protected Lambda(ISchemeObject formalParameters, ISchemeObject body, Environment env) :
             base(0, 0)
         {
             this.formalParameters = formalParameters;
@@ -85,19 +74,20 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
-        /// Create a new Lambda.
+        /// Initializes a new instance of the Lambda class.
         /// </summary>
         /// <param name="formalParameters">A list of variable names, to be matched with 
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        /// <returns>A new Lambda.</returns>
-        public static Lambda New(Obj formalParameters, Obj body, Environment env)
+        /// <returns>A Lambda.New.</returns>
+        public static Lambda New(ISchemeObject formalParameters, ISchemeObject body, Environment env)
         {
             return new Lambda(formalParameters, body, env);
         }
+        #endregion
 
         #region Public Methods
         /// <summary>
@@ -132,8 +122,8 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
         {
-            return this.body.Rest().IsEmptyList() ? 
-                EvaluateExpression.Call(this.body.First(), givenEnv, caller) : 
+            return List.Rest(this.body) is EmptyList ? 
+                EvaluateExpression.Call(List.First(this.body), givenEnv, caller) : 
                 EvaluateSequence.Call(this.body, givenEnv, caller);
         }
 
@@ -145,9 +135,9 @@ namespace SimpleScheme
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(Obj args, Evaluator caller)
+        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
         {
-            CheckArgs(args, typeof(Lambda));
+            this.CheckArgs(args, typeof(Lambda));
             return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);
         }
 
@@ -165,7 +155,7 @@ namespace SimpleScheme
                 bodyStr = bodyStr.Substring(1, bodyStr.Length - 2).Trim();
             }
 
-            return String.Format("({0} {1} {2})", tag, this.formalParameters, bodyStr);
+            return string.Format("({0} {1} {2})", tag, this.formalParameters, bodyStr);
         }
 
         /// <summary>
@@ -175,26 +165,25 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             int count = 0;
-            Obj vars = this.formalParameters;
+            ISchemeObject vars = this.formalParameters;
             while (true)
             {
-                if (vars.IsEmptyList())
+                if (vars is EmptyList)
                 {
                     this.SetMinMax(count);
                     return;
                 }
 
-                if (!vars.IsPair())
+                if (!(vars is Pair))
                 {
-                    this.SetMinMax(count, vars.IsSymbol() ? MaxInt : count);
+                    this.SetMinMax(count, vars is Symbol ? MaxInt : count);
                     return;
                 }
 
-                vars = vars.Rest();
+                vars = List.Rest(vars);
                 count++;
             }
         }
-        #endregion
     }
 
     #region Extension Class
@@ -204,23 +193,13 @@ namespace SimpleScheme
     public static class LambdaExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme lambda.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme lambda.</returns>
-        public static bool IsLambda(this Obj obj)
-        {
-            return Lambda.Is(obj);
-        }
-
-        /// <summary>
         /// Convert object to lambda.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a lambda.</returns>
-        public static Lambda AsLambda(this Obj obj)
+        public static Lambda AsLambda(this ISchemeObject obj)
         {
-            if (Lambda.Is(obj))
+            if (obj is Lambda)
             {
                 return (Lambda)obj;
             }

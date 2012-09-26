@@ -4,19 +4,18 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public class Vector : IPrintable, ISchemeType
+    public class Vector : IPrintable, ISchemeObject
     {
         #region Fields
         /// <summary>
         /// The elements of the vector.
         /// </summary>
-        private readonly Obj[] vec;
+        private readonly ISchemeObject[] vec;
         #endregion
 
         #region Constructors
@@ -26,21 +25,45 @@ namespace SimpleScheme
         /// <param name="length"> The number of elements in the vector.</param>
         private Vector(int length)
         {
-            this.vec = new Obj[length];
+            this.vec = new ISchemeObject[length];
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Vector"/> class.
+        /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
         /// </summary>
         /// <param name="length">The vector length.</param>
         /// <param name="fill">The fill.</param>
-        private Vector(int length, Obj fill) : this(length)
+        private Vector(int length, ISchemeObject fill) : this(length)
         {
+            fill = fill is EmptyList ? Undefined.Instance : fill;
             for (int i = 0; i < this.vec.Length; i++)
             {
                 this.vec[i] = fill;
             }
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class from an array of objects.
+        /// </summary>
+        /// <param name="elems">The vector elements.</param>
+        private Vector(object[] elems) : this(elems.Length)
+        {
+            for (int i = 0; i < this.vec.Length; i++)
+            {
+                this.vec[i] = ClrObject.FromClrObject(elems[i]);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
+        /// </summary>
+        /// <param name="length">The vector length as a scheme object.</param>
+        /// <param name="fill">The value to initialize the vector entries to.</param>
+        /// <returns>A vector of the objs filled with the fill object.</returns>
+        private Vector(ISchemeObject length, ISchemeObject fill) : this(length.AsInt(), fill)
+        {
+        }
+
         #endregion
 
         #region SchemeType Accessors
@@ -67,40 +90,66 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="index">The index.</param>
         /// <returns>The value at the given index.</returns>
-        public Obj this[int index]
+        public ISchemeObject this[int index]
         {
             get { return this.vec[index]; }
             set { this.vec[index] = value; }
         }
         #endregion
 
-        #region Public Static Methods
+        #region New
         /// <summary>
-        /// Create a new Vector.
+        /// Converts an object array into a vector.
         /// </summary>
-        /// <param name="count">The size for the new vector.</param>
-        /// <returns>The vector.</returns>
-        public static Vector New(int count)
+        /// <param name="elems">The object array.</param>
+        /// <returns>The corresponding Vector.</returns>
+        public static implicit operator Vector(object[] elems)
         {
-            return new Vector(count);
+            return New(elems);
         }
 
         /// <summary>
-        /// Create a vector from a length and an optional fill value.
+        /// Initializes a new instance of the <see cref="Vector"/> class.
+        /// </summary>
+        /// <param name="length"> The number of elements in the vector.</param>
+        /// <returns>A new Vector.</returns>
+        public static Vector New(int length)
+        {
+            return new Vector(length);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
         /// </summary>
         /// <param name="length">The vector length.</param>
-        /// <param name="fill">The value to initialize the vector entries to.</param>
-        /// <returns>A vector of the objs filled with the fill object.</returns>
-        public static Vector New(Obj length, Obj fill)
+        /// <param name="fill">The fill.</param>
+        /// <returns>A new Vector.</returns>
+        public static Vector New(int length, ISchemeObject fill)
         {
-            if (fill.IsEmptyList())
-            {
-                fill = Undefined.New();
-            }
-
-            return new Vector(length.AsInt(), fill);
+            return new Vector(length, fill);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class from an array of objects.
+        /// </summary>
+        /// <param name="elems">The vector elements.</param>
+        /// <returns>A new Vector.</returns>
+        public static Vector New(object[] elems)
+        {
+            return new Vector(elems);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
+        /// </summary>
+        /// <param name="length">The vector length as a scheme object.</param>
+        /// <param name="fill">The value to initialize the vector entries to.</param>
+        /// <returns>A vector of the objs filled with the fill object.</returns>
+        /// <returns>A new Vector.</returns>
+        public static Vector New(ISchemeObject length, ISchemeObject fill)
+        {
+            return new Vector(length, fill);
+        }
         #endregion
 
         #region Define Primitives
@@ -114,64 +163,64 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("list->vector"), 
-                        (args, caller) => FromList(args.First()), 
+                        "list->vector",
+                        (args, caller) => FromList(List.First(args)), 
                         1, 
                         TypePrimitives.ValueType.PairOrEmpty)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("make-vector"), 
-                        (args, caller) => New(args.First(), args.Second()), 
+                        "make-vector",
+                        (args, caller) => New(List.First(args), List.Second(args)), 
                         1, 
                         2, 
                         TypePrimitives.ValueType.Number, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("vector"), 
+                        "vector",
                         (args, caller) => FromList(args), 
                         0, 
                         MaxInt, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("vector->list"), 
-                        (args, caller) => ToList(args.First()), 
+                        "vector->list",
+                        (args, caller) => ToList(List.First(args)), 
                         1, 
                         TypePrimitives.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("vector-fill"), 
-                        (args, caller) => Fill(args.First(), args.Second()), 
+                        "vector-fill",
+                        (args, caller) => Fill(List.First(args), List.Second(args)), 
                         2, 
                         TypePrimitives.ValueType.Vector, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("vector-length"), 
-                        (args, caller) => args.First().AsVector().Length, 
+                        "vector-length",
+                        (args, caller) => (Number)List.First(args).AsVector().Length,
                         1, 
                         TypePrimitives.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("vector-ref"), 
-                        (args, caller) => Get(args.First(), args.Second()), 
+                        "vector-ref",
+                        (args, caller) => Get(List.First(args), List.Second(args)), 
                         2, 
                         TypePrimitives.ValueType.Vector, 
                         TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("vector-set!"), 
-                        (args, caller) => Set(args.First(), args.Second(), args.Third()), 
+                        "vector-set!",
+                        (args, caller) => Set(List.First(args), List.Second(args), List.Third(args)), 
                         3, 
                         TypePrimitives.ValueType.Vector, 
                         TypePrimitives.ValueType.Number, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
                 .DefinePrimitive( 
-                        Symbol.New("vector?"), 
-                        (args, caller) => SchemeBoolean.Truth(args.First().IsVector()), 
+                        "vector?",
+                        (args, caller) => SchemeBoolean.Truth(List.First(args) is Vector), 
                         1, 
                         TypePrimitives.ValueType.Obj);
         }
@@ -185,29 +234,29 @@ namespace SimpleScheme
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both vectors of equal length and 
         /// all elements are equal.</returns>
-        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(ISchemeObject obj1, ISchemeObject obj2)
         {
-            if (!obj2.IsVector())
+            if (!(obj2 is Vector))
             {
-                return SchemeBoolean.False;
+                return false;
             }
 
             var vector1 = obj1.AsVector();
             var vector2 = obj2.AsVector();
             if (vector1.Length != vector2.Length)
             {
-                return SchemeBoolean.False;
+                return false;
             }
 
             for (int i = 0; i < vector1.Length; i++)
             {
                 if (!SchemeBoolean.Equal(vector1[i], vector2[i]).Value)
                 {
-                    return SchemeBoolean.False;
+                    return false;
                 }
             }
 
-            return SchemeBoolean.True;
+            return true;
         }
 
         /// <summary>
@@ -216,7 +265,7 @@ namespace SimpleScheme
         /// <param name="vector">The vector to get from.</param>
         /// <param name="k">The index into the vector to get.</param>
         /// <returns>The vector element.</returns>
-        public static Obj Get(Obj vector, Obj k)
+        public static ISchemeObject Get(ISchemeObject vector, ISchemeObject k)
         {
             return vector.AsVector()[k.AsInt()];
         }
@@ -228,10 +277,10 @@ namespace SimpleScheme
         /// <param name="index">The index into the vector to set.</param>
         /// <param name="obj">The new value to set.</param>
         /// <returns>Undefined value.</returns>
-        public static Obj Set(Obj vector, Obj index, Obj obj)
+        public static ISchemeObject Set(ISchemeObject vector, ISchemeObject index, ISchemeObject obj)
         {
             vector.AsVector()[index.AsInt()] = obj;
-            return Undefined.New();
+            return Undefined.Instance;
         }
 
         /// <summary>
@@ -239,19 +288,19 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="objs">A list of values to put in the vector.</param>
         /// <returns>A vector of the objs.</returns>
-        public static Vector FromList(Obj objs)
+        public static Vector FromList(ISchemeObject objs)
         {
-            Vector vec = New(objs.ListLength());
-            if (!objs.IsPair())
+            var vec = new Vector(List.ListLength(objs));
+            if (!(objs is Pair))
             {
                 return vec;
             }
 
             int i = 0;
-            while (objs.IsPair())
+            while (objs is Pair)
             {
-                vec[i++] = objs.First();
-                objs = objs.Rest();
+                vec[i++] = List.First(objs);
+                objs = List.Rest(objs);
             }
 
             return vec;
@@ -259,16 +308,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Vector;
-        }
-
         /// <summary>
         /// Write the vector to the string builder.
         /// </summary>
@@ -279,7 +318,7 @@ namespace SimpleScheme
             buf.Append("#(");
             if (this.vec.Length > 0)
             {
-                foreach (Obj v in this.vec)
+                foreach (ISchemeObject v in this.vec)
                 {
                     Printer.PrintString(v, quoted, buf);
                     buf.Append(' ');
@@ -296,7 +335,7 @@ namespace SimpleScheme
         /// </summary>
         public void Clean()
         {
-            foreach (Obj v in this.vec)
+            foreach (ISchemeObject v in this.vec)
             {
                 Cleaner.Clean(v);
             }
@@ -430,13 +469,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="vector">The vector.</param>
         /// <returns>The vector as a list.</returns>
-        internal static Obj ToList(Obj vector)
+        internal static ISchemeObject ToList(ISchemeObject vector)
         {
             Vector vec = vector.AsVector();
-            Obj result = EmptyList.New();
+            ISchemeObject result = EmptyList.Instance;
             for (int i = vec.Length - 1; i >= 0; i--)
             {
-                result = vec[i].Cons(result);
+                result = List.Cons(vec[i], result);
             }
 
             return result;
@@ -450,7 +489,7 @@ namespace SimpleScheme
         /// <param name="vector">The vector to fill.</param>
         /// <param name="fill">The value to fill with.</param>
         /// <returns>Return value is unspecified.</returns>
-        private static Obj Fill(Obj vector, Obj fill)
+        private static ISchemeObject Fill(ISchemeObject vector, ISchemeObject fill)
         {
             Vector vec = vector.AsVector();
             for (int i = 0; i < vec.Length; i++)
@@ -458,7 +497,7 @@ namespace SimpleScheme
                 vec[i] = fill;
             }
 
-            return Undefined.New();
+            return Undefined.Instance;
         }
         #endregion
     }
@@ -469,23 +508,13 @@ namespace SimpleScheme
     public static class VectorExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme vector.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme vector.</returns>
-        public static bool IsVector(this Obj obj)
-        {
-            return Vector.Is(obj);
-        }
-
-        /// <summary>
         /// Check that the object is a vector.
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding vector.</returns>
-        public static Vector AsVector(this Obj x)
+        public static Vector AsVector(this ISchemeObject x)
         {
-            if (Vector.Is(x))
+            if (x is Vector)
             {
                 return (Vector)x;
             }

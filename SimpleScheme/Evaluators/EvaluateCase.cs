@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a case expression.
     /// First evaluate the key.
@@ -33,17 +31,17 @@ namespace SimpleScheme
         /// <summary>
         /// The list of clauses to test.
         /// </summary>
-        private Obj clauses;
+        private ISchemeObject clauses;
 
         /// <summary>
         /// The evaluated key.
         /// </summary>
-        private Obj keyVal;
+        private ISchemeObject keyVal;
 
         /// <summary>
         /// The list of expressions in a matched clause
         /// </summary>
-        private Obj exprList;
+        private ISchemeObject exprList;
         #endregion
 
         #region Constructor
@@ -54,7 +52,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="clauses">The case clauses.</param>
-        private EvaluateCase(Obj expr, Environment env, Evaluator caller, Obj clauses)
+        private EvaluateCase(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject clauses)
             : base(expr, env, caller)
         {
             this.clauses = clauses;
@@ -71,9 +69,9 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The case evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            return new EvaluateCase(expr, env, caller, expr.Rest());
+            return new EvaluateCase(expr, env, caller, List.Rest(expr));
         }
         #endregion
 
@@ -85,7 +83,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalKeyStep(Evaluator s)
         {
-            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(CheckClauseStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(CheckClauseStep));
         }
 
         /// <summary>
@@ -100,36 +98,36 @@ namespace SimpleScheme
         {
             var step = (EvaluateCase)s;
             step.keyVal = s.ReturnedExpr;
-            while (!step.clauses.IsEmptyList())
+            while (!(step.clauses is EmptyList))
             {
-                Obj clause = step.clauses.First();
-                if (!clause.IsPair())
+                ISchemeObject clause = List.First(step.clauses);
+                if (!(clause is Pair))
                 {
                     return (Evaluator)ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
 
-                Obj data = clause.First();
-                step.exprList = clause.Rest();
+                ISchemeObject data = List.First(clause);
+                step.exprList = List.Rest(clause);
 
                 // look for else datum
-                if (data.IsSymbol() && data.ToString() == "else")
+                if (data is Symbol && data.ToString() == "else")
                 {
                     return step.EvalExpr();
                 }
 
                 // look for a match within the list of datum items
-                while (data.IsPair())
+                while (data is Pair)
                 {
-                    if (SchemeBoolean.Eqv(step.keyVal, data.First()).Value)
+                    if (SchemeBoolean.Eqv(step.keyVal, List.First(data)).Value)
                     {
                         return step.EvalExpr();
                     }
 
-                    data = data.Rest();
+                    data = List.Rest(data);
                 }
 
                 // didn't find a match -- look at the next clause
-               step.clauses = step.clauses.Rest();
+               step.clauses = List.Rest(step.clauses);
             }
 
             // no clauses matched -- unspecified
@@ -142,7 +140,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         private Evaluator EvalExpr()
         {
-            if (this.exprList.IsEmptyList())
+            if (this.exprList is EmptyList)
             {
                 // if no expressions, return key value
                 return ReturnFromStep(this.keyVal);

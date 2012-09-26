@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate an if expression.
     /// Evaluate the first part, then depending on its truth value, either
@@ -33,7 +31,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateIf(Obj expr, Environment env, Evaluator caller)
+        private EvaluateIf(ISchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(EvalTestStep);
@@ -49,7 +47,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateIf(expr, env, caller);
         }
@@ -63,7 +61,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(EvalAlternativeStep));
+            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(EvalAlternativeStep));
         }
 
         /// <summary>
@@ -75,9 +73,9 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            Obj toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? s.Expr.Second() : s.Expr.Third();
+            ISchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? List.Second(s.Expr) : List.Third(s.Expr);
             return EvaluateExpression.Call(
-                toEvaluate.IsEmptyList() ? Undefined.New() : toEvaluate, s.Env, s.Caller);
+                toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }
         #endregion
     }

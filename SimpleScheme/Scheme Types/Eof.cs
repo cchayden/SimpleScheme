@@ -1,4 +1,4 @@
-﻿// <copyright file="Undefined.cs" company="Charles Hayden">
+﻿// <copyright file="Eof.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -6,34 +6,34 @@ namespace SimpleScheme
     using System.Text;
 
     /// <summary>
-    /// Represents an undefined scheme value.
+    /// Represents the Eof object
     /// This type is immutable.
     /// </summary>
-    public class Undefined : IPrintable, ISchemeObject
+    public class Eof : IPrintable, ISchemeObject
     {
-        /// <summary>
-        /// The undefined object instance.
-        /// </summary>
-        private static readonly Undefined undefined = new Undefined();
-
         #region Constructors
+
         /// <summary>
-        /// Prevents a default instance of the <see cref="Undefined"/> class from being created. 
+        /// The single Eof instance.
         /// </summary>
-        private Undefined()
+        private static readonly Eof eof = new Eof();
+
+        /// <summary>
+        /// Prevents a default instance of the <see cref="Eof"/> class from being created. 
+        /// </summary>
+        private Eof()
         {
         }
-
         #endregion
 
         #region Instance
         /// <summary>
-        /// Gets an undefined object.
+        /// Gets the Eof object.
         /// </summary>
-        /// <returns>An undefined object.</returns>
-        public static Undefined Instance
+        /// <returns>A new Eof object.</returns>
+        public static Eof Instance
         {
-            get { return undefined; }
+            get { return eof; }
         }
         #endregion
 
@@ -43,15 +43,14 @@ namespace SimpleScheme
         /// </summary>
         public string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Undefined); }
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Eof); }
         }
         #endregion
 
         #region Public Methods
         /// <summary>
-        /// Write the undefined object to the string builder.
+        /// Write the Eof object to the string builder.
         /// If not quoted, write nothing.
-        /// One of the main reasons for this type is to suppress output.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
@@ -70,30 +69,30 @@ namespace SimpleScheme
         /// <returns>The undefined type name.</returns>
         public override string ToString()
         {
-            return "<undefined>";
+            return "<eof>";
         }
 
         #endregion
     }
 
     /// <summary>
-    /// Extensions for Undefined
+    /// Extensions for Eof
     /// </summary>
-    public static class UndefinedExtension
+    public static class EofExtension
     {
         /// <summary>
-        /// Convert object to undefined object.
+        /// Convert object to eof object.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an undefined object.</returns>
-        public static Undefined AsUndefined(this ISchemeObject obj)
+        /// <returns>The object as an eof object.</returns>
+        public static Eof AsEof(this ISchemeObject obj)
         {
-            if (obj is Undefined)
+            if (obj is Eof)
             {
-                return (Undefined)obj;
+                return (Eof)obj;
             }
 
-            ErrorHandlers.TypeError(typeof(Undefined), obj);
+            ErrorHandlers.TypeError(typeof(Eof), obj);
             return null;
         }
     }    

@@ -4,13 +4,12 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Handles a scheme character.
     /// Scheme characters are represented as .NET char objects.
     /// </summary>
-    public class Character : IPrintable, ISchemeType
+    public class Character : IPrintable, ISchemeObject
     {
         #region Fields
         /// <summary>
@@ -50,6 +49,29 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region New
+        /// <summary>
+        /// Converts a char into a Character.
+        /// </summary>
+        /// <param name="c">The char.</param>
+        /// <returns>The corresponding Character.</returns>
+        public static implicit operator Character(char c)
+        {
+            return New(c);
+        }
+
+        /// <summary>
+        /// Create a new Character.
+        /// </summary>
+        /// <param name="c">The char.</param>
+        /// <returns>The corresponding Character.</returns>
+        public static Character New(char c)
+        {
+            // TODO cch define some standard characters that don't need to be created.
+            return new Character(c);
+        }
+        #endregion
+
         #region Private Static
         /// <summary>
         /// Tests whether two Characters are equal.
@@ -57,43 +79,21 @@ namespace SimpleScheme
         /// <param name="obj1">The first object (must be a scheme Character).</param>
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both the same character.</returns>
-        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(ISchemeObject obj1, ISchemeObject obj2)
         {
-            if (!obj2.IsCharacter())
+            if (!(obj2 is Character))
             {
-                return SchemeBoolean.False;
+                return false;
             }
 
             var char1 = obj1.AsCharacter();
             var char2 = obj2.AsCharacter();
             if (char1.c != char2.C)
             {
-                return SchemeBoolean.False;
+                return false;
             }
 
-            return SchemeBoolean.True;
-        }
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Character;
-        }
-
-        /// <summary>
-        /// Create a new Character object;
-        /// </summary>
-        /// <param name="c">The character that this represents.</param>
-        /// <returns>A new Character.</returns>
-        public static Character New(char c)
-        {
-            return new Character(c);
+            return true;
         }
         #endregion
 
@@ -107,116 +107,116 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char->integer"), 
-                        (args, caller) => Number.New(args.First().AsCharacter().C), 
+                        "char->integer",
+                        (args, caller) => (Number)List.First(args).AsCharacter().C,
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-alphabetic?"), 
-                        (args, caller) => SchemeBoolean.Truth(char.IsLetter(args.First().AsCharacter().C)), 
+                        "char-alphabetic?",
+                        (args, caller) => SchemeBoolean.Truth(char.IsLetter(List.First(args).AsCharacter().C)), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                    Symbol.New("char-ci<=?"), 
-                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) <= 0), 
+                    "char-ci<=?",
+                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) <= 0), 
                     2, 
                     TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-ci<?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) < 0), 
+                        "char-ci<?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) < 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-ci=?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) == 0), 
+                        "char-ci=?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) == 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci>=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-ci>=?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) >= 0), 
+                        "char-ci>=?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) >= 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-ci>?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) > 0), 
+                        "char-ci>?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) > 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-downcase"), 
-                        (args, caller) => New(char.ToLower(args.First().AsCharacter().C)), 
+                        "char-downcase",
+                        (args, caller) => (Character)char.ToLower(List.First(args).AsCharacter().C), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-lower-case?"), 
-                        (args, caller) => SchemeBoolean.Truth(char.IsLower(args.First().AsCharacter().C)), 
+                        "char-lower-case?",
+                        (args, caller) => SchemeBoolean.Truth(char.IsLower(List.First(args).AsCharacter().C)), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-numeric?"), 
-                        (args, caller) => SchemeBoolean.Truth(char.IsDigit(args.First().AsCharacter().C)), 
+                        "char-numeric?",
+                        (args, caller) => SchemeBoolean.Truth(char.IsDigit(List.First(args).AsCharacter().C)), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-upcase"), 
-                        (args, caller) => New(char.ToUpper(args.First().AsCharacter().C)), 
+                        "char-upcase",
+                        (args, caller) => (Character)char.ToUpper(List.First(args).AsCharacter().C), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-upper-case?"), 
-                        (args, caller) => SchemeBoolean.Truth(char.IsUpper(args.First().AsCharacter().C)), 
+                        "char-upper-case?",
+                        (args, caller) => SchemeBoolean.Truth(char.IsUpper(List.First(args).AsCharacter().C)), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char-whitespace?"), 
-                        (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(args.First().AsCharacter().C)), 
+                        "char-whitespace?",
+                        (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(List.First(args).AsCharacter().C)), 
                         1, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                       Symbol.New("char<=?"), 
-                       (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) <= 0), 
+                       "char<=?",
+                       (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) <= 0), 
                        2, 
                        TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char<?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) < 0), 
+                        "char<?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) < 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char=?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) == 0), 
+                        "char=?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) == 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char>=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char>=?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) >= 0), 
+                        "char>=?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) >= 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char>?"), 
-                        (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) > 0), 
+                        "char>?",
+                        (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) > 0), 
                         2, 
                         TypePrimitives.ValueType.Char)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("char?"), 
-                        (args, caller) => SchemeBoolean.Truth(args.First().IsCharacter()), 
+                        "char?",
+                        (args, caller) => SchemeBoolean.Truth(List.First(args) is Character), 
                         1, 
                         TypePrimitives.ValueType.Obj);
         }
@@ -255,7 +255,7 @@ namespace SimpleScheme
         /// <param name="caseInsensitive">If true, make the comparison case insensitive.</param>
         /// <returns>Negative if x is before y, positive if x is after y, 
         /// or 0 if they are the same.</returns>
-        private static int Compare(Obj char1, Obj char2, bool caseInsensitive)
+        private static int Compare(ISchemeObject char1, ISchemeObject char2, bool caseInsensitive)
         {
             char c1 = char1.AsCharacter().C;
             char c2 = char2.AsCharacter().C;
@@ -271,23 +271,13 @@ namespace SimpleScheme
     public static class CharacterExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme character.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme character.</returns>
-        public static bool IsCharacter(this Obj obj)
-        {
-            return Character.Is(obj);
-        }
-
-        /// <summary>
         /// Convert to a character.
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding character.</returns>
-        public static Character AsCharacter(this Obj x)
+        public static Character AsCharacter(this ISchemeObject x)
         {
-            if (Character.Is(x))
+            if (x is Character)
             {
                 return (Character)x;
             }
@@ -301,9 +291,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding char.</returns>
-        public static char AsChar(this Obj x)
+        public static char AsChar(this ISchemeObject x)
         {
-            if (Character.Is(x))
+            if (x is Character)
             {
                 return ((Character)x).C;
             }

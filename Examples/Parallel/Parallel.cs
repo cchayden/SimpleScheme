@@ -59,7 +59,7 @@ public class Parallel
         Console.WriteLine("Completed: {0}", res.IsCompleted);
         res.AsyncWaitHandle.WaitOne();
         Console.WriteLine("Completed: {0} in {1} ms", res.IsCompleted, (DateTime.Now - startTime).Milliseconds);
-        Console.WriteLine("Result: {0}", ((AsyncResult<object>)res).Result);
+        Console.WriteLine("Result: {0}", ((AsyncResult<ISchemeObject>)res).Result);
         Console.ReadLine();
     }
 }

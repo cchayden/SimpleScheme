@@ -5,14 +5,13 @@ namespace SimpleScheme
 {
     using System;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// A procedure is executable. 
     /// It supports an Apply method.
     /// Lambdas, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : IPrintable, ISchemeType
+    public abstract class Procedure : IPrintable, ISchemeObject
     {
         #region Constants
         /// <summary>
@@ -81,64 +80,52 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("apply"), 
-                        (args, caller) => args.First().AsProcedure().Apply(args.Rest().ListStar(), caller), 
+                        "apply",
+                        (args, caller) => List.First(args).AsProcedure().Apply(List.ListStar(List.Rest(args)), caller), 
                         2, 
                         MaxInt, 
                         TypePrimitives.ValueType.Proc, 
                         TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("call-with-current-continuation"), 
-                        (args, caller) => args.First().AsProcedure().CallCc(caller), 
+                        "call-with-current-continuation",
+                        (args, caller) => List.First(args).AsProcedure().CallCc(caller), 
                         1, 
                         TypePrimitives.ValueType.Proc)
                 .DefinePrimitive(
-                        Symbol.New("call/cc"), 
-                        (args, caller) => args.First().AsProcedure().CallCc(caller), 
+                        "call/cc",
+                        (args, caller) => List.First(args).AsProcedure().CallCc(caller), 
                         1, 
                         TypePrimitives.ValueType.Proc)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("force"), 
-                        (args, caller) => Force(args.First(), caller), 
+                        "force",
+                        (args, caller) => Force(List.First(args), caller), 
                         1, 
                         TypePrimitives.ValueType.Proc)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("for-each"), 
-                        (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), false, caller.Env, caller), 
+                        "for-each",
+                        (args, caller) => EvaluateMap.Call(List.First(args).AsProcedure(), List.Rest(args), false, caller.Env, caller), 
                          1, 
                         MaxInt,
                         TypePrimitives.ValueType.Proc, 
                         TypePrimitives.ValueType.Pair)
                 //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("map"), 
-                        (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), true, caller.Env, caller), 
+                        "map",
+                        (args, caller) => EvaluateMap.Call(List.First(args).AsProcedure(), List.Rest(args), true, caller.Env, caller), 
                         1, 
                         MaxInt, 
                         TypePrimitives.ValueType.Proc, 
                         TypePrimitives.ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
                 .DefinePrimitive(
-                        Symbol.New("procedure?"), 
-                        (args, caller) => SchemeBoolean.Truth(args.First().IsProcedure()), 
+                        "procedure?",
+                        (args, caller) => SchemeBoolean.Truth(List.First(args) is Procedure), 
                         1, 
                         TypePrimitives.ValueType.Obj);
-        }
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Procedure;
         }
         #endregion
 
@@ -171,7 +158,7 @@ namespace SimpleScheme
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to run after the application.</returns>
-        public abstract Evaluator Apply(Obj args, Evaluator caller);
+        public abstract Evaluator Apply(ISchemeObject args, Evaluator caller);
 
         /// <summary>
         /// Evaluate the procedure.
@@ -185,7 +172,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public virtual Evaluator Evaluate(Obj args, Environment env, Evaluator caller)
+        public virtual Evaluator Evaluate(ISchemeObject args, Environment env, Evaluator caller)
         {
             return EvaluateProc.Call(this, args, env, caller);
         }
@@ -235,9 +222,9 @@ namespace SimpleScheme
         /// <param name="args">The arguments passed to the procedure.</param>
         /// <param name="tagType">Name, for the error message.</param>
         /// <returns>The number of arguments passed to the procedure.</returns>
-        protected int CheckArgs(Obj args, Type tagType)
+        protected int CheckArgs(ISchemeObject args, Type tagType)
         {
-            int numArgs = args.ListLength();
+            int numArgs = List.ListLength(args);
             if (numArgs < this.minArgs || numArgs > this.maxArgs)
             {
                 string tag = TypePrimitives.SchemeTypeName(tagType);
@@ -263,9 +250,9 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        private static Obj Force(Obj promise, Evaluator caller)
+        private static ISchemeObject Force(ISchemeObject promise, Evaluator caller)
         {
-            return !promise.IsProcedure() ? promise : promise.AsProcedure().Apply(null, caller);
+            return promise is Procedure ? promise.AsProcedure().Apply(null, caller) : promise;
         }
         #endregion
 
@@ -278,9 +265,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private Obj CallCc(Evaluator caller)
+        private ISchemeObject CallCc(Evaluator caller)
         {
-            return this.Apply(Continuation.New(caller).MakeList(), caller);
+            return this.Apply(List.MakeList(Continuation.New(caller)), caller);
         }
         #endregion
     }
@@ -289,23 +276,13 @@ namespace SimpleScheme
     static class ProcedureExtension
     {
         /// <summary>
-        /// Tests whether to given object is a procedure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme procedure.</returns>
-        public static bool IsProcedure(this Obj obj)
-        {
-            return Procedure.Is(obj);
-        }
-
-        /// <summary>
         /// Cast the given object to a procedure.
         /// </summary>
         /// <param name="x">The obj to test.</param>
         /// <returns>The procedure.</returns>
-        public static Procedure AsProcedure(this Obj x)
+        public static Procedure AsProcedure(this ISchemeObject x)
         {
-            if (Procedure.Is(x))
+            if (x is Procedure)
             {
                 return (Procedure)x;
             }

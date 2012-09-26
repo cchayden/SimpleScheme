@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using Obj = System.Object;
 
     /// <summary>
     /// The primitive environment is "below" the global environment.
@@ -51,12 +50,12 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<Obj, Evaluator, Obj> operation, 
+            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
             int minArgs, 
             int maxArgs, 
             params TypePrimitives.ValueType[] argTypes)
         {
-            this.Define(name, Primitive.New(operation, minArgs, maxArgs, argTypes));
+            this.Define(name, new Primitive(operation, minArgs, maxArgs, argTypes));
             return this;
         }
 
@@ -72,11 +71,11 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<Obj, Evaluator, Obj> operation, 
+            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
             int numberOfArgs, 
             params TypePrimitives.ValueType[] argTypes)
         {
-            this.Define(name, Primitive.New(operation, numberOfArgs, numberOfArgs, argTypes));
+            this.Define(name, new Primitive(operation, numberOfArgs, numberOfArgs, argTypes));
             return this;
         }
         #endregion
@@ -106,23 +105,23 @@ namespace SimpleScheme
             Interpreter.DefinePrimitives(this);
             ErrorHandlers.DefinePrimitives(this);
 
-            this
-                .DefinePrimitive(
-                    Symbol.New("exit"),
+            this.DefinePrimitive(
+                    "exit",
                     (args, caller) =>
                     {
-                        System.Environment.Exit(args.First().IsEmptyList() ? 0 : args.First().AsInt());
-                        return Undefined.New();
+                        System.Environment.Exit(List.First(args) is EmptyList ? 0 : List.First(args).AsInt());
+                        return Undefined.Instance;
                     },
                     0,
                     1, 
                     TypePrimitives.ValueType.Number)
                 .DefinePrimitive(
-                    Symbol.New("time-call"), 
+                    "time-call",
                     (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 
                     1, 
                     2, 
-                    TypePrimitives.ValueType.Proc, TypePrimitives.ValueType.Number);
+                    TypePrimitives.ValueType.Proc,
+                    TypePrimitives.ValueType.Number);
         }
         #endregion
     }

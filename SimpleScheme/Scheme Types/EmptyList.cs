@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// This represents the empty list.
@@ -12,13 +11,13 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    public class EmptyList : IPrintable, ISchemeType
+    public class EmptyList : IPrintable, ISchemeObject
     {
         /// <summary>
         /// The empty list is represented by a distinguished obj.
         /// It would also work to have the empty list be represeted by null.
         /// </summary>
-        private static readonly EmptyList Instance = new EmptyList();
+        private static readonly EmptyList instance = new EmptyList();
 
         #region Constructor
         /// <summary>
@@ -26,6 +25,17 @@ namespace SimpleScheme
         /// </summary>
         private EmptyList()
         {
+        }
+        #endregion
+
+        #region Instance
+        /// <summary>
+        /// Gets the single instance.
+        /// </summary>
+        /// <returns>An empty list.</returns>
+        public static EmptyList Instance
+        {
+            get { return instance; }
         }
         #endregion
 
@@ -39,29 +49,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Create a new empty list.
-        /// Actually, returns the single instance.
-        /// </summary>
-        /// <returns>An empty list.</returns>
-        public static EmptyList New()
-        {
-            return Instance;
-        }
-        #endregion
-
         #region Public Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is EmptyList;
-        }
-
         /// <summary>
         /// Write the empty list to the string builder.
         /// </summary>
@@ -90,23 +78,13 @@ namespace SimpleScheme
     public static class EmptyListExtension
     {
         /// <summary>
-        /// Tests whether to given object is a scheme empty list.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme empty list.</returns>
-        public static bool IsEmptyList(this Obj obj)
-        {
-            return EmptyList.Is(obj);
-        }
-
-        /// <summary>
         /// Convert object to EmptyList.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as an empty list.</returns>
-        public static EmptyList AsEmptyList(this Obj obj)
+        public static EmptyList AsEmptyList(this ISchemeObject obj)
         {
-            if (EmptyList.Is(obj))
+            if (obj is EmptyList)
             {
                 return (EmptyList)obj;
             }

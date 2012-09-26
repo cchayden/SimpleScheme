@@ -21,11 +21,11 @@ public class Customize
         IInterpreter interp = Interpreter.New(primEnvironment);
 
         // define a variable in the global environment
-        interp.GlobalEnv.Define("x", 10);
-        interp.GlobalEnv.Define("y", 20);
+        interp.GlobalEnv.Define("x", (Number)10);
+        interp.GlobalEnv.Define("y", (Number)20);
 
         // define a primitive in the global environment
-        primEnvironment.DefinePrimitive(Symbol.New("plus-one"), (args, caller) => args.First().AsNumber().N + 1, 1, TypePrimitives.ValueType.Number);
+        primEnvironment.DefinePrimitive("plus-one", (args, caller) => (Number)(List.First(args).AsNumber().N + 1), 1, TypePrimitives.ValueType.Number);
 
         // evaluate a program stored in a string for its side effects
         interp.EvalStr("(p (plus-one x))");    // -> 11

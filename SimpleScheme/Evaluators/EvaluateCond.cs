@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Reduce a conditiona;
     /// </summary>
@@ -28,17 +26,17 @@ namespace SimpleScheme
         /// <summary>
         /// The value of the test expr
         /// </summary>
-        private Obj test;
+        private ISchemeObject test;
 
         /// <summary>
         /// The list of clauses in the cond
         /// </summary>
-        private Obj clauses;
+        private ISchemeObject clauses;
 
         /// <summary>
         /// The cond clause that is being processed.
         /// </summary>
-        private Obj clause;
+        private ISchemeObject clause;
         #endregion
 
         #region Constructor
@@ -48,7 +46,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateCond(Obj expr, Environment env, Evaluator caller)
+        private EvaluateCond(ISchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.clauses = expr;
@@ -65,12 +63,12 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The reduce cond evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
-                return caller.UpdateReturnValue(SchemeBoolean.False);
+                return caller.UpdateReturnValue((SchemeBoolean)false);
             }
 
             return new EvaluateCond(expr, env, caller);
@@ -88,15 +86,15 @@ namespace SimpleScheme
         private static Evaluator EvalClauseStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            step.clause = step.clauses.First();
-            var clause = step.clause.First();
-            if (clause.IsSymbol() && clause.ToString() == "else")
+            step.clause = List.First(step.clauses);
+            var clause = List.First(step.clause);
+            if (clause is Symbol && clause.ToString() == "else")
             {
-                step.test = EmptyList.New();
+                step.test = EmptyList.Instance;
                 return s.ContinueHere(EvalConsequentStep);
             }
 
-            return EvaluateExpression.Call(step.clause.First(), s.Env, s.ContinueHere(TestClauseStep));
+            return EvaluateExpression.Call(List.First(step.clause), s.Env, s.ContinueHere(TestClauseStep));
         }
 
         /// <summary>
@@ -116,8 +114,8 @@ namespace SimpleScheme
                 return s.ContinueHere(EvalConsequentStep);
             }
 
-            step.clauses = step.clauses.Rest();
-            if (step.clauses.IsEmptyList())
+            step.clauses = List.Rest(step.clauses);
+            if (step.clauses is EmptyList)
             {
                 return s.ReturnUndefined();
             }
@@ -135,21 +133,21 @@ namespace SimpleScheme
         private static Evaluator EvalConsequentStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            if (step.clause.Rest().IsEmptyList())
+            if (List.Rest(step.clause) is EmptyList)
             {
                 // no consequent: return the test as the result
                 return s.ReturnFromStep(step.test);
             }
 
-            var clause = step.clause.Second();
-            if (clause.IsSymbol() && clause.ToString() == "=>")
+            var clause = List.Second(step.clause);
+            if (clause is Symbol && clause.ToString() == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(step.clause.Third(), s.Env, s.ContinueHere(ApplyRecipientStep));
+                return EvaluateExpression.Call(List.Third(step.clause), s.Env, s.ContinueHere(ApplyRecipientStep));
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(step.clause.Rest(), s.Env, s.Caller);
+            return EvaluateSequence.Call(List.Rest(step.clause), s.Env, s.Caller);
         }
 
         /// <summary>
@@ -160,7 +158,7 @@ namespace SimpleScheme
         private static Evaluator ApplyRecipientStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            return EvaluateProc.CallQuoted(s.ReturnedExpr.AsProcedure(), step.test.MakeList(), s.Env, s.Caller);
+            return EvaluateProc.CallQuoted(s.ReturnedExpr.AsProcedure(), List.MakeList(step.test), s.Env, s.Caller);
         }
         #endregion
     }

@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// This evaluator is returned to suspend evaluation.
@@ -28,7 +27,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="res">The IAsyncResult associated with the suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
-        public SuspendedEvaluator(Obj res, Evaluator caller) : 
+        public SuspendedEvaluator(ISchemeObject res, Evaluator caller) : 
             base(res, null, caller)
         {
             this.UpdateReturnValue(this);

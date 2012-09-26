@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -34,7 +32,7 @@ namespace SimpleScheme
         /// The list is constructed in reverse order.
         /// This happens only if returnResult is true;
         /// </summary>
-        private Obj result;
+        private ISchemeObject result;
         #endregion
 
         #region Constructor
@@ -50,7 +48,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
-        private EvaluateMap(Obj expr, Environment env, Evaluator caller, Procedure proc, Obj result)
+        private EvaluateMap(ISchemeObject expr, Environment env, Evaluator caller, Procedure proc, ISchemeObject result)
             : base(expr, env, caller)
         {
             this.proc = proc;
@@ -71,21 +69,21 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The evaluator to execute.</returns>
-        public static Evaluator Call(Procedure proc, Obj expr, bool returnResult, Environment env, Evaluator caller)
+        public static Evaluator Call(Procedure proc, ISchemeObject expr, bool returnResult, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
-                return caller.UpdateReturnValue(EmptyList.New());
+                return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
-            if (!expr.IsPair())
+            if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + expr);
-                return caller.UpdateReturnValue(EmptyList.New());
+                return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
-            Obj result = returnResult ? EmptyList.New() : null;
+            ISchemeObject result = returnResult ? EmptyList.Instance : null;
             return new EvaluateMap(expr, env, caller, proc, result);
         }
         #endregion
@@ -100,15 +98,15 @@ namespace SimpleScheme
         private static Evaluator ApplyFunStep(Evaluator s)
         {
             var step = (EvaluateMap)s;
-            if (s.Expr.First().IsPair())
+            if (List.First(s.Expr) is Pair)
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return step.proc.Apply(List.MapFun(List.First, s.Expr.MakeList()), s.ContinueHere(CollectAndLoopStep));
+                return step.proc.Apply(List.MapFun(List.First, List.MakeList(s.Expr)), s.ContinueHere(CollectAndLoopStep));
             }
 
             // if we are done, return the reversed result list
-            return s.ReturnFromStep(step.result != null ? step.result.ReverseList() : Undefined.New());
+            return s.ReturnFromStep(step.result != null ? List.ReverseList(step.result) : Undefined.Instance);
         }
 
         /// <summary>
@@ -124,11 +122,11 @@ namespace SimpleScheme
             if (step.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = s.ReturnedExpr.Cons(step.result);
+                step.result = List.Cons(s.ReturnedExpr, step.result);
             }
 
             // Move down each of the lists
-            step.UpdateExpr(List.MapFun(List.Rest, s.Expr.MakeList()));
+            step.UpdateExpr(List.MapFun(List.Rest, List.MakeList(s.Expr)));
             return s.ContinueHere(ApplyFunStep);
         }
         #endregion

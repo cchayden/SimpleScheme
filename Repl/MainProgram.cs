@@ -4,9 +4,7 @@
 namespace Repl
 {
     using SimpleScheme;
-    using Obj = System.Object;
 
-    // TODO checklist
     // TODO check code coverage -- fill gaps
 
     /// <summary>

@@ -6,7 +6,6 @@ namespace SimpleScheme
     using System;
     using System.Reflection;
     using System.Text;
-    using Obj = System.Object;
 
     /// <summary>
     /// Handles  CLR method constructor calls.
@@ -28,8 +27,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        private ClrConstructor(Obj targetClassName, Obj argClassNames)
-            : base(targetClassName, ".ctor")
+        private ClrConstructor(ISchemeObject targetClassName, ISchemeObject argClassNames)
+            : base(targetClassName, (Symbol)".ctor")
         {
             try
             {
@@ -59,29 +58,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static new bool Is(Obj obj)
-        {
-            return obj is ClrConstructor;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the ClrConstructor class.
-        /// </summary>
-        /// <param name="targetClassName">The class of the object to invoke.</param>
-        /// <param name="argClassNames">The types of each argument.</param>
-        /// <returns>A new ClrConstructor.</returns>
-        public static ClrConstructor New(Obj targetClassName, Obj argClassNames)
-        {
-            return new ClrConstructor(targetClassName, argClassNames);
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the sync clr procedure primitives.
@@ -93,8 +69,8 @@ namespace SimpleScheme
             env
                 //// (constructor <class-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                    Symbol.New("constructor"),
-                    (args, caller) => New(Printer.AsString(args.First(), false), args.Rest()),
+                    "constructor",
+                    (args, caller) => new ClrConstructor((Symbol)Printer.AsString(List.First(args), false), List.Rest(args)),
                     1,
                     MaxInt, 
                     TypePrimitives.ValueType.String);
@@ -128,14 +104,14 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the constructor.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        public override Evaluator Apply(Obj args, Evaluator caller)
+        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(ClrConstructor));
             Assembly assembly = this.classType.Assembly;
             object[] argArray = ToArgList(args, null);
-            Obj res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
-            res = res ?? Undefined.New();
-            return caller.UpdateReturnValue(res);
+            object res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
+            res = res ?? Undefined.Instance;
+            return caller.UpdateReturnValue(ClrObject.New(res));
         }
         #endregion
     }
@@ -147,23 +123,13 @@ namespace SimpleScheme
     public static class ClrConstructorExtension
     {
         /// <summary>
-        /// Tests whether to given object is a CLR constructor.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a CLR constructor.</returns>
-        public static bool IsClrConstructor(this Obj obj)
-        {
-            return ClrConstructor.Is(obj);
-        }
-
-        /// <summary>
         /// Convert object to clr constructor.
         /// </summary>
         /// <param name="obj">The object to convert.</param>
         /// <returns>The object as a clr constructor.</returns>
-        public static ClrConstructor AsClrConstructor(this Obj obj)
+        public static ClrConstructor AsClrConstructor(this ISchemeObject obj)
         {
-            if (ClrConstructor.Is(obj))
+            if (obj is ClrConstructor)
             {
                 return (ClrConstructor)obj;
             }

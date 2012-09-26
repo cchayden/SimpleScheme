@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
@@ -25,12 +23,12 @@ namespace SimpleScheme
         /// <summary>
         /// The variable of the assignment.
         /// </summary>
-        private readonly Obj lhs;
+        private readonly ISchemeObject lhs;
 
         /// <summary>
         /// The expression of the assignment.
         /// </summary>
-        private readonly Obj rhs;
+        private readonly ISchemeObject rhs;
         #endregion
 
         #region Constructors
@@ -42,7 +40,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="lhs">The left hand side -- the variable to set.</param>
         /// <param name="rhs">The right hand side -- the new value.</param>
-        private EvaluateSet(Obj expr, Environment env, Evaluator caller, Obj lhs, Obj rhs)
+        private EvaluateSet(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject lhs, ISchemeObject rhs)
             : base(expr, env, caller)
         {
             this.lhs = lhs;
@@ -60,11 +58,11 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            Obj lhs = expr.First();
-            Obj rhs = expr.Second();
-            if (!lhs.IsSymbol())
+            ISchemeObject lhs = List.First(expr);
+            ISchemeObject rhs = List.Second(expr);
+            if (!(lhs is Symbol))
             {
                 ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs));
             }

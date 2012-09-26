@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.IO;
-    using Obj = System.Object;
 
     /// <summary>
     /// Evaluate a call-with-output-file expressions
@@ -36,7 +35,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="port">The output port.</param>
-        private EvaluateCallWithOutputFile(Obj expr, Environment env, Evaluator caller, OutputPort port)
+        private EvaluateCallWithOutputFile(ISchemeObject expr, Environment env, Evaluator caller, OutputPort port)
             : base(expr, env, caller)
         {
             this.port = port;
@@ -52,9 +51,9 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Evaluator Call(Obj expr, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Evaluator caller)
         {
-            OutputPort port = OpenOutputFile(expr.First(), caller.Interp);
+            OutputPort port = OpenOutputFile(List.First(expr), caller.Interp);
             return new EvaluateCallWithOutputFile(expr, caller.Env, caller, port);
         }
 
@@ -64,7 +63,7 @@ namespace SimpleScheme
         /// <param name="filename">The filename.</param>
         /// <param name="interp">The interpreter.</param>
         /// <returns>The output port, used for writing.</returns>
-        public static OutputPort OpenOutputFile(Obj filename, Interpreter interp)
+        public static OutputPort OpenOutputFile(ISchemeObject filename, Interpreter interp)
         {
             try
             {
@@ -93,7 +92,7 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateCallWithOutputFile)s;
-            return s.Expr.Second().AsProcedure().Apply(step.port.MakeList(), s.ContinueHere(CloseStep));
+            return List.Second(s.Expr).AsProcedure().Apply(List.MakeList(step.port), s.ContinueHere(CloseStep));
         }
 
         /// <summary>

@@ -7,7 +7,6 @@ namespace Tests
     using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
-    using Obj = System.Object;
 
     /// <summary>
     /// This tests basic functionality.
@@ -140,8 +139,8 @@ namespace Tests
                     (define return 0)
                     (define test (lambda ()
                          (+ 1 (call/cc (lambda (cont) (set! return cont) 99)))))
-                    (test))"
-            );
+                    (test))
+            ");
             this.Run("23", "call/cc return", "(return 22)");
             this.Run("34", "call/cc return", "(return 33)");
 
@@ -280,7 +279,7 @@ namespace Tests
                   (define str-ctor (constructor ""string"" ""char[]""))
                   (str-ctor ""xxx""))
             ");
-      }
+        }
 
         /// <summary>
         /// A test for asynchronous CLR procedures
@@ -532,8 +531,12 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void Run(string expected, string label, string expr)
         {
-            Obj res = this.ReadAndEvaluate(expr);
-            string actual = res != EmptyList.New() ? res.ToString() : "'()";
+            object res = this.ReadAndEvaluate(expr);
+            if (res is ClrObject)
+            {
+                res = ((ClrObject)res).Value;
+            }
+            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
@@ -543,7 +546,7 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private Obj ReadAndEvaluate(string str) 
+        private ISchemeObject ReadAndEvaluate(string str) 
         {
             return this.interpreter.EvalStr(str);
         }
@@ -556,8 +559,8 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void RunAsync(string expected, string label, string expr)
         {
-            Obj res = this.ReadAndEvaluateAsync(expr);
-            string actual = res != EmptyList.New() ? res.ToString() : "'()";
+            ISchemeObject res = this.ReadAndEvaluateAsync(expr);
+            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
@@ -567,10 +570,10 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private Obj ReadAndEvaluateAsync(string str)
+        private ISchemeObject ReadAndEvaluateAsync(string str)
         {
-            Obj expr = this.interpreter.Read(str);
-            IAsyncResult res =  this.interpreter.BeginEval(expr, null, null);
+            ISchemeObject expr = this.interpreter.Read(str);
+            IAsyncResult res = this.interpreter.BeginEval(expr, null, null);
             res.AsyncWaitHandle.WaitOne();
             return this.interpreter.EndEval(res);
         }

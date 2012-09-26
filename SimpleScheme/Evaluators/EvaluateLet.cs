@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a let expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -34,17 +32,17 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly Obj body;
+        private readonly ISchemeObject body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private readonly Obj vars;
+        private readonly ISchemeObject vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private readonly Obj inits;
+        private readonly ISchemeObject inits;
         #endregion
 
         #region Constructor
@@ -58,7 +56,7 @@ namespace SimpleScheme
         /// <param name="body">The let body.</param>
         /// <param name="vars">The variables to bind.</param>
         /// <param name="inits">The initial values of the variables.</param>
-        private EvaluateLet(Obj expr, Environment env, Evaluator caller, Symbol name, Obj body, Obj vars, Obj inits)
+        private EvaluateLet(ISchemeObject expr, Environment env, Evaluator caller, Symbol name, ISchemeObject body, ISchemeObject vars, ISchemeObject inits)
             : base(expr, env, caller)
         {
             this.name = name;
@@ -81,43 +79,43 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
                 ErrorHandlers.SemanticError("No arguments for let");
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            if (!expr.IsPair())
+            if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let: " + expr);
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             Symbol name = null;
-            Obj bindings;
-            Obj body;
-            if (expr.First().IsSymbol())
+            ISchemeObject bindings;
+            ISchemeObject body;
+            if (List.First(expr) is Symbol)
             {
                 // named let
-                name = expr.First().AsSymbol();   
-                bindings = expr.Second();
-                body = expr.Rest().Rest();
+                name = List.First(expr).AsSymbol();   
+                bindings = List.Second(expr);
+                body = List.Rest(List.Rest(expr));
             }
             else
             {
-                bindings = expr.First();
-                body = expr.Rest();
+                bindings = List.First(expr);
+                body = List.Rest(expr);
             }
 
-            if (body.IsEmptyList())
+            if (body is EmptyList)
             {
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            Obj vars = List.MapFun(List.First, bindings.MakeList());
-            Obj inits = List.MapFun(List.Second, bindings.MakeList());
+            ISchemeObject vars = List.MapFun(List.First, List.MakeList(bindings));
+            ISchemeObject inits = List.MapFun(List.Second, List.MakeList(bindings));
             return new EvaluateLet(expr, env, caller, name, body, vars, inits);
         }
         #endregion

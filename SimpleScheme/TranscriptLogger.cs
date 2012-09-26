@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System.IO;
-    using Obj = System.Object;
 
     /// <summary>
     /// Writes input and output to a transcript.
@@ -35,7 +34,7 @@ namespace SimpleScheme
         /// Turn on transcripts, writing to the given file.
         /// </summary>
         /// <param name="fileName">The file to write to.</param>
-        public void TranscriptOn(Obj fileName)
+        public void TranscriptOn(ISchemeObject fileName)
         {
             if (this.transcriptWriter != null)
             {

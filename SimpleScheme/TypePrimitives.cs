@@ -6,10 +6,8 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
 
-    using Obj = System.Object;
-
     /// <summary>
-    /// Generic operations on Obj, for tracing, debugging, and interfacing with the CLR.
+    /// Generic operations on ISchemeObject, for tracing, debugging, and interfacing with the CLR.
     /// Includes a method that returns "friendly" names for objects of given types.
     /// Also includes a methat that turns a "friendly" name into a full .NET name.
     /// </summary>
@@ -101,7 +99,7 @@ namespace SimpleScheme
                     { "int[]", "System.Int32[]" },                   
                     { "long[]", "System.Int64[]" },                   
                     { "float[]", "System.Single[]" },                   
-                    { "double[]", "System.Doubl[]e" },                   
+                    { "double[]", "System.Double[]" },                   
                     { "object[]", "System.Object[]" },                   
                 };
 
@@ -203,6 +201,11 @@ namespace SimpleScheme
             ClrConstructor,
 
             /// <summary>
+            /// A CLR object, created by a constructor
+            /// </summary>
+            ClrObject,
+
+            /// <summary>
             /// A continuation.
             /// </summary>
             Continuation,
@@ -218,6 +221,11 @@ namespace SimpleScheme
             Macro,
 
             /// <summary>
+            /// Eof object
+            /// </summary>
+            Eof,
+
+            /// <summary>
             /// The undefined object.
             /// </summary>
             Undefined
@@ -230,7 +238,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>The scheme type name.</returns>
-        public static string SchemeTypeName(Obj obj)
+        public static string SchemeTypeName(ISchemeObject obj)
         {
             if (obj == null)
             {
@@ -282,7 +290,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="arg">A value type or a type name.</param>
         /// <returns>The type corresponding to the name.</returns>
-        public static Type ToClass(Obj arg)
+        public static Type ToClass(ISchemeObject arg)
         {
             if (arg is Type)
             {

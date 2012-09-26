@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate an expression while timing it..
     /// This can evaluate the expression multiple times.
@@ -30,10 +28,10 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateTimeCall(Obj expr, Environment env, Evaluator caller)
+        private EvaluateTimeCall(ISchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
-            IncrementCounter(counter);
+            this.IncrementCounter(counter);
         }
         #endregion
 
@@ -45,7 +43,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateTimeCall(expr, env, caller);
         }
@@ -60,7 +58,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator Step1()
         {
-            return this.Expr.First().AsProcedure().Apply(EmptyList.New(), ContinueHere(Step2));
+            return List.First(this.Expr).AsProcedure().Apply(EmptyList.Instance, this.ContinueHere(Step2));
         }
         #endregion
     }

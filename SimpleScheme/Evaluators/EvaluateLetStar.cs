@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate a let* expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -28,29 +26,29 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly Obj body;
+        private readonly ISchemeObject body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private Obj vars;
+        private ISchemeObject vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private Obj inits;
+        private ISchemeObject inits;
 
         /// <summary>
         /// Evaluated values of inits.
         /// </summary>
-        private Obj vals;
+        private ISchemeObject vals;
 
         /// <summary>
         /// The list of formal parameters to pass to the final lambda.
         /// This is built up from variable1, variable2, ...
         /// It is in the reverse order from the given list.
         /// </summary>
-        private Obj formals;
+        private ISchemeObject formals;
         #endregion
 
         #region Constructor
@@ -65,7 +63,7 @@ namespace SimpleScheme
         /// <param name="inits">The initialization expressions.</param>
         /// <param name="formals">The list of parameters to pass to the lambda.</param>
         /// <param name="vals">Evaluated values of inits.</param>
-        private EvaluateLetStar(Obj expr, Environment env, Evaluator caller, Obj body, Obj vars, Obj inits, Obj formals, Obj vals)
+        private EvaluateLetStar(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject body, ISchemeObject vars, ISchemeObject inits, ISchemeObject formals, ISchemeObject vals)
             : base(expr, env, caller)
         {
             this.body = body;
@@ -86,32 +84,32 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
+        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
-            if (expr.IsEmptyList())
+            if (expr is EmptyList)
             {
                 ErrorHandlers.SemanticError("No arguments arguments for let*");
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            if (!expr.IsPair())
+            if (!(expr is Pair))
             {
                 ErrorHandlers.SemanticError("Bad arg list for let*: " + expr);
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            Obj bindings = expr.First();
-            Obj body = expr.Rest();
+            ISchemeObject bindings = List.First(expr);
+            ISchemeObject body = List.Rest(expr);
 
-            if (body.IsEmptyList())
+            if (body is EmptyList)
             {
-                return caller.UpdateReturnValue(Undefined.New());
+                return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            Obj vars = List.MapFun(List.First, bindings.MakeList());
-            Obj inits = List.MapFun(List.Second, bindings.MakeList());
-            Obj formals = EmptyList.New();
-            Obj vals = EmptyList.New();
+            ISchemeObject vars = List.MapFun(List.First, List.MakeList(bindings));
+            ISchemeObject inits = List.MapFun(List.Second, List.MakeList(bindings));
+            ISchemeObject formals = EmptyList.Instance;
+            ISchemeObject vals = EmptyList.Instance;
             return new EvaluateLetStar(expr, env, caller, body, vars, inits, formals, vals);
         }
         #endregion
@@ -126,12 +124,12 @@ namespace SimpleScheme
         private static Evaluator EvalInitStep(Evaluator s)
         {
             var step = (EvaluateLetStar)s;
-            if (step.inits.IsEmptyList())
+            if (step.inits is EmptyList)
             {
                 return s.ContinueHere(ApplyProcStep);
             }
 
-            Procedure fun = Lambda.New(step.formals, step.inits.First().MakeList(), s.Env);
+            Procedure fun = Lambda.New(step.formals, List.MakeList(List.First(step.inits)), s.Env);
             return fun.Apply(step.vals, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -145,10 +143,10 @@ namespace SimpleScheme
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
             var step = (EvaluateLetStar)s;
-            step.formals = step.vars.First().Cons(step.formals);
-            step.vals = s.ReturnedExpr.Cons(step.vals);
-            step.vars = step.vars.Rest();
-            step.inits = step.inits.Rest();
+            step.formals = List.Cons(List.First(step.vars), step.formals);
+            step.vals = List.Cons(s.ReturnedExpr, step.vals);
+            step.vars = List.Rest(step.vars);
+            step.inits = List.Rest(step.inits);
             return s.ContinueHere(EvalInitStep);
         }
 

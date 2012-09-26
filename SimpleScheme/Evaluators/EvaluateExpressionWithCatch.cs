@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using Obj = System.Object;
-
     /// <summary>
     /// Evaluate an expression with the ability to catch suspension.
     /// Anything that this calls that returns a suspended evaluator will be "caught"
@@ -42,7 +40,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateExpressionWithCatch(Obj expr, Environment env, Evaluator caller)
+        private EvaluateExpressionWithCatch(ISchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.catchSuspended = true;
@@ -71,7 +69,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expression evaluator.</returns>
-        public static EvaluateExpressionWithCatch Call(Obj expr, Environment env, Evaluator caller)
+        public static EvaluateExpressionWithCatch Call(ISchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateExpressionWithCatch(expr, env, caller);
         }
