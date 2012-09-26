@@ -3,8 +3,6 @@
 // </copyright>
 namespace Run
 {
-    using System;
-
     using SimpleScheme;
 
     class Run
