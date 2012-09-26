@@ -88,7 +88,7 @@ namespace SimpleScheme
             long mem = GC.GetTotalMemory(false) - step.startMem;
             return s.ReturnFromStep(
                 MakeList(
-                    s.ReturnedExpr,
+                    EnsureSchemeObject(s.ReturnedExpr),
                     MakeList((Number)time,  (Symbol)"msec"),
                     MakeList((Number)mem, (Symbol)"bytes")));
         }

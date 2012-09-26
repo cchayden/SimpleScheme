@@ -63,11 +63,11 @@ namespace SimpleScheme
 
             fromClrMap = new Dictionary<Type, Func<object, SchemeObject>>
                 {
-                    { typeof(Number), elem => (SchemeObject)elem },
+                    { typeof(Number), elem => (Number)elem },
                     { typeof(int), elem => (Number)(int)elem },
-                    { typeof(SchemeString), elem => (SchemeObject)elem },
+                    { typeof(SchemeString), elem => (SchemeString)elem },
                     { typeof(string), elem => SchemeString.New((string)elem) },
-                    { typeof(SchemeBoolean), elem => (SchemeObject)elem },
+                    { typeof(SchemeBoolean), elem => (SchemeBoolean)elem },
                     { typeof(bool), elem => (SchemeBoolean)(bool)elem },
                     { typeof(double), elem => (Number)(double)elem },
                     { typeof(float), elem => (Number)(float)elem },
@@ -77,9 +77,9 @@ namespace SimpleScheme
                     { typeof(Character), elem => (Character)elem },
                     { typeof(char), elem => (Character)(char)elem },
                     { typeof(EmptyList), elem => EmptyList.Instance },
-                    { typeof(Symbol), elem => SchemeString.New((elem.ToString())) },
+                    { typeof(Symbol), elem => SchemeString.New(elem.ToString()) },
                     { typeof(int[]), elem => Vector.New(elem) },
-                    { typeof(string[]), elem => (Vector)(object[])elem },
+                    { typeof(string[]), elem => Vector.New(elem) },
                     { typeof(bool[]), elem => Vector.New(elem) },
                     { typeof(double[]), elem => Vector.New(elem) },
                     { typeof(float[]), elem => Vector.New(elem) },

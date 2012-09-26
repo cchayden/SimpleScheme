@@ -160,7 +160,7 @@ namespace SimpleScheme
         private static Evaluator TestStep(Evaluator s)
         {
             var step = (EvaluateDo)s;
-            s.ReplaceEnvironment(step.vars, s.ReturnedExpr);
+            s.ReplaceEnvironment(step.vars, EnsureSchemeObject(s.ReturnedExpr));
             return step.testProc.ApplyWithtEnv(s.Env, step.ContinueHere(IterateStep));
         }
 
@@ -173,7 +173,7 @@ namespace SimpleScheme
         private static Evaluator IterateStep(Evaluator s)
         {
             var step = (EvaluateDo)s;
-            if (SchemeBoolean.Truth(step.ReturnedExpr).Value)
+            if (SchemeBoolean.Truth(EnsureSchemeObject(step.ReturnedExpr)).Value)
             {
                 // test is true
                 // Evaluate exprs and return the value of the last

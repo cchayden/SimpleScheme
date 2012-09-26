@@ -79,7 +79,7 @@ namespace SimpleScheme
         /// <returns>Return to caller with the expanded macro.</returns>
         private static Evaluator EvaluateStep(Evaluator s)
         {
-            return EvaluateExpression.Call(Cleaner.Clean(s.ReturnedExpr), s.Env, s.Caller);
+            return EvaluateExpression.Call(Cleaner.Clean(EnsureSchemeObject(s.ReturnedExpr)), s.Env, s.Caller);
         }
         #endregion
     }

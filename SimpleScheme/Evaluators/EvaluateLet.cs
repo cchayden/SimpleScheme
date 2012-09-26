@@ -149,7 +149,7 @@ namespace SimpleScheme
             var step = (EvaluateLet)s;
             Lambda fn = Lambda.New(step.vars, step.body, s.Env);
             fn.Env.Define(step.name, fn);   
-            return fn.Apply(s.ReturnedExpr, s.Caller);
+            return fn.Apply(EnsureSchemeObject(s.ReturnedExpr), s.Caller);
         }
         #endregion
     }

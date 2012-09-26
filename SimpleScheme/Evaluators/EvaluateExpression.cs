@@ -222,7 +222,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(EvaluatorOrObject expr, Environment env, Evaluator caller)
         {
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.
@@ -253,8 +253,8 @@ namespace SimpleScheme
 
             // Break apart and evaluate the fn and args
             // Handle special forms that do not need an actual evaluation.
-            var fn = First(expr);
-            var args = Rest(expr);
+            var fn = First(EnsureSchemeObject(expr));
+            var args = Rest(EnsureSchemeObject(expr));
             if (fn is Symbol)
             {
                 switch (Symbol.ToString((Symbol)fn))

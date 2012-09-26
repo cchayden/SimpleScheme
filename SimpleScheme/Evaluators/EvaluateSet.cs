@@ -88,7 +88,7 @@ namespace SimpleScheme
         private static Evaluator SetStep(Evaluator s)
         {
             var step = (EvaluateSet)s;
-            s.Env.Set(step.lhs, s.ReturnedExpr);
+            s.Env.Set(step.lhs, EnsureSchemeObject(s.ReturnedExpr));
             return s.ReturnUndefined();
         }
         #endregion

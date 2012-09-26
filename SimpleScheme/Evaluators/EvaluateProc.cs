@@ -114,13 +114,13 @@ namespace SimpleScheme
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("evaluate-proc: ({0} {1})", fn.ProcedureName, First(s.ReturnedExpr)));
+                    String.Format("evaluate-proc: ({0} {1})", fn.ProcedureName, First(EnsureSchemeObject(s.ReturnedExpr))));
             }
 #endif
 
             // Pass s.Caller to return to the caller rather than to here, since there is
             //  nothing left to do.
-            return fn.Apply(s.ReturnedExpr, s.Caller);
+            return fn.Apply(EnsureSchemeObject(s.ReturnedExpr), s.Caller);
         }
         #endregion
     }

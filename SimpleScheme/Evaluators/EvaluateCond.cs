@@ -103,7 +103,7 @@ namespace SimpleScheme
         private static Evaluator TestClauseStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            step.test = s.ReturnedExpr;
+            step.test = EnsureSchemeObject(s.ReturnedExpr);
             if (SchemeBoolean.Truth(step.test).Value)
             {
                 return s.ContinueHere(EvalConsequentStep);
@@ -153,7 +153,7 @@ namespace SimpleScheme
         private static Evaluator ApplyRecipientStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            Procedure.EnsureProcedure(s.ReturnedExpr);
+            Procedure.EnsureProcedure(EnsureSchemeObject(s.ReturnedExpr));
             return EvaluateProc.CallQuoted(((Procedure)s.ReturnedExpr), List.MakeList(step.test), s.Env, s.Caller);
         }
         #endregion

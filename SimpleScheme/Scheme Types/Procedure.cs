@@ -253,7 +253,7 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        private static SchemeObject Force(Procedure promise, Evaluator caller)
+        private static EvaluatorOrObject Force(Procedure promise, Evaluator caller)
         {
             return promise.Apply(null, caller);
         }
@@ -268,7 +268,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private SchemeObject CallCc(Evaluator caller)
+        private EvaluatorOrObject CallCc(Evaluator caller)
         {
             return this.Apply(List.MakeList(Continuation.New(caller)), caller);
         }

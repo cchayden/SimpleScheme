@@ -167,13 +167,13 @@ namespace SimpleScheme
                         // return after suspension
                         // Record return result and either end the thread or 
                         //  return from the whole thing.
-                        step.accum = Cons(step.ReturnedExpr, step.accum);
+                        step.accum = Cons(EnsureSchemeObject(step.ReturnedExpr), step.accum);
                         step.joined++;
                         return (step.joined < step.forked || !(s.Expr is EmptyList)) ? step.ReturnEnded() : step.ReturnFromStep(step.accum);
 
                     case ReturnType.SynchronousReturn:
                         // synchronous return
-                        step.accum = Cons(step.ReturnedExpr, step.accum);
+                        step.accum = Cons(EnsureSchemeObject(step.ReturnedExpr), step.accum);
                         break;
                 }
 
@@ -183,7 +183,7 @@ namespace SimpleScheme
                     // finished with expressions -- either suspend (if there is more pending) or
                     //   return from the whole thing
                     return step.joined < step.forked ? 
-                        new SuspendedEvaluator(s.ReturnedExpr, s.ContinueHere(LoopStep)) : 
+                        new SuspendedEvaluator(EnsureSchemeObject(s.ReturnedExpr), s.ContinueHere(LoopStep)) : 
                         s.ReturnFromStep(step.accum);
                 }
 

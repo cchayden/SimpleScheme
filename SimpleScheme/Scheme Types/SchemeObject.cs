@@ -14,7 +14,7 @@ namespace SimpleScheme
     /// This also provides some type primitives, mostly as static methods.
     /// The only method a subclass has to implement is PrintString.
     /// </summary>
-    public abstract class SchemeObject : List
+    public abstract class SchemeObject : EvaluatorOrObject
     {
         /// <summary>
         /// Gets the CLR type name of the object.
@@ -56,7 +56,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <returns>The string representing the obj.</returns>
-        public string ToString(bool quoted)
+        public override string ToString(bool quoted)
         {
             var buf = new StringBuilder();
             this.PrintString(quoted, buf);

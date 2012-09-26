@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            SchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? Second(s.Expr) : Third(s.Expr);
+            EvaluatorOrObject toEvaluate = SchemeBoolean.Truth(EnsureSchemeObject(s.ReturnedExpr)).Value ? Second(s.Expr) : Third(s.Expr);
             return EvaluateExpression.Call(
                 toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }

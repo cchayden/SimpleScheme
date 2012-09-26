@@ -92,7 +92,7 @@ namespace SimpleScheme
         private static Evaluator CheckClauseStep(Evaluator s)
         {
             var step = (EvaluateCase)s;
-            step.keyVal = s.ReturnedExpr;
+            step.keyVal = EnsureSchemeObject(s.ReturnedExpr);
             while (!(step.clauses is EmptyList))
             {
                 SchemeObject clause = First(step.clauses);

@@ -89,7 +89,7 @@ namespace SimpleScheme
                 ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)));
             }
 
-            s.Env.Define((Symbol)symbol, s.ReturnedExpr);
+            s.Env.Define((Symbol)symbol, EnsureSchemeObject(s.ReturnedExpr));
             return s.ReturnUndefined();
         }
 

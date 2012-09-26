@@ -133,7 +133,7 @@ namespace SimpleScheme
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
             var step = (EvaluateLetRec)s;
-            step.vals = Cons(s.ReturnedExpr, step.vals);
+            step.vals = Cons(EnsureSchemeObject(s.ReturnedExpr), step.vals);
             step.vars = Rest(step.vars);
             step.inits = Rest(step.inits);
             return s.ContinueHere(EvalInitStep);

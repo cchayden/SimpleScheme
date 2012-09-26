@@ -78,7 +78,7 @@ namespace SimpleScheme
         /// <returns>The result, or this evaluator to loop back to previous step.</returns>
         private static Evaluator LoopStep(Evaluator s)
         {
-            if (SchemeBoolean.IsFalse(s.ReturnedExpr))
+            if (SchemeBoolean.IsFalse(EnsureSchemeObject(s.ReturnedExpr)))
             {
                 return s.ReturnFromStep((SchemeBoolean)false);
             }

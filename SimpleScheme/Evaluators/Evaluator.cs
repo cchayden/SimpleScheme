@@ -1,5 +1,4 @@
-﻿#define FromSchemeObject
-// <copyright file="Evaluator.cs" company="Charles Hayden">
+﻿// <copyright file="Evaluator.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -12,18 +11,9 @@ namespace SimpleScheme
     /// Evaluates expressions step by step.
     /// Base class for all other evaluators.
     /// </summary>
-#if  FromSchemeObject
-    public class Evaluator : SchemeObject
-#else
-    public class Evaluator : List
-#endif
+    public class Evaluator : EvaluatorOrObject
     {
         #region Constants
-        /// <summary>
-        /// The printable name of the evaluator type.
-        /// </summary>
-        public const string Name = "evaluator";
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -129,7 +119,7 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the returned expression from the last call.
         /// </summary>
-        public SchemeObject ReturnedExpr { get; private set; }
+        public EvaluatorOrObject ReturnedExpr { get; private set; }
 
         /// <summary>
         /// Gets the evaluation environment.  After execution, this is the new environment.
@@ -193,19 +183,27 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Convert an obj into a string representation.
+        /// </summary>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <returns>The string representing the obj.</returns>
+        public override string ToString(bool quoted)
+        {
+            var buf = new StringBuilder();
+            this.PrintString(quoted, buf);
+            return buf.ToString();
+        }
+
+        /// <summary>
         /// Write the evaluator to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-#if FromSchemeObject
-        public override void PrintString(bool quoted, StringBuilder buf)
-#else
         public void PrintString(bool quoted, StringBuilder buf)
-#endif
         {
             if (quoted)
             {
-                buf.Append("<" + Name + ">");
+                buf.Append("<evaluator>");
             }
         }
 
@@ -322,7 +320,7 @@ namespace SimpleScheme
         /// Call the interpreter in the environment to start evaluating steps.
         /// </summary>
         /// <returns>The return value of the evaluation (or halted or suspended).</returns>
-        public SchemeObject EvalStep()
+        public EvaluatorOrObject EvalStep()
         {
             return this.Env.Interp.EvalSteps(this);
         }
@@ -426,9 +424,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The returned value.</param>
         /// <returns>The next evaluator, which is this evaluator.</returns>
-        public virtual Evaluator UpdateReturnValue(SchemeObject exp)
+        public virtual Evaluator UpdateReturnValue(EvaluatorOrObject exp)
         {
             this.ReturnedExpr = exp;
+            ////this.ReturnFlag = ReturnType.SynchronousReturn;
             return this;
         }
         
@@ -441,6 +440,7 @@ namespace SimpleScheme
         public virtual Evaluator UpdateReturnValue(SchemeObject exp, Environment envir)
         {
             this.ReturnedExpr = exp;
+            ////this.ReturnFlag = ReturnType.SynchronousReturn;
             this.ReturnedEnv = envir;
             return this;
         }
@@ -490,9 +490,9 @@ namespace SimpleScheme
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="envir">The environment to save as the returned environment.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public Evaluator ReturnFromStep(SchemeObject exp, Environment envir)
+        public Evaluator ReturnFromStep(EvaluatorOrObject exp, Environment envir)
         {
-            return this.CallerCaller.UpdateReturnValue(exp, envir);
+            return this.CallerCaller.UpdateReturnValue(EnsureSchemeObject(exp), envir);
         }
 
         /// <summary>
@@ -500,7 +500,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="exp">The value to save as the returned value.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public Evaluator ReturnFromStep(SchemeObject exp)
+        public Evaluator ReturnFromStep(EvaluatorOrObject exp)
         {
             return this.CallerCaller.UpdateReturnValue(exp);
         }
@@ -511,9 +511,9 @@ namespace SimpleScheme
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="flag">The return type.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public Evaluator ReturnFromStep(SchemeObject exp, ReturnType flag)
+        public Evaluator ReturnFromStep(EvaluatorOrObject exp, ReturnType flag)
         {
-            return this.CallerCaller.UpdateReturnValue(exp, flag);
+            return this.CallerCaller.UpdateReturnValue(EnsureSchemeObject(exp), flag);
         }
 
         /// <summary>

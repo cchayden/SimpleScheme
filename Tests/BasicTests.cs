@@ -598,7 +598,7 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private SchemeObject ReadAndEvaluate(string str) 
+        private EvaluatorOrObject ReadAndEvaluate(string str) 
         {
             return this.interpreter.Eval(str);
         }

@@ -117,7 +117,7 @@ namespace SimpleScheme
             if (step.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = Cons(s.ReturnedExpr, step.result);
+                step.result = Cons(EnsureSchemeObject(s.ReturnedExpr), step.result);
             }
 
             // Move down each of the lists

@@ -284,11 +284,11 @@ namespace SimpleScheme
         ///   doing an async call.
         /// </summary>
         /// <param name="returnedExpr">The value to return as the asynchronous result.</param>
-        public void SetComplete(SchemeObject returnedExpr)
+        public void SetComplete(EvaluatorOrObject returnedExpr)
         {
             if (this.asyncResult != null)
             {
-                this.asyncResult.SetAsCompleted(returnedExpr, false);
+                this.asyncResult.SetAsCompleted(EvaluatorOrObject.EnsureSchemeObject(returnedExpr), false);
             }
         }
 
@@ -298,7 +298,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public SchemeObject Eval(SchemeObject expr)
+        public EvaluatorOrObject Eval(SchemeObject expr)
         {
             this.asyncResult = null;
             try
@@ -317,7 +317,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public SchemeObject Eval(string str)
+        public EvaluatorOrObject Eval(string str)
         {
             try
             {
@@ -375,7 +375,7 @@ namespace SimpleScheme
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        public SchemeObject ReadEvalPrint()
+        public EvaluatorOrObject ReadEvalPrint()
         {
             this.asyncResult = null;
             try
@@ -437,7 +437,7 @@ namespace SimpleScheme
         {
             while (true)
             {
-                SchemeObject expr = this.ReadEvalPrint();
+                EvaluatorOrObject expr = this.ReadEvalPrint();
                 if (ReferenceEquals(expr, Eof.Instance))
                 {
                     return;
@@ -532,7 +532,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The result of the evaluation.</returns>
-        public SchemeObject ReadEval(InputPort inp)
+        public EvaluatorOrObject ReadEval(InputPort inp)
         {
             try
             {
@@ -588,7 +588,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to print.</param>
         /// <returns>The string representing the object.</returns>
-        public string Print(SchemeObject obj)
+        public string Print(EvaluatorOrObject obj)
         {
             try
             {
@@ -611,7 +611,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        internal SchemeObject Eval(SchemeObject expr, Environment env)
+        internal EvaluatorOrObject Eval(SchemeObject expr, Environment env)
         {
             return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
@@ -621,7 +621,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended evaluator.</returns>
-        internal SchemeObject EvalSteps(Evaluator step)
+        internal EvaluatorOrObject EvalSteps(Evaluator step)
         {
             while (true)
             {
@@ -779,7 +779,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        private SchemeObject UnsafeEval(SchemeObject expr)
+        private EvaluatorOrObject UnsafeEval(SchemeObject expr)
         {
             return this.Eval(expr, this.GlobalEnvironment);
         }
@@ -794,7 +794,7 @@ namespace SimpleScheme
         private IAsyncResult UnsafeBeginEval(SchemeObject expr, AsyncCallback cb, object state)
         {
             this.asyncResult = new AsyncResult<SchemeObject>(cb, state);
-            SchemeObject res = this.Eval(expr, this.GlobalEnvironment);
+            EvaluatorOrObject res = this.Eval(expr, this.GlobalEnvironment);
             if (res is SuspendedEvaluator)
             {
                 return this.asyncResult;
@@ -802,7 +802,7 @@ namespace SimpleScheme
 
             if (!this.asyncResult.IsCompleted)
             {
-                this.asyncResult.SetAsCompleted(res, true);
+                this.asyncResult.SetAsCompleted(EvaluatorOrObject.EnsureSchemeObject(res), true);
             }
 
             return this.asyncResult;
@@ -812,7 +812,7 @@ namespace SimpleScheme
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        private SchemeObject UnsafeReadEvalPrint()
+        private EvaluatorOrObject UnsafeReadEvalPrint()
         {
             SchemeObject expr;
             this.CurrentOutputPort.Write(Prompt);
@@ -822,7 +822,7 @@ namespace SimpleScheme
                 return Eof.Instance;
             }
 
-            SchemeObject val = this.UnsafeEval(expr);
+            EvaluatorOrObject val = this.UnsafeEval(expr);
             if (val != Undefined.Instance)
             {
                 string output = val.ToString(false);

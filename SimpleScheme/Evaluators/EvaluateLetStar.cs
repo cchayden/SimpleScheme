@@ -139,7 +139,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateLetStar)s;
             step.formals = Cons(First(step.vars), step.formals);
-            step.vals = Cons(s.ReturnedExpr, step.vals);
+            step.vals = Cons(EnsureSchemeObject(s.ReturnedExpr), step.vals);
             step.vars = Rest(step.vars);
             step.inits = Rest(step.inits);
             return s.ContinueHere(EvalInitStep);

@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// <param name="expected">The expected type.</param>
         /// <param name="got">The actual value.</param>
         /// <returns>Actually, does not return.</returns>
-        public static SchemeObject TypeError(Type expected, SchemeObject got)
+        public static SchemeObject TypeError(Type expected, EvaluatorOrObject got)
         {
             string message = string.Format(
                 "Invalid type: expected {0}, got {1}: {2}", 

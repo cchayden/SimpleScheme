@@ -96,7 +96,7 @@ namespace SimpleScheme
             var step = (EvaluateList)s;
 
             // back from the evaluation -- save the result and keep going with the rest
-            step.result = Cons(s.ReturnedExpr, step.result);
+            step.result = Cons(EnsureSchemeObject(s.ReturnedExpr), step.result);
             step.StepDownExpr();
 
             if (s.Expr is Pair)

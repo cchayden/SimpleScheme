@@ -46,7 +46,7 @@ namespace SimpleScheme
         /// (1) a value, the operation result, or
         /// (2) a Evaluator, The next evaluator to execute. 
         /// </summary>
-        private readonly Func<SchemeObject, Evaluator, SchemeObject> operation;
+        private readonly Func<SchemeObject, Evaluator, EvaluatorOrObject> operation;
 
         /// <summary>
         /// The argument types.
@@ -105,7 +105,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
-        public Primitive(Func<SchemeObject, Evaluator, SchemeObject> operation, string[] description, int minArgs, int maxArgs, ArgType[] argTypes) :
+        public Primitive(Func<SchemeObject, Evaluator, EvaluatorOrObject> operation, string[] description, int minArgs, int maxArgs, ArgType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
