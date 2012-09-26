@@ -1,11 +1,9 @@
-﻿#define OLD
-// <copyright file="Environment.cs" company="Charles Hayden">
+﻿// <copyright file="Environment.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Text;
     using Obj = System.Object;
 
@@ -22,12 +20,12 @@ namespace SimpleScheme
         /// <summary>
         /// Represents the end of the environment chain.
         /// </summary>
-        protected const Environment Empty = null;
+        private static readonly Environment EmptyEnvironment = null;
 
         /// <summary>
         /// Used for an interpreter with no environment (the primitive environment).
         /// </summary>
-        protected const Interpreter NullInterp = null;
+        private static readonly Interpreter NullInterp = null;
         #endregion
 
         #region Fields
@@ -35,12 +33,12 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create("environment");
+        private static readonly int Counter = SimpleScheme.Counter.Create("environment");
 
         /// <summary>
         /// The symbol table for this enviornment.
         /// </summary>
-        private readonly ISymbolTable symbolTable;
+        private readonly SymbolTable symbolTable;
 
         /// <summary>
         /// The interpreter.
@@ -65,10 +63,10 @@ namespace SimpleScheme
         {
             this.interp = interp;
             this.lexicalParent = lexicalParent;
-            this.symbolTable = SymbolTableFactory.New(0);
+            this.symbolTable = new SymbolTable(0);
             if (interp != NullInterp)
             {
-                interp.IncrementCounter(counter);
+                interp.IncrementCounter(Counter);
             }
         }
 
@@ -95,56 +93,16 @@ namespace SimpleScheme
         {
             this.interp = lexicalParent.Interp;
             this.lexicalParent = lexicalParent;
-            this.symbolTable = SymbolTableFactory.New(formals, vals);
+            this.symbolTable = new SymbolTable(formals, vals);
         }
-        #endregion
 
-        #region ISymbolTable
         /// <summary>
-        /// The interface to the common SymbolTable interface.
+        /// Initializes a new instance of the Environment class.
+        /// This is used to create the base of the environment chain.
         /// </summary>
-        private interface ISymbolTable
+        public Environment() : this(NullInterp, EmptyEnvironment)
         {
-            /// <summary>
-            /// Look up a symbol given its name.
-            /// </summary>
-            /// <param name="symbol">The symbol to look up.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if found in the symbol table, false if not found.</returns>
-            Obj Lookup(Symbol symbol, int level);
-
-            /// <summary>
-            /// Add a symbol and its value to the environment.
-            /// </summary>
-            /// <param name="symbol">The symbol name.</param>
-            /// <param name="val">The value.</param>
-            void Add(Symbol symbol, Obj val);
-
-            /// <summary>
-            /// Update a value in the symbol table.
-            /// </summary>
-            /// <param name="symbol">The symbol to update.</param>
-            /// <param name="val">The new value.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if the value was found and stored, false if not found.</returns>
-            bool Update(Symbol symbol, Obj val, int level);
-
-            /// <summary>
-            /// Increment the value for a symbol.
-            /// </summary>
-            /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if the symbol was found (and incremented), false otherwise.</returns>
-            Obj Increment(Symbol symbol, int level);
-
-            /// <summary>
-            /// Dump the symbol table to a string for printing.
-            /// </summary>
-            /// <param name="indent">The number of characters to indent.</param>
-            /// <param name="sb">A string builder to write the dump into.</param>
-            void Dump(int indent, StringBuilder sb);
         }
-
         #endregion
 
         #region Accessors
@@ -172,6 +130,7 @@ namespace SimpleScheme
         /// <summary>
         /// Add a new definition into the environment.
         /// If a procedure is being added, set its name.
+        /// Creates a new symbol through public interface instead of through parser.
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
@@ -179,7 +138,7 @@ namespace SimpleScheme
         {
             try
             {
-               this.Define(Symbol.New(var), val); 
+               this.Define(Symbol.New(var), val);
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -188,8 +147,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Look up a symbol in the environment.
-        /// This is the single most expensive operation in the whole interpreter.
-        /// Is there some way to make this faster?
+        /// Creates a new symbol through public interface instead of through parser.
         /// </summary>
         /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
@@ -197,7 +155,7 @@ namespace SimpleScheme
         {
             try
             {
-               return this.Lookup(Symbol.New(var)); 
+               return this.Lookup(Symbol.New(var));
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -243,7 +201,18 @@ namespace SimpleScheme
 
             // search down the chain of environments for a definition
             int level = 0;
-            while (env != Empty)
+            if (var.Located)
+            {
+                while (level < var.Level)
+                {
+                    env = env.LexicalParent;
+                    level++;
+                }
+
+                return env.symbolTable.Lookup(var, level);
+            }
+
+            while (env != EmptyEnvironment)
             {
                 Obj val = env.symbolTable.Lookup(var, level);
                 if (val != null)
@@ -281,9 +250,21 @@ namespace SimpleScheme
 
             // search down the chain of environments for a definition
             int level = 0;
-            while (env != Empty)
+            if (symbol.Located)
             {
-                if (env.symbolTable.Update(symbol, val, level))
+                while (level < symbol.Level)
+                {
+                    env = env.LexicalParent;
+                    level++;
+                }
+
+                env.symbolTable.Update(symbol, val, level);
+                return val;
+            }
+
+            while (env != EmptyEnvironment)
+            {
+                if (env.symbolTable.Update(symbol, val, level) != null)
                 {
                     return val;
                 }
@@ -313,7 +294,7 @@ namespace SimpleScheme
 
             // search down the chain of environments for a definition
             int level = 0;
-            while (env != Empty)
+            while (env != EmptyEnvironment)
             {
                 Obj val = env.symbolTable.Increment(symbol, level);
                 if (val != null)
@@ -340,7 +321,7 @@ namespace SimpleScheme
         {
             var sb = new StringBuilder();
             Environment env = this;
-            while (env != Empty && levels > 0)
+            while (env != EmptyEnvironment && levels > 0)
             {
                 env.symbolTable.Dump(indent, sb);
                 levels--;
@@ -373,217 +354,12 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region SymbolTableFactory
-        /// <summary>
-        /// Encapsulates the policy for creating symbol tables.
-        /// </summary>
-        private static class SymbolTableFactory
-        {
-            /// <summary>
-            /// Create a new symbol table with a given number of elements.
-            /// </summary>
-            /// <param name="count">The number of entries to start with.</param>
-            /// <returns>A symbol table.</returns>
-            public static ISymbolTable New(int count)
-            {
-                return new SymbolTableDict(count);
-            }
-
-            /// <summary>
-            /// Create a symbol table and populate it with some symbol definitions.
-            /// </summary>
-            /// <param name="formals">A list of symbol names.</param>
-            /// <param name="vals">A list of smybol values.</param>
-            /// <returns>A symbol table.</returns>
-            public static ISymbolTable New(Obj formals, Obj vals)
-            {
-                return new SymbolTableList(formals, vals);
-            }
-        }
-        #endregion
-
-        #region SymbolTableDict
-        /// <summary>
-        /// The symbol table for the environment.
-        /// This implementation uses a dictionary, which is good for large symbol tables.
-        /// This is always accessed within a lock, so we can use Dictionary instead of
-        ///   the (presumably) more expensive ConcurrentDictionary.
-        /// This is the single most expensive part of the code.
-        /// Is there a way to make this faster?
-        /// Most symbol tables are small, but the base environment with the primitives is large.
-        /// Both of them are used very frequently.  Is there a way to look up symbols less?
-        /// </summary>
-        private class SymbolTableDict : ISymbolTable
-        {
-            /// <summary>
-            /// Stores symbols and their values.
-            /// </summary>
-            private readonly Dictionary<string, Obj> symbolTable;
-
-            /// <summary>
-            /// Lock the symbol table before using -- may be concurrent.
-            /// Alternative: use ConcurrentDictionary.
-            /// </summary>
-            private readonly object lockObj;
-
-            /// <summary>
-            /// Initializes a new instance of the Environment.SymbolTableDict class.
-            /// </summary>
-            /// <param name="count">The number of symbol table slots to pre-allocate.</param>
-            public SymbolTableDict(int count)
-            {
-                this.symbolTable = new Dictionary<string, Obj>(count);
-                this.lockObj = new object();
-            }
-
-            /// <summary>
-            /// Initializes a new instance of the Environment.SymbolTableDict class and adds symbols.
-            /// </summary>
-            /// <param name="symbols">The list of symbols.</param>
-            /// <param name="vals">The list of values.</param>
-            public SymbolTableDict(Obj symbols, Obj vals) : this(symbols.ListLength())
-            {
-                this.AddList(symbols, vals);
-            }
-
-            /// <summary>
-            /// Look up a symbol given its name.
-            /// </summary>
-            /// <param name="symbol">The symbol to look up.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if found in the symbol table, false if not found.</returns>
-            public Obj Lookup(Symbol symbol, int level)
-            {
-                lock (this.lockObj)
-                {
-                    Obj val;
-                    if (this.symbolTable.TryGetValue(symbol.SymbolName, out val))
-                    {
-                        return val;
-                    }
-
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// Add a symbol and its value to the environment.
-            /// </summary>
-            /// <param name="symbol">The symbol name.</param>
-            /// <param name="val">The value.</param>
-            public void Add(Symbol symbol, Obj val)
-            {
-                lock (this.lockObj)
-                {
-                    this.symbolTable[symbol.SymbolName] = val;
-                }
-            }
-
-            /// <summary>
-            /// Update a value in the symbol table.
-            /// </summary>
-            /// <param name="symbol">The symbol to update.</param>
-            /// <param name="val">The new value.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if the value was found and stored, false if not found.</returns>
-            public bool Update(Symbol symbol, Obj val, int level)
-            {
-                lock (this.lockObj)
-                {
-                    if (!this.symbolTable.ContainsKey(symbol.SymbolName))
-                    {
-                        return false;
-                    }
-
-                    this.symbolTable[symbol.SymbolName] = val;
-                    return true;
-                }
-            }
-
-            /// <summary>
-            /// Increment the value for a symbol.
-            /// </summary>
-            /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if the symbol was found (and incremented), false otherwise.</returns>
-            public Obj Increment(Symbol symbol, int level)
-            {
-                lock (this.lockObj)
-                {
-                    Obj val;
-                    if (!this.symbolTable.TryGetValue(symbol.SymbolName, out val))
-                    {
-                        // If not found, it is not an error, just keep looking.
-                        return null;
-                    }
-
-                    if (!val.IsNumber())
-                    {
-                        // If it is found but is not a number, then that is an error.
-                        ErrorHandlers.SemanticError("Attempt to increment a non-number: " + Printer.AsString(val));
-                        return null;
-                    }
-
-                    this.symbolTable[symbol.SymbolName] = val.AsNumber() + 1;
-                    return val;
-                }
-            }
-
-            /// <summary>
-            /// Dump the symbol table to a string for printing.
-            /// </summary>
-            /// <param name="indent">The number of characters to indent.</param>
-            /// <param name="sb">A string builder to write the dump into.</param>
-            public void Dump(int indent, StringBuilder sb)
-            {
-                lock (this.lockObj)
-                {
-                    var initial = new string(' ', indent);
-                    foreach (var key in this.symbolTable.Keys)
-                    {
-                        sb.AppendFormat("{0}{1}: {2}\n", initial, key, this.symbolTable[key]);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Add a list of symbols and values.
-            /// The list of symbols and their values must be the same length.
-            /// </summary>
-            /// <param name="symbols">The list of symbols.</param>
-            /// <param name="vals">The list of values.</param>
-            private void AddList(Obj symbols, Obj vals)
-            {
-                while (!symbols.IsEmptyList())
-                {
-                    if (symbols.IsSymbol())
-                    {
-                        this.Add(symbols.AsSymbol(), vals);
-                    }
-                    else
-                    {
-                        Obj symbol = symbols.First();
-                        if (!symbol.IsSymbol())
-                        {
-                            ErrorHandlers.SemanticError("Bad formal parameter: " + symbol);
-                        }
-
-                        this.Add(symbol.AsSymbol(), vals.First());
-                    }
-
-                    symbols = symbols.Rest();
-                    vals = vals.Rest();
-                }
-            }
-        }
-        #endregion
-
-        #region SymbolTableList
+        #region SymbolTable
         /// <summary>
         /// A SymbolTable based on List.  This is inefficient for large symbol tables,
         /// but if the caller can remember the position, it can be more efficient.
         /// </summary>
-        private class SymbolTableList : ISymbolTable
+        public class SymbolTable
         {
             /// <summary>
             /// Stores the symbols.
@@ -602,20 +378,20 @@ namespace SimpleScheme
             private readonly object lockObj;
 
             /// <summary>
-            /// Initializes a new instance of the Environment.SymbolTableList class and adds symbols.
+            /// Initializes a new instance of the Environment.SymbolTable class and adds symbols.
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public SymbolTableList(Obj symbols, Obj vals) : this(symbols.ListLength())
+            public SymbolTable(Obj symbols, Obj vals) : this(symbols.ListLength())
             {
                 this.AddList(symbols, vals);
             }
 
             /// <summary>
-            /// Initializes a new instance of the Environment.SymbolTableList class.
+            /// Initializes a new instance of the Environment.SymbolTable class.
             /// </summary>
             /// <param name="count">The number of symbol table slots to pre-allocate.</param>
-            private SymbolTableList(int count)
+            public SymbolTable(int count)
             {
                 this.names = new List<string>(count);
                 this.values = new List<object>(count);
@@ -628,18 +404,28 @@ namespace SimpleScheme
             /// through the parent environment chain.
             /// </summary>
             /// <param name="symbol">The symbol to look up.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if found in the symbol table, false if not found.</returns>
-            public Obj Lookup(Symbol symbol, int level)
+            /// <param name="level"></param>
+            /// <returns>The value of the object looked up, null if not found.</returns>
+            public object Lookup(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
-                    var index = this.names.FindIndex(name => name == symbol.SymbolName);
-                    if (index == -1)
+                    if (symbol.Located)
+                    {
+                        if (level != symbol.Level)
+                        {
+                            return null;
+                        }
+                        return this.values[symbol.Pos];
+                    }
+
+                    var index = this.FindSymbol(symbol);
+                    if (!SymbolFound(index))
                     {
                         return null;
                     }
 
+                    symbol.Locate(index, level);
                     return this.values[index];
                 }
             }
@@ -655,38 +441,51 @@ namespace SimpleScheme
             {
                 lock (this.lockObj)
                 {
-                    var index = this.names.FindIndex(name => name == symbol.SymbolName);
-                    if (index == -1)
+                    var index = this.FindSymbol(symbol);
+                    if (!SymbolFound(index))
                     {
                         this.names.Add(symbol.SymbolName);
                         this.values.Add(val);
-                        return;
                     }
-
-                    this.values[index] = val;
+                    else
+                    {
+                        this.values[index] = val;
+                    }
                 }
             }
 
             /// <summary>
             /// Update a value in the symbol table.
-            /// If the symbol is not defined, return false (this is an error).
+            /// If the symbol is not defined, return false.
             /// </summary>
             /// <param name="symbol">The symbol to update.</param>
             /// <param name="val">The new value.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if the value was found and stored, false if not found.</returns>
-            public bool Update(Symbol symbol, Obj val, int level)
+            /// <param name="level"></param>
+            /// <returns>The new value, null if not found.</returns>
+            public object Update(Symbol symbol, object val, int level)
             {
                 lock (this.lockObj)
                 {
-                    var index = this.names.FindIndex(name => name == symbol.SymbolName);
-                    if (index == -1)
+                    if (symbol.Located)
                     {
-                        return false;
+                        if (level != symbol.Level)
+                        {
+                            return null;
+                        }
+
+                        this.values[symbol.Pos] = val;
+                        return val;
+                    }
+
+                    var index = this.FindSymbol(symbol);
+                    if (!SymbolFound(index))
+                    {
+                        return null;
                     }
 
                     this.values[index] = val;
-                    return true;
+                    symbol.Locate(index, level);
+                    return val;
                 }
             }
 
@@ -694,14 +493,14 @@ namespace SimpleScheme
             /// Increment the value for a symbol.
             /// </summary>
             /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
-            /// <param name="level">The number of levels from the use to the definition.</param>
-            /// <returns>True if the symbol was found (and incremented), false otherwise.</returns>
-            public Obj Increment(Symbol symbol, int level)
+            /// <param name="level"></param>
+            /// <returns>TThe new value, null if not found.</returns>
+            public object Increment(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
-                    var index = this.names.FindIndex(name => name == symbol.SymbolName);
-                    if (index == -1)
+                    var index = this.FindSymbol(symbol);
+                    if (!SymbolFound(index))
                     {
                         return null;
                     }
@@ -734,6 +533,26 @@ namespace SimpleScheme
                         sb.AppendFormat("{0}{1}: {2}\n", initial, this.names[i], this.values[i]);
                     }
                 }
+            }
+
+            /// <summary>
+            /// Tests if the symbol was found.
+            /// </summary>
+            /// <param name="index">The return value from FindSymbol.</param>
+            /// <returns>True if a symbol was found.</returns>
+            private static bool SymbolFound(int index)
+            {
+                return index != -1;
+            }
+
+            /// <summary>
+            /// Find a symbol in the symbol table.
+            /// </summary>
+            /// <param name="symbol">The symbol to look for.</param>
+            /// <returns>The symbol position, if found, otherwise -1.</returns>
+            private int FindSymbol(Symbol symbol)
+            {
+                return this.names.FindIndex(name => name == symbol.SymbolName);
             }
 
             /// <summary>

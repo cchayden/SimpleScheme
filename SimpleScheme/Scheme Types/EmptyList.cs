@@ -54,7 +54,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }

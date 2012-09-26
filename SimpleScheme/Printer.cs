@@ -13,7 +13,7 @@ namespace SimpleScheme
     /// Unquoted values are for use internally (for instance to get a filename from either a 
     ///    string or a symbol.)
     /// </summary>
-    public class Printer
+    public static class Printer
     {
         #region Public Static Methods
         /// <summary>

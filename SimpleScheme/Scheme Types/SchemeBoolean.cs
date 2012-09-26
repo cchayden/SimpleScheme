@@ -180,17 +180,17 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(args.First().IsSchemeBoolean()), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("boolean?"), (args, caller) => Truth(args.First().IsSchemeBoolean()), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("eq?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("equal?"), (args, caller) => Truth(Equal(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("eqv?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(args.First().IsSchemeBoolean() && (bool)args.First() == false), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("not"), (args, caller) => Truth(args.First().IsSchemeBoolean() && (bool)args.First() == false), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(args.First().IsEmptyList()), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive(Symbol.New("null?"), (args, caller) => Truth(args.First().IsEmptyList()), 1, Primitive.ValueType.Obj);
         }
         #endregion
     }

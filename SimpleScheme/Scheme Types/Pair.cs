@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : Printable
+    public sealed class Pair : Printable, Cleanable
     {
         #region Constants
         /// <summary>
@@ -142,7 +142,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public void PrintString(bool quoted, StringBuilder buf)
         {
             Obj tail = this.Rest();
             if (tail.IsPair() && tail.Rest().IsEmptyList())
@@ -217,6 +217,18 @@ namespace SimpleScheme
             }
 
             buf.Append(')');
+        }
+
+        public void Clean()
+        {
+            Cleaner.Clean(this.First());
+            Obj tail = this.Rest();
+            while (tail.IsPair())
+            {
+                Cleaner.Clean(tail.First());
+                Obj oldTail = tail;
+                tail = tail.Rest();
+            }
         }
 
         /// <summary>

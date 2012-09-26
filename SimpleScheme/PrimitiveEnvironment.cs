@@ -20,8 +20,7 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the PrimitiveEnvironment class.
         /// </summary>
-        internal PrimitiveEnvironment() :
-            base(NullInterp, Empty)
+        internal PrimitiveEnvironment()
         {
             this.InstallPrimitives();
         }
@@ -50,9 +49,14 @@ namespace SimpleScheme
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int minArgs, int maxArgs, params Primitive.ValueType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(
+            Symbol name, 
+            Func<Obj, Evaluator, Obj> operation, 
+            int minArgs, 
+            int maxArgs, 
+            params Primitive.ValueType[] argTypes)
         {
-            this.Define(Symbol.New(name), Primitive.New(operation, minArgs, maxArgs, argTypes));
+            this.Define(name, Primitive.New(operation, minArgs, maxArgs, argTypes));
             return this;
         }
 
@@ -66,9 +70,13 @@ namespace SimpleScheme
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int numberOfArgs, params Primitive.ValueType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(
+            Symbol name, 
+            Func<Obj, Evaluator, Obj> operation, 
+            int numberOfArgs, 
+            params Primitive.ValueType[] argTypes)
         {
-            this.Define(Symbol.New(name), Primitive.New(operation, numberOfArgs, numberOfArgs, argTypes));
+            this.Define(name, Primitive.New(operation, numberOfArgs, numberOfArgs, argTypes));
             return this;
         }
         #endregion
@@ -100,7 +108,7 @@ namespace SimpleScheme
 
             this
                 .DefinePrimitive(
-                    "exit",
+                    Symbol.New("exit"),
                     (args, caller) =>
                     {
                         System.Environment.Exit(args.First().IsEmptyList() ? 0 : Number.AsInt(args.First()));
@@ -109,7 +117,12 @@ namespace SimpleScheme
                     0,
                     1, 
                     Primitive.ValueType.Number)
-                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2, Primitive.ValueType.Proc, Primitive.ValueType.Number);
+                .DefinePrimitive(
+                    Symbol.New("time-call"), 
+                    (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 
+                    1, 
+                    2, 
+                    Primitive.ValueType.Proc, Primitive.ValueType.Number);
         }
         #endregion
     }

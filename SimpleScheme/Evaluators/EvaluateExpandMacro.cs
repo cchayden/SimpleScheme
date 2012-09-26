@@ -78,12 +78,15 @@ namespace SimpleScheme
 
         /// <summary>
         /// Back here after macro is expanded.  Evaluate the result.
+        /// Before doing that, clean the expanded result.
+        /// Cleaning removes any cached information from the symbols, because they may not be
+        ///   evaluated at the same nesting level each time.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>Return to caller with the expanded macro.</returns>
         private static Evaluator EvaluateStep(Evaluator s)
         {
-            return EvaluateExpression.Call(s.ReturnedExpr, s.Env, s.Caller);
+            return EvaluateExpression.Call(Cleaner.Clean(s.ReturnedExpr), s.Env, s.Caller);
         }
         #endregion
     }

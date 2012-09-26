@@ -11,6 +11,24 @@ namespace SimpleScheme
    //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
     public sealed class EvaluateExpression : Evaluator
     {
+        #region Constants
+        private static readonly Symbol andSym = Symbol.New("and");
+        private static readonly Symbol beginSym = Symbol.New("begin");
+        private static readonly Symbol parallelSym = Symbol.New("parallel");
+        private static readonly Symbol caseSym = Symbol.New("case");
+        private static readonly Symbol condSym = Symbol.New("cond");
+        private static readonly Symbol defineSym = Symbol.New("define");
+        private static readonly Symbol doSym = Symbol.New("do");
+        private static readonly Symbol ifSym = Symbol.New("if");
+        private static readonly Symbol letSym = Symbol.New("let");
+        private static readonly Symbol letstarSym = Symbol.New("let*");
+        private static readonly Symbol letrecSym = Symbol.New("letrec");
+        private static readonly Symbol orSym = Symbol.New("or");
+        private static readonly Symbol setSym = Symbol.New("set!");
+        private static readonly Symbol timeSym = Symbol.New("time");
+
+        #endregion
+
         #region Fields
         /// <summary>
         /// The name of the evaluator, used for counters and tracing.
@@ -52,20 +70,6 @@ namespace SimpleScheme
 
             IncrementCounter(counter);
         }
-
-        /// <summary>
-        /// Initializes a new instance of the EvaluateExpression class.
-        /// The function is supplied as a string.
-        /// </summary>
-        /// <param name="args">The function args to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="funName">The function name to evaluate.</param>
-        private EvaluateExpression(Obj args, Environment env, Evaluator caller, string funName)
-            : this(args, env, caller, Symbol.New(funName))
-        {
-        }
-
         #endregion
 
         #region Define Primitives
@@ -81,67 +85,151 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-                .DefinePrimitive("and", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "and"), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        andSym,
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, andSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                .DefinePrimitive("begin", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "begin"), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        beginSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, beginSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Obj)
                 //// (parallel <expr> ...)
-                .DefinePrimitive("parallel", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "parallel"), 0, MaxInt, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                        parallelSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, parallelSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Pair)
                 //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-                .DefinePrimitive("case", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "case"), 0, MaxInt, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                        caseSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, caseSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Pair)
                 //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... )</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                .DefinePrimitive("cond", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "cond"), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        condSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, condSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                .DefinePrimitive("define", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "define"), 0, MaxInt, Primitive.ValueType.PairOrSymbol)
+                .DefinePrimitive(
+                        defineSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, defineSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.PairOrSymbol)
                 //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                 ////                           ...)
                 ////                           (<test> <expression> ...)
                 ////                         <command> ...)</r4rs>
-                .DefinePrimitive("do", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "do"), 0, MaxInt, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                        doSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, doSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Pair)
                 //// Instead of returning a value, return an evaulator that can be run to get the value
-                .DefinePrimitive("eval", (args, caller) => Call(args.First(), caller.Env, caller), 1, 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        Symbol.New("eval"), 
+                        (args, caller) => Call(args.First(), caller.Env, caller), 
+                        1, 
+                        2, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                 //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-                .DefinePrimitive("if", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "if"), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        ifSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, ifSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
                 //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
                 //// <r4rs section="4.1.4">formals: <variable></r4rs>
                 //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-                .DefinePrimitive("lambda", (args, caller) => EvalLambda(args, caller.Env, caller), 0, MaxInt, Primitive.ValueType.PairOrSymbol)
+                .DefinePrimitive(
+                        Symbol.New("lambda"), 
+                        (args, caller) => EvalLambda(args, caller.Env, caller), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.PairOrSymbol)
                 //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                .DefinePrimitive("let", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "let"), 0, MaxInt, Primitive.ValueType.PairOrSymbol)
+                .DefinePrimitive(
+                        letSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, letSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.PairOrSymbol)
                 //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                .DefinePrimitive("let*", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "let*"), 0, MaxInt, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                        letstarSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, letstarSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Pair)
                 //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                .DefinePrimitive("letrec", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "letrec"), 0, MaxInt, Primitive.ValueType.Pair)
-                .DefinePrimitive("macro", (args, caller) => EvalMacro(args, caller.Env, caller), 0, MaxInt, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                        letrecSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, letrecSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Pair)
+                //// not defined in r4rs
+                .DefinePrimitive(
+                        Symbol.New("macro"), 
+                        (args, caller) => EvalMacro(args, caller.Env, caller), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Pair)
                 //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-                .DefinePrimitive("or", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "or"), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        orSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, orSym), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
-                .DefinePrimitive("quote", (args, caller) => EvalQuote(args, caller), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        Symbol.New("quote"), 
+                        (args, caller) => EvalQuote(args, caller), 
+                        1, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
                 .DefinePrimitive(
-                    "set!",
-                    (args, caller) => new EvaluateExpression(args, caller.Env, caller, "set!"),
+                    setSym,
+                    (args, caller) => new EvaluateExpression(args, caller.Env, caller, setSym),
                     2,
                     Primitive.ValueType.Symbol,
                     Primitive.ValueType.Pair)
                 //// (time <expr>)
-                .DefinePrimitive("time", (args, caller) => new EvaluateExpression(args, caller.Env, caller, "time"), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive(
+                        timeSym, 
+                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, timeSym), 
+                        1, 
+                        Primitive.ValueType.Obj);
         }
         #endregion
 

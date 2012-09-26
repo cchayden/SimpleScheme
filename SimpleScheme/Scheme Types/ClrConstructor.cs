@@ -79,10 +79,8 @@ namespace SimpleScheme
             env
                 //// (constructor <class-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                    "constructor",
-                    (args, caller) => New(
-                                          Printer.AsString(args.First(), false),
-                                          args.Rest()),
+                    Symbol.New("constructor"),
+                    (args, caller) => New(Printer.AsString(args.First(), false), args.Rest()),
                     1,
                     MaxInt, 
                     Primitive.ValueType.String);
@@ -95,7 +93,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public new void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(Name + ": ");
             buf.Append(this.ToString());

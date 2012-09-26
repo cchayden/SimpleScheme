@@ -76,7 +76,7 @@ namespace SimpleScheme
             env
                 //// (method-async <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                   "method-async",
+                   Symbol.New("method-async"),
                    (args, caller) => new AsynchronousClrProcedure(args.First(), args.Second(), args.Rest().Rest()),
                    2,
                    MaxInt, 
@@ -99,7 +99,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public new void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

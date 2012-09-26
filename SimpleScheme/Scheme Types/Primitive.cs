@@ -200,7 +200,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public new void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -230,8 +230,8 @@ namespace SimpleScheme
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
             // First check the number of arguments
-            this.CheckArgs(args, "Primitive");
-            this.CheckArgTypes(args);
+            int numArgs = this.CheckArgs(args, "Primitive");
+            this.CheckArgTypes(numArgs, args);
             caller.IncrementCounter(counter);
 
             // Execute the operation
@@ -253,10 +253,10 @@ namespace SimpleScheme
         /// <summary>
         /// Check the argument types
         /// </summary>
+        /// <param name="numArgs">The number of arguments passed to the procedure.</param>
         /// <param name="args">The arguments passed to the primitive.</param>
-        private void CheckArgTypes(Obj args)
+        private void CheckArgTypes(int numArgs, Obj args)
         {
-            int numArgs = args.ListLength();
             int numTypes = this.argTypes.Length - 1;
             for (int i = 0; i < numArgs; i++)
             {

@@ -236,15 +236,34 @@ namespace SimpleScheme
         {
             env
                 //// (trace-on)
-                .DefinePrimitive("trace-on", (args, caller) => SetTraceFlag(caller, true), 0)
+                .DefinePrimitive(
+                    Symbol.New("trace-on"), 
+                    (args, caller) => SetTraceFlag(caller, true), 
+                    0)
                 //// (trace-off)
-                .DefinePrimitive("trace-off", (args, caller) => SetTraceFlag(caller, false), 0)
+                .DefinePrimitive(
+                    Symbol.New("trace-off"), 
+                    (args, caller) => SetTraceFlag(caller, false), 
+                    0)
                 //// (counters-on)
-                .DefinePrimitive("counters-on", (args, caller) => SetCountFlag(caller, true), 0)
+                .DefinePrimitive(
+                    Symbol.New("counters-on"), 
+                    (args, caller) => SetCountFlag(caller, true), 
+                    0)
                 //// (counters-off)
-                .DefinePrimitive("counters-off", (args, caller) => SetCountFlag(caller, false), 0)
+                .DefinePrimitive(
+                    Symbol.New("counters-off"), 
+                    (args, caller) => SetCountFlag(caller, false), 
+                    0)
                 //// (backtrace)
-                .DefinePrimitive("backtrace", (args, caller) => Backtrace(caller), 0);
+                .DefinePrimitive(
+                    Symbol.New("backtrace"), 
+                    (args, caller) => Backtrace(caller), 
+                    0);
+                env.DefinePrimitive(
+                    Symbol.New("debug"), 
+                    (args, caller) => Debug(caller), 
+                    0);
         }
         #endregion
 
@@ -681,6 +700,18 @@ namespace SimpleScheme
         private static Obj Backtrace(Evaluator caller)
         {
             caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
+            return Undefined.New();
+        }
+
+        /// <summary>
+        /// Display whatever debug information is defined
+        /// </summary>
+        /// <param name="caller"></param>
+        /// <returns></returns>
+        private static Object Debug(Evaluator caller)
+        {
+            string msg = "debug";
+            caller.Interp.CurrentOutputPort.WriteLine(msg);
             return Undefined.New();
         }
         #endregion

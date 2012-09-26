@@ -68,14 +68,14 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
                 .DefinePrimitive(
-                        "list->vector", 
+                        Symbol.New("list->vector"), 
                         (args, caller) => FromList(args.First()), 
                         1, 
                         Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
                 .DefinePrimitive(
-                        "make-vector", 
+                        Symbol.New("make-vector"), 
                         (args, caller) => New(args.First(), args.Second()), 
                         1, 
                         2, 
@@ -83,40 +83,40 @@ namespace SimpleScheme
                         Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive(
-                        "vector", 
+                        Symbol.New("vector"), 
                         (args, caller) => FromList(args), 
                         0, 
                         MaxInt, 
                         Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
                 .DefinePrimitive(
-                        "vector->list", 
+                        Symbol.New("vector->list"), 
                         (args, caller) => ToList(args.First()), 
                         1, 
                         Primitive.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
                 .DefinePrimitive(
-                        "vector-fill", 
+                        Symbol.New("vector-fill"), 
                         (args, caller) => Fill(args.First(), args.Second()), 
                         2, 
                         Primitive.ValueType.Vector, 
                         Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
                 .DefinePrimitive(
-                        "vector-length", 
+                        Symbol.New("vector-length"), 
                         (args, caller) => args.First().AsVector().Length, 
                         1, 
                         Primitive.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
                 .DefinePrimitive(
-                        "vector-ref", 
+                        Symbol.New("vector-ref"), 
                         (args, caller) => Get(args.First(), args.Second()), 
                         2, 
                         Primitive.ValueType.Vector, 
                         Primitive.ValueType.Number)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
                 .DefinePrimitive(
-                        "vector-set!", 
+                        Symbol.New("vector-set!"), 
                         (args, caller) => Set(args.First(), args.Second(), args.Third()), 
                         3, 
                         Primitive.ValueType.Vector, 
@@ -124,7 +124,7 @@ namespace SimpleScheme
                         Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
                 .DefinePrimitive( 
-                        "vector?", 
+                        Symbol.New("vector?"), 
                         (args, caller) => SchemeBoolean.Truth(args.First().IsVector()), 
                         1, 
                         Primitive.ValueType.Obj);
@@ -153,6 +153,18 @@ namespace SimpleScheme
             }
 
             buf.Append(')');
+        }
+
+        /// <summary>
+        /// Clean each element of the vector.
+        /// </summary>
+        /// <param name="vec">The vector to clean.</param>
+        public static void Clean(this Obj[] vec)
+        {
+            foreach (Obj v in vec)
+            {
+                Cleaner.Clean(v);
+            }
         }
 
         /// <summary>

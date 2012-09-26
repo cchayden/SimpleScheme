@@ -18,7 +18,11 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
     //// <r4rs section="4.1.4">formals: <variable></r4rs>
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
+#if OLD
+    public class Lambda : Procedure, Cleanable
+#else
     public class Lambda : Procedure
+#endif
     {
         #region Constants
         /// <summary>
@@ -92,7 +96,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public new void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -106,6 +110,18 @@ namespace SimpleScheme
         {
             return this.ToString(Name);
         }
+
+#if OLD
+        /// <summary>
+        /// Clean the body.
+        /// This may need to be cleaned after executing in a different environment.
+        /// Used when executing continuations.
+        /// </summary>
+        public void Clean()
+        {
+            Cleaner.Clean(this.body);
+        }
+#endif
         #endregion
 
         /// <summary>

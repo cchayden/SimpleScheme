@@ -94,115 +94,115 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
                 .DefinePrimitive(
-                        "char->integer", 
+                        Symbol.New("char->integer"), 
                         (args, caller) => (int)(char)args.First(), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
                 .DefinePrimitive(
-                        "char-alphabetic?", 
+                        Symbol.New("char-alphabetic?"), 
                         (args, caller) => SchemeBoolean.Truth(char.IsLetter((char)args.First())), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                    "char-ci<=?", 
+                    Symbol.New("char-ci<=?"), 
                     (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), true) <= 0), 
                     2, 
                     Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char-ci<?", 
+                        Symbol.New("char-ci<?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), true) < 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char-ci=?", 
+                        Symbol.New("char-ci=?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), true) == 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci>=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char-ci>=?", 
+                        Symbol.New("char-ci>=?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), true) >= 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char-ci>?", 
+                        Symbol.New("char-ci>?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), true) > 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
                 .DefinePrimitive(
-                        "char-downcase", 
+                        Symbol.New("char-downcase"), 
                         (args, caller) => char.ToLower((char)args.First()), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
                 .DefinePrimitive(
-                        "char-lower-case?", 
+                        Symbol.New("char-lower-case?"), 
                         (args, caller) => SchemeBoolean.Truth(char.IsLower((char)args.First())), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
                 .DefinePrimitive(
-                        "char-numeric?", 
+                        Symbol.New("char-numeric?"), 
                         (args, caller) => SchemeBoolean.Truth(char.IsDigit((char)args.First())), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
                 .DefinePrimitive(
-                        "char-upcase", 
+                        Symbol.New("char-upcase"), 
                         (args, caller) => char.ToUpper((char)args.First()).AsCharacter(), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
                 .DefinePrimitive(
-                        "char-upper-case?", 
+                        Symbol.New("char-upper-case?"), 
                         (args, caller) => SchemeBoolean.Truth(char.IsUpper((char)args.First())), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
                 .DefinePrimitive(
-                        "char-whitespace?", 
+                        Symbol.New("char-whitespace?"), 
                         (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace((char)args.First())), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                       "char<=?", 
+                       Symbol.New("char<=?"), 
                        (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), false) <= 0), 
                        2, 
                        Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char<?", 
+                        Symbol.New("char<?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), false) < 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char=?", 
+                        Symbol.New("char=?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), false) == 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char>=? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char>=?", 
+                        Symbol.New("char>=?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), false) >= 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
                 .DefinePrimitive(
-                        "char>?", 
+                        Symbol.New("char>?"), 
                         (args, caller) => SchemeBoolean.Truth(Compare((char)args.First(), (char)args.Second(), false) > 0), 
                         2, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
                 .DefinePrimitive(
-                        "char?", 
+                        Symbol.New("char?"), 
                         (args, caller) => SchemeBoolean.Truth(args.First().IsCharacter()), 
                         1, 
                         Primitive.ValueType.Obj);

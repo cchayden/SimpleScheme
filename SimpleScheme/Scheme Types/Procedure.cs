@@ -75,36 +75,52 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
                 .DefinePrimitive(
-                "apply", 
-                (args, caller) => args.First().AsProcedure().Apply(args.Rest().ListStar(), caller), 
-                2, 
-                MaxInt, 
-                Primitive.ValueType.Proc, 
-                Primitive.ValueType.Obj)
+                        Symbol.New("apply"), 
+                        (args, caller) => args.First().AsProcedure().Apply(args.Rest().ListStar(), caller), 
+                        2, 
+                        MaxInt, 
+                        Primitive.ValueType.Proc, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
-                .DefinePrimitive("call-with-current-continuation", (args, caller) => args.First().AsProcedure().CallCc(caller), 1, Primitive.ValueType.Proc)
-                .DefinePrimitive("call/cc", (args, caller) => args.First().AsProcedure().CallCc(caller), 1, Primitive.ValueType.Proc)
+                .DefinePrimitive(
+                        Symbol.New("call-with-current-continuation"), 
+                        (args, caller) => args.First().AsProcedure().CallCc(caller), 
+                        1, 
+                        Primitive.ValueType.Proc)
+                .DefinePrimitive(
+                        Symbol.New("call/cc"), 
+                        (args, caller) => args.First().AsProcedure().CallCc(caller), 
+                        1, 
+                        Primitive.ValueType.Proc)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
-                .DefinePrimitive("force", (args, caller) => Force(args.First(), caller), 1, Primitive.ValueType.Proc)
+                .DefinePrimitive(
+                        Symbol.New("force"), 
+                        (args, caller) => Force(args.First(), caller), 
+                        1, 
+                        Primitive.ValueType.Proc)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive(
-                "for-each", 
-                (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), false, caller.Env, caller), 
-                1, 
-                MaxInt,
-                Primitive.ValueType.Proc, 
-                Primitive.ValueType.Pair)
+                        Symbol.New("for-each"), 
+                        (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), false, caller.Env, caller), 
+                         1, 
+                        MaxInt,
+                        Primitive.ValueType.Proc, 
+                        Primitive.ValueType.Pair)
                 //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive(
-                "map", 
-                (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), true, caller.Env, caller), 
-                1, 
-                MaxInt, 
-                Primitive.ValueType.Proc, 
-                Primitive.ValueType.PairOrEmpty)
+                        Symbol.New("map"), 
+                        (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), true, caller.Env, caller), 
+                        1, 
+                        MaxInt, 
+                        Primitive.ValueType.Proc, 
+                        Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(args.First().IsProcedure()), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive(
+                        Symbol.New("procedure?"), 
+                        (args, caller) => SchemeBoolean.Truth(args.First().IsProcedure()), 
+                        1, 
+                        Primitive.ValueType.Obj);
         }
         #endregion
 
@@ -114,7 +130,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -200,7 +216,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">The arguments passed to the procedure.</param>
         /// <param name="tag">Name, for the error message.</param>
-        protected void CheckArgs(Obj args, string tag)
+        /// <returns>The number of arguments passed to the procedure.</returns>
+        protected int CheckArgs(Obj args, string tag)
         {
             int numArgs = args.ListLength();
             if (numArgs < this.minArgs)
@@ -214,6 +231,8 @@ namespace SimpleScheme
                 ErrorHandlers.SemanticError(tag + ": too many args, " + numArgs + ", for " +
                                                             this.ProcedureName + ": " + args);
             }
+
+            return numArgs;
         }
         #endregion
 
@@ -235,11 +254,18 @@ namespace SimpleScheme
         /// Perform the call/cc primitive.
         /// Create a continuation that captures the caller's environment and returns to the caller.
         /// Then apply this procedure to it.
+        /// Clean the lambda first, because it could have been previously executed in another environment.
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>A function to continue the evaluation.</returns>
         private Obj CallCc(Evaluator caller)
         {
+#if OLD
+            if (this.IsLambda())
+            {
+                this.AsLambda().Clean();
+            }
+#endif
             return this.Apply(Continuation.New(caller).MakeList(), caller);
         }
         #endregion

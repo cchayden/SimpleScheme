@@ -16,9 +16,9 @@
 (define (fib-iter n)
   (do ((x1 0) (x2 1) (tmp 1) (i 1 (+ i 1)))
     ((> i n) x1)
-    (set! tmp (+ x1 x2))
-    (set! x1 x2)
-    (set! x2 tmp)))
+     (set! tmp (+ x1 x2))
+     (set! x1 x2)
+     (set! x2 tmp)))
 
 (define print-fib
   (lambda (m) 
@@ -28,9 +28,11 @@
 (define run-fib
   (lambda (m) 
     (do ((i 0 (+ i 1)))
-      ((> i m) 'done)
+      ((>= i m) 'done)
       (test fib25))))
 (define fib25 (lambda () (fib 25)))
 (run-fib 10)
+;(p (fib-iter 1000))
+(debug)
 
 

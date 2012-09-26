@@ -23,7 +23,12 @@ namespace SimpleScheme
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int minArgs, int maxArgs, params Primitive.ValueType[] argTypes);
+        IPrimitiveEnvironment DefinePrimitive(
+            Symbol name, 
+            Func<Obj, Evaluator, Obj> operation, 
+            int minArgs, 
+            int maxArgs, 
+            params Primitive.ValueType[] argTypes);
 
         /// <summary>
         /// Define a primitive in the environment.
@@ -33,6 +38,10 @@ namespace SimpleScheme
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int numberOfArgs, params Primitive.ValueType[] argTypes);
+        IPrimitiveEnvironment DefinePrimitive(
+            Symbol name, 
+            Func<Obj, Evaluator, Obj> operation, 
+            int numberOfArgs, 
+            params Primitive.ValueType[] argTypes);
     }
 }

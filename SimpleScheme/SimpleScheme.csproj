@@ -38,6 +38,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cleaner.cs" />
     <Compile Include="Evaluators\EndedEvaluator.cs" />
     <Compile Include="Evaluators\EvaluateExpressionWithCatch.cs" />
     <Compile Include="Evaluators\HaltedEvaluator.cs" />
@@ -47,6 +48,7 @@
     <Compile Include="Scheme Types\Character.cs" />
     <Compile Include="CompletedAsyncResult.cs" />
     <Compile Include="Counter.cs" />
+    <Compile Include="Scheme Types\Cleanable.cs" />
     <Compile Include="Scheme Types\ClrConstructor.cs" />
     <Compile Include="Scheme Types\EmptyList.cs" />
     <Compile Include="Evaluators\EvaluateAnd.cs">

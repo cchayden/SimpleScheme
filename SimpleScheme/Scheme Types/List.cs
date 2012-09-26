@@ -292,109 +292,168 @@ namespace SimpleScheme
             const int MaxInt = Int32.MaxValue;
             env
                 //// <r4rs section="6.3">(append <list> ...)</r4rs>
-                .DefinePrimitive("append", (args, caller) => Append(args), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("append"), 
+                    (args, caller) => Append(args), 
+                    0, 
+                    MaxInt, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
                 .DefinePrimitive(
-                    "assoc", 
+                    Symbol.New("assoc"), 
                     (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Equal(x, y)), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
                 .DefinePrimitive(
-                    "assq", 
+                    Symbol.New("assq"), 
                     (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y)), 
                     2, 
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(assv <obj> <alist>)</r4rs>
                 .DefinePrimitive(
-                    "assv", 
+                    Symbol.New("assv"), 
                     (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y)), 
                     2, 
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(car <pair>)</r4rs>
-                .DefinePrimitive("car", (args, caller) => args.First().First(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                     Symbol.New("car"), 
+                     (args, caller) => args.First().First(), 
+                     1, 
+                     Primitive.ValueType.Pair)
                 //// (first <pair>)
-                .DefinePrimitive("first", (args, caller) => args.First().First(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    Symbol.New("first"), 
+                    (args, caller) => args.First().First(), 
+                    1, 
+                    Primitive.ValueType.Pair)
                 //// (second <pair>)
-                .DefinePrimitive("second", (args, caller) => args.First().Second(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    Symbol.New("second"), 
+                    (args, caller) => args.First().Second(), 
+                    1, 
+                    Primitive.ValueType.Pair)
                 //// (third <pair>)
-                .DefinePrimitive("third", (args, caller) => args.First().Third(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    Symbol.New("third"), 
+                    (args, caller) => args.First().Third(), 
+                    1, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(cdr <pair>)</r4rs>
-                .DefinePrimitive("cdr", (args, caller) => args.First().Rest(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    Symbol.New("cdr"), 
+                    (args, caller) => args.First().Rest(),
+                    1, 
+                    Primitive.ValueType.Pair)
                 //// (rest <pair>)
-                .DefinePrimitive("rest", (args, caller) => args.First().Rest(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    Symbol.New("rest"), 
+                    (args, caller) => args.First().Rest(), 
+                    1, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(cons <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("cons", (args, caller) => args.First().Cons(args.Second()), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("cons"), 
+                    (args, caller) => args.First().Cons(args.Second()), 
+                    2, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(length <list> ...)</r4rs>
-                .DefinePrimitive("length", (args, caller) => args.First().ListLength(), 1, Primitive.ValueType.PairOrEmpty)
+                .DefinePrimitive(
+                    Symbol.New("length"), 
+                    (args, caller) => args.First().ListLength(), 
+                    1, 
+                    Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.3">(list <obj> ...)</r4rs>
-                .DefinePrimitive("list", (args, caller) => args, 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("list"), 
+                    (args, caller) => args, 
+                    0, 
+                    MaxInt, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
                 .DefinePrimitive(
-                    "list-ref", 
+                    Symbol.New("list-ref"), 
                     (args, caller) => ListRef(args.First(), args.Second()), 
                     2, 
                     Primitive.ValueType.Pair, 
                     Primitive.ValueType.Number)
                 //// <r4rs section="6.3">(list-tail <list> <k>)</r4rs>
                 .DefinePrimitive(
-                    "list-tail", 
+                    Symbol.New("list-tail"), 
                     (args, caller) => ListTail(args.First(), args.Second()), 
                     2, 
                     Primitive.ValueType.Pair, 
                     Primitive.ValueType.Number)
-                .DefinePrimitive("list*", (args, caller) => args.ListStar(), 2, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("list*"),
+                    (args, caller) => args.ListStar(), 
+                    2, 
+                    MaxInt, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(list? <obj>)</r4rs>
-                .DefinePrimitive("list?", (args, caller) => SchemeBoolean.Truth(IsList(args.First())), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("list?"), 
+                    (args, caller) => SchemeBoolean.Truth(IsList(args.First())), 
+                    1, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
                 .DefinePrimitive(
-                    "member", 
+                    Symbol.New("member"), 
                     (args, caller) => MemberAssoc(args.First(), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y)), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(memq <obj> <list>)</r4rs>
                 .DefinePrimitive(
-                    "memq", 
+                    Symbol.New("memq"), 
                     (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
                 .DefinePrimitive(
-                    "memv", 
+                    Symbol.New("memv"), 
                     (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(args.First().IsPair()), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("pair?"), 
+                    (args, caller) => SchemeBoolean.Truth(args.First().IsPair()), 
+                    1, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
-                .DefinePrimitive("reverse", (args, caller) => args.First().ReverseList(), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    Symbol.New("reverse"), 
+                    (args, caller) => args.First().ReverseList(), 
+                    1, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
                 .DefinePrimitive(
-                    "set-car!", (args, caller) => args.First().SetFirst(args.Second()), 
+                    Symbol.New("set-car!"), (args, caller) => args.First().SetFirst(args.Second()), 
                     2, 
                     Primitive.ValueType.Pair, 
                     Primitive.ValueType.Obj)
                 //// (set-first! <pair> <obj>)
                 .DefinePrimitive(
-                    "set-first!", (args, caller) => args.First().SetFirst(args.Second()), 
+                    Symbol.New("set-first!"), (args, caller) => args.First().SetFirst(args.Second()), 
                     2, 
                     Primitive.ValueType.Pair, 
                     Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(set-cdr! <pair> <obj>)</r4rs>
                 .DefinePrimitive(
-                    "set-cdr!", (args, caller) => args.First().SetRest(args.Second()), 
+                    Symbol.New("set-cdr!"), (args, caller) => args.First().SetRest(args.Second()), 
                     2, 
                     Primitive.ValueType.Pair, 
                     Primitive.ValueType.Obj)
                 //// (set-rest! <pair> <obj>)
                 .DefinePrimitive(
-                    "set-rest!", (args, caller) => args.First().SetRest(args.Second()), 
+                    Symbol.New("set-rest!"), (args, caller) => args.First().SetRest(args.Second()), 
                     2, 
                     Primitive.ValueType.Pair, 
                     Primitive.ValueType.Obj);
@@ -432,7 +491,7 @@ namespace SimpleScheme
         private static void DefineAccessPrimitives(PrimitiveEnvironment env, string access)
         {
             string prim = "c" + access + "r";
-            env.DefinePrimitive(prim, (args, caller) => Cxr(prim, args), 1, Primitive.ValueType.Pair);
+            env.DefinePrimitive(Symbol.New(prim), (args, caller) => Cxr(prim, args), 1, Primitive.ValueType.Pair);
             if (access.Length >= 4)
             {
                 return;

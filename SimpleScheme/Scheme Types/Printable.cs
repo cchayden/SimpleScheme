@@ -9,13 +9,13 @@ namespace SimpleScheme
     /// A printable class is one that has an PrintString method, 
     ///   which appends a printable representation to a string builder.
     /// </summary>
-    public abstract class Printable
+    public interface Printable
     {
         /// <summary>
         /// Print the value into the given buffer.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public abstract void PrintString(bool quoted, StringBuilder buf);
+        void PrintString(bool quoted, StringBuilder buf);
     }
 }

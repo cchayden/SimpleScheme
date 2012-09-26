@@ -61,7 +61,7 @@ namespace SimpleScheme
             env
                 //// (method <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
-                   "method",
+                   Symbol.New("method"),
                    (args, caller) => New(
                        Printer.AsString(args.First(), false), 
                        Printer.AsString(args.Second(), false), 
@@ -71,7 +71,7 @@ namespace SimpleScheme
                     Primitive.ValueType.String)
                 //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
-                   "property-get",
+                   Symbol.New("property-get"),
                    (args, caller) => New(
                        Printer.AsString(args.First(), false), 
                        "get_" + Printer.AsString(args.Second(), false), 
@@ -80,7 +80,7 @@ namespace SimpleScheme
                     Primitive.ValueType.String)
                 //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
-                   "property-set",
+                   Symbol.New("property-set"),
                    (args, caller) => New(
                        Printer.AsString(args.First(), false), 
                        "set_" + Printer.AsString(args.Second(), false), 
@@ -89,7 +89,7 @@ namespace SimpleScheme
                     Primitive.ValueType.String)
                 //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
-                   "index-get",
+                   Symbol.New("index-get"),
                    (args, caller) => New(
                        Printer.AsString(args.First(), false), 
                        "get_Item", 
@@ -98,7 +98,7 @@ namespace SimpleScheme
                     Primitive.ValueType.String)
                 //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
-                   "index-set",
+                   Symbol.New("index-set"),
                    (args, caller) => New(
                        Printer.AsString(args.First(), false), 
                        "set_Item", 
@@ -114,7 +114,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public new void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(Name + ": ");
             buf.Append(this.ToString());

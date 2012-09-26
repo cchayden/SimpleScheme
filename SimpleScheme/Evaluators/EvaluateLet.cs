@@ -29,7 +29,7 @@ namespace SimpleScheme
         /// <summary>
         /// Name, for named let.
         /// </summary>
-        private readonly string name;
+        private readonly Symbol name;
 
         /// <summary>
         /// The body of the let.
@@ -58,7 +58,7 @@ namespace SimpleScheme
         /// <param name="body">The let body.</param>
         /// <param name="vars">The variables to bind.</param>
         /// <param name="inits">The initial values of the variables.</param>
-        private EvaluateLet(Obj expr, Environment env, Evaluator caller, string name, Obj body, Obj vars, Obj inits)
+        private EvaluateLet(Obj expr, Environment env, Evaluator caller, Symbol name, Obj body, Obj vars, Obj inits)
             : base(expr, env, caller)
         {
             this.name = name;
@@ -95,13 +95,13 @@ namespace SimpleScheme
                 return caller.UpdateReturnValue(Undefined.New());
             }
 
-            string name = null;
+            Symbol name = null;
             Obj bindings;
             Obj body;
             if (expr.First().IsSymbol())
             {
                 // named let
-                name = expr.First().ToString();   // TODO keep as symbol?
+                name = expr.First().AsSymbol();   
                 bindings = expr.Second();
                 body = expr.Rest().Rest();
             }
@@ -155,7 +155,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateLet)s;
             Lambda fn = Lambda.New(step.vars, step.body, s.Env);
-            fn.Env.Define(Symbol.New(step.name), fn);
+            fn.Env.Define(step.name, fn);   
             return fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion

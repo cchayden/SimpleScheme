@@ -84,11 +84,24 @@ namespace SimpleScheme
         {
             env
                 //// (class <class-name>)
-                .DefinePrimitive("class", (args, caller) => Class(args.First()), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                    Symbol.New("class"), 
+                    (args, caller) => Class(args.First()), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// (new <class-name>)
-                .DefinePrimitive("new", (args, caller) => New(args.First()), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                    Symbol.New("new"), 
+                    (args, caller) => New(args.First()), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// (new-array <class-name> <length>)
-                .DefinePrimitive("new-array", (args, caller) => NewArray(args.First(), args.Second()), 2, Primitive.ValueType.String, Primitive.ValueType.Number);
+                .DefinePrimitive(
+                    Symbol.New("new-array"), 
+                    (args, caller) => NewArray(args.First(), args.Second()), 
+                    2, 
+                    Primitive.ValueType.String, 
+                    Primitive.ValueType.Number);
         }
         #endregion
 
@@ -98,7 +111,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public new void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(Name + ": ");
             buf.Append(this.ToString());

@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : Printable
+    public class Symbol : Printable, Cleanable
     {
         #region Constants
         /// <summary>
@@ -26,6 +26,10 @@ namespace SimpleScheme
         /// The symbol's value, as a string.
         /// </summary>
         private readonly string name;
+
+        private int pos;
+
+        private int level;
         #endregion
 
         #region Constructor
@@ -36,6 +40,8 @@ namespace SimpleScheme
         private Symbol(string name)
         {
             this.name = name;
+            this.pos = -1;
+            this.level = -1;
         }
         #endregion
 
@@ -56,6 +62,23 @@ namespace SimpleScheme
         public string SymbolName
         {
             get { return this.name; }
+        }
+
+        public bool Located
+        {
+            get { return this.pos != -1; }
+        }
+
+        public int Pos
+        {
+            get { return this.pos; }
+            set { this.pos = value; }
+        }
+
+        public int Level
+        {
+            get { return this.level; }
+            set { this.level = value; }
         }
         #endregion
 
@@ -96,21 +119,42 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
-                .DefinePrimitive("string->symbol", (args, caller) => New(SchemeString.AsString(args.First())), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                    New("string->symbol"), 
+                    (args, caller) => New(SchemeString.AsString(args.First())), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(args.First().IsSymbol()), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive(
+                    New("symbol?"), 
+                    (args, caller) => SchemeBoolean.Truth(args.First().IsSymbol()), 
+                    1, 
+                    Primitive.ValueType.Obj);
         }
         #endregion
 
         #region Public Methods
+
+        public void Locate(int pos, int level)
+        {
+            this.pos = pos;
+            this.level = level;
+        }
+
         /// <summary>
         /// Write the symbol to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.name);
+        }
+
+        public void Clean()
+        {
+            this.pos = -1;
+            this.level = -1;
         }
 
         /// <summary>

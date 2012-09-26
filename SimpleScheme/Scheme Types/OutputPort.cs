@@ -70,38 +70,80 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
-                .DefinePrimitive("call-with-output-file", (args, caller) => EvaluateCallWithOutputFile.Call(args, caller), 2, 
-                            Primitive.ValueType.String, Primitive.ValueType.Proc)
+                .DefinePrimitive(
+                    Symbol.New("call-with-output-file"), 
+                    (args, caller) => EvaluateCallWithOutputFile.Call(args, caller), 
+                    2, 
+                    Primitive.ValueType.String, 
+                    Primitive.ValueType.Proc)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
-                .DefinePrimitive("close-output-port", (args, caller) => Port(args.First(), caller.Interp.CurrentOutputPort).CloseOutputPort(), 1, 
-                            Primitive.ValueType.Port)
+                .DefinePrimitive(
+                    Symbol.New("close-output-port"), 
+                    (args, caller) => Port(args.First(), caller.Interp.CurrentOutputPort).CloseOutputPort(), 
+                    1, 
+                    Primitive.ValueType.Port)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
-                .DefinePrimitive("current-output-port", (args, caller) => caller.Interp.CurrentOutputPort, 0)
+                .DefinePrimitive(
+                    Symbol.New("current-output-port"), 
+                    (args, caller) => caller.Interp.CurrentOutputPort, 
+                    0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
-                .DefinePrimitive("display", (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).Display(args.First()), 1, 2,
-                            Primitive.ValueType.Obj, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                    Symbol.New("display"), 
+                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).Display(args.First()), 
+                    1, 
+                    2,
+                    Primitive.ValueType.Obj, Primitive.ValueType.Port)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
-                .DefinePrimitive("newline", (args, caller) => Port(args.First(), caller.Interp.CurrentOutputPort).Newline(), 0, 1, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                    Symbol.New("newline"), 
+                    (args, caller) => Port(args.First(), caller.Interp.CurrentOutputPort).Newline(), 
+                    0, 
+                    1, 
+                    Primitive.ValueType.Port)
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
-                .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(args.First(), caller.Interp), 1, 
-                            Primitive.ValueType.String)
+                .DefinePrimitive(
+                    Symbol.New("open-output-file"), 
+                    (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(args.First(), caller.Interp), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(args.First().IsOutputPort()), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("output-port?"), 
+                    (args, caller) => SchemeBoolean.Truth(args.First().IsOutputPort()), 
+                    1, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
-                .DefinePrimitive("write", (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).Write(args.First()), 1, 2, 
-                            Primitive.ValueType.Obj, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                    Symbol.New("write"), 
+                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).Write(args.First()), 
+                    1, 
+                    2, 
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Port)
                 //// (p <expr>)
-                .DefinePrimitive("p", (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).P(args.First()), 1, 
-                            Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    Symbol.New("p"), 
+                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).P(args.First()), 
+                    1, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
-                .DefinePrimitive("write-char", (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).WriteChar(args.First()), 1, 2,
-                            Primitive.ValueType.Char, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                    Symbol.New("write-char"), 
+                    (args, caller) => Port(args.Second(), caller.Interp.CurrentOutputPort).WriteChar(args.First()), 
+                    1, 
+                    2,
+                    Primitive.ValueType.Char, 
+                    Primitive.ValueType.Port)
                 //// (dump-env)
-                .DefinePrimitive("dump-env", (args, caller) => DumpEnv(caller.Env), 0);
+                .DefinePrimitive(
+                    Symbol.New("dump-env"), 
+                    (args, caller) => DumpEnv(caller.Env), 
+                    0);
         }
         #endregion
 
@@ -111,7 +153,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }

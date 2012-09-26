@@ -58,13 +58,26 @@ namespace SimpleScheme
         {
             env
                 //// (dump-counters)
-                .DefinePrimitive("dump-counters", (args, caller) => caller.Interp.CurrentCounters.DumpCounters(caller.Interp.CurrentOutputPort), 0)
+                .DefinePrimitive(
+                    Symbol.New("dump-counters"), 
+                    (args, caller) => caller.Interp.CurrentCounters.DumpCounters(caller.Interp.CurrentOutputPort), 
+                    0)
                 //// (get-counters)
-                .DefinePrimitive("get-counters", (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 0)
+                .DefinePrimitive(
+                    Symbol.New("get-counters"), 
+                    (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 
+                    0)
                 //// (get-counter <name>)
-                .DefinePrimitive("get-counter", (args, caller) => caller.Interp.CurrentCounters.GetCounter(args.First()), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                    Symbol.New("get-counter"), 
+                    (args, caller) => caller.Interp.CurrentCounters.GetCounter(args.First()), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// (reset-counters)
-                .DefinePrimitive("reset-counters", (args, caller) => caller.Interp.CurrentCounters.ResetCounters(), 0);
+                .DefinePrimitive(
+                    Symbol.New("reset-counters"), 
+                    (args, caller) => caller.Interp.CurrentCounters.ResetCounters(), 
+                    0);
         }
         #endregion
 

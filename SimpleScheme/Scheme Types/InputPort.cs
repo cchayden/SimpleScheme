@@ -92,41 +92,82 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
-                .DefinePrimitive("eof-object?", (args, caller) => SchemeBoolean.Truth(IsEof(args.First())), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        Symbol.New("eof-object?"), 
+                        (args, caller) => SchemeBoolean.Truth(IsEof(args.First())), 
+                        1, 
+                        Primitive.ValueType.Obj)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
-                       "call-with-input-file", 
+                       Symbol.New("call-with-input-file"), 
                        (args, caller) => EvaluateCallWithInputFile.Call(args, caller), 
                        2, 
                        Primitive.ValueType.String, 
                        Primitive.ValueType.Proc)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
-                .DefinePrimitive("close-input-port", (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).CloseInputPort(), 1, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                        Symbol.New("close-input-port"), 
+                        (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).CloseInputPort(), 
+                        1, 
+                        Primitive.ValueType.Port)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
-                .DefinePrimitive("current-input-port", (args, caller) => caller.Interp.CurrentInputPort, 0)
+                .DefinePrimitive(
+                        Symbol.New("current-input-port"), 
+                        (args, caller) => caller.Interp.CurrentInputPort, 
+                        0)
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
-                .DefinePrimitive("input-port?", (args, caller) => SchemeBoolean.Truth(args.First().IsInputPort()), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        Symbol.New("input-port?"), 
+                        (args, caller) => SchemeBoolean.Truth(args.First().IsInputPort()), 
+                        1, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
-                .DefinePrimitive("load", (args, caller) => LoadFile(args.First(), caller.Interp), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                        Symbol.New("load"), 
+                        (args, caller) => LoadFile(args.First(), caller.Interp), 
+                        1, 
+                        Primitive.ValueType.String)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
                 .DefinePrimitive(
-                        "open-input-file", 
+                        Symbol.New("open-input-file"), 
                         (args, caller) => EvaluateCallWithInputFile.OpenInputFile(args.First(), caller.Interp), 
                         1,
                         Primitive.ValueType.String)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
-                .DefinePrimitive("peek-char", (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).PeekChar(), 0, 1, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                        Symbol.New("peek-char"), 
+                        (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).PeekChar(), 
+                        0, 
+                        1, 
+                        Primitive.ValueType.Port)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
-                .DefinePrimitive("read", (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).Read(), 0, 1, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                        Symbol.New("read"), 
+                        (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).Read(), 
+                        0, 
+                        1, 
+                        Primitive.ValueType.Port)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
-                .DefinePrimitive("read-char", (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).ReadChar(), 0, 1, Primitive.ValueType.Port)
+                .DefinePrimitive(
+                        Symbol.New("read-char"), 
+                        (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).ReadChar(), 
+                        0, 
+                        1, 
+                        Primitive.ValueType.Port)
                 //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
-                .DefinePrimitive("transcript-on", (args, caller) => TranscriptOn(args.First(), caller.Interp.Transcript), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                        Symbol.New("transcript-on"), 
+                        (args, caller) => TranscriptOn(args.First(), caller.Interp.Transcript), 
+                        1, 
+                        Primitive.ValueType.String)
                 //// <r4rs section="6.10.4">(transcript-off)</r4rs>
-                .DefinePrimitive("transcript-off", (args, caller) => TranscriptOff(caller.Interp.Transcript), 0);
+                .DefinePrimitive(
+                        Symbol.New("transcript-off"), 
+                        (args, caller) => TranscriptOff(caller.Interp.Transcript), 
+                        0);
         }
         #endregion
 
@@ -148,7 +189,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
