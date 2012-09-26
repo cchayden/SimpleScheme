@@ -37,6 +37,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf", "Examples\Perf\Perf.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Examples\Benchmark\Benchmark.csproj", "{9AE99053-3E45-4408-BC04-49C8483C034C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eliza", "Eliza\Eliza.csproj", "{828FEBFF-BF57-45B7-B858-059E4B0A43D6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{827C9CB9-C717-4B14-9CD0-260D852D9223}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = SimpleScheme.vsmdi
@@ -220,6 +224,16 @@ Global
 		{9AE99053-3E45-4408-BC04-49C8483C034C}.Release|Mixed Platforms.Build.0 = Release|x86
 		{9AE99053-3E45-4408-BC04-49C8483C034C}.Release|x86.ActiveCfg = Release|x86
 		{9AE99053-3E45-4408-BC04-49C8483C034C}.Release|x86.Build.0 = Release|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Debug|x86.ActiveCfg = Debug|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Debug|x86.Build.0 = Debug|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Release|Any CPU.ActiveCfg = Release|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Release|Mixed Platforms.Build.0 = Release|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Release|x86.ActiveCfg = Release|x86
+		{828FEBFF-BF57-45B7-B858-059E4B0A43D6}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

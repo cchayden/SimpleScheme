@@ -4,8 +4,25 @@
 
 namespace SimpleScheme
 {
-    using System.Collections.Generic;
-    using System.Text;
+    using System.Diagnostics.CodeAnalysis;
+
+    /// <summary>
+    /// There are the only tokens in the language.
+    /// </summary>
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:EnumerationItemsMustBeDocumented", Justification = "Token types described below.")]
+    internal enum TokType
+    {
+        LParen,
+        RParen,
+        Dot,
+        Comma,
+        SingleQuote,
+        BackQuote,
+        Splice,
+        OpenVector,
+        Eof,
+        None
+    }
 
     /// <summary>
     /// Tokens are returned from NextToken.
@@ -17,60 +34,92 @@ namespace SimpleScheme
     internal class Token : SchemeObject
     {
         /// <summary>
-        /// Cache of predefined tokens, used when possible.
+        /// Left paren.
         /// </summary>
-        private static readonly Dictionary<string, Token> tokens;
+        internal static readonly Token LParen = new Token(TokType.LParen, "(");
 
+        /// <summary>
+        /// Right paren.
+        /// </summary>
+        internal static readonly Token RParen = new Token(TokType.RParen, ")");
+
+        /// <summary>
+        /// Dot token.
+        /// </summary>
+        internal static readonly Token Dot = new Token(TokType.Dot, ".");
+
+        /// <summary>
+        /// Comma token.
+        /// </summary>
+        internal static readonly Token Comma = new Token(TokType.Comma, ",");
+
+        /// <summary>
+        /// Single quote.
+        /// </summary>
+        internal static readonly Token SingleQuote = new Token(TokType.SingleQuote, "'");
+
+        /// <summary>
+        /// Back quote.
+        /// </summary>
+        internal static readonly Token BackQuote = new Token(TokType.BackQuote, "`");
+
+        /// <summary>
+        /// Splice token.
+        /// </summary>
+        internal static readonly Token Splice = new Token(TokType.Splice, ",@");
+
+        /// <summary>
+        /// Open a vector constant.
+        /// </summary>
+        internal static readonly Token OpenVector = new Token(TokType.OpenVector, "#(");
+
+        /// <summary>
+        /// End of file.
+        /// </summary>
+        internal static readonly Token Eof = new Token(TokType.Eof, "#EOF!");
+
+        #region Fields
         /// <summary>
         /// Identifies the particular token.
         /// </summary>
-        private readonly string value;
+        private readonly TokType tokType;
 
         /// <summary>
-        /// Initializes static members of the <see cref="Token"/> class.
+        /// The string representation of the token.
         /// </summary>
-        static Token()
-        {
-            tokens = new Dictionary<string, Token>(8);
-            foreach (var s in new[] { "(", ")", ".", ",", "'", "`", ",@", "#EOF!" })
-            {
-               tokens.Add(s, new Token(s)); 
-            }
-        }
+        private readonly string tokString;
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="Token"/> class.
         /// </summary>
-        /// <param name="value">The value.</param>
-        internal Token(string value)
+        /// <param name="tokType">The value.</param>
+        /// <param name="tokString">The token string value.</param>
+        private Token(TokType tokType, string tokString)
         {
-            this.value = value;
+            this.tokType = tokType;
+            this.tokString = tokString;
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
-        /// Gets a token.  Either retrieves an existing token instance,
-        ///   or creates a new one.
+        /// Gets the token type.
         /// </summary>
-        /// <param name="tok">The token (as a string).</param>
-        /// <returns>The Token.</returns>
-        internal static Token New(string tok)
+        internal TokType TokType
         {
-            Token t;
-            if (tokens.TryGetValue(tok, out t))
-            {
-                return t;
-            }
-
-            return new Token(tok);
+            get { return this.tokType; }
         }
+        #endregion
 
         /// <summary>
-        /// The token value.
+        /// The token value: the string version of the enum.
         /// </summary>
         /// <returns>The string value of the token.</returns>
         public override string ToString()
         {
-            return this.value;
+            return this.tokString;
         }
     }
 }

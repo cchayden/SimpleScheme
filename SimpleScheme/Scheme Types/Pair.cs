@@ -177,10 +177,11 @@ namespace SimpleScheme
         /// It is safest to clone what you are going to destroy.
         /// </summary>
         /// <param name="expr">The list to reverse.</param>
+        /// <param name="last">If given, the (new) last Rest cell.  Used for making improper lists.</param>
         /// <returns>The reversed list.</returns>
-        internal static SchemeObject ReverseListInPlace(SchemeObject expr)
+        internal static SchemeObject ReverseListInPlace(SchemeObject expr, SchemeObject last = null)
         {
-            SchemeObject prev = EmptyList.Instance;
+            SchemeObject prev = last ?? EmptyList.Instance;
             SchemeObject curr = expr;
             while (curr is Pair)
             {

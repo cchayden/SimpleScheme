@@ -85,7 +85,7 @@ namespace Tests
             this.TestNextToken("   abc", "abc");
             this.TestNextToken("abc   ", "abc");
             this.TestNextToken("abc def", "abc");
-            this.TestNextToken(string.Empty, Token.New("#EOF!"));
+            this.TestNextToken(string.Empty, Token.Eof);
             this.TestNextToken("abc(", "abc");
             this.TestNextToken("abc)", "abc");
             this.TestNextToken("abc'", "abc");

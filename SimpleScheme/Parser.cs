@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Collections.Generic;
     using System.IO;
     using System.Text;
 
@@ -19,6 +20,10 @@ namespace SimpleScheme
         #endregion
 
         #region Fields
+        /// <summary>
+        /// Translates quote tokens to quote special forms.
+        /// </summary>
+        private static readonly Dictionary<TokType, string> QuoteTranslation = new Dictionary<TokType, string>();
 
         /// <summary>
         /// Lexical analyzer.  Scans input for tokens.
@@ -26,7 +31,18 @@ namespace SimpleScheme
         private readonly Scanner scanner;
         #endregion
 
-        #region Constructor
+        #region Constructors
+        /// <summary>
+        /// Initializes static members of the <see cref="Parser"/> class.
+        /// </summary>
+        static Parser()
+        {
+            QuoteTranslation.Add(TokType.SingleQuote, "quote");
+            QuoteTranslation.Add(TokType.BackQuote, "quasiquote");
+            QuoteTranslation.Add(TokType.Comma, "unquote");
+            QuoteTranslation.Add(TokType.Splice, "unquote-splicing");
+        }
+
         /// <summary>
         /// Initializes a new instance of the Parser class.
         /// </summary>
@@ -109,112 +125,139 @@ namespace SimpleScheme
         internal SchemeObject ReadExpr(StringBuilder sb)
         {
             this.scanner.Logger = sb;
-            return this.Read();
-        }
-
-        /// <summary>
-        /// Read a whole expression.
-        /// Handles parentheses and the various kinds of quote syntax shortcuts.
-        /// Warns about extra right parentheses and dots.
-        /// </summary>
-        /// <returns>The expression as a list.</returns>
-        internal SchemeObject Read()
-        {
-            try
-            {
-                SchemeObject token = this.NextToken();
-
-                if (token is Token)
-                {
-                    switch (token.ToString())
-                    {
-                        case "#EOF!":
-                            token = Eof.Instance;
-                            break;
-                        case "(":
-                            token = this.ReadTail(false);
-                            break;
-
-                        case ")":
-                            ErrorHandlers.Warn("Extra ) ignored.");
-                            token = this.Read();
-                            break;
-                        case ".":
-                            ErrorHandlers.Warn("Extra . ignored.");
-                            token = this.Read();
-                            break;
-                        case "'":
-                            token = List.MakeList(Symbol.New("quote", this.LineNumber), this.Read());
-                            break;
-                        case "`":
-                            token = List.MakeList(Symbol.New("quasiquote", this.LineNumber), this.Read());
-                            break;
-                        case ",":
-                            token = List.MakeList(Symbol.New("unquote", this.LineNumber), this.Read());
-                            break;
-                        case ",@":
-                            token = List.MakeList(Symbol.New("unquote-splicing", this.LineNumber), this.Read());
-                            break;
-                        case "#(":
-                            token = Vector.FromList(this.Read(), this.LineNumber);
-                            break;
-                    }
-                }
-
-                return token;
-            }
-            catch (IOException ex)
-            {
-                ErrorHandlers.Warn("On input, exception:" + ex);
-                return InputPort.Eof;
-            }
+            return this.ReadExpr();
         }
         #endregion
 
         #region Private Methods
         /// <summary>
-        /// Read the tail of a list.
-        /// The opening left paren has been read, also perhaps some of the list.
+        /// Expand a quote token by reading the expr and sticking it in a list after the appropriate symbol.
         /// </summary>
-        /// <param name="dotOk">True if a dot is OK at this point.</param>
-        /// <returns>A list of the tokens read.</returns>
-        private SchemeObject ReadTail(bool dotOk)
+        /// <param name="tok">The quote token to expand.</param>
+        /// <param name="expr">The list of enclosed expressions.</param>
+        /// <returns>The expanded quote expression.</returns>
+        private SchemeObject Expand(TokType tok, SchemeObject expr)
         {
-            SchemeObject token = this.NextToken();
-            if (token is Token)
+            var sym = QuoteTranslation[tok];
+            return List.MakeList(Symbol.New(sym, this.LineNumber), expr);
+        }
+
+        /// <summary>
+        /// Read a vector.
+        /// </summary>
+        /// <param name="expr">The list of enclosed expressions.</param>
+        /// <returns>The vector.</returns>
+        private SchemeObject MakeVector(SchemeObject expr)
+        {
+            return Vector.FromList(expr, this.LineNumber);
+        }
+
+        /// <summary>
+        /// Read a single expression.  This can be a scheme value, a list, or a vector.
+        /// ReadExpr and ReadList are mutually recursive.
+        /// </summary>
+        /// <returns>The object read.</returns>
+        private SchemeObject ReadExpr()
+        {
+            while (true)
             {
-                string tok = token.ToString();
-                if (tok == "#EOF!")
+                SchemeObject token = this.NextToken();
+                TokType tok = token is Token ? ((Token)token).TokType : TokType.None;
+                switch (tok)
                 {
-                    return ErrorHandlers.IoError("EOF during read.");
-                }
-
-                if (tok == ")")
-                {
-                    return EmptyList.Instance; // there was no more
-                }
-
-                if (tok == ".")
-                {
-                    if (!dotOk)
-                    {
-                        ErrorHandlers.Warn("Dot not allowed here, ignored.");
-                        return this.ReadTail(false);
-                    }
-
-                    SchemeObject result = this.Read();
-                    token = this.NextToken();
-                    if (!(token is Token) || token.ToString() != ")")
-                    {
-                        ErrorHandlers.Warn("Expecting ')' got " + token + " after dot");
-                    }
-
-                    return result;
+                    case TokType.None:
+                        return token; // not a Token -- just return it
+                    case TokType.Eof:
+                        return InputPort.Eof;
+                    case TokType.LParen:
+                        var exprList = this.ReadList();
+                        this.ReadClose();
+                        return exprList;
+                    case TokType.OpenVector:
+                        var vectorExprList = this.ReadList();
+                        this.ReadClose();
+                        return this.MakeVector(vectorExprList);
+                    case TokType.RParen:
+                    case TokType.Dot:
+                        ErrorHandlers.Warn("Extra '" + token + "' ignored.");
+                        continue;
+                    case TokType.SingleQuote:
+                    case TokType.BackQuote:
+                    case TokType.Comma:
+                    case TokType.Splice:
+                        var quoteExpr = this.ReadExpr();
+                        return this.Expand(tok, quoteExpr);
+                    default:
+                        ErrorHandlers.Warn("Unexpected token " + token + ".");
+                        return EmptyList.Instance; // can never happen
                 }
             }
+        }
 
-            this.PushToken(token);
-            return List.Cons(this.Read(), this.ReadTail(true), this.LineNumber);
+        /// <summary>
+        /// Read a list of expressions.  
+        /// We have seen an opening paren already, so  read expressions until a closing paren is seen.
+        /// Return the list, leaving the closing paren unread.
+        /// The list cannot start with dot, but after the first expression dot is legal.
+        /// The list is created in reverse order, then fixed up when it is returned.
+        /// </summary>
+        /// <returns>The list of expressions.</returns>
+        private SchemeObject ReadList()
+        {
+            bool dotOk = false;
+            SchemeObject result = EmptyList.Instance;
+            while (true)
+            {
+                SchemeObject token = this.NextToken();
+                TokType tok = token is Token ? ((Token)token).TokType : TokType.None;
+                switch (tok)
+                {
+                    case TokType.Eof:
+                        ErrorHandlers.IoError("EOF during read.");
+                        return null;  // does not return
+                    case TokType.RParen:
+                        this.PushToken(token);
+                        return Pair.ReverseListInPlace(result);  // List is complete -- put the paren back and return the list.
+                    case TokType.Dot:
+                        if (dotOk)
+                        {
+                            // read one more expression only, stick it on the end
+                            return Pair.ReverseListInPlace(result, this.ReadExpr());
+                        }
+
+                        ErrorHandlers.Warn("Dot not allowed here, ignored.");
+                        continue;
+                }
+
+                // A Token not one of the above, or a non-Token.
+                // Read as a single expression and add to the list.
+                dotOk = true;
+                this.PushToken(token); 
+                result = List.Cons(this.ReadExpr(), result, this.LineNumber);
+            }
+        }
+
+        /// <summary>
+        /// Read a closing paren.  If we get anything else, warn and skip it.
+        /// </summary>
+        private void ReadClose()
+        {
+            while (true)
+            {
+                SchemeObject token = this.NextToken();
+                TokType tok = token is Token ? ((Token)token).TokType : TokType.None;
+                switch (tok)
+                {
+                    case TokType.Eof:
+                        ErrorHandlers.IoError("EOF during read.");
+                        return;  // does not return
+                    case TokType.RParen:
+                        return;
+                    default:
+                        ErrorHandlers.Warn("Expecting ')' got '" + token + "'.");
+                        continue;
+                }
+            }
         }
         #endregion
     }

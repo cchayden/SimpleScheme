@@ -44,6 +44,7 @@
     <Compile Include="Evaluators\FinalEvaluator.cs" />
     <Compile Include="Evaluators\HaltedEvaluator.cs" />
     <Compile Include="Evaluators\SuspendedEvaluator.cs" />
+    <Compile Include="GetLine.cs" />
     <Compile Include="Scanner.cs" />
     <Compile Include="Scheme Types\AsynchronousClrProcedure.cs" />
     <Compile Include="AsyncResult.cs" />
