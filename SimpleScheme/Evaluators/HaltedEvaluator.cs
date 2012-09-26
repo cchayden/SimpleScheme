@@ -18,15 +18,27 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("halted");
         #endregion
 
-        #region Constructor
+        #region Initialize
         /// <summary>
         /// Initializes a new instance of the HaltedEvaluator class.
         /// </summary>
         /// <param name="env">The evaluator environment.</param>
-        internal HaltedEvaluator(Environment env) : 
-            base(OpCode.End, Undefined.Instance, env, new FinalEvaluator(Undefined.Instance), counter)
+        internal HaltedEvaluator Initialize(Environment env)
         {
             Contract.Requires(env != null);
+            base.Initialize(OpCode.End, Undefined.Instance, env, FinalEvaluator.New(Undefined.Instance), counter);
+            return this;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of the HaltedEvaluator class.
+        /// </summary>
+        /// <param name="env">The evaluation environment</param>
+        /// <returns>Initialized evaluator.</returns>
+        internal static HaltedEvaluator New(Environment env)
+        {
+            Contract.Requires(env != null);
+            return new HaltedEvaluator().Initialize(env);
         }
         #endregion
 
@@ -34,11 +46,12 @@ namespace SimpleScheme
         /// <summary>
         /// The step that ends evaluation
         /// </summary>
-        /// <returns>The next evaluator to execute.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EndStep()
         {
-            this.Interp.SetComplete(this.ReturnedExpr);
-            return new FinalEvaluator(this.ReturnedExpr);
+            var res = this.ReturnedExpr;
+            this.Interp.SetComplete(res);
+            return this.ReturnFromEvaluator(res);
         }
         #endregion
     }

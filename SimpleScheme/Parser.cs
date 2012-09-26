@@ -299,7 +299,7 @@ namespace SimpleScheme
                             ErrorHandlers.Warn("EOF inside of a string.");
                         }
 
-                        return SchemeString.New(buff, this.LineNumber);
+                        return new SchemeString(buff, this.LineNumber);
                     }
 
                 case '#':
@@ -384,7 +384,7 @@ namespace SimpleScheme
                         }
 
                         // read a symbol
-                        return Symbol.New(buf.ToLower(), this.LineNumber);
+                        return new Symbol(buf.ToLower(), this.LineNumber);
                     }
             }
         }
@@ -488,16 +488,16 @@ namespace SimpleScheme
                             token = this.Read();
                             break;
                         case "'":
-                            token = List.MakeList(Symbol.New("quote", this.LineNumber), this.Read());
+                            token = List.MakeList(new Symbol("quote", this.LineNumber), this.Read());
                             break;
                         case "`":
-                            token = List.MakeList(Symbol.New("quasiquote", this.LineNumber), this.Read());
+                            token = List.MakeList(new Symbol("quasiquote", this.LineNumber), this.Read());
                             break;
                         case ",":
-                            token = List.MakeList(Symbol.New("unquote", this.LineNumber), this.Read());
+                            token = List.MakeList(new Symbol("unquote", this.LineNumber), this.Read());
                             break;
                         case ",@":
-                            token = List.MakeList(Symbol.New("unquote-splicing", this.LineNumber), this.Read());
+                            token = List.MakeList(new Symbol("unquote-splicing", this.LineNumber), this.Read());
                             break;
                     }
                 }

@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="SchemeString"/> class.
         /// </summary>
         /// <param name="str">The string contents.</param>
-        private SchemeString(char[] str)
+        public SchemeString(char[] str)
         {
             Contract.Requires(str != null);
             this.str = str;
@@ -37,7 +37,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="SchemeString"/> class.
         /// </summary>
         /// <param name="length">The string length.</param>
-        private SchemeString(int length)
+        public SchemeString(int length)
         {
             Contract.Requires(length >= 0);
             this.str = new char[length];
@@ -47,7 +47,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="SchemeString"/> class from a string builder. 
         /// </summary>
         /// <param name="buf">A string builder containing the string value.</param>
-        private SchemeString(StringBuilder buf) : this(buf.ToString().ToCharArray())
+        public SchemeString(StringBuilder buf) : this(buf.ToString().ToCharArray())
         {
             Contract.Requires(buf != null);
         }
@@ -57,7 +57,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="buf">A string builder containing the string value.</param>
         /// <param name="lineNumber">The line where the string is read.</param>
-        private SchemeString(StringBuilder buf, int lineNumber) : base(lineNumber)
+        public SchemeString(StringBuilder buf, int lineNumber) : base(lineNumber)
         {
             Contract.Requires(buf != null);
             this.str = buf.ToString().ToCharArray();
@@ -69,7 +69,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The symbol to convert.</param>
         /// <returns>The scheme string.</returns>
-        private SchemeString(Symbol str) : this(str.ToString().ToCharArray())
+        public SchemeString(Symbol str) : this(str.ToString().ToCharArray())
         {
             Contract.Requires(str != null);
         }
@@ -80,7 +80,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The scheme string to copy.</param>
         /// <returns>The scheme string.</returns>
-        private SchemeString(SchemeString str) : this(str.ToString().ToCharArray())
+        public SchemeString(SchemeString str) : this(str.ToString().ToCharArray())
         {
             Contract.Requires(str != null);
         }
@@ -90,7 +90,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The CLR string.</param>
         /// <returns>The scheme string.</returns>
-        private SchemeString(string str) : this(str.ToCharArray())
+        public SchemeString(string str) : this(str.ToCharArray())
         {
             Contract.Requires(str != null);
         }
@@ -120,7 +120,7 @@ namespace SimpleScheme
         {
             Contract.Requires(str != null);
             Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return New(str);
+            return new SchemeString(str);
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace SimpleScheme
         {
             Contract.Requires(buf != null);
             Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return New(buf);
+            return new SchemeString(buf);
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace SimpleScheme
         {
             Contract.Requires(str != null);
             Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return New(str);
+            return new SchemeString(str);
         }
 
         /// <summary>
@@ -157,43 +157,6 @@ namespace SimpleScheme
             Contract.Requires(str != null);
             Contract.Ensures(Contract.Result<SchemeString>() != null);
             return new SchemeString(str);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SchemeString"/> class.
-        /// </summary>
-        /// <param name="length">The string length.</param>
-        /// <returns>A SchemeString.</returns>
-        public static SchemeString New(int length)
-        {
-            Contract.Requires(length >= 0);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return new SchemeString(length);
-        }
-
-        /// <summary>
-        /// Creates a scheme string from a string builder.
-        /// </summary>
-        /// <param name="buf">A string builder containing the string value.</param>
-        /// <returns>A SchemeString.</returns>
-        public static SchemeString New(StringBuilder buf)
-        {
-            Contract.Requires(buf != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return new SchemeString(buf);
-        }
-
-        /// <summary>
-        /// Creates a scheme string from a string builder.
-        /// </summary>
-        /// <param name="buf">A string builder containing the string value.</param>
-        /// <param name="lineNumber">The line where the string is read.</param>
-        /// <returns>A SchemeString.</returns>
-        public static SchemeString New(StringBuilder buf, int lineNumber)
-        {
-            Contract.Requires(buf != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return new SchemeString(buf, lineNumber);
         }
 
         /// <summary>

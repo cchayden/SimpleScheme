@@ -27,28 +27,11 @@ namespace SimpleScheme
         ///   clone necessary.
         /// </summary>
         /// <param name="eval">The continuation to return to when applied.</param>
-        private Continuation(Evaluator eval) : 
+        public Continuation(Evaluator eval) : 
             base(null, new ArgsInfo(1, 1, false))
         {
             Contract.Requires(eval != null);
             this.savedEvaluator = eval.CloneChain(); 
-        }
-        #endregion
-
-        #region New
-        /// <summary>
-        /// Initializes a new instance of the Continuation class.
-        /// The evaluator and its chain of evaluators back to the beginning have to be cloned because they
-        ///   hold information about the progress of the evaluation.  When the evaluation proceeds
-        ///   these evaluators might be altered, damaging the ability to continue, which is what makes the
-        ///   clone necessary.
-        /// </summary>
-        /// <param name="eval">The continuation to return to when applied.</param>
-        /// <returns>A new continuation.</returns>
-        public static Continuation New(Evaluator eval)
-        {
-            Contract.Requires(eval != null);
-            return new Continuation(eval);
         }
         #endregion
 
@@ -72,12 +55,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">The value to return.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
-        /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "Continuation", caller);
+            this.CheckArgCount(ListLength(args), args, "Continuation");
 #endif
             Evaluator nextStep = this.savedEvaluator.CloneChain();
             nextStep.ReturnedExpr = First(args);

@@ -19,11 +19,10 @@ namespace SimpleScheme
         /// <summary>
         /// The macro to expand.
         /// </summary>
-        private readonly Macro fn;
+        private Macro fn;
         #endregion
 
         #region Constructor
-
         /// <summary>
         /// Initializes a new instance of the EvaluateExpandMacro class.
         /// </summary>
@@ -31,8 +30,8 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
-        private EvaluateExpandMacro(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
-            : base(OpCode.Expand, expr, env, caller, counter)
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateExpandMacro Initialize(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -40,6 +39,24 @@ namespace SimpleScheme
             Contract.Requires(fn != null);
             Contract.Requires(counter >= 0);
             this.fn = fn;
+            base.Initialize(OpCode.Expand, expr, env, caller, counter);
+            return this;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateExpandMacro class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fn">The macro to expand.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateExpandMacro New(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return new EvaluateExpandMacro().Initialize(expr, env, caller, fn);
         }
         #endregion
 
@@ -62,7 +79,7 @@ namespace SimpleScheme
             Contract.Requires(args != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            return new EvaluateExpandMacro(args, env, caller, fn);
+            return New(args, env, caller, fn);
         }
         #endregion
 
@@ -70,11 +87,11 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the macro to the arguments, expanding it.  
         /// </summary>
-        /// <returns>The step to evaluate the expanded macro.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator ExpandStep()
         {
             this.Pc = OpCode.Evaluate;
-            return this.fn.Apply(this.Expr, this, this);
+            return this.fn.Apply(this.Expr, this);
         }
 
         /// <summary>
@@ -83,12 +100,15 @@ namespace SimpleScheme
         /// Cleaning removes any cached information from the symbols, because they may not be
         ///   evaluated at the same nesting level each time.
         /// </summary>
-        /// <returns>Return to caller with the expanded macro.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvaluateStep()
         {
             SchemeObject obj = this.ReturnedExpr;
             obj.Clean();
-            return EvaluateExpression.Call(obj, this.Env, this.Caller);
+            Environment ev = this.Env;
+            Evaluator c = this.Caller;
+            this.Reclaim();
+            return EvaluateExpression.Call(obj, ev, c);
         }
         #endregion
 
@@ -99,7 +119,7 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.fn != null);
+            Contract.Invariant(this.degenerate || this.fn != null);
         }
         #endregion
     }

@@ -30,24 +30,6 @@ namespace SimpleScheme
         private bool catchSuspended;
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateExpressionWithCatch class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateExpressionWithCatch(SchemeObject expr, Environment env, Evaluator caller)
-            : base(OpCode.Initial, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            this.catchSuspended = true;
-        }
-        #endregion
-
         #region Accessors
         /// <summary>
         /// Tells the evaluator main loop to catch suspensions.
@@ -73,7 +55,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            return new EvaluateExpressionWithCatch(expr, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -81,7 +63,7 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the expression.
         /// </summary>
-        /// <returns>Steps to evaluate the expression.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             this.Pc = OpCode.Done;
@@ -92,7 +74,7 @@ namespace SimpleScheme
         /// Back here after the expression has been evaluated.
         /// Return to caller.
         /// </summary>
-        /// <returns>Execution continues with the return.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator DoneStep()
         {
             // If we get here because a suspend was caught, then return Undefined
@@ -100,8 +82,6 @@ namespace SimpleScheme
             // Then do not catch any further suspensions.
             // If we get here because of a normal or asynchronous return, then set
             // the return value and set an appropriate flag value.
-            Evaluator caller = this.Caller;
-            Contract.Assert(caller != null);
             ReturnType returnType;
             if (this.FetchAndResetCaught() > 0)
             {
@@ -113,9 +93,42 @@ namespace SimpleScheme
                 returnType = this.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn;
             }
 
-            caller.ReturnedExpr = this.ReturnedExpr;
-            caller.UpdateReturnFlag(returnType);
-            return caller;
+            this.Caller.UpdateReturnFlag(this.ReturnedExpr, returnType);
+            return this.ReturnFromEvaluator(this.ReturnedExpr);
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateExpressionWithCatch class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateExpressionWithCatch New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return new EvaluateExpressionWithCatch().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateExpressionWithCatch class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateExpressionWithCatch Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            this.catchSuspended = true;
+            Initialize(OpCode.Initial, expr, env, caller, counter);
+            return this;
         }
         #endregion
     }

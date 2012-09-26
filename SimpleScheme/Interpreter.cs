@@ -81,13 +81,13 @@ namespace SimpleScheme
             this.Trace = false;
             this.Count = false;
             this.transcript = new TranscriptLogger(this);
-            this.currentInputPort = InputPort.New(reader ?? Console.In, this);
-            this.currentOutputPort = OutputPort.New(writer ?? Console.Out, this);
+            this.currentInputPort = new InputPort(reader ?? Console.In, this);
+            this.currentOutputPort = new OutputPort(writer ?? Console.Out, this);
             this.primEnvironment = primEnvironment ?? new PrimitiveEnvironment();
 
             this.currentCounters = new Counter();
             this.globalEnvironment = new Environment(this.primEnvironment, this);
-            this.halted = new HaltedEvaluator(this.globalEnvironment);
+            this.halted = HaltedEvaluator.New(this.globalEnvironment);
             var echo = (writer != null) ? this.CurrentOutputPort : null;
             try
             {
@@ -478,7 +478,7 @@ namespace SimpleScheme
             {
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
-                    this.Load(InputPort.New(new StreamReader(fs), this), outp);
+                    this.Load(new InputPort(new StreamReader(fs), this), outp);
                 }
             }
             catch (IOException)
@@ -499,7 +499,7 @@ namespace SimpleScheme
             {
                 using (var reader = new StringReader(str))
                 {
-                    this.Load(InputPort.New(reader, this), null);
+                    this.Load(new InputPort(reader, this), null);
                 }
             }
             catch (Exception ex)
@@ -634,7 +634,8 @@ namespace SimpleScheme
             while (true)
             {
                 // Invoke the next step in the current evaluator.
-                if ((evaluator = evaluator.Step()) is FinalEvaluator)
+                evaluator = evaluator.Step();
+                if (evaluator is FinalEvaluator)
                 {
                     return evaluator.ReturnedExpr;
                 }
@@ -756,7 +757,7 @@ namespace SimpleScheme
             Contract.Ensures(Contract.Result<SchemeObject>() != null);
             using (var reader = new StringReader(str))
             {
-                return UnsafeRead(InputPort.New(reader, this));
+                return UnsafeRead(new InputPort(reader, this));
             }
         }
 

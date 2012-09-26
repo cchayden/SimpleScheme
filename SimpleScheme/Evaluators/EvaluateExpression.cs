@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// <summary>
         /// The function to evaluate.
         /// </summary>
-        private readonly SchemeObject fn;
+        private SchemeObject fn;
         #endregion
 
         #region Constructor
@@ -75,35 +75,6 @@ namespace SimpleScheme
                     { "set!", EvaluateSet.Call },
                     { "time", EvaluateTime.Call }
                 };
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the EvaluateExpression class.
-        /// At this point, fn is something that evaluates to a proc.
-        /// It might be a symbol that, when looked up, resolves to a primitive or to a
-        ///   proc of some kind, like a lambda.
-        /// It is not a symbol like "and" where there are special argument-evaluation rules, so
-        ///   the first task is to evaluate all the arguments.
-        /// </summary>
-        /// <param name="fn">The function to evaluate (the expression in the first position).</param>
-        /// <param name="args">The function args to evaluate (the rest of the expressions in the list).</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateExpression(SchemeObject fn, SchemeObject args, Environment env, Evaluator caller)
-            : base(OpCode.Initial, args, env, caller, counter)
-        {
-            Contract.Requires(fn != null);
-            Contract.Requires(args != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            this.fn = fn;
-            if (fn is Procedure)
-            {
-                // If the fun is already a procedure, skip to apply step
-                this.Pc = OpCode.ApplyProc;
-                this.ReturnedExpr = fn;
-            }
         }
         #endregion
 
@@ -335,7 +306,7 @@ namespace SimpleScheme
             }
 
             // Actually create an evaluator to do the operation.
-            return new EvaluateExpression(fn, args, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -345,7 +316,7 @@ namespace SimpleScheme
         /// The special forms have their own evaluators.
         /// Otherwise, evaluate the first argument (the proc) in preparation for a call.
         /// </summary>
-        /// <returns>The next thing to do.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             // If we get here, it wasn't one of the special forms.  
@@ -360,14 +331,14 @@ namespace SimpleScheme
         /// Come here after evaluating the first expression, the proc.
         /// Handle the proc: macro, lambda, or function call.
         /// </summary>
-        /// <returns>The next thing to do.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator ApplyProcStep()
         {
             // Come here after evaluating fn
             var ret = this.ReturnedExpr;
             if (!(ret is Procedure))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", ret), null);
+                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", ret));
             }
 
             var proc = (Procedure)ret;
@@ -381,7 +352,11 @@ namespace SimpleScheme
             }
 
             // call normal evaluator 
-            return proc.Evaluate(this.Expr, this.Env, this.Caller);
+            SchemeObject exp = this.Expr;
+            Environment ev = this.Env;
+            Evaluator c = this.Caller;
+            this.Reclaim();
+            return proc.Evaluate(exp, ev, c);
         }
         #endregion
 
@@ -405,7 +380,7 @@ namespace SimpleScheme
             if (!fun.EvaluateArgs)
             {
                 Contract.Assume(fun is Primitive);
-                return ((Primitive)fun).Apply(args, env, caller, caller);                
+                return ((Primitive)fun).Apply(args, env, caller);                
             }
 
             return null;
@@ -444,11 +419,59 @@ namespace SimpleScheme
             SchemeObject lhs = First(expr);
             if (!(lhs is Symbol))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Increment: first argument must be a symbol.  Got: ""{0}""", lhs), null);
+                ErrorHandlers.SemanticError(string.Format(@"Increment: first argument must be a symbol.  Got: ""{0}""", lhs));
             }
 
             caller.ReturnedExpr = env.Increment(lhs);
             return caller;
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateExpression class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateExpression New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateExpression>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateExpression class.
+        /// At this point, fn is something that evaluates to a proc.
+        /// It might be a symbol that, when looked up, resolves to a primitive or to a
+        ///   proc of some kind, like a lambda.
+        /// It is not a symbol like "and" where there are special argument-evaluation rules, so
+        ///   the first task is to evaluate all the arguments.
+        /// </summary>
+        /// <param name="expr">The function and the arguments to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Newly initialized evaluator.</returns>
+        private EvaluateExpression Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            var args = Rest(expr);
+            this.fn = First(expr);
+            Initialize(OpCode.Initial, args, env, caller, counter);
+            if (fn is Procedure)
+            {
+                // If the fun is already a procedure, skip to apply step
+                this.Pc = OpCode.ApplyProc;
+                this.ReturnedExpr = this.fn;
+            }
+
+            return this;
         }
         #endregion
 
@@ -459,7 +482,7 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.fn != null);
+            Contract.Invariant(this.degenerate || this.fn != null);
         }
         #endregion
     }

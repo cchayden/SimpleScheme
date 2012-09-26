@@ -19,7 +19,7 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("evaluate-time-call");
         #endregion
 
-        #region Constructor
+        #region Initialize
         /// <summary>
         /// Initializes a new instance of the EvaluateTimeCall class.
         /// </summary>
@@ -27,13 +27,32 @@ namespace SimpleScheme
         /// <param name="count">The number of times to evaluate the expression.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateTimeCall(Procedure proc, int count, Environment env, Evaluator caller)
-            : base(proc, count, env, caller, counter)
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateTimeCall Initialize(Procedure proc, int count, Environment env, Evaluator caller)
         {
             Contract.Requires(proc != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             Contract.Requires(counter >= 0);
+            base.Initialize(proc, count, env, caller, counter);
+            return this;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateTimeCall class.
+        /// </summary>
+        /// <param name="proc">The expression to evaluate.</param>
+        /// <param name="count">The number of times to evaluate the expression.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateTimeCall New(Procedure proc, int count, Environment env, Evaluator caller)
+        {
+            Contract.Requires(proc != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            return new EvaluateTimeCall().Initialize(proc, count, env, caller);
         }
         #endregion
 
@@ -53,7 +72,7 @@ namespace SimpleScheme
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             int n = count is EmptyList ? 1 : Number.AsInt(count);
-            return new EvaluateTimeCall(proc, n, env, caller);
+            return New(proc, n, env, caller);
         }
         #endregion
 
@@ -65,11 +84,12 @@ namespace SimpleScheme
         /// Caller ensures that first arg is a procedure.
         /// </summary>
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvaluateStep()
         {
             this.Pc = OpCode.Done;
             Contract.Assume(this.Expr is Procedure);
-            return ((Procedure)this.Expr).Apply(EmptyList.Instance, this, this);
+            return ((Procedure)this.Expr).Apply(EmptyList.Instance, this);
         }
         #endregion
     }

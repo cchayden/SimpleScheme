@@ -30,7 +30,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="outp">The TextWriter to write output to.</param>
         /// <param name="interp">The interpreter.</param>
-        private OutputPort(TextWriter outp, Interpreter interp)
+        public OutputPort(TextWriter outp, Interpreter interp)
         {
             Contract.Requires(outp != null);
             Contract.Requires(interp != null);
@@ -58,21 +58,6 @@ namespace SimpleScheme
         internal bool IsConsole
         {
             get { return this.outp == Console.Out; }
-        }
-        #endregion
-
-        #region New
-        /// <summary>
-        /// Initializes a new instance of the OutputPort class.
-        /// </summary>
-        /// <param name="outp">The TextWriter to write output to.</param>
-        /// <param name="interp">The interpreter.</param>
-        /// <returns>A new output port</returns>
-        public static OutputPort New(TextWriter outp, Interpreter interp)
-        {
-            Contract.Requires(outp != null);
-            Contract.Requires(interp != null);
-            return new OutputPort(outp, interp);
         }
         #endregion
 

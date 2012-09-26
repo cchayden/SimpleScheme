@@ -56,25 +56,6 @@ namespace SimpleScheme
         private SchemeObject accum;
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateParallel class.
-        /// </summary>
-        /// <param name="expr">The expressions to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateParallel(SchemeObject expr, Environment env, Evaluator caller)
-            : base(OpCode.Initial, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            this.forked = this.joined = 0;
-            this.accum = EmptyList.Instance;
-        }
-        #endregion
-
         #region Call
         /// <summary>
         /// Call the parallel evaluator.
@@ -97,7 +78,7 @@ namespace SimpleScheme
                 return caller;
             }
 
-            return new EvaluateParallel(expr, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -125,12 +106,13 @@ namespace SimpleScheme
         /// Store in a queue rather than in variables because this can be executed
         ///   concurrently in several threads.
         /// </summary>
+        /// <param name="returnedExpr">The expression to return.</param>
         /// <param name="flag">The return flag.</param>
-        internal override void UpdateReturnFlag(ReturnType flag)
+        internal override void UpdateReturnFlag(SchemeObject returnedExpr, ReturnType flag)
         {
             lock (this.lockObj)
             {
-                this.returnQueue.Enqueue(new Tuple<SchemeObject, ReturnType>(this.ReturnedExpr, flag));
+                this.returnQueue.Enqueue(new Tuple<SchemeObject, ReturnType>(returnedExpr, flag));
             }
         }
         #endregion
@@ -141,7 +123,7 @@ namespace SimpleScheme
         /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
         ///   execution and halts the evaluation.
         /// </summary>
-        /// <returns>The next evaluator.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             this.Pc = OpCode.Loop;
@@ -155,12 +137,13 @@ namespace SimpleScheme
         /// Continue looping until all evaluations return an actual result.
         /// Accumulate the results and return when everything finishes.
         /// </summary>
-        /// <returns>Immediately steps back.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator LoopStep()
         {
             lock (this.lockObj)
             {
                 this.FetchReturnValue();
+                var res = this.ReturnedExpr;
                 switch (this.ReturnFlag)
                 {
                     case ReturnType.CaughtSuspended:
@@ -172,21 +155,22 @@ namespace SimpleScheme
                         // Record return result and either end the thread or 
                         //  return from the whole thing.
                         Contract.Assume(this.accum != null);
-                        this.accum = Cons(this.ReturnedExpr, this.accum);
+                        this.accum = Cons(res, this.accum);
                         this.joined++;
                         if (this.joined < this.forked || !(this.Expr is EmptyList))
                         {
-                            return new FinalEvaluator(Undefined.Instance);
+                            // all done -- return
+                            this.Reclaim();
+                            return FinalEvaluator.New(Undefined.Instance);
                         }
 
-                        Evaluator caller = this.Caller;
-                        caller.ReturnedExpr = this.accum;
-                        return caller;
+                        // return from the parallel function
+                        return this.ReturnFromEvaluator(this.accum);
 
                     case ReturnType.SynchronousReturn:
                         // synchronous return
                         Contract.Assume(this.accum != null);
-                        this.accum = Cons(this.ReturnedExpr, this.accum);
+                        this.accum = Cons(res, this.accum);
                         break;
                 }
 
@@ -198,13 +182,10 @@ namespace SimpleScheme
                     if (this.joined < this.forked)
                     {
                         this.Pc = OpCode.Loop;
-                        return new SuspendedEvaluator(this.ReturnedExpr, this.Env, this);
+                        return SuspendedEvaluator.New(res, this.Env, this);
                     }
 
-                    Evaluator caller = this.Caller;
-                    Contract.Assume(this.accum != null);
-                    caller.ReturnedExpr = this.accum;
-                    return caller;
+                    return this.ReturnFromEvaluator(this.accum);
                 }
 
                 this.Pc = OpCode.Loop;
@@ -222,8 +203,42 @@ namespace SimpleScheme
         {
             // Now it is safe to store return value and flag
             Tuple<SchemeObject, ReturnType> ret = this.returnQueue.Dequeue();
-            this.ReturnedExpr = ret.Item1;
-            base.UpdateReturnFlag(ret.Item2);
+            base.UpdateReturnFlag(ret.Item1, ret.Item2);
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateParallel class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateParallel New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return new EvaluateParallel().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateParallel class.
+        /// </summary>
+        /// <param name="expr">The expressions to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateParallel Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            this.forked = this.joined = 0;
+            this.accum = EmptyList.Instance;
+            Initialize(OpCode.Initial, expr, env, caller, counter);
+            return this;
         }
         #endregion
 

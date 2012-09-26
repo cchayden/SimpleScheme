@@ -41,26 +41,6 @@ namespace SimpleScheme
         private SchemeObject exprList;
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateCase class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="clauses">The case clauses.</param>
-        private EvaluateCase(SchemeObject expr, Environment env, Evaluator caller, SchemeObject clauses)
-            : base(OpCode.EvalKey, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(clauses != null);
-            Contract.Requires(counter >= 0);
-            this.clauses = clauses;
-        }
-        #endregion
-
         #region Call
         /// <summary>
         /// Creates a case evaluator.
@@ -74,7 +54,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            return new EvaluateCase(expr, env, caller, Rest(expr));
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -82,7 +62,7 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
-        /// <returns>Steps to evaluate the test.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvalKeyStep()
         {
             this.Pc = OpCode.CheckClause;
@@ -95,7 +75,7 @@ namespace SimpleScheme
         /// If no clauses left, return empty list.
         /// If clause matches, start evaluating expressions.
         /// </summary>
-        /// <returns>The steps to test che clauses.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator CheckClauseStep()
         {
             this.keyVal = this.ReturnedExpr;
@@ -104,8 +84,7 @@ namespace SimpleScheme
                 SchemeObject clause = First(this.clauses);
                 if (!(clause is Pair))
                 {
-                    ErrorHandlers.SemanticError("Bad syntax in case: " + clause, null);
-                    return null;
+                    ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
                 }
 
                 SchemeObject data = First(clause);
@@ -133,10 +112,46 @@ namespace SimpleScheme
             }
 
             // no clauses matched -- unspecified
-            Evaluator caller = this.Caller;
-            caller.ReturnedExpr = Undefined.Instance;
-            return caller;
+            return this.ReturnFromEvaluator(Undefined.Instance);
         }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateCase class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateCase New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateCase>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateCase class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateCase Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            Initialize(OpCode.EvalKey, expr, env, caller, counter);
+            this.clauses = Rest(expr);
+            return this;
+        }
+        #endregion
+
+        #region Private Methods
 
         /// <summary>
         /// Common logic for evaluating expressions in the clause expression list.
@@ -147,15 +162,17 @@ namespace SimpleScheme
             if (this.exprList is EmptyList)
             {
                 // if no expressions, return key value
-                Evaluator caller = this.Caller;
                 Contract.Assume(this.keyVal != null);
-                caller.ReturnedExpr = this.keyVal;
-                return caller;
+                return this.ReturnFromEvaluator(this.keyVal);
             }
 
             // eval and return last expr
             Contract.Assume(this.exprList != null);
-            return EvaluateSequence.Call(this.exprList, this.Env, this.Caller);
+            var list = this.exprList;
+            var ev = this.Env;
+            var c = this.Caller;
+            this.Reclaim();
+            return EvaluateSequence.Call(list, ev, c);
         }
         #endregion
 
@@ -166,7 +183,7 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.clauses != null);
+            Contract.Invariant(this.degenerate || this.clauses != null);
         }
         #endregion
     }

@@ -19,23 +19,6 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("evaluate-or");
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateOr class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateOr(SchemeObject expr, Environment env, Evaluator caller)
-            : base(OpCode.EvalTest, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-        }
-        #endregion
-
         #region Call
         /// <summary>
         /// Calls an or evaluator.
@@ -57,7 +40,7 @@ namespace SimpleScheme
                 return caller;
             }
 
-            return new EvaluateOr(expr, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -65,14 +48,18 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
-        /// <returns>Steps to evaluate the expression.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvalTestStep()
         {
             if (Rest(this.Expr) is EmptyList)
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
+                SchemeObject f = First(this.Expr);
+                Environment ev = this.Env;
+                Evaluator c = this.Caller;
+                this.Reclaim();
+                return EvaluateExpression.Call(f, ev, c);
             }
 
             this.Pc = OpCode.Loop;
@@ -83,19 +70,52 @@ namespace SimpleScheme
         /// If the expression evaluated to true, we are done and we can return the expression value.
         /// Otherwise, move down the list.
         /// </summary>
-        /// <returns>The evaluation result, or loops back to evaluate the next item.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator LoopStep()
         {
-            if (SchemeBoolean.Truth(this.ReturnedExpr).Value)
+            var res = this.ReturnedExpr;
+            if (SchemeBoolean.Truth(res).Value)
             {
-                Evaluator caller = this.Caller;
-                Contract.Assert(caller != null);
-                caller.ReturnedExpr = this.ReturnedExpr;
-                return caller;
+                return this.ReturnFromEvaluator(res);
             }
 
             this.Expr = Rest(this.Expr);
-            this.Pc = OpCode.EvalTest;
+
+            // do EvalTestStep now
+            return this.EvalTestStep();
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateOr class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateOr New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateOr>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateOr class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Newly initialized evaluator.</returns>
+        private EvaluateOr Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            Initialize(OpCode.EvalTest, expr, env, caller, counter);
             return this;
         }
         #endregion

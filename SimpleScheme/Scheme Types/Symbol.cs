@@ -42,7 +42,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Symbol class.
         /// </summary>
         /// <param name="name">The value of the symbol.</param>
-        private Symbol(string name)
+        public Symbol(string name)
         {
             Contract.Requires(name != null);
             this.name = name;
@@ -56,7 +56,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The value of the symbol.</param>
         /// <param name="lineNumber">The line number where the symbol was read.</param>
-        private Symbol(string name, int lineNumber) : base(lineNumber)
+        public Symbol(string name, int lineNumber) : base(lineNumber)
         {
             Contract.Requires(name != null);
             this.name = name;
@@ -118,7 +118,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region New
+        #region Cast
         /// <summary>
         /// Converts a string into a Smybol.
         /// </summary>
@@ -128,32 +128,7 @@ namespace SimpleScheme
         {
             Contract.Requires(name != null);
             Contract.Ensures(Contract.Result<Symbol>() != null);
-            return New(name);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Symbol class.
-        /// </summary>
-        /// <param name="name">The value of the symbol.</param>
-        /// <returns>A new Symbol.</returns>
-        public static Symbol New(string name)
-        {
-            Contract.Requires(name != null);
-            Contract.Ensures(Contract.Result<Symbol>() != null);
             return new Symbol(name);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Symbol class, with a line number.
-        /// </summary>
-        /// <param name="name">The value of the symbol.</param>
-        /// <param name="lineNumber">The line number where the symbol was read.</param>
-        /// <returns>A new Smybol.</returns>
-        public static Symbol New(string name, int lineNumber)
-        {
-            Contract.Requires(name != null);
-            Contract.Ensures(Contract.Result<Symbol>() != null);
-            return new Symbol(name, lineNumber);
         }
         #endregion
 

@@ -1349,7 +1349,7 @@ namespace Tests
         {
             using (var reader = new StringReader(str))
             {
-                InputPort inp = InputPort.New(reader, (Interpreter)this.interpreter);
+                InputPort inp = new InputPort(reader, (Interpreter)this.interpreter);
                 SchemeObject last = EmptyList.Instance;
                 while (true)
                 {

@@ -86,6 +86,7 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -93,13 +94,13 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "AsynchronousClrProcedure", caller);
+            this.CheckArgCount(ListLength(args), args, "AsynchronousClrProcedure");
 #endif
             SchemeObject target = null;
             if (!this.MethodInfo.IsStatic)
@@ -111,7 +112,7 @@ namespace SimpleScheme
             }
 
             var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
-            var argArray = this.ToArgListBegin(args, new InterpreterState(actualTarget, returnTo), caller);
+            var argArray = this.ToArgListBegin(args, new InterpreterState(actualTarget, returnTo));
             var res = this.MethodInfo.Invoke(actualTarget, argArray) as IAsyncResult;
             if (res == null)
             {
@@ -120,7 +121,7 @@ namespace SimpleScheme
             }
 
             // res is not converted because it is IAsyncResult -- convert in completion method
-            return new SuspendedEvaluator(ClrObject.New(res), new Environment(false), returnTo);
+            return SuspendedEvaluator.New(new ClrObject(res), new Environment(false), returnTo);
         }
 
         #endregion
@@ -151,15 +152,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
         /// <param name="state">State, passed on to completion function.</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private object[] ToArgListBegin(SchemeObject args, object state, Evaluator caller)
+        private object[] ToArgListBegin(SchemeObject args, object state)
         {
             Contract.Requires(args != null);
             Contract.Requires(state != null);
-            Contract.Requires(caller != null);
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
-            return this.ToArgList(args, additionalArgs, "AsynchronousClrProcedure", caller);
+            return this.ToArgList(args, additionalArgs, "AsynchronousClrProcedure");
         }
 
         /// <summary>

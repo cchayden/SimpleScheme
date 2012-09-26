@@ -122,18 +122,18 @@ namespace Tests
             Assert.IsTrue(SchemeBoolean.Equal((Symbol)"abc", (Symbol)"abc").Value);
             Assert.IsFalse(SchemeBoolean.Equal((Symbol)"abc", (Symbol)"ab").Value);
             Assert.IsFalse(SchemeBoolean.Equal((Symbol)"abc", (Number)1).Value);
-            var vec1 = Vector.New(3);
+            var vec1 = new Vector(3);
             vec1[0] = (Number)1;
             vec1[1] = (Number)2;
             vec1[2] = (Number)3;
-            var vec2 = Vector.New(3);
+            var vec2 = new Vector(3);
             vec2[0] = (Number)1;
             vec2[1] = (Number)2;
             vec2[2] = (Number)3;
-            var vec3 = Vector.New(2);
+            var vec3 = new Vector(2);
             vec3[0] = (Number)1;
             vec3[1] = (Number)2;
-            var vec4 = Vector.New(3);
+            var vec4 = new Vector(3);
             vec4[0] = (Number)1;
             vec4[1] = (Number)2;
             vec4[2] = (Number)4;
@@ -163,18 +163,18 @@ namespace Tests
             Assert.IsTrue(SchemeBoolean.Eqv(abc, abc).Value);
             Assert.IsFalse(SchemeBoolean.Eqv(abc, ab).Value);
             Assert.IsFalse(SchemeBoolean.Eqv(abc, n1).Value);
-            var vec1 = Vector.New(3);
+            var vec1 = new Vector(3);
             vec1[0] = (Number)1;
             vec1[1] = (Number)2;
             vec1[2] = (Number)3;
-            var vec2 = Vector.New(3);
+            var vec2 = new Vector(3);
             vec2[0] = (Number)1;
             vec2[1] = (Number)2;
             vec2[2] = (Number)3;
-            var vec3 = Vector.New(2);
+            var vec3 = new Vector(2);
             vec3[0] = (Number)1;
             vec3[1] = (Number)2;
-            var vec4 = Vector.New(3);
+            var vec4 = new Vector(3);
             vec4[0] = (Number)1;
             vec4[1] = (Number)2;
             vec4[2] = (Number)4;
@@ -307,7 +307,7 @@ namespace Tests
         public void ListToVectorTest()
         {
             var actual = Vector.FromList(List.MakeList((Number)1, (Number)2));
-            var expected = Vector.New(2);
+            var expected = new Vector(2);
             expected[0] = (Number)1;
             expected[1] = (Number)2;
             Assert.AreEqual(2, actual.Length);
@@ -378,13 +378,13 @@ namespace Tests
             Assert.AreEqual("1.5", ((Number)1.5).ToString(true));
             Assert.AreEqual("1", ((Number)1).ToString(true));
             Assert.AreEqual("#\\a", ((Character)'a').ToString(true));
-            Assert.AreEqual("(1 . 2)", (Pair.New((Number)1, (Number)2)).ToString(true));
+            Assert.AreEqual("(1 . 2)", (new Pair((Number)1, (Number)2)).ToString(true));
             Assert.AreEqual("(1 2)", (List.MakeList((Number)1, (Number)2)).ToString(true));
             Assert.AreEqual("abc", ((Symbol)"abc").ToString(true));
             Assert.AreEqual(@"""abc""", ((SchemeString)"abc").ToString(true));
-            SchemeString empty = SchemeString.New(0);
+            SchemeString empty = new SchemeString(0);
             Assert.AreEqual(@"""""", empty.ToString(true));
-            var test = Vector.New(2);
+            var test = new Vector(2);
             test[0] = (Number)1;
             test[1] = (Number)2;
             Assert.AreEqual("#(1 2)", test.ToString(true));
@@ -403,13 +403,13 @@ namespace Tests
             Assert.AreEqual("1.5", ((Number)1.5).ToString(false));
             Assert.AreEqual("1", ((Number)1).ToString());
             Assert.AreEqual("a", ((Character)'a').ToString(false));
-            Assert.AreEqual("(1 . 2)", (Pair.New((Number)1, (Number)2)).ToString(false));
+            Assert.AreEqual("(1 . 2)", (new Pair((Number)1, (Number)2)).ToString(false));
             Assert.AreEqual("(1 2)", (List.MakeList((Number)1, (Number)2)).ToString(false));
             Assert.AreEqual("abc", ((Symbol)"abc").ToString(false));
             Assert.AreEqual(@"""abc""", ((SchemeString)"abc").ToString(true));
             Assert.AreEqual("abc", ((SchemeString)"abc").ToString(false));
             Assert.AreEqual(@"""", ((SchemeString)@"""").ToString(false));
-            var test = Vector.New(2);
+            var test = new Vector(2);
             test[0] = (Number)1;
             test[1] = (Number)2;
             Assert.AreEqual("#(1 2)", test.ToString(false));
@@ -450,7 +450,7 @@ namespace Tests
         [TestMethod]
         public void VecTest()
         {
-            var test = Vector.New(2);
+            var test = new Vector(2);
             test[0] = (Number)1;
             test[1] = (Number)2;
             Assert.AreEqual(2, test.Length);
@@ -464,7 +464,7 @@ namespace Tests
         [TestMethod]
         public void VectorToListTest()
         {
-            var test = Vector.New(3);
+            var test = new Vector(3);
             test[0] = (Number)1;
             test[1] = (Number)2;
             test[2] = (Number)3;
@@ -493,7 +493,7 @@ namespace Tests
         {
             using (StringWriter writer = new StringWriter())
             {
-                var outp = OutputPort.New(writer, (Interpreter)this.interpreter);
+                var outp = new OutputPort(writer, (Interpreter)this.interpreter);
                 outp.Write("abc");
                 Assert.AreEqual("abc", writer.ToString());
             }
@@ -508,13 +508,13 @@ namespace Tests
             Assert.AreEqual("boolean", ((SchemeBoolean)true).SchemeTypeName());
             Assert.AreEqual("symbol", ((Symbol)"sym").SchemeTypeName());
             Assert.AreEqual("character", ((Character)'c').SchemeTypeName());
-            Assert.AreEqual("vector", Vector.New((Number)3, (Number)0).SchemeTypeName());
-            Assert.AreEqual("pair", Pair.New(Undefined.Instance, Undefined.Instance).SchemeTypeName());
+            Assert.AreEqual("vector", new Vector((Number)3, (Number)0).SchemeTypeName());
+            Assert.AreEqual("pair", new Pair(Undefined.Instance, Undefined.Instance).SchemeTypeName());
             Assert.AreEqual("number", ((Number)1.0d).SchemeTypeName());
             Assert.AreEqual("string", ((SchemeString)"abc").SchemeTypeName());
             Assert.AreEqual("primitive", (new Primitive("primitive", (args, env, caller) => null, new[] {string.Empty}, new ArgsInfo(0, 0, false, new ArgType[0]))).SchemeTypeName());
-            Assert.AreEqual("input-port", InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter).SchemeTypeName());
-            Assert.AreEqual("output-port", OutputPort.New(new StringWriter(), (Interpreter)this.interpreter).SchemeTypeName());
+            Assert.AreEqual("input-port", new InputPort(new StringReader(string.Empty), (Interpreter)this.interpreter).SchemeTypeName());
+            Assert.AreEqual("output-port", new OutputPort(new StringWriter(), (Interpreter)this.interpreter).SchemeTypeName());
             Assert.AreEqual("empty-list", EmptyList.Instance.SchemeTypeName());
         }
 

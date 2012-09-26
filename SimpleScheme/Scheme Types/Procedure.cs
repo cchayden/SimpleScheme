@@ -127,7 +127,7 @@ namespace SimpleScheme
                 .DefinePrimitive(
                         "apply", 
                         new[] { "6.9", "(apply <proc> <args>)", "(apply <proc> <arg1> ... <args>)" },
-                        (args, env, caller) => ((Procedure)First(args)).Apply(ListStar(Rest(args)), caller, caller), 
+                        (args, env, caller) => ((Procedure)First(args)).Apply(ListStar(Rest(args)), caller), 
                         new ArgsInfo(2, MaxInt, ArgType.Proc, ArgType.Obj))
                 .DefinePrimitive(
                         "call-with-current-continuation", 
@@ -185,6 +185,7 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// That is what it means to be a procedure.
@@ -193,9 +194,8 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the procedure, which may or may not have 
         ///   been evaluated.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to run after the application.</returns>
-        internal abstract Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller);
+        internal abstract Evaluator Apply(SchemeObject args, Evaluator returnTo);
 
         /// <summary>
         /// Evaluate the procedure.
@@ -236,15 +236,13 @@ namespace SimpleScheme
         /// <param name="numArgs">The number of arguments expected.</param>
         /// <param name="args">The arguments passed to the procedure.</param>
         /// <param name="evaluatorName">Name, for the error message.</param>
-        /// <param name="caller">The calling evaluator</param>
-        protected void CheckArgCount(int numArgs, SchemeObject args, string evaluatorName, Evaluator caller)
+        protected void CheckArgCount(int numArgs, SchemeObject args, string evaluatorName)
         {
             Contract.Requires(args != null);
             Contract.Requires(evaluatorName != null);
-            Contract.Requires(caller != null);
             if (numArgs < this.minArgs || numArgs > this.maxArgs)
             {
-                this.ArgCountError(numArgs, minArgs, args, evaluatorName, caller);
+                this.ArgCountError(numArgs, minArgs, args, evaluatorName);
             }
         }
 
@@ -256,14 +254,16 @@ namespace SimpleScheme
         /// <param name="expectedArgs">The expected number of arguments.</param>
         /// <param name="args">The arguments actually passed.</param>
         /// <param name="evaluatorName">The name of the evaluator that is checking the count.</param>
-        /// <param name="caller">The calling evaluator.</param>
-        protected void ArgCountError(int numArgs, int expectedArgs, SchemeObject args, string evaluatorName, Evaluator caller)
+        protected void ArgCountError(int numArgs, int expectedArgs, SchemeObject args, string evaluatorName)
         {
             Contract.Requires(args != null);
             Contract.Requires(evaluatorName != null);
-            Contract.Requires(caller != null);
             string msg = numArgs < expectedArgs ? "few" : "many";
+#if FALSE
             int lineNumber = caller.FindLineNumberInCallStack();
+#else
+            int lineNumber = 0;
+#endif
             string lineMsg = lineNumber == 0 ? string.Empty : " at line: " + lineNumber;
             ErrorHandlers.SemanticError(
                 string.Format(
@@ -273,8 +273,7 @@ namespace SimpleScheme
                     numArgs,
                     this.ProcedureName,
                     args,
-                    lineMsg),
-                null);
+                    lineMsg));
         }
 
         #endregion
@@ -290,7 +289,7 @@ namespace SimpleScheme
         {
             Contract.Requires(promise != null);
             Contract.Requires(caller != null);
-            return promise.Apply(Undefined.Instance, caller, caller);
+            return promise.Apply(Undefined.Instance, caller);
         }
         #endregion
 
@@ -306,7 +305,7 @@ namespace SimpleScheme
         private Evaluator CallCc(Evaluator caller)
         {
             Contract.Requires(caller != null);
-            return this.Apply(MakeList(Continuation.New(caller)), caller, caller);
+            return this.Apply(MakeList(new Continuation(caller)), caller);
         }
         #endregion
 
@@ -343,14 +342,13 @@ namespace SimpleScheme
         /// Apply the procedure to the args.
         /// </summary>
         /// <param name="args">The procedure arguments.</param>
-        /// <param name="returnTo">When done, return control here.</param>
         /// <param name="caller">The caller.</param>
+        /// <param name="returnTo">When done, return control here.</param>
         /// <returns>An evaluator to continue the computation.</returns>
-        internal override Evaluator Apply(SchemeObject args,  Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
             Contract.Requires(args != null);
             Contract.Requires(returnTo != null);
-            Contract.Requires(caller != null);
             return null;
         }
     }

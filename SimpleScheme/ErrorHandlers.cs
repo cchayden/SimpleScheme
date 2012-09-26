@@ -185,9 +185,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="message">The message to display and to put 
         ///     into the exception.</param>
-        /// <param name="got">The actual result.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static SchemeObject SemanticError(string message, SchemeObject got)
+        internal static SchemeObject SemanticError(string message)
         {
             Contract.Requires(message != null);
             Contract.Ensures(false);

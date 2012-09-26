@@ -16,7 +16,6 @@ namespace SimpleScheme
     internal sealed class EvaluateDo : Evaluator
     {
         #region Fields
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -25,67 +24,32 @@ namespace SimpleScheme
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private readonly SchemeObject vars;
+        private SchemeObject vars;
 
         /// <summary>
         /// The list of initializers.
         /// </summary>
-        private readonly SchemeObject inits;
+        private SchemeObject inits;
 
         /// <summary>
         /// This list of step expressions.
         /// </summary>
-        private readonly SchemeObject steps;
+        private SchemeObject steps;
 
         /// <summary>
         /// The expression list following the test
         /// </summary>
-        private readonly SchemeObject exprs;
+        private SchemeObject exprs;
 
         /// <summary>
         /// The commands to execute each time through.
         /// </summary>
-        private readonly SchemeObject commands;
+        private SchemeObject commands;
 
         /// <summary>
         /// The test proc to execute each time around.
         /// </summary>
-        private readonly Lambda testProc;
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateDo class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="vars">The variables.</param>
-        /// <param name="inits">The initialization expressions.</param>
-        /// <param name="steps">The steps.</param>
-        /// <param name="exprs">The expressions.</param>
-        /// <param name="commands">The commands.</param>
-        /// <param name="testProc">The test proc to execute each interation.</param>
-        private EvaluateDo(SchemeObject expr, Environment env, Evaluator caller, SchemeObject vars, SchemeObject inits, SchemeObject steps, SchemeObject exprs, SchemeObject commands, Lambda testProc)
-            : base(OpCode.Initial, expr, new Environment(env), caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(vars != null);
-            Contract.Requires(inits != null);
-            Contract.Requires(steps != null);
-            Contract.Requires(exprs != null);
-            Contract.Requires(commands != null);
-            Contract.Requires(testProc != null);
-            Contract.Requires(counter >= 0);
-            this.vars = vars;
-            this.inits = inits;
-            this.steps = steps;
-            this.exprs = exprs;
-            this.commands = commands;
-            this.testProc = testProc;
-        }
+        private Lambda testProc;
         #endregion
 
         #region Call
@@ -109,20 +73,13 @@ namespace SimpleScheme
             // Test for errors before creating the object.
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No body for do", null);
+                ErrorHandlers.SemanticError("No body for do");
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for do: " + expr, null);
+                ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
             }
-
-            var bindings = First(expr);
-            var vars = MapFun(First, bindings);
-            var inits = MapFun(Second, bindings);
-            var steps = MapFun(ThirdOrFirst, bindings);
-            var exprs = Rest(Second(expr));
-            var commands = Rest(Rest(expr));
 
             SchemeObject test = First(Second(expr));
             if (test is EmptyList)
@@ -132,8 +89,7 @@ namespace SimpleScheme
             }
 
             // prepare test proc to execute each time through
-            var testProc = Lambda.New(vars, MakeList(test), env);
-            return new EvaluateDo(expr, env, caller, vars, inits, steps, exprs, commands, testProc);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -141,7 +97,7 @@ namespace SimpleScheme
         /// <summary>
         /// Start by evaluating the inits.
         /// </summary>
-        /// <returns>Continues by evaluating the inits.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             this.Pc = OpCode.Test;
@@ -152,7 +108,7 @@ namespace SimpleScheme
         /// Evaluate the test expr in the environment containing the variables with their new values.
         /// These are the init values or the step values.
         /// </summary>
-        /// <returns>The next step, which tests the result.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator TestStep()
         {
             this.UpdateEnvironment(this.vars, this.ReturnedExpr);
@@ -164,7 +120,7 @@ namespace SimpleScheme
         /// Iterate: if test is true, eval the exprs and return.
         /// Otherwise, evaluate the commands.
         /// </summary>
-        /// <returns>The next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator IterateStep()
         {
             if (SchemeBoolean.Truth(this.ReturnedExpr).Value)
@@ -175,12 +131,14 @@ namespace SimpleScheme
                 // If no exprs, unspecified.
                 if (this.exprs is EmptyList)
                 {
-                    Evaluator caller = this.Caller;
-                    caller.ReturnedExpr = Undefined.Instance;
-                    return caller;
+                    return this.ReturnFromEvaluator(Undefined.Instance);
                 }
 
-                return EvaluateSequence.Call(this.exprs, this.Env, this.Caller);
+                SchemeObject ex = this.exprs;
+                Environment ev = this.Env;
+                Evaluator c = this.Caller;
+                this.Reclaim();
+                return EvaluateSequence.Call(ex, ev, c);
             }
             
             // test is false
@@ -193,26 +151,69 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the step expressions.  
         /// </summary>
-        /// <returns>The next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator LoopStep()
         {
-            this.Pc =OpCode.Test;
+            this.Pc = OpCode.Test;
             return EvaluateList.Call(this.steps, this.Env, this);
         }
         #endregion
 
-        #region Private Methods
+        #region Private Static Methods
         /// <summary>
         /// Extract the steps (third element in list).
         /// If it is missing, then use the first instead.
         /// </summary>
         /// <param name="x">The list to start with.</param>
         /// <returns>The third, if it exists, otherwise the first.</returns>
+        /// <returns>The next step to execute.</returns>
         private static SchemeObject ThirdOrFirst(SchemeObject x)
         {
             Contract.Requires(x != null);
             SchemeObject res = Third(x);
             return res is EmptyList ? First(x) : res;
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateDo class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateDo New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateDo>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateDo class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Newly initialized evaluator.</returns>
+        private EvaluateDo Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            var bindings = First(expr);
+            this.vars = MapFun(First, bindings);
+            this.inits = MapFun(Second, bindings);
+            this.steps = MapFun(ThirdOrFirst, bindings);
+            this.exprs = Rest(Second(expr));
+            this.commands = Rest(Rest(expr));
+            var test = First(Second(expr));
+            this.testProc = new Lambda(vars, MakeList(test), env);
+            Initialize(OpCode.Initial, expr, new Environment(env), caller, counter);
+            return this;
         }
         #endregion
 
@@ -223,12 +224,12 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.vars != null);
-            Contract.Invariant(this.inits != null);
-            Contract.Invariant(this.steps != null);
-            Contract.Invariant(this.exprs != null);
-            Contract.Invariant(this.commands != null);
-            Contract.Invariant(this.testProc != null);
+            Contract.Invariant(this.degenerate || this.vars != null);
+            Contract.Invariant(this.degenerate || this.inits != null);
+            Contract.Invariant(this.degenerate || this.steps != null);
+            Contract.Invariant(this.degenerate || this.exprs != null);
+            Contract.Invariant(this.degenerate || this.commands != null);
+            Contract.Invariant(this.degenerate || this.testProc != null);
         }
         #endregion
     }

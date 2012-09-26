@@ -21,23 +21,6 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("evaluate-define");
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateDefine class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateDefine(SchemeObject expr, Environment env, Evaluator caller)
-            : base(OpCode.Initial, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-        }
-        #endregion
-
         #region Call
         /// <summary>
         /// Call a define evaluator.
@@ -61,15 +44,15 @@ namespace SimpleScheme
                 var symbol = First(First(expr));
                 if (!(symbol is Symbol))
                 {
-                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)), null);
+                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)));
                 }
 
-                env.Define((Symbol)symbol, Lambda.New(Rest(First(expr)), Rest(expr), env));
+                env.Define((Symbol)symbol, new Lambda(Rest(First(expr)), Rest(expr), env));
                 caller.ReturnedExpr = Undefined.Instance;
                 return caller;
             }
 
-            return new EvaluateDefine(expr, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -77,7 +60,7 @@ namespace SimpleScheme
         /// <summary>
         /// Start by evaluating the expression.
         /// </summary>
-        /// <returns>Continue by evaluating the expression.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             this.Pc = OpCode.StoreDefine;
@@ -87,14 +70,46 @@ namespace SimpleScheme
         /// <summary>
         /// Back from expression evaluation.  Store the result as the value of the symbol
         /// </summary>
-        /// <returns>Execution continues in the caller.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator StoreDefineStep()
         {
             this.Env.Define((Symbol)First(this.Expr), this.ReturnedExpr);
-            this.Caller.ReturnedExpr = Undefined.Instance;
-            return this.Caller;
+            return this.ReturnFromEvaluator(Undefined.Instance);
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateDefine class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateDefine New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateDefine>().Initialize(expr, env, caller);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the EvaluateDefine class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Newly initialized evaluator.</returns>
+        private EvaluateDefine Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            Initialize(OpCode.Initial, expr, env, caller, counter);
+            return this;
+        }
         #endregion
     }
 }

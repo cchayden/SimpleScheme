@@ -10,16 +10,28 @@ namespace SimpleScheme
     /// </summary>
     internal class FinalEvaluator : Evaluator
     {
-        #region Constructor
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the FinalEvaluator class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <returns>Initialized evaluator.</returns>
+        internal static FinalEvaluator New(SchemeObject expr)
+        {
+            Contract.Requires(expr != null);
+            return GetInstance<FinalEvaluator>().Initialize(expr);
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FinalEvaluator"/> class. 
         /// </summary>
         /// <param name="expr">The value to return as the final result.</param>
-        internal FinalEvaluator(SchemeObject expr) 
+        private FinalEvaluator Initialize(SchemeObject expr) 
         {
             Contract.Requires(expr != null);
             this.ReturnedExpr = expr;
             this.Pc = OpCode.End;
+            return this;
         }
         #endregion
 
@@ -27,11 +39,13 @@ namespace SimpleScheme
         /// <summary>
         /// The step that ends evaluation
         /// </summary>
-        /// <returns>The next evaluator to execute.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EndStep()
         {
-            this.Interp.SetComplete(this.ReturnedExpr);
-            return new FinalEvaluator(this.ReturnedExpr);
+            var res = this.ReturnedExpr;
+            this.Interp.SetComplete(res);
+            this.ReturnedExpr = res;
+            return this;
         }
         #endregion
     }

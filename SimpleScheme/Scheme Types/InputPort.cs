@@ -48,7 +48,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">A text reader.</param>
         /// <param name="interp">The interpreter.</param>
-        private InputPort(TextReader inp, Interpreter interp)
+        public InputPort(TextReader inp, Interpreter interp)
         {
             Contract.Requires(interp != null);
             Contract.Requires(inp != null);
@@ -81,23 +81,6 @@ namespace SimpleScheme
         internal bool IsConsole
         {
             get { return this.inp == Console.In; }
-        }
-        #endregion
-
-        #region New
-        /// <summary>
-        /// Initializes a new instance of the InputPort class.
-        /// Store the TextReader and initialize the parser.
-        /// </summary>
-        /// <param name="inp">A text reader.</param>
-        /// <param name="interp">The interpreter.</param>
-        /// <returns>An input port.</returns>
-        public static InputPort New(TextReader inp, Interpreter interp)
-        {
-            Contract.Requires(inp != null);
-            Contract.Requires(interp != null);
-            Contract.Ensures(Contract.Result<InputPort>() != null);
-            return new InputPort(inp, interp);
         }
         #endregion
 

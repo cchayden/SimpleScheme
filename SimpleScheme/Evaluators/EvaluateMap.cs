@@ -22,7 +22,7 @@ namespace SimpleScheme
         /// <summary>
         /// The proc to apply to each element of the list.
         /// </summary>
-        private readonly Procedure proc;
+        private Procedure proc;
 
         /// <summary>
         /// Accumulates the returned result.
@@ -30,33 +30,6 @@ namespace SimpleScheme
         /// This happens only if returnResult is true;
         /// </summary>
         private SchemeObject result;
-        #endregion
-
-        #region Constructor
-
-        /// <summary>
-        /// Initializes a new instance of the EvaluateMap class.
-        /// This is used in the "map" primitive, and as part of "for-each".
-        /// Because it is used internally, the evaluator must not use destructive
-        ///   operations on its member variables.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="proc">The proc to apply to each element of the list.</param>
-        /// <param name="result">Accumulate the result here, if not null.</param>
-        private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-            : base(OpCode.ApplyFun, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(proc != null);
-            Contract.Requires(counter >= 0);
-            //// result can be null if the caller does not need the result
-            this.proc = proc;
-            this.result = result;
-        }
         #endregion
 
         #region Call
@@ -85,11 +58,11 @@ namespace SimpleScheme
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad args for map: " + expr, null);
+                ErrorHandlers.SemanticError("Bad args for map: " + expr);
             }
 
             SchemeObject result = returnResult ? EmptyList.Instance : null;
-            return new EvaluateMap(expr, env, caller, proc, result);
+            return New(expr, env, caller, proc, result);
         }
         #endregion
 
@@ -112,8 +85,7 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the map function to an element of the list and grab the result.
         /// </summary>
-        /// <returns>If apply recurses, return that evaluator.  Otherwise go on to save result.
-        /// If we are done, return the collected results.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator ApplyFunStep()
         {
             if (First(this.Expr) is Pair)
@@ -121,21 +93,18 @@ namespace SimpleScheme
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
                 this.Pc = OpCode.CollectAndLoop;
-                return this.proc.Apply(MapFun(First, this.Expr), this, this);
+                return this.proc.Apply(MapFun(First, this.Expr), this);
             }
 
             // if we are done, return the reversed result list
             // We cannot do this destructively without breaking call/cc.
-            Evaluator caller = this.Caller;
-            Contract.Assert(caller != null);
-            caller.ReturnedExpr = this.result != null ? Pair.ReverseListInPlace(this.result) : Undefined.Instance;
-            return caller;
+            return this.ReturnFromEvaluator(this.result != null ? Pair.ReverseListInPlace(this.result) : Undefined.Instance);
         }
 
         /// <summary>
         /// Collect the result of the function application and loop back to do the next one.
         /// </summary>
-        /// <returns>Continue back in apply fun step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator CollectAndLoopStep()
         {
             // back from the evaluation -- save the result and keep going with the rest
@@ -147,7 +116,50 @@ namespace SimpleScheme
 
             // Move down each of the lists
             this.Expr = MapFun(Rest, this.Expr);
-            this.Pc = OpCode.ApplyFun;
+            //// do ApplyFun now
+            return this.ApplyFunStep();
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateMap class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateMap New(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateMap>().Initialize(expr, env, caller, proc, result);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateMap class.
+        /// This is used in the "map" primitive, and as part of "for-each".
+        /// Because it is used internally, the evaluator must not use destructive
+        ///   operations on its member variables.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="proc">The proc to apply to each element of the list.</param>
+        /// <param name="result">Accumulate the result here, if not null.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateMap Initialize(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(proc != null);
+            Contract.Requires(counter >= 0);
+            //// result can be null if the caller does not need the result
+            this.proc = proc;
+            this.result = result;
+            Initialize(OpCode.ApplyFun, expr, env, caller, counter);
             return this;
         }
         #endregion

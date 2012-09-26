@@ -4,6 +4,8 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Contracts;
     using System.Reflection;
@@ -13,7 +15,7 @@ namespace SimpleScheme
     // ReSharper disable ConvertToAutoProperty
     #region Delegates
     /// <summary>
-    /// Each step takes an Evaluator and returns another one.
+    /// Each step takes an Evaluator.  Actually an open delegate, used to call an instance method.
     /// </summary>
     /// <param name="curr">The current step.</param>
     /// <returns>The next step to execute.</returns>
@@ -50,29 +52,37 @@ namespace SimpleScheme
     /// </summary>
     public abstract class Evaluator : EvaluatorOrObject
     {
+        #region Static Fields
+        /// <summary>
+        /// Free list of evaluators.  Used to cut down on garbage collection.
+        /// </summary>
+        protected static readonly Dictionary<Type, ConcurrentStack<Evaluator>> FreeList = new Dictionary<Type, ConcurrentStack<Evaluator>>();
+
         /// <summary>
         /// This maps OpCode values to the corresponding virtual methods.
         /// These are open delegates (instance methods not bound to a specific instance) so the
         /// caller can supply the correct Evaluator instance.
         /// </summary>
         private static readonly Stepper[] Instructions;
+        #endregion
 
         #region Fields
-        /// <summary>
-        /// The current interpreter.
-        /// Copied to every evaluator for ease of access.
-        /// </summary>
-        private readonly Interpreter interp;
-
         /// <summary>
         /// Flag indicates a degenerate evaluator.
         /// The only degenerate evaluator is the FinalEvaluator.
         /// </summary>
-        private readonly bool degenerate;
+        protected bool degenerate;
+
+        /// <summary>
+        /// The current interpreter.
+        /// Copied to every evaluator for ease of access.
+        /// </summary>
+        private Interpreter interp;
 
         /// <summary>
         /// The program counter.
         /// Contains an enum value specifying the the virtual method to execute next.
+        /// Should always be set before returning from a step.
         /// </summary>
         private OpCode pc;
 
@@ -115,6 +125,8 @@ namespace SimpleScheme
         /// The type of return (synchronous or asynchronous).
         /// </summary>
         private ReturnType returnFlag;
+
+        private static int evalCount = 0;
         #endregion
 
         #region Constructor
@@ -153,6 +165,33 @@ namespace SimpleScheme
             Instructions[(int)OpCode.Close] = GetStepper("CloseStep");
             Instructions[(int)OpCode.ContinueAfterSuspended] = GetStepper("ContinueAfterSuspendedStep");
             Instructions[(int)OpCode.Illegal] = GetStepper("IllegalStep");
+
+            FreeList.Add(typeof(EvaluateAnd), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateCallWithInputFile), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateCallWithOutputFile), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateCase), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateCond), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateDefine), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateDo), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateExpandMacro), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateExpression), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateExpressionWithCatch), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateIf), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateLet), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateLetRec), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateLetStar), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateList), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateMap), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateOr), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateParallel), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateProc), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateSequence), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateSet), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateTime), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(EvaluateTimeCall), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(FinalEvaluator), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(HaltedEvaluator), new ConcurrentStack<Evaluator>());
+            FreeList.Add(typeof(SuspendedEvaluator), new ConcurrentStack<Evaluator>());
         }
 
         /// <summary>
@@ -161,31 +200,35 @@ namespace SimpleScheme
         /// </summary>
         protected internal Evaluator()
         {
+            this.Initialize();
+            Console.WriteLine("Construct " + this.GetType().Name + " " + evalCount++);
+        }
+
+        protected Evaluator Initialize()
+        {
             this.pc = OpCode.Illegal;
             this.degenerate = true;
+            return this;
         }
 
         /// <summary>
-        /// Initializes a new instance of the Evaluator class.
-        /// This class is not instantiated itself, but only derived classes.
+        /// Initialize the member variables.
         /// </summary>
         /// <param name="initialPc">The initial pc value.</param>
-        /// <param name="args">The expression to evaluate.</param>
-        /// <param name="env">The evaluator environment.</param>
-        /// <param name="caller">The caller evaluator.</param>
+        /// <param name="exp">The expression to evaluate.</param>
+        /// <param name="envir">The evaluator environment.</param>
+        /// <param name="returnTo">The caller evaluator.</param>
         /// <param name="counterId">The counter ID associated with this evaluator.</param>
-        protected internal Evaluator(OpCode initialPc, SchemeObject args, Environment env, Evaluator caller, int counterId)
+        protected Evaluator Initialize(OpCode initialPc, SchemeObject exp, Environment envir, Evaluator returnTo, int counterId)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counterId >= 0);
-            this.expr = args;
-            this.env = env;
+            Contract.Requires(exp != null);
+            Contract.Requires(envir != null);
+            Contract.Requires(returnTo != null);
+            this.expr = exp;
+            this.env = envir;
+            this.caller = returnTo;
             this.interp = env.InterpOrNull;
-            this.caller = caller;
             this.pc = initialPc;
-            this.lineNumber = 0;
             this.returnedExpr = Undefined.Instance;
             this.returnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
@@ -193,6 +236,7 @@ namespace SimpleScheme
 #if Diagnostics
             this.IncrementCounter(counterId);
 #endif
+            return this;
         }
         #endregion
 
@@ -394,7 +438,6 @@ namespace SimpleScheme
         /// </summary>
         internal Evaluator Step()
         {
-            Contract.Ensures(Contract.Result<Evaluator>() != null);
             return Instructions[(int)this.pc](this);
         }
         #endregion
@@ -501,6 +544,14 @@ namespace SimpleScheme
 
         #region Internal Virtual Methods
         /// <summary>
+        /// When the evaluator is no longer needed, reclaim it for reuse.
+        /// </summary>
+        protected void Reclaim()
+        {
+            PutInstance(this);
+        }
+
+        /// <summary>
         /// Perform a shallow copy of the evaluator.
         /// Subclass overrides this to provide specialized implementation.
         /// </summary>
@@ -526,14 +577,59 @@ namespace SimpleScheme
         /// <summary>
         /// Stores the return type.
         /// </summary>
+        /// <param name="exp">The returned expression (unused).</param>
         /// <param name="flag">The return type.</param>
-        internal virtual void UpdateReturnFlag(ReturnType flag)
+        internal virtual void UpdateReturnFlag(SchemeObject exp, ReturnType flag)
         {
             this.returnFlag = flag;
         }
         #endregion
 
         #region Protected Methods
+        /// <summary>
+        /// Get an instance of en avaluator of type T.
+        /// If there is one on the free list, then return it.
+        /// Otherwise, create a new one.
+        /// Don't bother to initialize it -- that will be done by the caller.
+        /// </summary>
+        /// <typeparam name="T">The type of the evaluator.</typeparam>
+        /// <returns>An instance of the given eavulator type.</returns>
+        protected static T GetInstance<T>() where T : Evaluator
+        {
+            Evaluator eval;
+            if (FreeList[typeof(T)].TryPop(out eval))
+            {
+                return (T)eval;
+            }
+
+            return Activator.CreateInstance<T>();
+        }
+
+        /// <summary>
+        /// Put an evaluator instance on the appropriate free list.
+        /// The ealuator can be reused immediately after, so make sure that the caller does not need it any longer.
+        /// </summary>
+        /// <param name="ev">The evaluator to place on a free list.</param>
+        protected static void PutInstance(Evaluator ev)
+        {
+            FreeList[ev.GetType()].Push(ev);
+        }
+
+        /// <summary>
+        /// To return from an evaluator, a step needs to assign a value to the
+        /// ReturnedExpr and supply the calling evaluator as the next step.
+        /// </summary>
+        /// <param name="res">The evaluation result.</param>
+        /// <returns>The next evaluator.</returns>
+        protected Evaluator ReturnFromEvaluator(SchemeObject res)
+        {
+            Contract.Assert(this.caller != null);
+            this.caller.ReturnedExpr = res;
+            var returnTo = this.caller;     // copy before reclaiming
+            this.Reclaim();
+            return returnTo;
+        }
+
         /// <summary>
         /// Update and environment.
         /// Formals must be a list of symbols, vals is a corresponding list of nver values.
@@ -573,283 +669,254 @@ namespace SimpleScheme
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator InitialStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: InitialStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator DoneStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: DoneStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator TestStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: TestStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator IterateStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: IterateStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator LoopStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: LoopStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvaluateStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvaluateStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EndStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: InitialStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalTestStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalTestStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalExprStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalExprStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalAlternativeStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalAlternativeStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalKeyStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalKeyStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator CheckClauseStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: CheckClauseStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalClauseStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalClauseStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalConsequentStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalConsequentStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ApplyRecipientStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ApplyRecipientStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator StoreDefineStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: StoreDefineStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ExpandStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ExpandStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator EvalInitStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalInitStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator BindVarToInitStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: BindVarToInitStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ApplyStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ApplyStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ApplyProcStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ApplyProcStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ApplyNamedLetStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ApplyNamedLetStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ApplyFunStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ApplyFunStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator CollectAndLoopStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: CollectAndLoopStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator SetStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: SetStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator CloseStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: CloseStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ContinueAfterSuspendedStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: ContinueAfterSuspendedStep");
-            return this;
+            return null;
         }
 
         /// <summary>
         /// Base declaration for step.  Should never be called.
         /// </summary>
-        /// <returns>Next evaluator.</returns>
         protected virtual Evaluator IllegalStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: IllegalStep");
-            return this;
+            return null;
         }
-
         #endregion
 
         #region Private Static
@@ -874,7 +941,6 @@ namespace SimpleScheme
                 return null;
             }
 
-            Contract.Assert(mi != null);
             return (Stepper)Delegate.CreateDelegate(typeof(Stepper), null, mi);
         }
         #endregion

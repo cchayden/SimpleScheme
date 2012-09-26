@@ -20,27 +20,7 @@ namespace SimpleScheme
         /// <summary>
         /// The input port to be used during the evaluation.
         /// </summary>
-        private readonly InputPort port;
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateCallWithInputFile class.
-        /// </summary>
-        /// <param name="args">A pair, containing a filename and a proc to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="port">The input port.</param>
-        private EvaluateCallWithInputFile(SchemeObject args, Environment env, Evaluator caller, InputPort port)
-            : base(OpCode.Initial, args, env, caller, counter)
-        {
-            Contract.Requires(args != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(port != null);
-            Contract.Requires(counter >= 0);
-            this.port = port;
-        }
+        private InputPort port;
         #endregion
 
         #region Call
@@ -55,7 +35,7 @@ namespace SimpleScheme
             Contract.Requires(args != null);
             Contract.Requires(caller != null);
             InputPort port = OpenInputFile(First(args), caller.Interp);
-            return new EvaluateCallWithInputFile(args, caller.Env, caller, port);
+            return New(args, caller.Env, caller, port);
         }
         #endregion
 
@@ -72,7 +52,7 @@ namespace SimpleScheme
             Contract.Requires(interp != null);
             try
             {
-                return InputPort.New(new StreamReader(filename.ToString()), interp);
+                return new InputPort(new StreamReader(filename.ToString()), interp);
             }
             catch (FileNotFoundException)
             {
@@ -89,26 +69,61 @@ namespace SimpleScheme
         /// <summary>
         /// Open the input file and apply the proc.  
         /// </summary>
-        /// <returns>The next evaluator, or else if the result is available, continue on to the next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             var proc = (Procedure)Second(this.Expr);
             this.Pc = OpCode.Close;
-            return proc.Apply(MakeList(this.port), this, this);
+            return proc.Apply(MakeList(this.port), this);
         }
 
         /// <summary>
         /// Evaluation is complete: close the file and return the result.
         /// </summary>
-        /// <returns>The evaluation result.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator CloseStep()
         {
             Contract.Assert(this.port != null);
             this.port.Close();
+            return this.ReturnFromEvaluator(this.ReturnedExpr);
+        }
+        #endregion
 
-            Evaluator caller = this.Caller;
-            caller.ReturnedExpr = this.ReturnedExpr;
-            return caller;
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateCallWithInputFile class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="port">The input port.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateCallWithInputFile New(SchemeObject expr, Environment env, Evaluator caller, InputPort port)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return new EvaluateCallWithInputFile().Initialize(expr, env, caller, port);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateCallWithInputFile class.
+        /// </summary>
+        /// <param name="args">A pair, containing a filename and a proc to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="p">The input port.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateCallWithInputFile Initialize(SchemeObject args, Environment env, Evaluator caller, InputPort p)
+        {
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(p != null);
+            Contract.Requires(counter >= 0);
+            this.port = p;
+            Initialize(OpCode.Initial, args, env, caller, counter);
+            return this;
         }
         #endregion
 
@@ -119,7 +134,7 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.port != null);
+            Contract.Invariant(this.degenerate || this.port != null);
         }
         #endregion
     }

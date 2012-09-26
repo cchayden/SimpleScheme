@@ -24,51 +24,22 @@ namespace SimpleScheme
         /// <summary>
         /// Name, for named let.
         /// </summary>
-        private readonly Symbol name;
+        private Symbol name;
 
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly SchemeObject body;
+        private SchemeObject body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private readonly SchemeObject vars;
+        private SchemeObject vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private readonly SchemeObject inits;
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateLet class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="name">The name of a named let.</param>
-        /// <param name="body">The let body.</param>
-        /// <param name="vars">The variables to bind.</param>
-        /// <param name="inits">The initial values of the variables.</param>
-        private EvaluateLet(SchemeObject expr, Environment env, Evaluator caller, Symbol name, SchemeObject body, SchemeObject vars, SchemeObject inits)
-            : base(OpCode.Initial, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            //// name is null except for named let
-            Contract.Requires(body != null);
-            Contract.Requires(vars != null);
-            Contract.Requires(inits != null);
-            this.name = name;
-            this.body = body;
-            this.vars = vars;
-            this.inits = inits;
-        }
+        private SchemeObject inits;
         #endregion
 
         #region Call
@@ -89,31 +60,26 @@ namespace SimpleScheme
             Contract.Requires(caller != null);
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No arguments for let", null);
+                ErrorHandlers.SemanticError("No arguments for let");
                 caller.ReturnedExpr = Undefined.Instance;
                 return caller;
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for let: " + expr, null);
+                ErrorHandlers.SemanticError("Bad arg list for let: " + expr);
                 caller.ReturnedExpr = Undefined.Instance;
                 return caller;
             }
 
-            Symbol name = null;
-            SchemeObject bindings;
             SchemeObject body;
             if (First(expr) is Symbol)
             {
                 // named let
-                name = (Symbol)First(expr);   
-                bindings = Second(expr);
                 body = Rest(Rest(expr));
             }
             else
             {
-                bindings = First(expr);
                 body = Rest(expr);
             }
 
@@ -123,9 +89,7 @@ namespace SimpleScheme
                 return caller;
             }
 
-            var vars = MapFun(First, bindings);
-            var inits = MapFun(Second, bindings);
-            return new EvaluateLet(expr, env, caller, name, body, vars, inits);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -135,13 +99,17 @@ namespace SimpleScheme
         /// For a normal let, evaluate this lambda.
         /// For a named let, construct the additional lambda to bind to the name.
         /// </summary>
-        /// <returns>Continues by evaluating the constructed lambda.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             if (this.name == null)
             {
                 // regular let -- create a lambda for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(Lambda.New(this.vars, this.body, this.Env), this.inits, this.Env, this.Caller);
+                var i = this.inits;
+                var ev = this.Env;
+                var c = this.Caller;
+                this.Reclaim();
+                return EvaluateProc.Call(new Lambda(this.vars, this.body, this.Env), i, ev, c);
             }
 
             // named let -- eval the inits in the outer environment
@@ -155,13 +123,68 @@ namespace SimpleScheme
         ///   of the lambda.
         /// Then apply the lambda.
         /// </summary>
-        /// <returns>The next evaluator to execute.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator ApplyNamedLetStep()
         {
             Contract.Assume(this.name != null);
-            Lambda fn = Lambda.New(this.vars, this.body, this.Env);
-            fn.Env.Define(this.name, fn);   
-            return fn.Apply(this.ReturnedExpr, this.Caller, this);
+            var fn = new Lambda(this.vars, this.body, this.Env);
+            fn.Env.Define(this.name, fn);
+            var r = this.ReturnedExpr;
+            var c = this.Caller;
+            this.Reclaim();
+            return fn.Apply(r, c);
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateLet class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateLet New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateLet>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateLet class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateLet Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+
+            SchemeObject bindings;
+            if (First(expr) is Symbol)
+            {
+                // named let
+                this.name = (Symbol)First(expr);   
+                bindings = Second(expr);
+                this.body = Rest(Rest(expr));
+            }
+            else
+            {
+                this.name = null;
+                bindings = First(expr);
+                this.body = Rest(expr);
+            }
+
+            this.vars = MapFun(First, bindings);
+            this.inits = MapFun(Second, bindings);
+            Initialize(OpCode.Initial, expr, env, caller, counter);
+            return this;
         }
         #endregion
 
@@ -172,9 +195,9 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.body != null);
-            Contract.Invariant(this.vars != null);
-            Contract.Invariant(this.inits != null);
+            Contract.Invariant(this.degenerate || this.body != null);
+            Contract.Invariant(this.degenerate || this.vars != null);
+            Contract.Invariant(this.degenerate || this.inits != null);
         }
         #endregion
     }

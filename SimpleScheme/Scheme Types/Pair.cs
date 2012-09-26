@@ -26,12 +26,12 @@ namespace SimpleScheme
 
         #region Constructor
         /// <summary>
-        /// Initializes a new instance of the Pair class.
+        /// Initializes a new instance of the <see cref="Pair"/> class. 
         /// </summary>
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
-        protected Pair(SchemeObject first, SchemeObject rest)
+        public Pair(SchemeObject first, SchemeObject rest)
         {
             Contract.Requires(first != null);
             Contract.Requires(rest != null);
@@ -42,13 +42,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Initializes a new instance of the Pair class.
+        /// Initializes a new instance of the <see cref="Pair"/> class. 
         /// </summary>
         /// <param name="first">The first object.</param>
         /// <param name="rest">The rest of the objs in the list are 
         /// referenced by this.</param>
         /// <param name="lineNumber">The line where the Pair is read.</param>
-        protected Pair(SchemeObject first, SchemeObject rest, int lineNumber) : base(lineNumber)
+        public Pair(SchemeObject first, SchemeObject rest, int lineNumber) : base(lineNumber)
         {
             Contract.Requires(first != null);
             Contract.Requires(rest != null);
@@ -59,11 +59,11 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Initializes a new instance of the Pair class.
+        /// Initializes a new instance of the <see cref="Pair"/> class. 
         /// Make a one-element list.
         /// </summary>
         /// <param name="first">The first object.</param>
-        protected Pair(SchemeObject first)
+        public Pair(SchemeObject first)
         {
             Contract.Requires(first != null);
             Contract.Ensures(this.firstCell != null);
@@ -76,7 +76,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="Pair"/> class. 
         /// Make an empty list.
         /// </summary>
-        protected Pair()
+        public Pair()
         {
             Contract.Ensures(this.firstCell != null);
             Contract.Ensures(this.restCell != null);
@@ -110,62 +110,6 @@ namespace SimpleScheme
             }
         }
 
-        #endregion
-
-        #region New
-        /// <summary>
-        /// Initializes a new instance of the Pair class.
-        /// Make an empty list.
-        /// </summary>
-        /// <returns>A new Pair.</returns>
-        public static Pair New()
-        {
-            return new Pair();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Pair class.
-        /// Make a one-element list.
-        /// </summary>
-        /// <param name="first">The first object.</param>
-        /// <returns>A new Pair.</returns>
-        public static Pair New(SchemeObject first)
-        {
-            Contract.Requires(first != null);
-            Contract.Ensures(Contract.Result<Pair>() != null);
-            return new Pair(first);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Pair class.
-        /// </summary>
-        /// <param name="first">The first object.</param>
-        /// <param name="rest">The rest of the objs in the list are 
-        /// referenced by this.</param>
-        /// <returns>A new Pair.</returns>
-        public static Pair New(SchemeObject first, SchemeObject rest)
-        {
-            Contract.Requires(first != null);
-            Contract.Requires(rest != null);
-            Contract.Ensures(Contract.Result<Pair>() != null);
-            return new Pair(first, rest);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the Pair class.
-        /// </summary>
-        /// <param name="first">The first object.</param>
-        /// <param name="rest">The rest of the objs in the list are 
-        /// referenced by this.</param>
-        /// <param name="lineNumber">The line number the pair was read from.</param>
-        /// <returns>A new Pair.</returns>
-        public static Pair New(SchemeObject first, SchemeObject rest, int lineNumber)
-        {
-            Contract.Requires(first != null);
-            Contract.Requires(rest != null);
-            Contract.Ensures(Contract.Result<Pair>() != null);
-            return new Pair(first, rest, lineNumber);
-        }
         #endregion
 
         #region Public Static Methods

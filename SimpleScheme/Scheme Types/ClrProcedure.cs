@@ -124,17 +124,17 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "class", 
                     new[] { "(class <class-name>)" },
-                    (args, env, caller) => ClrObject.New(Class(First(args).ToString())), 
+                    (args, env, caller) => new ClrObject(Class(First(args).ToString())), 
                     new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                     "new", 
                     new[] { "(new <class-name>)" },
-                    (args, env, caller) => ClrObject.New(New(First(args).ToString())), 
+                    (args, env, caller) => new ClrObject(New(First(args).ToString())), 
                     new ArgsInfo(1, ArgType.String))
                 .DefinePrimitive(
                     "new-clr-array", 
                     new[] { "(new-clr-array <class-name> <length>)" },
-                    (args, env, caller) => ClrObject.New(NewArray(First(args).ToString(), Second(args))), 
+                    (args, env, caller) => new ClrObject(NewArray(First(args).ToString(), Second(args))), 
                     new ArgsInfo(2, ArgType.String, ArgType.Number))
                 .DefinePrimitive(
                     "clr->native", 
@@ -236,12 +236,11 @@ namespace SimpleScheme
         /// <param name="evaluatorName">The evaluator name, for the error message.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        protected object[] ToArgList(SchemeObject args, object[] additionalArgs, string evaluatorName, Evaluator caller)
+        protected object[] ToArgList(SchemeObject args, object[] additionalArgs, string evaluatorName)
         {
             Contract.Requires(args != null);
             //// additionalArgs can be null
             Contract.Requires(evaluatorName != null);
-            Contract.Requires(caller != null);
             Contract.Assert(this.argClasses != null);
 
             // This has been checked once already, in Procedure.CheckArgCount, but that included
@@ -252,7 +251,7 @@ namespace SimpleScheme
             int expectedArgs = this.ArgClasses.Length;
             if (numArgs != expectedArgs)
             {
-                this.ArgCountError(numArgs, expectedArgs, args, evaluatorName, caller);
+                this.ArgCountError(numArgs, expectedArgs, args, evaluatorName);
             }
 
             var array = new object[numArgs];

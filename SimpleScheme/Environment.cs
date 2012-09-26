@@ -167,6 +167,14 @@ namespace SimpleScheme
                 return this.lexicalParent;
             }
         }
+
+        /// <summary>
+        /// Gets the lexical parent environment.
+        /// </summary>
+        internal Environment LexicalParentOrNull
+        {
+            get { return this.lexicalParent; }
+        }
         #endregion
 
         #region Interface Methods
@@ -181,7 +189,7 @@ namespace SimpleScheme
         {
             try
             {
-                this.Define(Symbol.New(var), val);
+                this.Define(new Symbol(var), val);
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -199,7 +207,7 @@ namespace SimpleScheme
         {
             try
             {
-                this.Set(Symbol.New(var), val);
+                this.Set(new Symbol(var), val);
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -215,7 +223,7 @@ namespace SimpleScheme
         {
             try
             {
-                return this.Lookup(Symbol.New(var));
+                return this.Lookup(new Symbol(var));
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -290,11 +298,11 @@ namespace SimpleScheme
                 }
 
                 // if we have not found anything yet, look in the parent
-                env = env.LexicalParent;
+                env = env.LexicalParentOrNull;
                 level++;
             }
 
-            ErrorHandlers.SemanticError(string.Format(@"Unbound variable: ""{0}""", var.SymbolName), var);
+            ErrorHandlers.SemanticError(string.Format(@"Unbound variable: ""{0}""", var.SymbolName));
             return null;
         }
 
@@ -310,7 +318,7 @@ namespace SimpleScheme
             if (!(symbol is Symbol))
             {
                 ErrorHandlers.SemanticError(
-                    string.Format(@"Attempt to update a non-symbol: ""{0}""", symbol.ToString(true)), symbol);
+                    string.Format(@"Attempt to update a non-symbol: ""{0}""", symbol.ToString(true)));
             }
 
             this.AddSymbol((Symbol)symbol, val);
@@ -354,11 +362,11 @@ namespace SimpleScheme
                 }
 
                 // if we have not found anything yet, look in the parent
-                env = env.LexicalParent;
+                env = env.LexicalParentOrNull;
                 level++;
             }
 
-            ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
+            ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName));
         }
 
         /// <summary>
@@ -373,7 +381,7 @@ namespace SimpleScheme
             {
                 return
                     ErrorHandlers.SemanticError(
-                        string.Format(@"Attempt to increment a non-symbol: ""{0}""", var.ToString(true)), var);
+                        string.Format(@"Attempt to increment a non-symbol: ""{0}""", var.ToString(true)));
             }
 
             var symbol = (Symbol)var;
@@ -389,11 +397,11 @@ namespace SimpleScheme
                 }
 
                 // if we have not found anything yet, look in the parent
-                env = env.LexicalParent;
+                env = env.LexicalParentOrNull;
             }
 
             return ErrorHandlers.SemanticError(
-                string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
+                string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName));
         }
 
         /// <summary>
@@ -417,7 +425,7 @@ namespace SimpleScheme
                     sb.Append("-----\n ");
                 }
 
-                env = env.LexicalParent;
+                env = env.LexicalParentOrNull;
             }
 
             return sb.ToString();
@@ -581,7 +589,7 @@ namespace SimpleScheme
                 {
                     // If it is found but is not a number, then that is an error.
                     ErrorHandlers.SemanticError(
-                        string.Format(@"Attempt to increment a non-number: ""{0}""", val.ToString(true)), symbol);
+                        string.Format(@"Attempt to increment a non-number: ""{0}""", val.ToString(true)));
                     return null;
                 }
 
@@ -629,7 +637,8 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Add a list of symbols and values.
+        /// Add a list of symbols and values to the symbol table.
+        /// This is used when binding formals to actual parameters.
         /// If the list of symbols and vals is the same length, they are paired up.
         /// If the list of symbols is shorter, a list of the rest of the vals are bound to the last symbol.
         ///   This handles cases (2) and (3) in section 4.1.4 describing lambda formals.
@@ -645,22 +654,27 @@ namespace SimpleScheme
             {
                 while (!(symbols is EmptyList))
                 {
+#if Check
+                    if (vals is EmptyList)
+                    {
+                        ErrorHandlers.SemanticError("Too few actual parameters.");
+                    }
+#endif
                     if (symbols is Symbol)
                     {
                         // bind the symbol the the rest of the values
                         this.AddSymbolUnlocked((Symbol)symbols, vals);
+                        break;
                     }
-                    else
-                    {
-                        SchemeObject symbol = List.First(symbols);
-                        if (!(symbol is Symbol))
-                        {
-                            ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""", symbol), symbol);
-                        }
 
-                        Contract.Assert(symbol is Symbol);
-                        this.AddSymbolUnlocked((Symbol)symbol, List.First(vals));
+                    SchemeObject symbol = List.First(symbols);
+                    if (!(symbol is Symbol))
+                    {
+                        ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""", symbol));
                     }
+
+                    Contract.Assert(symbol is Symbol);
+                    this.AddSymbolUnlocked((Symbol)symbol, List.First(vals));
 
                     symbols = List.Rest(symbols);
                     vals = List.Rest(vals);

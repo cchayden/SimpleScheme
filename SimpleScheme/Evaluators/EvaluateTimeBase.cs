@@ -18,17 +18,17 @@ namespace SimpleScheme
         /// <summary>
         /// The amount of memory at the start.
         /// </summary>
-        private readonly long startMem;
+        private long startMem;
 
         /// <summary>
         /// The starting time.
         /// </summary>
-        private readonly Stopwatch stopwatch;
+        private Stopwatch stopwatch;
 
         /// <summary>
         /// The number of times to repeat the evaluation.
         /// </summary>
-        private readonly int counter;
+        private int counter;
 
         /// <summary>
         /// How far we are into the repeated evaluation.
@@ -36,7 +36,7 @@ namespace SimpleScheme
         private int i;
         #endregion
 
-        #region Constructor
+        #region Initialize
         /// <summary>
         /// Initializes a new instance of the EvaluateTimeBase class.
         /// </summary>
@@ -45,8 +45,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="counterId">The counter id of the evaluator.</param>
-        protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
-            : base(OpCode.Initial, expr, env, caller, counterId)
+        protected EvaluateTimeBase Initialize(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -55,6 +54,8 @@ namespace SimpleScheme
             this.counter = count;
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
+            Initialize(OpCode.Initial, expr, env, caller, counter);
+            return this;
         }
         #endregion
 
@@ -62,12 +63,13 @@ namespace SimpleScheme
         /// <summary>
         /// Start by setting up timers and counter.
         /// </summary>
-        /// <returns>Continue to next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator InitialStep()
         {
             this.i = 0;
-            this.Pc = OpCode.Evaluate;
-            return this;
+
+            // do EvaluateStep
+            return this.EvaluateStep();
         }
 
         /// <summary>
@@ -76,26 +78,23 @@ namespace SimpleScheme
         /// If not done, loop back.
         /// Otherwise, calculate elapsed time and mem use.
         /// </summary>
-        /// <returns>Continue, or else give the timer results.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator DoneStep()
         {
             this.i++;
             if (this.i < this.counter)
             {
-                this.Pc = OpCode.Evaluate;
-                return this;
+                // do EvaluateStep
+                return this.EvaluateStep();
             }
 
             this.stopwatch.Stop();
             long time = this.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - this.startMem;
-            Evaluator caller = this.Caller;
-            caller.ReturnedExpr = 
-                MakeList(
+            return this.ReturnFromEvaluator(MakeList(
                     this.ReturnedExpr,
                     MakeList((Number)time,  (Symbol)"msec"),
-                    MakeList((Number)mem, (Symbol)"bytes"));
-            return caller;
+                    MakeList((Number)mem, (Symbol)"bytes")));
         }
         #endregion
     }

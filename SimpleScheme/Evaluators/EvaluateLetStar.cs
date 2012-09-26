@@ -23,7 +23,7 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly SchemeObject body;
+        private SchemeObject body;
 
         /// <summary>
         /// The list of variables to bind.
@@ -48,38 +48,6 @@ namespace SimpleScheme
         private SchemeObject formals;
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateLetStar class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="body">The let* body.</param>
-        /// <param name="vars">The list of variables to bind.</param>
-        /// <param name="inits">The initialization expressions.</param>
-        /// <param name="formals">The list of parameters to pass to the lambda.</param>
-        /// <param name="vals">Evaluated values of inits.</param>
-        private EvaluateLetStar(SchemeObject expr, Environment env, Evaluator caller, SchemeObject body, SchemeObject vars, SchemeObject inits, SchemeObject formals, SchemeObject vals)
-            : base(OpCode.EvalInit, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(body != null);
-            Contract.Requires(vars != null);
-            Contract.Requires(inits != null);
-            Contract.Requires(formals != null);
-            Contract.Requires(vals != null);
-            Contract.Requires(counter >= 0);
-            this.body = body;
-            this.vars = vars;
-            this.inits = inits;
-            this.formals = formals;
-            this.vals = vals;
-        }
-        #endregion
-
         #region Call
         /// <summary>
         /// Call let* evaluator.
@@ -95,48 +63,42 @@ namespace SimpleScheme
             Contract.Requires(caller != null);
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No arguments arguments for let*", null);
+                ErrorHandlers.SemanticError("No arguments arguments for let*");
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for let*: " + expr, null);
+                ErrorHandlers.SemanticError("Bad arg list for let*: " + expr);
             }
 
-            SchemeObject bindings = First(expr);
             SchemeObject body = Rest(expr);
-
             if (body is EmptyList)
             {
                 caller.ReturnedExpr = Undefined.Instance;
                 return caller;
             }
 
-            var vars = MapFun(First, bindings);
-            var inits = MapFun(Second, bindings);
-            var formals = EmptyList.Instance;
-            var vals = EmptyList.Instance;
-            return new EvaluateLetStar(expr, env, caller, body, vars, inits, formals, vals);
+            return New(expr, env, caller);
         }
         #endregion
 
-        #region steps
+        #region Steps
         /// <summary>
         /// Evaluate one of the inits.
         /// Do it in an environment made up of the previously evaluated inits bound to their vars.
         /// </summary>
-        /// <returns>The next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvalInitStep()
         {
             if (this.inits is EmptyList)
             {
-                this.Pc = OpCode.ApplyProc;
-                return this;
+                // do ApplyProc now
+                return this.ApplyProcStep();
             }
 
-            Lambda fun = Lambda.New(this.formals, MakeList(First(this.inits)), this.Env);
+            var fun = new Lambda(this.formals, MakeList(First(this.inits)), this.Env);
             this.Pc = OpCode.BindVarToInit;
-            return fun.Apply(this.vals, this, this);
+            return fun.Apply(this.vals, this);
         }
 
         /// <summary>
@@ -144,29 +106,72 @@ namespace SimpleScheme
         /// Move down list of vars and inits.
         /// Go back and evaluate another init.
         /// </summary>
-        /// <returns>The next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator BindVarToInitStep()
         {
             this.formals = Cons(First(this.vars), this.formals);
             this.vals = Cons(this.ReturnedExpr, this.vals);
             this.vars = Rest(this.vars);
             this.inits = Rest(this.inits);
-            this.Pc = OpCode.EvalInit;
-            return this;
+
+            // finish up by doing EvalInit
+            return this.EvalInitStep();
         }
 
         /// <summary>
         /// Inits evaluated and bound -- execute the proc.
         /// </summary>
-        /// <returns>Execution continues with evaluation of the body of the let.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator ApplyProcStep()
         {
             // apply the fun to the vals
-            Lambda fun = Lambda.New(this.formals, this.body, this.Env);
-            return fun.Apply(this.vals, this.Caller, this);
+            var fun = new Lambda(this.formals, this.body, this.Env);
+            var v = this.vals;
+            var c = this.Caller;
+            this.Reclaim();
+            return fun.Apply(v, c);
         }
         #endregion
 
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateLetStar class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateLetStar New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateLetStar>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateLetStar class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateLetStar Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            SchemeObject bindings = First(expr);
+            this.body = Rest(expr);
+            this.vars = MapFun(First, bindings);
+            this.inits = MapFun(Second, bindings);
+            this.formals = EmptyList.Instance;
+            this.vals = EmptyList.Instance;
+            Initialize(OpCode.EvalInit, expr, env, caller, counter);
+            return this;
+        }
+        #endregion
         #region Contract Invariant
         /// <summary>
         /// Describes invariants on the member variables.
@@ -174,11 +179,11 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.body != null);
-            Contract.Invariant(this.vars != null);
-            Contract.Invariant(this.inits != null);
-            Contract.Invariant(this.formals != null);
-            Contract.Invariant(this.vals != null);
+            Contract.Invariant(this.degenerate || this.body != null);
+            Contract.Invariant(this.degenerate || this.vars != null);
+            Contract.Invariant(this.degenerate || this.inits != null);
+            Contract.Invariant(this.degenerate || this.formals != null);
+            Contract.Invariant(this.degenerate || this.vals != null);
         }
         #endregion
     }

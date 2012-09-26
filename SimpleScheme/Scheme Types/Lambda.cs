@@ -43,7 +43,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        protected Lambda(SchemeObject formalParameters, SchemeObject body, Environment env) :
+        public Lambda(SchemeObject formalParameters, SchemeObject body, Environment env) :
             base(null, new ArgsInfo(CountFormals(formalParameters)))
         {
             Contract.Requires(formalParameters != null);
@@ -69,25 +69,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region New
-        /// <summary>
-        /// Initializes a new instance of the Lambda class.
-        /// </summary>
-        /// <param name="formalParameters">A list of variable names, to be matched with 
-        ///    values given later.</param>
-        /// <param name="body">The program to execute.</param>
-        /// <param name="env">The environment in which to execute it.</param>
-        /// <returns>A Lambda.New.</returns>
-        public static Lambda New(SchemeObject formalParameters, SchemeObject body, Environment env)
-        {
-            Contract.Requires(formalParameters != null);
-            Contract.Requires(body != null);
-            Contract.Requires(env != null);
-            Contract.Ensures(Contract.Result<Lambda>() != null);
-            return new Lambda(formalParameters, body, env);
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Display the lambda as a string.  
@@ -96,7 +77,6 @@ namespace SimpleScheme
         /// <returns>The string form of the lambda.</returns>
         public override string ToString()
         {
-            // TODO display formals??
             return this.ToString("lambda");
         }
         #endregion
@@ -114,7 +94,7 @@ namespace SimpleScheme
             Contract.Requires(args != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            caller.ReturnedExpr = New(First(args), Rest(args), env);
+            caller.ReturnedExpr = new Lambda(First(args), Rest(args), env);
             return caller;
         }
 
@@ -139,13 +119,13 @@ namespace SimpleScheme
         /// The outer environment is supplied from the Lambda itself.
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
-        /// <param name="returnTo">The evaluator to return to.  This can be different from returnTo if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from returnTo if this is the last step in evaluation</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "Lambda", caller);
+            this.CheckArgCount(ListLength(args), args, "Lambda");
 #endif
             return this.ApplyWithGivenEnv(new Environment(this.Env, this.formalParameters, args), returnTo);
         }

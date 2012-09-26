@@ -78,21 +78,22 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+
         /// <summary>
         /// Execute the constructor.
         /// Match all arguments supplied up to the constructor's types.
         /// </summary>
         /// <param name="args">Arguments to pass to the constructor.</param>
-        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <returns>The next evaluator to excute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "ClrConstructor", caller);
+            this.CheckArgCount(ListLength(args), args, "ClrConstructor");
 #endif
             Assembly assembly = this.classType.Assembly;
-            object[] argArray = this.ToArgList(args, null, "ClrConstructor", caller);
+            object[] argArray = this.ToArgList(args, null, "ClrConstructor");
             object res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
             if (res == null)
             {
@@ -100,7 +101,7 @@ namespace SimpleScheme
                 return null;
             }
 
-            returnTo.ReturnedExpr = ClrObject.New(res);
+            returnTo.ReturnedExpr = new ClrObject(res);
             return returnTo;
         }
         #endregion

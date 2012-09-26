@@ -68,7 +68,7 @@ namespace SimpleScheme
                     { typeof(Number), elem => (Number)elem },
                     { typeof(int), elem => (Number)(int)elem },
                     { typeof(SchemeString), elem => (SchemeString)elem },
-                    { typeof(string), elem => SchemeString.New((string)elem) },
+                    { typeof(string), elem => new SchemeString((string)elem) },
                     { typeof(SchemeBoolean), elem => (SchemeBoolean)elem },
                     { typeof(bool), elem => (SchemeBoolean)(bool)elem },
                     { typeof(double), elem => (Number)(double)elem },
@@ -79,7 +79,7 @@ namespace SimpleScheme
                     { typeof(Character), elem => (Character)elem },
                     { typeof(char), elem => (Character)(char)elem },
                     { typeof(EmptyList), elem => EmptyList.Instance },
-                    { typeof(Symbol), elem => SchemeString.New(elem.ToString()) },
+                    { typeof(Symbol), elem => new SchemeString(elem.ToString()) },
                     { typeof(int[]), elem => Vector.New(elem) },
                     { typeof(string[]), elem => Vector.New(elem) },
                     { typeof(bool[]), elem => Vector.New(elem) },
@@ -97,7 +97,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="ClrObject"/> class.
         /// </summary>
         /// <param name="clrObject">The wrapped clr object.</param>
-        private ClrObject(object clrObject)
+        public ClrObject(object clrObject)
         {
             Contract.Requires(clrObject != null);
             this.clrObject = clrObject;
@@ -115,25 +115,6 @@ namespace SimpleScheme
                 Contract.Ensures(Contract.Result<object>() != null);
                 return this.clrObject;
             }
-        }
-        #endregion
-
-        #region New
-        /// <summary>
-        /// Creates a new instance of the CrlObject.
-        /// </summary>
-        /// <param name="clrObject">The clr object to wrap.</param>
-        /// <returns>The ClrObject wrapper.</returns>
-        public static ClrObject New(object clrObject)
-        {
-            Contract.Requires(clrObject != null);
-            Contract.Ensures(Contract.Result<ClrObject>() != null);
-            if (clrObject == null)
-            {
-                clrObject = Undefined.Instance;
-            }
-
-            return new ClrObject(clrObject);
         }
         #endregion
 

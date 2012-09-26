@@ -28,23 +28,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region New
-        /// <summary>
-        /// Initializes a new instance of the Macro class.
-        /// </summary>
-        /// <param name="parms">The macro params.</param>
-        /// <param name="body">The macro body.</param>
-        /// <param name="env">The environment that the macro is defined in.</param>
-        /// <returns>A new Macro.</returns>
-        public static new Macro New(SchemeObject parms, SchemeObject body, Environment env)
-        {
-            Contract.Requires(parms != null);
-            Contract.Requires(body != null);
-            Contract.Requires(env != null);
-            return new Macro(parms, body, env);
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Display the macro as a string.  

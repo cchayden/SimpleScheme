@@ -126,7 +126,7 @@ namespace SimpleScheme
         {
             Contract.Requires(obj != null);
             string msg = string.Format("Type: {0}\nDescription: {1}", obj.GetType().Name, obj.Describe());
-            return SchemeString.New(msg);
+            return new SchemeString(msg);
         }
         #endregion
     }

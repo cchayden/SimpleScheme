@@ -19,20 +19,36 @@ namespace SimpleScheme
 
         #endregion
 
-        #region Constructor
+        #region Initialize
         /// <summary>
         /// Initializes a new instance of the EvaluateTime class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateTime(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, 1, env, caller, counter)
+        private EvaluateTime Initialize(SchemeObject expr, Environment env, Evaluator caller)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             Contract.Requires(counter >= 0);
+            base.Initialize(expr, 1, env, caller, counter);
+            return this;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateTime class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateTime New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return new EvaluateTime().Initialize(expr, env, caller);
         }
         #endregion
 
@@ -49,7 +65,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            return new EvaluateTime(expr, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -59,7 +75,7 @@ namespace SimpleScheme
         /// This evaluates the expression that is being timed.
         /// Test to see if we are done.
         /// </summary>
-        /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvaluateStep()
         {
             this.Pc = OpCode.Done;

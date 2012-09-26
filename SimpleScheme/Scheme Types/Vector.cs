@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="Vector"/> class.
         /// </summary>
         /// <param name="length"> The number of elements in the vector.</param>
-        private Vector(int length)
+        public Vector(int length)
         {
             Contract.Requires(length >= 0);
             this.vec = new SchemeObject[length];
@@ -36,7 +36,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="length"> The number of elements in the vector.</param>
         /// <param name="lineNumber">The line where the vector is read.</param>
-        private Vector(int length, int lineNumber) : base(lineNumber)
+        public Vector(int length, int lineNumber) : base(lineNumber)
         {
             Contract.Requires(length >= 0);
             this.vec = new SchemeObject[length];
@@ -47,7 +47,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="length">The vector length.</param>
         /// <param name="fill">The fill.</param>
-        private Vector(int length, SchemeObject fill) : this(length)
+        public Vector(int length, SchemeObject fill) : this(length)
         {
             Contract.Requires(length >= 0);
             Contract.Requires(fill != null);
@@ -62,7 +62,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="Vector"/> class from an array of objects.
         /// </summary>
         /// <param name="elems">The vector elements.</param>
-        private Vector(object[] elems) : this(elems.Length)
+        public Vector(object[] elems) : this(elems.Length)
         {
             Contract.Requires(elems != null);
             Contract.Requires(Contract.ForAll(elems, elem => elem != null));
@@ -78,7 +78,7 @@ namespace SimpleScheme
         /// <param name="length">The vector length as a scheme object.</param>
         /// <param name="fill">The value to initialize the vector entries to.</param>
         /// <returns>A vector of the objs filled with the fill object.</returns>
-        private Vector(SchemeObject length, SchemeObject fill) : this(Number.AsInt(length), fill)
+        public Vector(SchemeObject length, SchemeObject fill) : this(Number.AsInt(length), fill)
         {
             Contract.Requires(length != null);
             Contract.Requires(Number.AsInt(length) >= 0);
@@ -133,58 +133,7 @@ namespace SimpleScheme
         public static implicit operator Vector(object[] elems)
         {
             Contract.Requires(elems != null);
-            return New(elems);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Vector"/> class.
-        /// </summary>
-        /// <param name="length"> The number of elements in the vector.</param>
-        /// <returns>A new Vector.</returns>
-        public static Vector New(int length)
-        {
-            Contract.Requires(length >= 0);
-            return new Vector(length);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
-        /// </summary>
-        /// <param name="length">The vector length.</param>
-        /// <param name="fill">The fill.</param>
-        /// <returns>A new Vector.</returns>
-        public static Vector New(int length, SchemeObject fill)
-        {
-            Contract.Requires(length >= 0);
-            Contract.Requires(fill != null);
-            return new Vector(length, fill);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Vector"/> class from an array of objects.
-        /// </summary>
-        /// <param name="elems">The vector elements.</param>
-        /// <returns>A new Vector.</returns>
-        public static Vector New(object[] elems)
-        {
-            Contract.Requires(elems != null);
-            Contract.Requires(Contract.ForAll(elems, elem => elem != null));
             return new Vector(elems);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
-        /// </summary>
-        /// <param name="length">The vector length as a scheme object.</param>
-        /// <param name="fill">The value to initialize the vector entries to.</param>
-        /// <returns>A vector of the objs filled with the fill object.</returns>
-        /// <returns>A new Vector.</returns>
-        public static Vector New(SchemeObject length, SchemeObject fill)
-        {
-            Contract.Requires(length != null);
-            Contract.Requires(Number.AsInt(length) >= 0);
-            Contract.Requires(fill != null);
-            return new Vector(length, fill);
         }
 
         /// <summary>
@@ -470,7 +419,7 @@ namespace SimpleScheme
                 .DefinePrimitive(
                         "make-vector", 
                         new[] { "6.8", "(make-vector <k>)", "(make-vector <k> <fill>)" },
-                        (args, env, caller) => New(First(args), Second(args)), 
+                        (args, env, caller) => new Vector(First(args), Second(args)), 
                         new ArgsInfo(1, 2, ArgType.Number, ArgType.Obj))
                 .DefinePrimitive(
                         "vector", 

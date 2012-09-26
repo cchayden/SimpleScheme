@@ -113,6 +113,7 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -121,9 +122,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
             SchemeObject target = null;
             if (!this.MethodInfo.IsStatic)
@@ -133,11 +133,11 @@ namespace SimpleScheme
             }
 
 #if Check
-            this.CheckArgCount(ListLength(args), args, "SynchronousClrProcedure", caller);
+            this.CheckArgCount(ListLength(args), args, "SynchronousClrProcedure");
 #endif
 
             var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
-            var argList = this.ToArgList(args, null, "SynchronousClrProcedure", caller);
+            var argList = this.ToArgList(args, null, "SynchronousClrProcedure");
             object res = this.MethodInfo.Invoke(actualTarget, argList);
             res = res ?? Undefined.Instance;
             returnTo.ReturnedExpr = ClrObject.FromClrObject(res);

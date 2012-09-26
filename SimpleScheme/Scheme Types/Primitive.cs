@@ -242,12 +242,12 @@ namespace SimpleScheme
         ///   in ReturnedResult and returning to the caller.
         /// </summary>
         /// <param name="args">The arguments to the primitive.</param>
-        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling Evaluator.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
         {
-            return this.Apply(args, null, returnTo, caller);
+            return this.Apply(args, null, returnTo);
         }
 
         /// <summary>
@@ -265,16 +265,15 @@ namespace SimpleScheme
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling Evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
+        internal Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo)
         {
             Contract.Requires(args != null);
             //// env may be null (mostly it is, meaning the primitive usually does not depend on the environment)
             Contract.Requires(returnTo != null);
-            Contract.Requires(caller != null);
 
             // First check the number of arguments
 #if Check
-            this.CheckArgTypes(args, caller);
+            this.CheckArgTypes(args);
 #endif
 #if Diagnostics
             returnTo.IncrementCounter(counter);
@@ -316,13 +315,11 @@ namespace SimpleScheme
         /// Check the argument types
         /// </summary>
         /// <param name="args">The arguments passed to the primitive.</param>
-        /// <param name="caller">The calling evaluator</param>
-        private void CheckArgTypes(SchemeObject args, Evaluator caller)
+        private void CheckArgTypes(SchemeObject args)
         {
             Contract.Requires(args != null);
-            Contract.Requires(caller != null);
             int numArgs = ListLength(args);
-            this.CheckArgCount(numArgs, args, this.ProcedureName, caller);
+            this.CheckArgCount(numArgs, args, this.ProcedureName);
             int numTypes = this.argTypes.Length - 1;
             for (int i = 0; i < numArgs; i++)
             {
@@ -357,7 +354,7 @@ namespace SimpleScheme
                 arg.ToString(true),
                 arg.GetType().Name,
                 ArgTypeTester.ValueMessage(argType));
-            ErrorHandlers.SemanticError(msg, arg);
+            ErrorHandlers.SemanticError(msg);
         }
         #endregion
 

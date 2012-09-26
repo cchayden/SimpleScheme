@@ -14,31 +14,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The Symbol "and"
-        /// </summary>
-        internal static readonly Symbol AndSym = "and";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-and");
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateAnd class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateAnd(SchemeObject expr, Environment env, Evaluator caller)
-            : base(OpCode.EvalTest, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-        }
         #endregion
 
         #region Call
@@ -62,7 +40,7 @@ namespace SimpleScheme
                 return caller;
             }
 
-            return new EvaluateAnd(expr, env, caller);
+            return New(expr, env, caller);
         }
         #endregion
 
@@ -70,7 +48,7 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
-        /// <returns>The next evaluator to execute.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvalTestStep()
         {
             Contract.Assert(this.Expr != null);
@@ -78,10 +56,14 @@ namespace SimpleScheme
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
+                var f = First(this.Expr);
+                var ev = this.Env;
+                var c = this.Caller;
+                this.Reclaim();
+                return EvaluateExpression.Call(f, ev, c);
             }
 
-            this.Pc =OpCode.Loop;
+            this.Pc = OpCode.Loop;
             return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
@@ -89,20 +71,51 @@ namespace SimpleScheme
         /// If the evaluated expression is false, we are done.
         /// Otherwise, move down the list and try again at EvalTestStep.
         /// </summary>
-        /// <returns>The result, or this evaluator to loop back to previous step.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator LoopStep()
         {
-            Contract.Assert(this.ReturnedExpr != null);
             if (SchemeBoolean.IsFalse(this.ReturnedExpr))
             {
-                Evaluator caller = this.Caller;
-                Contract.Assert(this.Caller != null);
-                caller.ReturnedExpr = SchemeBoolean.False;
-                return caller;
+                return this.ReturnFromEvaluator(SchemeBoolean.False);
             }
 
             this.Expr = Rest(this.Expr);
-            this.Pc = OpCode.EvalTest;
+
+            // now do EvalTestStep
+            return this.EvalTestStep();
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateAnd class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateAnd New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateAnd>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateAnd class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Newly initialized evaluator.</returns>
+        private EvaluateAnd Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            Initialize(OpCode.EvalTest, expr, env, caller, counter);
             return this;
         }
         #endregion

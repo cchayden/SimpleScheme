@@ -18,23 +18,6 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("evaluate-sequence");
         #endregion
 
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateSequence class.
-        /// </summary>
-        /// <param name="expr">The expressions to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSequence(SchemeObject expr, Environment env, Evaluator caller)
-            : base(OpCode.EvalExpr, expr, env, caller, counter)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-        }
-        #endregion
-
         #region Call
         /// <summary>
         /// Call the sequence evaluator.
@@ -50,7 +33,7 @@ namespace SimpleScheme
             Contract.Requires(caller != null);
             return Rest(expr) is EmptyList ?
                 EvaluateExpression.Call(First(expr), env, caller) :
-                new EvaluateSequence(expr, env, caller);
+                New(expr, env, caller);
         }
         #endregion
 
@@ -60,16 +43,20 @@ namespace SimpleScheme
         /// If not, evaluate the next expression.
         /// If we are, evaluate and return the last expr.
         /// </summary>
-        /// <returns>The next evaluator.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator EvalExprStep()
         {
             if (Rest(this.Expr) is EmptyList)
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
-                // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
-                //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
+                // If this instead continues to a "DoneStep" here then each
+                //   EvaluateSequence and each environment will be stacked up.
+                SchemeObject f = First(this.Expr);
+                Environment ev = this.Env;
+                Evaluator c = this.Caller;
+                this.Reclaim();
+                return EvaluateExpression.Call(f, ev, c);
             }
 
             this.Pc = OpCode.Loop;
@@ -79,11 +66,46 @@ namespace SimpleScheme
         /// <summary>
         /// Comes back here after expression evaluation.  Loop back and evaluate another.
         /// </summary>
-        /// <returns>Immediately steps back.</returns>
+        /// <returns>The next step to execute.</returns>
         protected override Evaluator LoopStep()
         {
             this.Expr = Rest(this.Expr);
-            this.Pc = OpCode.EvalExpr;
+
+            // instead of taking another step, do EvalExpr in line
+            return this.EvalExprStep();
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateSequence class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateSequence New(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return GetInstance<EvaluateSequence>().Initialize(expr, env, caller);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateSequence class.
+        /// </summary>
+        /// <param name="expr">The expressions to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <returns>Newly initialized evaluator.</returns>
+        private EvaluateSequence Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
+            Initialize(OpCode.EvalExpr, expr, env, caller, counter);
             return this;
         }
         #endregion

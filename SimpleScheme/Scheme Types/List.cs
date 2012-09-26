@@ -50,7 +50,7 @@ namespace SimpleScheme
             Contract.Requires(a != null);
             Contract.Requires(b != null);
             Contract.Ensures(Contract.Result<Pair>() != null);
-            return Cons(a, Pair.New(b));
+            return Cons(a, new Pair(b));
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace SimpleScheme
             Contract.Requires(b != null);
             Contract.Requires(c != null);
             Contract.Ensures(Contract.Result<Pair>() != null);
-            return Cons(a, Cons(b, Pair.New(c)));
+            return Cons(a, Cons(b, new Pair(c)));
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace SimpleScheme
             Contract.Requires(a != null);
             Contract.Requires(b != null);
             Contract.Ensures(Contract.Result<Pair>() != null);
-            return Pair.New(a, b);
+            return new Pair(a, b);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace SimpleScheme
             Contract.Requires(a != null);
             Contract.Requires(b != null);
             Contract.Ensures(Contract.Result<Pair>() != null);
-            return Pair.New(a, b, lineNumber);
+            return new Pair(a, b, lineNumber);
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-car! of a non-Pair: ""{0}""", pair.ToString(true)), pair);
+            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-car! of a non-Pair: ""{0}""", pair.ToString(true)));
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-cdr! of a non-Pair: ""{0}""", pair.ToString(true)), pair);
+            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-cdr! of a non-Pair: ""{0}""", pair.ToString(true)));
         }
 
         /// <summary>
