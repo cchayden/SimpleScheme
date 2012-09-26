@@ -54,7 +54,7 @@ namespace SimpleScheme
             Func<Obj, Evaluator, Obj> operation, 
             int minArgs, 
             int maxArgs, 
-            params Primitive.ValueType[] argTypes)
+            params TypePrimitives.ValueType[] argTypes)
         {
             this.Define(name, Primitive.New(operation, minArgs, maxArgs, argTypes));
             return this;
@@ -74,7 +74,7 @@ namespace SimpleScheme
             Symbol name, 
             Func<Obj, Evaluator, Obj> operation, 
             int numberOfArgs, 
-            params Primitive.ValueType[] argTypes)
+            params TypePrimitives.ValueType[] argTypes)
         {
             this.Define(name, Primitive.New(operation, numberOfArgs, numberOfArgs, argTypes));
             return this;
@@ -116,13 +116,13 @@ namespace SimpleScheme
                     },
                     0,
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 .DefinePrimitive(
                     Symbol.New("time-call"), 
                     (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 
                     1, 
                     2, 
-                    Primitive.ValueType.Proc, Primitive.ValueType.Number);
+                    TypePrimitives.ValueType.Proc, TypePrimitives.ValueType.Number);
         }
         #endregion
     }

@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Reflection;
     using System.Text;
 
@@ -17,13 +18,6 @@ namespace SimpleScheme
     /// </summary>
     public abstract class ClrProcedure : Procedure
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the clr procedure type.
-        /// </summary>
-        public new const string Name = "clr-procedure";
-        #endregion
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
@@ -41,6 +35,16 @@ namespace SimpleScheme
             this.ClassName = Printer.AsString(className, false);
             this.MethodName = Printer.AsString(methodName, false);
             this.SetName(this.ClassName + "." + this.MethodName);
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.SynchronousClrProcedure); }
         }
         #endregion
 
@@ -84,20 +88,20 @@ namespace SimpleScheme
                     Symbol.New("class"), 
                     (args, caller) => Class(args.First()), 
                     1, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (new <class-name>)
                 .DefinePrimitive(
                     Symbol.New("new"), 
                     (args, caller) => New(args.First()), 
                     1, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (new-array <class-name> <length>)
                 .DefinePrimitive(
                     Symbol.New("new-array"), 
                     (args, caller) => NewArray(args.First(), args.Second()), 
                     2, 
-                    Primitive.ValueType.String, 
-                    Primitive.ValueType.Number);
+                    TypePrimitives.ValueType.String, 
+                    TypePrimitives.ValueType.Number);
         }
         #endregion
 
@@ -109,8 +113,7 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public new void PrintString(bool quoted, StringBuilder buf)
         {
-            buf.Append(Name + ": ");
-            buf.Append(this.ToString());
+            buf.Append("clr-procedure: " + this);
         }
 
         /// <summary>
@@ -258,17 +261,45 @@ namespace SimpleScheme
                 {
                     array[a++] = elem.AsChar();
                 }
-                else if (this.ArgClasses[i] == typeof(System.IO.TextReader))
+                else if (this.ArgClasses[i] == typeof(TextReader))
                 {
                     array[a++] = elem.AsTextReader();
                 }
-                else if (this.ArgClasses[i] == typeof(System.IO.TextWriter))
+                else if (this.ArgClasses[i] == typeof(TextWriter))
                 {
                     array[a++] = elem.AsTextWriter();
                 }
                 else if (this.ArgClasses[i] == typeof(char[]))
                 {
                     array[a++] = Printer.AsString(elem, false).ToCharArray();
+                }
+                else if (this.ArgClasses[i] == typeof(object[]))
+                {
+                    array[a++] = elem.AsVector().AsObjectArray();
+                }
+                else if (this.ArgClasses[i] == typeof(int[]))
+                {
+                    array[a++] = elem.AsVector().AsIntArray();
+                }
+                else if (this.ArgClasses[i] == typeof(byte[]))
+                {
+                    array[a++] = elem.AsVector().AsByteArray();
+                }
+                else if (this.ArgClasses[i] == typeof(short[]))
+                {
+                    array[a++] = elem.AsVector().AsShortArray();
+                }
+                else if (this.ArgClasses[i] == typeof(long[]))
+                {
+                    array[a++] = elem.AsVector().AsLongArray();
+                }
+                else if (this.ArgClasses[i] == typeof(float[]))
+                {
+                    array[a++] = elem.AsVector().AsFloatArray();
+                }
+                else if (this.ArgClasses[i] == typeof(double[]))
+                {
+                    array[a++] = elem.AsVector().AsDoubleArray();
                 }
                 else
                 {
@@ -365,12 +396,13 @@ namespace SimpleScheme
         /// <returns>The object as a clr procedure.</returns>
         public static ClrProcedure AsClrProcedure(this Obj obj)
         {
-            if (obj is ClrProcedure)
+            var asClrProcedure = obj as ClrProcedure;
+            if (asClrProcedure != null)
             {
-                return (ClrProcedure)obj;
+                return asClrProcedure;
             }
 
-            ErrorHandlers.TypeError(ClrProcedure.Name, obj);
+            ErrorHandlers.TypeError(typeof(ClrProcedure), obj);
             return null;
         }
     }

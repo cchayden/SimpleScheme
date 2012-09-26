@@ -10,34 +10,8 @@ namespace SimpleScheme
     /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : IPrintable, ICleanable
+    public sealed class Pair : IPrintable, ICleanable, ISchemeType
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the scheme pair type.
-        /// </summary>
-        public const string Name = "pair";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Pair.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Pair;
-        }
-
-        #region Fields
-
-        #endregion
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -73,8 +47,17 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Accessors
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Pair); }
+        }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the first obj of the pair.
         /// </summary>
@@ -84,10 +67,19 @@ namespace SimpleScheme
         /// Gets the rest of the objs in the list.
         /// </summary>
         public object Rest { get; private set; }
-
         #endregion
 
         #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Pair;
+        }
+
         /// <summary>
         /// Tests whether two pairs are equal.
         /// The first object must be a pair.
@@ -240,11 +232,10 @@ namespace SimpleScheme
         public void Clean()
         {
             Cleaner.Clean(this.First());
-            Obj tail = this.Rest();
+            var tail = this.Rest();
             while (tail.IsPair())
             {
                 Cleaner.Clean(tail.First());
-                Obj oldTail = tail;
                 tail = tail.Rest();
             }
         }
@@ -288,7 +279,7 @@ namespace SimpleScheme
                 return (Pair)obj;
             }
 
-            ErrorHandlers.TypeError(Pair.Name, obj);
+            ErrorHandlers.TypeError(typeof(Pair), obj);
             return null;
         }
     }

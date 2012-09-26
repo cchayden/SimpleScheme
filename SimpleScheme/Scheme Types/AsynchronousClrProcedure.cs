@@ -17,28 +17,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class AsynchronousClrProcedure : ClrProcedure
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the asynchronous clr procedure type.
-        /// </summary>
-        public new const string Name = "asynchronous-clr-procedure";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public new static string TypeName = Primitive.ValueType.AsynchronousClrProcedure.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public new static bool Is(Obj obj)
-        {
-            return obj is AsynchronousClrProcedure;
-        }
-
         #region Fields
         /// <summary>
         /// The method info for the EndXXX method.
@@ -66,7 +44,27 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.AsynchronousClrProcedure); }
+        }
+        #endregion
+
         #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static new bool Is(Obj obj)
+        {
+            return obj is AsynchronousClrProcedure;
+        }
+
         /// <summary>
         /// Creates a new instance of the AsynchronousClrProcedure class.
         /// </summary>
@@ -95,7 +93,7 @@ namespace SimpleScheme
                    (args, caller) => new AsynchronousClrProcedure(args.First(), args.Second(), args.Rest().Rest()),
                    2,
                    MaxInt, 
-                   Primitive.ValueType.String);
+                   TypePrimitives.ValueType.String);
         }
         #endregion
 
@@ -106,7 +104,7 @@ namespace SimpleScheme
         /// <returns>The string form of the procedure.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            return "<asynchronous-clr-procedure>";
         }
 
         /// <summary>
@@ -118,7 +116,6 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append(Name + ": ");
                 buf.Append(this.ToString());
             }
         }
@@ -134,7 +131,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            CheckArgs(args, "AsynchronousClrProcedure");
+            this.CheckArgs(args, typeof(AsynchronousClrProcedure));
             object target = null;
             if (!this.MethodInfo.IsStatic)
             {
@@ -183,7 +180,7 @@ namespace SimpleScheme
         private object[] ToArgListBegin(object args, object state)
         {
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
-            return ToArgList(args, additionalArgs);
+            return this.ToArgList(args, additionalArgs);
         }
 
         /// <summary>
@@ -194,10 +191,10 @@ namespace SimpleScheme
         private void CompletionMethod(IAsyncResult result)
         {
             object[] args = { result };
-            Tuple<object, Evaluator> state = (Tuple<object, Evaluator>)result.AsyncState;
+            var state = (Tuple<object, Evaluator>)result.AsyncState;
             Evaluator caller = state.Item2;
             Obj res = this.endMethodInfo.Invoke(state.Item1, args);
-            caller.UpdateReturnValue(res);
+            state.Item2.UpdateReturnValue(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
@@ -234,7 +231,7 @@ namespace SimpleScheme
                 return (AsynchronousClrProcedure)obj;
             }
 
-            ErrorHandlers.TypeError(AsynchronousClrProcedure.Name, obj);
+            ErrorHandlers.TypeError(typeof(AsynchronousClrProcedure), obj);
             return null;
         }
     }

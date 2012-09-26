@@ -18,14 +18,9 @@ namespace SimpleScheme
     {
         #region Constants
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public new const string Name = "primitive";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(Name);
+        private static readonly int counter = Counter.Create("procedure");
         #endregion
 
         #region Static fields
@@ -52,7 +47,7 @@ namespace SimpleScheme
         /// The argument types.
         /// Arguments are checked against these types, if they are supplied.
         /// </summary>
-        private readonly ValueType[] argTypes;
+        private readonly TypePrimitives.ValueType[] argTypes;
         #endregion
 
         #region Constructor
@@ -63,14 +58,14 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
-        private Primitive(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, ValueType[] argTypes) :
+        private Primitive(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, TypePrimitives.ValueType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
             this.argTypes = argTypes;
             if (maxArgs > 0 && argTypes.Length == 0)
             {
-                throw new ErrorHandlers.SchemeException("Invalid primitive: " + operation);
+                throw new ErrorHandlers.SchemeException(string.Format(@"Invalid primitive ""{0}""", operation));
             }
         }
         #endregion
@@ -84,122 +79,9 @@ namespace SimpleScheme
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A new primitive.</returns>
-        public static Primitive New(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, ValueType[] argTypes)
+        public static Primitive New(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, TypePrimitives.ValueType[] argTypes)
         {
             return new Primitive(operation, minArgs, maxArgs, argTypes);
-        }
-        #endregion
-
-        #region Enums
-        /// <summary>
-        /// This enum contains all the types that values can have.  It also contains
-        /// a few combination types that are used in checking arguments to
-        /// primitives.
-        /// </summary>
-        public enum ValueType
-        {
-            /// <summary>
-            /// Any object is required.
-            /// </summary>
-            Obj,
-
-            /// <summary>
-            /// A pair is required..
-            /// </summary>
-            Pair,
-
-            /// <summary>
-            /// A pair or the empty object is required.
-            /// </summary>
-            PairOrEmpty,
-
-            /// <summary>
-            /// A pair or a symbol is required.
-            /// </summary>
-            PairOrSymbol,
-
-            /// <summary>
-            /// A number is required.
-            /// </summary>
-            Number,
-
-            /// <summary>
-            /// A character is required.
-            /// </summary>
-            Char,
-
-            /// <summary>
-            /// A string is required.
-            /// </summary>
-            String,
-
-            /// <summary>
-            /// A procedure is required.  This includes macros and primitives, as well
-            /// as lambdas.
-            /// </summary>
-            Proc,
-
-            /// <summary>
-            /// A vector is required.
-            /// </summary>
-            Vector,
-
-            /// <summary>
-            /// A symbol is required.
-            /// </summary>
-            Symbol,
-
-            /// <summary>
-            /// A boolean is required.
-            /// </summary>
-            Boolean,
-
-            /// <summary>
-            /// A port is required.
-            /// </summary>
-            Port,
-
-            //// The following are not used as primitive arguments.
-
-            /// <summary>
-            /// The empty list.
-            /// </summary>
-            Empty,
-
-            /// <summary>
-            /// An asynchronous clr procedure.
-            /// </summary>
-            AsynchronousClrProcedure,
-
-            /// <summary>
-            /// A synchronous clr procedure.
-            /// </summary>
-            SynchronousClrProcedure,
-
-            /// <summary>
-            /// A CLR constructor.
-            /// </summary>
-            ClrConstructor,
-
-            /// <summary>
-            /// A continuation.
-            /// </summary>
-            Continuation,
-
-            /// <summary>
-            /// A lambda.
-            /// </summary>
-            Lambda,
-
-            /// <summary>
-            /// A macro
-            /// </summary>
-            Macro,
-
-            /// <summary>
-            /// The undefined object.
-            /// </summary>
-            Undefined
         }
         #endregion
 
@@ -239,7 +121,7 @@ namespace SimpleScheme
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
             // First check the number of arguments
-            int numArgs = this.CheckArgs(args, "Primitive");
+            int numArgs = this.CheckArgs(args, typeof(Primitive));
             this.CheckArgTypes(numArgs, args);
             caller.IncrementCounter(counter);
 
@@ -286,7 +168,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="arg">An argument passed to the primitive.</param>
         /// <param name="argType">The expected argument type.</param>
-        private void CheckArgType(Obj arg, ValueType argType)
+        private void CheckArgType(Obj arg, TypePrimitives.ValueType argType)
         {
             if (tester.Ok(arg, argType))
             {
@@ -294,7 +176,7 @@ namespace SimpleScheme
             }
 
             var msg = string.Format(
-                "Primitive {0} invalid argument {1} type: {2} expected: {3}", 
+                @"Primitive ""{0}"" invalid argument ""{1}"" type: {2} expected: {3}", 
                 this.ProcedureName, 
                 Printer.AsString(arg),
                 Printer.TypeName(arg), 
@@ -312,26 +194,26 @@ namespace SimpleScheme
             /// <summary>
             /// Contains argument type predicates, indexed by argument type specifier.
             /// </summary>
-            private Predicate<object>[] argPredicates;
+            private readonly Predicate<object>[] argPredicates;
 
             /// <summary>
-            /// Initializes the argument type list.
+            /// Initializes a new instance of the ArgTypeTester class.
             /// </summary>
             public ArgTypeTester()
             {
-                argPredicates = new Predicate<object>[(int)ValueType.Undefined];
-                this.Set(ValueType.Obj, arg => true);
-                this.Set(ValueType.Pair, Pair.Is);
-                this.Set(ValueType.PairOrEmpty, arg => Pair.Is(arg) || EmptyList.Is(arg));
-                this.Set(ValueType.PairOrSymbol, arg => Pair.Is(arg) || Symbol.Is(arg));
-                this.Set(ValueType.Number, Number.Is);
-                this.Set(ValueType.Char, Character.Is);
-                this.Set(ValueType.String, SchemeString.Is);
-                this.Set(ValueType.Proc, Procedure.Is);
-                this.Set(ValueType.Vector, Vector.Is);
-                this.Set(ValueType.Boolean, SchemeBoolean.Is);
-                this.Set(ValueType.Symbol, Symbol.Is);
-                this.Set(ValueType.Port, (arg) => InputPort.Is(arg) || OutputPort.Is(arg));
+                this.argPredicates = new Predicate<object>[(int)TypePrimitives.ValueType.Undefined];
+                this.Set(TypePrimitives.ValueType.Obj, arg => true);
+                this.Set(TypePrimitives.ValueType.Pair, Pair.Is);
+                this.Set(TypePrimitives.ValueType.PairOrEmpty, arg => Pair.Is(arg) || EmptyList.Is(arg));
+                this.Set(TypePrimitives.ValueType.PairOrSymbol, arg => Pair.Is(arg) || Symbol.Is(arg));
+                this.Set(TypePrimitives.ValueType.Number, Number.Is);
+                this.Set(TypePrimitives.ValueType.Char, Character.Is);
+                this.Set(TypePrimitives.ValueType.String, SchemeString.Is);
+                this.Set(TypePrimitives.ValueType.Proc, Is);
+                this.Set(TypePrimitives.ValueType.Vector, Vector.Is);
+                this.Set(TypePrimitives.ValueType.Boolean, SchemeBoolean.Is);
+                this.Set(TypePrimitives.ValueType.Symbol, Symbol.Is);
+                this.Set(TypePrimitives.ValueType.Port, arg => InputPort.Is(arg) || OutputPort.Is(arg));
             }
 
             /// <summary>
@@ -340,9 +222,9 @@ namespace SimpleScheme
             /// <param name="arg">The actual argument.</param>
             /// <param name="argType">The expected argument type.</param>
             /// <returns>True if OK.</returns>
-            public bool Ok(object arg, ValueType argType)
+            public bool Ok(object arg, TypePrimitives.ValueType argType)
             {
-                return argType <= ValueType.Undefined && this.argPredicates[(int)argType](arg);
+                return argType <= TypePrimitives.ValueType.Undefined && this.argPredicates[(int)argType](arg);
             }
 
             /// <summary>

@@ -42,7 +42,7 @@ namespace SimpleScheme
                     (args, caller) => Error(Printer.AsString(args)), 
                     0, 
                     MaxInt, 
-                    Primitive.ValueType.String);
+                    TypePrimitives.ValueType.String);
         }
         #endregion
 
@@ -69,9 +69,13 @@ namespace SimpleScheme
         /// <param name="expected">The expected type.</param>
         /// <param name="got">The actual value.</param>
         /// <returns>Actually, does not return.</returns>
-        public static object TypeError(string expected, object got)
+        public static object TypeError(Type expected, object got)
         {
-            string message = string.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), Printer.AsString(got));
+            string message = string.Format(
+                "Invalid type: expected {0}, got {1}: {2}", 
+                TypePrimitives.SchemeTypeName(expected), 
+                TypePrimitives.SchemeTypeName(got), 
+                Printer.AsString(got));
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }

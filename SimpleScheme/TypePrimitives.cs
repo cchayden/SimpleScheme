@@ -13,7 +13,7 @@ namespace SimpleScheme
     /// Includes a method that returns "friendly" names for objects of given types.
     /// Also includes a methat that turns a "friendly" name into a full .NET name.
     /// </summary>
-    public class TypePrimitives
+    public static class TypePrimitives
     {
         /// <summary>
         /// Used to translate from full qualified type names into the friendly name.
@@ -25,81 +25,204 @@ namespace SimpleScheme
         /// </summary>
         private readonly static Dictionary<string, string> clrTranslator;
 
+        /// <summary>
+        /// The string names of the enum members.
+        /// </summary>
+        private readonly static string[] valueTypeNames = new string[(int)ValueType.Undefined + 1];
+
 
         static TypePrimitives()
         {
             typeTranslator = new Dictionary<string, string>
                 {
-                    { "SimpleScheme.AsynchronousClrProcedure", AsynchronousClrProcedure.Name },
-                    { "SimpleScheme.Character", Character.Name },
-                    { "SimpleScheme.ClrConstructor", ClrConstructor.Name },
-                    { "SimpleScheme.ClrProcedure", ClrProcedure.Name },
-                    { "SimpleScheme.Continuation", Continuation.Name },
-                    { "SimpleScheme.EmptyList", EmptyList.Name },
-                    { "SimpleScheme.InputPort", InputPort.Name },
-                    { "SimpleScheme.Lambda", Lambda.Name },
-                    { "SimpleScheme.Macro", Macro.Name },
-                    { "SimpleScheme.Number", Number.Name },
-                    { "SimpleScheme.OutputPort", OutputPort.Name },
-                    { "SimpleScheme.Pair", Pair.Name },
-                    { "SimpleScheme.Primitive", Primitive.Name },
-                    { "SimpleScheme.Procedure", Procedure.Name },
-                    { "SimpleScheme.SchemeBoolean", SchemeBoolean.Name },
-                    { "SimpleScheme.SchemeString", SchemeString.Name },
-                    { "SimpleScheme.Symbol", Symbol.Name },
-                    { "SimpleScheme.SynchronousClrProcedure", SynchronousClrProcedure.Name },
-                    { "SimpleScheme.Undefined", Undefined.Name },
-                    { "SimpleScheme.Vector", Vector.Name },
-                    { "SimpleScheme.EndedEvaluator", EndedEvaluator.EvaluatorName },
-                    { "SimpleScheme.EvaluateAnd", EvaluateAnd.EvaluatorName },
-                    { "SimpleScheme.EvaluateCallWithInputFile", EvaluateCallWithInputFile.EvaluatorName },
-                    { "SimpleScheme.EvaluateCallWithOutputFile", EvaluateCallWithOutputFile.EvaluatorName },
-                    { "SimpleScheme.EvaluateCase", EvaluateCase.EvaluatorName },
-                    { "SimpleScheme.EvaluateCond", EvaluateCond.EvaluatorName },
-                    { "SimpleScheme.EvaluateDefine", EvaluateDefine.EvaluatorName },
-                    { "SimpleScheme.EvaluateDo", EvaluateDo.EvaluatorName },
-                    { "SimpleScheme.EvaluateExpandMacro", EvaluateExpandMacro.EvaluatorName },
-                    { "SimpleScheme.EvaluateExpression", EvaluateExpression.EvaluatorName },
-                    { "SimpleScheme.EvaluateIf", EvaluateIf.EvaluatorName },
-                    { "SimpleScheme.EvaluateLet", EvaluateLet.EvaluatorName },
-                    { "SimpleScheme.EvaluateLetRec", EvaluateLetRec.EvaluatorName },
-                    { "SimpleScheme.EvaluateLetStar", EvaluateLetStar.EvaluatorName },
-                    { "SimpleScheme.EvaluateList", EvaluateList.EvaluatorName },
-                    { "SimpleScheme.EvaluateMap", EvaluateMap.EvaluatorName },
-                    { "SimpleScheme.EvaluateOr", EvaluateOr.EvaluatorName },
-                    { "SimpleScheme.EvaluateParallel", EvaluateParallel.EvaluatorName },
-                    { "SimpleScheme.EvaluateProc", EvaluateProc.EvaluatorName },
-                    { "SimpleScheme.EvaluateSequence", EvaluateSequence.EvaluatorName },
-                    { "SimpleScheme.EvaluateSet", EvaluateSet.EvaluatorName },
-                    { "SimpleScheme.EvaluateTime", EvaluateTime.EvaluatorName },
-                    { "SimpleScheme.HaltedEvaluator", HaltedEvaluator.EvaluatorName },
-                    { "SimpleScheme.SuspendedEvaluator", SuspendedEvaluator.EvaluatorName }
+                    { "SimpleScheme.AsynchronousClrProcedure", "asynchronous-clr-procedure" },
+                    { "SimpleScheme.Character", "character" },
+                    { "SimpleScheme.ClrConstructor", "clr-constructor" },
+                    { "SimpleScheme.ClrProcedure", "clr-procedure" },
+                    { "SimpleScheme.Continuation", "continuation" },
+                    { "SimpleScheme.EmptyList", "empty-list" },
+                    { "SimpleScheme.InputPort", "input-port" },
+                    { "SimpleScheme.Lambda", "lambda" },
+                    { "SimpleScheme.Macro", "macro" },
+                    { "SimpleScheme.Number", "number" },
+                    { "SimpleScheme.OutputPort", "output-port" },
+                    { "SimpleScheme.Pair", "pair" },
+                    { "SimpleScheme.Primitive", "primitive" },
+                    { "SimpleScheme.Procedure", "procedure" },
+                    { "SimpleScheme.SchemeBoolean", "boolean" },
+                    { "SimpleScheme.SchemeString", "string" },
+                    { "SimpleScheme.Symbol", "symbol" },
+                    { "SimpleScheme.SynchronousClrProcedure", "synchronous-clr-procedure" },
+                    { "SimpleScheme.Undefined", "undefined" },
+                    { "SimpleScheme.Vector", "vector" },
+                    { "SimpleScheme.EndedEvaluator", "ended-evaluator" },
+                    { "SimpleScheme.EvaluateAnd", "evaluate-and" },
+                    { "SimpleScheme.EvaluateCallWithInputFile", "call-with-input-file" },
+                    { "SimpleScheme.EvaluateCallWithOutputFile", "evaluate-call-with-output-file" },
+                    { "SimpleScheme.EvaluateCase", "evaluate-case" },
+                    { "SimpleScheme.EvaluateCond", "evaluate-cond" },
+                    { "SimpleScheme.EvaluateDefine", "evaluate-define" },
+                    { "SimpleScheme.EvaluateDo", "evaluate-do" },
+                    { "SimpleScheme.EvaluateExpandMacro", "evaluate-expand-macro" },
+                    { "SimpleScheme.EvaluateExpression", "evaluate-expression" },
+                    { "SimpleScheme.EvaluateIf", "evaluate-if" },
+                    { "SimpleScheme.EvaluateLet", "evaluate-let" },
+                    { "SimpleScheme.EvaluateLetRec", "evaluate-letrec" },
+                    { "SimpleScheme.EvaluateLetStar", "evaluate-let*" },
+                    { "SimpleScheme.EvaluateList", "evaluate-list" },
+                    { "SimpleScheme.EvaluateMap", "evaluate-map" },
+                    { "SimpleScheme.EvaluateOr", "evaluate-or" },
+                    { "SimpleScheme.EvaluateParallel", "evaluate-parallel" },
+                    { "SimpleScheme.EvaluateProc", "evaluate-proc" },
+                    { "SimpleScheme.EvaluateSequence", "evaluate-sequence" },
+                    { "SimpleScheme.EvaluateSet", "evaluate-set" },
+                    { "SimpleScheme.EvaluateTime", "evaluate-time" },
+                    { "SimpleScheme.HaltedEvaluator", "halted-evaluator" },
+                    { "SimpleScheme.SuspendedEvaluator", "suspended-evaluator" }
                 };
 
-            clrTranslator = new Dictionary<string, string>()
+            clrTranslator = new Dictionary<string, string>
                 {
-                    {"bool", "System.Boolean"},                   
-                    {"char", "System.Char"},                    
-                    {"string", "System.String"},                    
-                    {"byte", "System.Byte"},                   
-                    {"short", "System.Int16"},                   
-                    {"int", "System.Int32"},                   
-                    {"long", "System.Int64"},                   
-                    {"float", "System.Single"},                   
-                    {"double", "System.Double"},                   
-                    {"object", "System.Object"},                   
-                    {"boolean[]", "System.Boolean[]"},                   
-                    {"char[]", "System.Char[]"},                   
-                    {"string[]", "System.String[]"},                    
-                    {"byte[]", "System.Byte[]"},                   
-                    {"short[]", "System.Int16[]"},                   
-                    {"int[]", "System.Int32[]"},                   
-                    {"long[]", "System.Int64[]"},                   
-                    {"float[]", "System.Single[]"},                   
-                    {"double[]", "System.Doubl[]e"},                   
-                    {"object[]", "System.Object[]"},                   
+                    { "bool", "System.Boolean" },
+                    { "char", "System.Char" },
+                    { "string", "System.String" },
+                    { "byte", "System.Byte" },
+                    { "short", "System.Int16" },                   
+                    { "int", "System.Int32" },                   
+                    { "long", "System.Int64" },                   
+                    { "float", "System.Single" },                   
+                    { "double", "System.Double" },                   
+                    { "object", "System.Object" },                   
+                    { "bool[]", "System.Boolean[]" },                   
+                    { "char[]", "System.Char[]" },                   
+                    { "string[]", "System.String[]" },                    
+                    { "byte[]", "System.Byte[]" },                   
+                    { "short[]", "System.Int16[]" },                   
+                    { "int[]", "System.Int32[]" },                   
+                    { "long[]", "System.Int64[]" },                   
+                    { "float[]", "System.Single[]" },                   
+                    { "double[]", "System.Doubl[]e" },                   
+                    { "object[]", "System.Object[]" },                   
                 };
+
+            for (var i = (int)ValueType.Obj; i < (int)ValueType.Undefined + 1; i++)
+            {
+                valueTypeNames[i] = ((ValueType)i).ToString();
+            }
         }
+
+        #region Enums
+        /// <summary>
+        /// This enum contains all the types that values can have.  It also contains
+        /// a few combination types that are used in checking arguments to
+        /// primitives.
+        /// </summary>
+        public enum ValueType
+        {
+            /// <summary>
+            /// Any object is required.
+            /// </summary>
+            Obj,
+
+            /// <summary>
+            /// A pair is required..
+            /// </summary>
+            Pair,
+
+            /// <summary>
+            /// A pair or the empty object is required.
+            /// </summary>
+            PairOrEmpty,
+
+            /// <summary>
+            /// A pair or a symbol is required.
+            /// </summary>
+            PairOrSymbol,
+
+            /// <summary>
+            /// A number is required.
+            /// </summary>
+            Number,
+
+            /// <summary>
+            /// A character is required.
+            /// </summary>
+            Char,
+
+            /// <summary>
+            /// A string is required.
+            /// </summary>
+            String,
+
+            /// <summary>
+            /// A procedure is required.  This includes macros and primitives, as well
+            /// as lambdas.
+            /// </summary>
+            Proc,
+
+            /// <summary>
+            /// A vector is required.
+            /// </summary>
+            Vector,
+
+            /// <summary>
+            /// A symbol is required.
+            /// </summary>
+            Symbol,
+
+            /// <summary>
+            /// A boolean is required.
+            /// </summary>
+            Boolean,
+
+            /// <summary>
+            /// A port is required.
+            /// </summary>
+            Port,
+
+            //// The following are not used as primitive arguments.
+
+            /// <summary>
+            /// The empty list.
+            /// </summary>
+            Empty,
+
+            /// <summary>
+            /// An asynchronous clr procedure.
+            /// </summary>
+            AsynchronousClrProcedure,
+
+            /// <summary>
+            /// A synchronous clr procedure.
+            /// </summary>
+            SynchronousClrProcedure,
+
+            /// <summary>
+            /// A CLR constructor.
+            /// </summary>
+            ClrConstructor,
+
+            /// <summary>
+            /// A continuation.
+            /// </summary>
+            Continuation,
+
+            /// <summary>
+            /// A lambda.
+            /// </summary>
+            Lambda,
+
+            /// <summary>
+            /// A macro
+            /// </summary>
+            Macro,
+
+            /// <summary>
+            /// The undefined object.
+            /// </summary>
+            Undefined
+        }
+        #endregion
 
         #region Public Static Methods
         /// <summary>
@@ -107,7 +230,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>The scheme type name.</returns>
-        public static string TypeName(Obj obj)
+        public static string SchemeTypeName(Obj obj)
         {
             if (obj == null)
             {
@@ -122,6 +245,33 @@ namespace SimpleScheme
 
             string name;
             return typeTranslator.TryGetValue(fullName, out name) ? name : fullName;
+        }
+
+        /// <summary>
+        /// Find the scheme type name given the type.
+        /// </summary>
+        /// <param name="t">The object type.</param>
+        /// <returns>The scheme type name.</returns>
+        public static string SchemeTypeName(Type t)
+        {
+            string fullName = t.FullName;
+            if (fullName == null)
+            {
+                return "unknown";
+            }
+
+            string name;
+            return typeTranslator.TryGetValue(fullName, out name) ? name : fullName;
+        }
+
+        /// <summary>
+        /// Gets the string name of the given value type.
+        /// </summary>
+        /// <param name="t">The value type.</param>
+        /// <returns>The type's string name.</returns>
+        public static string ValueTypeName(ValueType t) 
+        {
+            return valueTypeNames[(int)t];
         }
 
 

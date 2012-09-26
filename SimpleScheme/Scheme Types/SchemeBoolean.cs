@@ -10,16 +10,9 @@ namespace SimpleScheme
     /// Operations on boolean values.
     /// Booleans are immutable.
     /// </summary>
-    public class SchemeBoolean : IPrintable
+    public class SchemeBoolean : IPrintable, ISchemeType
     {
         #region Static Fields
-        #region Constants
-        /// <summary>
-        /// The printable name of the scheme boolean type.
-        /// </summary>
-        public const string Name = "boolean";
-        #endregion
-
         /// <summary>
         /// Define the true value.
         /// </summary>
@@ -30,22 +23,6 @@ namespace SimpleScheme
         /// </summary>
         public static readonly SchemeBoolean False = new SchemeBoolean(false);
         #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Boolean.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is SchemeBoolean;
-        }
-
         #region Fields
         /// <summary>
         /// The boolean value.
@@ -64,6 +41,16 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Boolean); }
+        }
+        #endregion
+
         #region Accessors
         /// <summary>
         /// Gets a value indicating whether the boolean value is true.
@@ -75,6 +62,16 @@ namespace SimpleScheme
         #endregion
 
         #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is SchemeBoolean;
+        }
+
         /// <summary>
         /// Equality test for two objs.
         /// Two objs are equal if they:
@@ -224,17 +221,17 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive(Symbol.New("boolean?"), (args, caller) => Truth(args.First().IsSchemeBoolean()), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("boolean?"), (args, caller) => Truth(args.First().IsSchemeBoolean()), 1, TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive(Symbol.New("eq?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("eq?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive(Symbol.New("equal?"), (args, caller) => Truth(Equal(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("equal?"), (args, caller) => Truth(Equal(args.First(), args.Second())), 2, TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive(Symbol.New("eqv?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("eqv?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive(Symbol.New("not"), (args, caller) => Truth(args.First().IsSchemeBoolean() && args.First().AsSchemeBoolean().Value == false), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("not"), (args, caller) => Truth(args.First().IsSchemeBoolean() && args.First().AsSchemeBoolean().Value == false), 1, TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive(Symbol.New("null?"), (args, caller) => Truth(args.First().IsEmptyList()), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive(Symbol.New("null?"), (args, caller) => Truth(args.First().IsEmptyList()), 1, TypePrimitives.ValueType.Obj);
         }
         #endregion
 
@@ -288,12 +285,12 @@ namespace SimpleScheme
                 return (SchemeBoolean)x;
             }
 
-            ErrorHandlers.TypeError(SchemeBoolean.Name, x);
+            ErrorHandlers.TypeError(typeof(SchemeBoolean), x);
             return null;
         }
 
         /// <summary>
-        /// Convertboolean.
+        /// Convert boolean.
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding boolean.</returns>
@@ -301,10 +298,10 @@ namespace SimpleScheme
         {
             if (SchemeBoolean.Is(x))
             {
-                return SchemeBoolean.IsTrue((SchemeBoolean)x);
+                return SchemeBoolean.IsTrue(x);
             }
 
-            ErrorHandlers.TypeError(SchemeBoolean.Name, x);
+            ErrorHandlers.TypeError(typeof(SchemeBoolean), x);
             return false;
         }
     }

@@ -11,20 +11,28 @@ namespace SimpleScheme
     /// Represents an undefined scheme value.
     /// This type is immutable.
     /// </summary>
-    public class Undefined : IPrintable
+    public class Undefined : IPrintable, ISchemeType
     {
-        #region Constants
+        #region Constructors
         /// <summary>
-        /// The printable name of the undefined type.
+        /// Prevents a default instance of the <see cref="Undefined"/> class from being created. 
         /// </summary>
-        public const string Name = "undefined";
+        private Undefined()
+        {
+        }
         #endregion
 
+        #region SchemeType Accessors
         /// <summary>
-        /// The printable name of this scheme type.
+        /// Gets the name of the type.
         /// </summary>
-        public static string TypeName = Primitive.ValueType.Undefined.ToString();
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Undefined); }
+        }
+        #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Identifies objects of this scheme type.
         /// </summary>
@@ -35,16 +43,6 @@ namespace SimpleScheme
             return obj is Undefined;
         }
 
-        #region Constructors
-        /// <summary>
-        /// Prevents a default instance of the <see cref="Undefined"/> class from being created. 
-        /// </summary>
-        private Undefined()
-        {
-        }
-        #endregion
-
-        #region Public Static Methods
         /// <summary>
         /// Create a new undefined object.
         /// </summary>
@@ -57,7 +55,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
-
         /// <summary>
         /// Write the undefined object to the string builder.
         /// If not quoted, write nothing.
@@ -80,7 +77,7 @@ namespace SimpleScheme
         /// <returns>The undefined type name.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            return "<undefined>";
         }
 
         #endregion
@@ -113,7 +110,7 @@ namespace SimpleScheme
                 return (Undefined)obj;
             }
 
-            ErrorHandlers.TypeError(Undefined.Name, obj);
+            ErrorHandlers.TypeError(typeof(Undefined), obj);
             return null;
         }
     }    

@@ -12,35 +12,13 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    public class EmptyList : IPrintable
+    public class EmptyList : IPrintable, ISchemeType
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the empty list type.
-        /// </summary>
-        public const string Name = "empty-list";
-
         /// <summary>
         /// The empty list is represented by a distinguished obj.
         /// It would also work to have the empty list be represeted by null.
         /// </summary>
         private static readonly EmptyList Instance = new EmptyList();
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Empty.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is EmptyList;
-        }
 
         #region Constructor
         /// <summary>
@@ -48,6 +26,16 @@ namespace SimpleScheme
         /// </summary>
         private EmptyList()
         {
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Empty); }
         }
         #endregion
 
@@ -64,6 +52,16 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is EmptyList;
+        }
+
         /// <summary>
         /// Write the empty list to the string builder.
         /// </summary>
@@ -113,7 +111,7 @@ namespace SimpleScheme
                 return (EmptyList)obj;
             }
 
-            ErrorHandlers.TypeError(EmptyList.Name, obj);
+            ErrorHandlers.TypeError(typeof(EmptyList), obj);
             return null;
         }
     }

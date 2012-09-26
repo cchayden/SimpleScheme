@@ -10,30 +10,8 @@ namespace SimpleScheme
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public class Vector : IPrintable
+    public class Vector : IPrintable, ISchemeType
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the vector type.
-        /// </summary>
-        public const string Name = "vector";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Vector.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Vector;
-        }
-
         #region Fields
         /// <summary>
         /// The elements of the vector.
@@ -62,6 +40,16 @@ namespace SimpleScheme
             {
                 this.vec[i] = fill;
             }
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Vector); }
         }
         #endregion
 
@@ -129,7 +117,7 @@ namespace SimpleScheme
                         Symbol.New("list->vector"), 
                         (args, caller) => FromList(args.First()), 
                         1, 
-                        Primitive.ValueType.PairOrEmpty)
+                        TypePrimitives.ValueType.PairOrEmpty)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
                 .DefinePrimitive(
@@ -137,55 +125,55 @@ namespace SimpleScheme
                         (args, caller) => New(args.First(), args.Second()), 
                         1, 
                         2, 
-                        Primitive.ValueType.Number, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Number, 
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("vector"), 
                         (args, caller) => FromList(args), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("vector->list"), 
                         (args, caller) => ToList(args.First()), 
                         1, 
-                        Primitive.ValueType.Vector)
+                        TypePrimitives.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("vector-fill"), 
                         (args, caller) => Fill(args.First(), args.Second()), 
                         2, 
-                        Primitive.ValueType.Vector, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Vector, 
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("vector-length"), 
                         (args, caller) => args.First().AsVector().Length, 
                         1, 
-                        Primitive.ValueType.Vector)
+                        TypePrimitives.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("vector-ref"), 
                         (args, caller) => Get(args.First(), args.Second()), 
                         2, 
-                        Primitive.ValueType.Vector, 
-                        Primitive.ValueType.Number)
+                        TypePrimitives.ValueType.Vector, 
+                        TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("vector-set!"), 
                         (args, caller) => Set(args.First(), args.Second(), args.Third()), 
                         3, 
-                        Primitive.ValueType.Vector, 
-                        Primitive.ValueType.Number, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Vector, 
+                        TypePrimitives.ValueType.Number, 
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
                 .DefinePrimitive( 
                         Symbol.New("vector?"), 
                         (args, caller) => SchemeBoolean.Truth(args.First().IsVector()), 
                         1, 
-                        Primitive.ValueType.Obj);
+                        TypePrimitives.ValueType.Obj);
         }
         #endregion
 
@@ -272,6 +260,16 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Vector;
+        }
+
+        /// <summary>
         /// Write the vector to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
@@ -304,6 +302,125 @@ namespace SimpleScheme
             }
         }
 
+        /// <summary>
+        /// Convert the vector to an attay of objects.
+        /// </summary>
+        /// <returns>An array of object</returns>
+        public object[] AsObjectArray()
+        {
+            var res = new object[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i];
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of ints.
+        /// </summary>
+        /// <returns>An array of int</returns>
+        public int[] AsIntArray()
+        {
+            var res = new int[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsInt();
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of bools.
+        /// </summary>
+        /// <returns>An array of bool</returns>
+        public bool[] AsBoolArray()
+        {
+            var res = new bool[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsBoolean();
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of bytes.
+        /// </summary>
+        /// <returns>An array of byte</returns>
+        public byte[] AsByteArray()
+        {
+            var res = new byte[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsByte();
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of shorts.
+        /// </summary>
+        /// <returns>An array of short</returns>
+        public short[] AsShortArray()
+        {
+            var res = new short[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsShort();
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of longs.
+        /// </summary>
+        /// <returns>An array of long</returns>
+        public long[] AsLongArray()
+        {
+            var res = new long[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsLong();
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of floats.
+        /// </summary>
+        /// <returns>An array of float</returns>
+        public float[] AsFloatArray()
+        {
+            var res = new float[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsFloat();
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Convert the vector to an attay of doubles.
+        /// </summary>
+        /// <returns>An array of double</returns>
+        public double[] AsDoubleArray()
+        {
+            var res = new double[this.vec.Length];
+            for (var i = 0; i < res.Length; i++)
+            {
+                res[i] = this.vec[i].AsDouble();
+            }
+
+            return res;
+        }
         #endregion
 
         #region Internal Static Methods
@@ -373,7 +490,7 @@ namespace SimpleScheme
                 return (Vector)x;
             }
 
-            ErrorHandlers.TypeError(Vector.Name, x);
+            ErrorHandlers.TypeError(typeof(Vector), x);
             return null;
         }
     }    

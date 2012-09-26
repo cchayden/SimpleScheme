@@ -15,28 +15,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class ClrConstructor : ClrProcedure
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the synchronous clr procedure type.
-        /// </summary>
-        public new const string Name = "clr-constructor";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public new static string TypeName = Primitive.ValueType.ClrConstructor.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public new static bool Is(Obj obj)
-        {
-            return obj is ClrConstructor;
-        }
-
         #region Fields
         /// <summary>
         /// The type of the class to construct.
@@ -56,7 +34,7 @@ namespace SimpleScheme
             try
             {
                 this.classType = TypePrimitives.ToClass(targetClassName);
-                this.SetArgClasses(ClassList(argClassNames));
+                this.SetArgClasses(this.ClassList(argClassNames));
                 this.SetMinMax(this.ArgClasses.Count);
             }
             catch (TypeLoadException)
@@ -69,10 +47,29 @@ namespace SimpleScheme
                 ErrorHandlers.ClrError("ValueType cannot be found: " + Printer.AsString(targetClassName, false));
             }
         }
+        #endregion
 
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.ClrConstructor); }
+        }
         #endregion
 
         #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static new bool Is(Obj obj)
+        {
+            return obj is ClrConstructor;
+        }
+
         /// <summary>
         /// Creates a new instance of the ClrConstructor class.
         /// </summary>
@@ -100,7 +97,7 @@ namespace SimpleScheme
                     (args, caller) => New(Printer.AsString(args.First(), false), args.Rest()),
                     1,
                     MaxInt, 
-                    Primitive.ValueType.String);
+                    TypePrimitives.ValueType.String);
         }
         #endregion
 
@@ -112,7 +109,6 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public new void PrintString(bool quoted, StringBuilder buf)
         {
-            buf.Append(Name + ": ");
             buf.Append(this.ToString());
         }
 
@@ -122,7 +118,7 @@ namespace SimpleScheme
         /// <returns>The string form of the constructor.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            return "<clr-constructor>";
         }
 
         /// <summary>
@@ -134,7 +130,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to excute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            CheckArgs(args, "ClrConstructor");
+            this.CheckArgs(args, typeof(ClrConstructor));
             Assembly assembly = this.classType.Assembly;
             object[] argArray = ToArgList(args, null);
             Obj res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
@@ -172,7 +168,7 @@ namespace SimpleScheme
                 return (ClrConstructor)obj;
             }
 
-            ErrorHandlers.TypeError(ClrConstructor.Name, obj);
+            ErrorHandlers.TypeError(typeof(ClrConstructor), obj);
             return null;
         }
     }

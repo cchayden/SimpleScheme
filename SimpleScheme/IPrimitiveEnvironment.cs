@@ -28,7 +28,7 @@ namespace SimpleScheme
             Func<Obj, Evaluator, Obj> operation, 
             int minArgs, 
             int maxArgs, 
-            params Primitive.ValueType[] argTypes);
+            params TypePrimitives.ValueType[] argTypes);
 
         /// <summary>
         /// Define a primitive in the environment.
@@ -42,6 +42,6 @@ namespace SimpleScheme
             Symbol name, 
             Func<Obj, Evaluator, Obj> operation, 
             int numberOfArgs, 
-            params Primitive.ValueType[] argTypes);
+            params TypePrimitives.ValueType[] argTypes);
     }
 }

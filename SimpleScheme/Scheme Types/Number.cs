@@ -11,47 +11,25 @@ namespace SimpleScheme
     /// Utilities that have to do with numbers.
     /// Scheme numbers are preresented by .NET double.
     /// </summary>
-    public class Number : IPrintable
+    public class Number : IPrintable, ISchemeType
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the scheme number type.
-        /// </summary>
-        public const string Name = "number";
-        #endregion
-
         #region Static Fields
         /// <summary>
         /// The constant 0.
         /// </summary>
-        public static Number Zero = new Number(0.0);
+        private static readonly Number Zero = new Number(0.0);
 
         /// <summary>
         /// The constant 1.
         /// </summary>
-        public static Number One = new Number(1.0);
+        private static readonly Number One = new Number(1.0);
         #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Number.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Number;
-        }
 
         #region Fields
         /// <summary>
         /// The number value.
         /// </summary>
-        private double n;
+        private readonly double n;
         #endregion
 
         #region Constructors
@@ -59,7 +37,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Number class.
         /// Create a number from a double.
         /// </summary>
-        /// <param name="number"></param>
+        /// <param name="number">The number value.</param>
         private Number(double number)
         {
             this.n = number;
@@ -69,7 +47,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Number class.
         /// Create a number from an int.
         /// </summary>
-        /// <param name="number"></param>
+        /// <param name="number">The number value.</param>
         private Number(int number)
         {
             this.n = number;
@@ -79,12 +57,22 @@ namespace SimpleScheme
         /// Initializes a new instance of the Number class.
         /// Create a number from a long.
         /// </summary>
-        /// <param name="number"></param>
+        /// <param name="number">The number value.</param>
         private Number(long number)
         {
             this.n = number;
         }
 
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Number); }
+        }
         #endregion
 
         #region Properties
@@ -98,6 +86,16 @@ namespace SimpleScheme
         #endregion
 
         #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Number;
+        }
+
         /// <summary>
         /// Create a new number from a double.
         /// </summary>
@@ -236,14 +234,14 @@ namespace SimpleScheme
                     (args, caller) => New(Compute(args, (x, y) => x * y, 1.0)), 
                     0, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(+ <z1> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("+"), 
                     (args, caller) => New(Compute(args, (x, y) => x + y, 0.0)), 
                     0, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(- <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(- <z>)</r4rs>
                 .DefinePrimitive(
@@ -251,7 +249,7 @@ namespace SimpleScheme
                     (args, caller) => New(Compute(args, (x, y) => x - y, 0.0)), 
                     1, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(/ <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z1> <z2> ...)</r4rs>
@@ -260,191 +258,191 @@ namespace SimpleScheme
                     (args, caller) => New(Compute(args, (x, y) => x / y, 1.0)), 
                     1, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(= <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("="), 
                     (args, caller) => Compare(args, (x, y) => x == y), 
                     2, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(< <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("<"), 
                     (args, caller) => Compare(args, (x, y) => x < y), 
                     2, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(> <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New(">"), 
                     (args, caller) => Compare(args, (x, y) => x > y), 
                     2, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(<= <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("<="), 
                     (args, caller) => Compare(args, (x, y) => x <= y), 
                     2, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(>= <z1> <z2> <z3> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New(">="), 
                     (args, caller) => Compare(args, (x, y) => x >= y), 
                     2, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(abs <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("abs"), 
                     (args, caller) => New(Math.Abs(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(ceiling <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("ceiling"), 
                     (args, caller) => New(Math.Ceiling(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(floor <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("floor"), 
                     (args, caller) => New(Math.Floor(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(acos <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("acos"), 
                     (args, caller) => New(Math.Acos(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(asin <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("asin"), 
                     (args, caller) => New(Math.Asin(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(atan <z>)</r4rs>
                 //// <r4rs section="6.5.5">(atan <y> <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("atan"), 
                     (args, caller) => New(Math.Atan(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(complex? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("complex?"), 
                     (args, caller) => SchemeBoolean.Truth(args.First().IsNumber()), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(cos <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("cos"), 
                     (args, caller) => New(Math.Cos(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(even? <n>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("even?"), 
                     (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(args.First())) % 2 == 0), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(exact? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("exact?"), 
                     (args, caller) => SchemeBoolean.Truth(IsExact(args.First())), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(exact->inexact <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("exact->inexact"), 
                     (args, caller) => Num(args.First()), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(exp <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("exp"), 
                     (args, caller) => New(Math.Exp(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(expt <z1> <z2>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("expt"), 
                     (args, caller) => New(Expt(args.First(), args.Second())), 
                     2, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("gcd"), 
                     (args, caller) => args.IsEmptyList() ? Zero : New(Gcd(args)), 
                     0, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("inexact?"), 
                     (args, caller) => SchemeBoolean.Truth(!IsExact(args.First())), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(inexact->exact <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("inexact->exact"), 
                     (args, caller) => Num(args.First()), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("integer->char"), 
                     (args, caller) => Character.New((char)(int)Num(args.First())), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("integer?"), 
                     (args, caller) => SchemeBoolean.Truth(IsExact(args.First())), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("lcm"), 
                     (args, caller) => args.IsEmptyList() ? One : New(Lcm(args)), 
                     0, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("log"), 
                     (args, caller) => New(Math.Log(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("max"), 
                     (args, caller) => New(Compute(args, Math.Max, Num(args.First()))), 
                     1, 
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(min? <x1> <x2> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("min"), 
                     (args, caller) => New(Compute(args, Math.Min, Num(args.First()))), 
                     1,
                     MaxInt, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(module <n1> <n2>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("modulo"), 
                     (args, caller) => New(Modulo(args.First(), args.Second())), 
                     2, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(negative? <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("negative?"), 
                     (args, caller) => SchemeBoolean.Truth(Num(args.First()) < 0), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.6">(number->string <number>)</r4rs>
                 //// <r4rs section="6.5.6">(number->string <number> <radix>)</r4rs>
                 .DefinePrimitive(
@@ -452,85 +450,85 @@ namespace SimpleScheme
                     (args, caller) => NumberToString(args.First(), args.Second()), 
                     1, 
                     2, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(number? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("number?"), 
                     (args, caller) => SchemeBoolean.Truth(args.First().IsNumber()), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(odd? <n>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("odd?"), 
                     (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(args.First())) % 2 != 0), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(positive? <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("positive?"), 
                     (args, caller) => SchemeBoolean.Truth(Num(args.First()) > 0), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(quotient <n1> <n2>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("quotient"), 
                     (args, caller) => New(Quotient(args.First(), args.Second())), 
                     2, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(rational? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("rational?"), 
                     (args, caller) => SchemeBoolean.Truth(IsExact(args.First())), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(real? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("real?"), 
                     (args, caller) => SchemeBoolean.Truth(IsExact(args.First())), 
                     1, 
-                    Primitive.ValueType.Obj)
+                    TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.5.5">(remainder <n1> <n2>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("remainder"), 
                     (args, caller) => New((long)Num(args.First()) % (long)Num(args.Second())), 
                     2, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(round <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("round"), 
                     (args, caller) => New(Math.Round(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(sin <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("sin"), 
                     (args, caller) => New(Math.Sin(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(sqrt <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("sqrt"), 
                     (args, caller) => New(Math.Sqrt(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(tan <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("tan"), 
                     (args, caller) => New(Math.Tan(Num(args.First()))), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(truncate <x>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("truncate"), 
                     (args, caller) => New(Truncate(args.First())), 
                     1, 
-                    Primitive.ValueType.Number)
+                    TypePrimitives.ValueType.Number)
                 //// <r4rs section="6.5.5">(zero? <z>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("zero?"), 
                     (args, caller) => SchemeBoolean.Truth(Num(args.First()) == 0), 
                     1, 
-                    Primitive.ValueType.Number);
+                    TypePrimitives.ValueType.Number);
         }
         #endregion
 
@@ -769,12 +767,13 @@ namespace SimpleScheme
         /// <returns>The corresponding Number.</returns>
         public static Number AsNumber(this Obj x)
         {
-            if (x is Number)
+            var asNumber = x as Number;
+            if (asNumber != null)
             {
-                return (Number)x;
+                return asNumber;
             }
 
-            ErrorHandlers.TypeError(Number.Name, x);
+            ErrorHandlers.TypeError(typeof(Number), x);
             return null;
         }
 
@@ -790,7 +789,7 @@ namespace SimpleScheme
                 return Convert.ToInt32(x.AsNumber().N);
             }
 
-            ErrorHandlers.TypeError(Number.Name, x);
+            ErrorHandlers.TypeError(typeof(Number), x);
             return 0;
         }
 
@@ -806,7 +805,7 @@ namespace SimpleScheme
                 return ((Number)x).N;
             }
 
-            ErrorHandlers.TypeError(Number.Name, x);
+            ErrorHandlers.TypeError(typeof(Number), x);
             return 0.0;
         }
 
@@ -819,10 +818,10 @@ namespace SimpleScheme
         {
             if (Number.Is(x))
             {
-                return (float)(((Number)x).N);
+                return (float)((Number)x).N;
             }
 
-            ErrorHandlers.TypeError(Number.Name, x);
+            ErrorHandlers.TypeError(typeof(Number), x);
             return 0.0f;
         }
 
@@ -835,10 +834,26 @@ namespace SimpleScheme
         {
             if (Number.Is(x))
             {
-                return (short)(((Number)x).N);
+                return (short)((Number)x).N;
             }
 
-            ErrorHandlers.TypeError(Number.Name, x);
+            ErrorHandlers.TypeError(typeof(Number), x);
+            return 0;
+        }
+
+        /// <summary>
+        /// Convert to a long
+        /// </summary>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding short.</returns>
+        public static long AsLong(this Obj x)
+        {
+            if (Number.Is(x))
+            {
+                return (long)((Number)x).N;
+            }
+
+            ErrorHandlers.TypeError(typeof(Number), x);
             return 0;
         }
 
@@ -851,10 +866,10 @@ namespace SimpleScheme
         {
             if (Number.Is(x))
             {
-                return (byte)(((Number)x).N);
+                return (byte)((Number)x).N;
             }
 
-            ErrorHandlers.TypeError(Number.Name, x);
+            ErrorHandlers.TypeError(typeof(Number), x);
             return 0;
         }
     }

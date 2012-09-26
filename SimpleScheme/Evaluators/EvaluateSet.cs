@@ -66,7 +66,7 @@ namespace SimpleScheme
             Obj rhs = expr.Second();
             if (!lhs.IsSymbol())
             {
-                ErrorHandlers.SemanticError("Set: first argument must be a symbol.  Got: " + lhs);
+                ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs));
             }
 
             return new EvaluateSet(expr, env, caller, lhs, rhs);

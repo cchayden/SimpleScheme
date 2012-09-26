@@ -2,7 +2,7 @@
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 
-namespace ClrTest
+namespace Clr
 {
     /// <summary>
     /// Contains various kinds of properties and methods that will be used by the

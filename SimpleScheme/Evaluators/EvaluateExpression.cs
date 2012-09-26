@@ -90,7 +90,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, andSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
                 //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
                 .DefinePrimitive(
@@ -98,14 +98,14 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, beginSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// (parallel <expr> ...)
                 .DefinePrimitive(
                         parallelSym, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, parallelSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Pair)
                 //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
                 //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
                 //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
@@ -114,7 +114,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, caseSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Pair)
                 //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... )</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
                 //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
@@ -124,7 +124,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, condSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
                 //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
@@ -133,7 +133,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, defineSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.PairOrSymbol)
+                        TypePrimitives.ValueType.PairOrSymbol)
                 //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
                 ////                           ...)
                 ////                           (<test> <expression> ...)
@@ -143,14 +143,14 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, doSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Pair)
                 //// Instead of returning a value, return an evaulator that can be run to get the value
                 .DefinePrimitive(
                         Symbol.New("eval"), 
                         (args, caller) => Call(args.First(), caller.Env, caller), 
                         1, 
                         2, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
                 //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
                 .DefinePrimitive(
@@ -158,7 +158,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, ifSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
                 //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
                 //// <r4rs section="4.1.4">formals: <variable></r4rs>
@@ -168,7 +168,7 @@ namespace SimpleScheme
                         (args, caller) => EvalLambda(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.PairOrSymbol)
+                        TypePrimitives.ValueType.PairOrSymbol)
                 //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
@@ -178,7 +178,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.PairOrSymbol)
+                        TypePrimitives.ValueType.PairOrSymbol)
                 //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
@@ -187,7 +187,7 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letstarSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Pair)
                 //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
                 //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
                 //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
@@ -196,40 +196,40 @@ namespace SimpleScheme
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, letrecSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Pair)
                 //// not defined in r4rs
                 .DefinePrimitive(
                         Symbol.New("macro"), 
                         (args, caller) => EvalMacro(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Pair)
                 //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
                 .DefinePrimitive(
                         orSym, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, orSym), 
                         0, 
                         MaxInt, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("quote"), 
                         (args, caller) => EvalQuote(args, caller), 
                         1, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
                 .DefinePrimitive(
                     setSym,
                     (args, caller) => new EvaluateExpression(args, caller.Env, caller, setSym),
                     2,
-                    Primitive.ValueType.Symbol,
-                    Primitive.ValueType.Pair)
+                    TypePrimitives.ValueType.Symbol,
+                    TypePrimitives.ValueType.Pair)
                 //// (time <expr>)
                 .DefinePrimitive(
                         timeSym, 
                         (args, caller) => new EvaluateExpression(args, caller.Env, caller, timeSym), 
                         1, 
-                        Primitive.ValueType.Obj);
+                        TypePrimitives.ValueType.Obj);
         }
         #endregion
 
@@ -475,7 +475,7 @@ namespace SimpleScheme
             Obj lhs = expr.First();
             if (!lhs.IsSymbol())
             {
-                ErrorHandlers.SemanticError("Increment: first argument must be a symbol.  Got: " + lhs);
+                ErrorHandlers.SemanticError(string.Format(@"Increment: first argument must be a symbol.  Got: ""{0}""", lhs));
             }
 
             return caller.UpdateReturnValue(env.Increment(lhs));
@@ -492,7 +492,7 @@ namespace SimpleScheme
             // Come here after evaluating fn
             if (!s.ReturnedExpr.IsProcedure())
             {
-                ErrorHandlers.SemanticError("Value must be procedure: " + s.ReturnedExpr);
+                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", s.ReturnedExpr));
             }
 
             return s.ReturnedExpr.AsProcedure().Evaluate(s.Expr, s.Env, s.Caller);

@@ -12,34 +12,14 @@ namespace SimpleScheme
     /// Represents an input port, a mechanism for reading input.
     /// It is immutable.
     /// </summary>
-    public sealed class InputPort : IPrintable
+    public sealed class InputPort : IPrintable, ISchemeType
     {
         #region Constants
         /// <summary>
         /// Marks the end of the input file.
         /// </summary>
         public const string Eof = "#!EOF";
-
-        /// <summary>
-        /// The printable name of the scheme input port type.
-        /// </summary>
-        public const string Name = "input-port";
         #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Port.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is InputPort;
-        }
 
         #region Fields
         /// <summary>
@@ -66,6 +46,16 @@ namespace SimpleScheme
         {
             this.transcript = interp.Transcript;
             this.parser = new Parser(inp);
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Port); }
         }
         #endregion
 
@@ -111,20 +101,20 @@ namespace SimpleScheme
                         Symbol.New("eof-object?"), 
                         (args, caller) => SchemeBoolean.Truth(IsEof(args.First())), 
                         1, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
                        Symbol.New("call-with-input-file"), 
-                       (args, caller) => EvaluateCallWithInputFile.Call(args, caller), 
+                       EvaluateCallWithInputFile.Call, 
                        2, 
-                       Primitive.ValueType.String, 
-                       Primitive.ValueType.Proc)
+                       TypePrimitives.ValueType.String, 
+                       TypePrimitives.ValueType.Proc)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("close-input-port"), 
                         (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).CloseInputPort(), 
                         1, 
-                        Primitive.ValueType.Port)
+                        TypePrimitives.ValueType.Port)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("current-input-port"), 
@@ -135,19 +125,19 @@ namespace SimpleScheme
                         Symbol.New("input-port?"), 
                         (args, caller) => SchemeBoolean.Truth(args.First().IsInputPort()), 
                         1, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("load"), 
                         (args, caller) => LoadFile(args.First(), caller.Interp), 
                         1, 
-                        Primitive.ValueType.String)
+                        TypePrimitives.ValueType.String)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("open-input-file"), 
                         (args, caller) => EvaluateCallWithInputFile.OpenInputFile(args.First(), caller.Interp), 
                         1,
-                        Primitive.ValueType.String)
+                        TypePrimitives.ValueType.String)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
                 .DefinePrimitive(
@@ -155,7 +145,7 @@ namespace SimpleScheme
                         (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).PeekChar(), 
                         0, 
                         1, 
-                        Primitive.ValueType.Port)
+                        TypePrimitives.ValueType.Port)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
                 .DefinePrimitive(
@@ -163,7 +153,7 @@ namespace SimpleScheme
                         (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).Read(), 
                         0, 
                         1, 
-                        Primitive.ValueType.Port)
+                        TypePrimitives.ValueType.Port)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
                 .DefinePrimitive(
@@ -171,13 +161,13 @@ namespace SimpleScheme
                         (args, caller) => Port(args.First(), caller.Interp.CurrentInputPort).ReadChar(), 
                         0, 
                         1, 
-                        Primitive.ValueType.Port)
+                        TypePrimitives.ValueType.Port)
                 //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("transcript-on"), 
                         (args, caller) => TranscriptOn(args.First(), caller.Interp.Transcript), 
                         1, 
-                        Primitive.ValueType.String)
+                        TypePrimitives.ValueType.String)
                 //// <r4rs section="6.10.4">(transcript-off)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("transcript-off"), 
@@ -199,6 +189,16 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is InputPort;
+        }
+
         /// <summary>
         /// Write the input port to the string builder.
         /// </summary>
@@ -238,7 +238,7 @@ namespace SimpleScheme
         /// <returns>The input port type name.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            return "<input-port>";
         }
         #endregion
 
@@ -354,10 +354,9 @@ namespace SimpleScheme
                 return (InputPort)obj;
             }
 
-            ErrorHandlers.TypeError(InputPort.Name, obj);
+            ErrorHandlers.TypeError(typeof(InputPort), obj);
             return null;
         }
-
 
         /// <summary>
         /// Convert to text writer.
@@ -371,7 +370,7 @@ namespace SimpleScheme
                 return ((InputPort)obj).Parser.Reader;
             }
 
-            ErrorHandlers.TypeError(InputPort.Name, obj);
+            ErrorHandlers.TypeError(typeof(InputPort), obj);
             return null;
         }
     }

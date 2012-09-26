@@ -12,28 +12,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Continuation : Procedure
     {
-        #region Constants
-        /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public new const string Name = "continuation";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public new static string TypeName = Primitive.ValueType.Continuation.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public new static bool Is(Obj obj)
-        {
-            return obj is Continuation;
-        }
-
         #region Fields
         /// <summary>
         /// The evaluator to execute when the continuation is applied.
@@ -57,6 +35,16 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Continuation); }
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Creates a new instance of the Continuation class.
@@ -75,13 +63,23 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static new bool Is(Obj obj)
+        {
+            return obj is Continuation;
+        }
+
+        /// <summary>
         /// Write the continuation to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
         public new void PrintString(bool quoted, StringBuilder buf)
         {
-            buf.Append("<" + Name + ">");
+            buf.Append("<continuation>");
         }
 
         /// <summary>
@@ -106,7 +104,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            CheckArgs(args, "Continuation");
+            this.CheckArgs(args, typeof(Continuation));
             return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), args.First(), this.savedEvaluator.Env);
         }
         #endregion
@@ -140,7 +138,7 @@ namespace SimpleScheme
                 return (Continuation)obj;
             }
 
-            ErrorHandlers.TypeError(Continuation.Name, obj);
+            ErrorHandlers.TypeError(typeof(Continuation), obj);
             return null;
         }
     }

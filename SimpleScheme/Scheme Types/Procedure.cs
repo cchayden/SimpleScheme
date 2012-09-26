@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Text;
     using Obj = System.Object;
 
@@ -11,34 +12,14 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Lambdas, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : IPrintable
+    public abstract class Procedure : IPrintable, ISchemeType
     {
         #region Constants
-        /// <summary>
-        /// The printable name of the procedure type.
-        /// </summary>
-        public const string Name = "procedure";
-
         /// <summary>
         /// The default name of a procedure.
         /// </summary>
         private const string AnonymousProc = "anonymous procedure";
         #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Proc.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Procedure;
-        }
 
         #region Fields
 
@@ -69,6 +50,16 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public virtual string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Proc); }
+        }
+        #endregion
+
         #region Accessors
 
         /// <summary>
@@ -94,48 +85,60 @@ namespace SimpleScheme
                         (args, caller) => args.First().AsProcedure().Apply(args.Rest().ListStar(), caller), 
                         2, 
                         MaxInt, 
-                        Primitive.ValueType.Proc, 
-                        Primitive.ValueType.Obj)
+                        TypePrimitives.ValueType.Proc, 
+                        TypePrimitives.ValueType.Obj)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("call-with-current-continuation"), 
                         (args, caller) => args.First().AsProcedure().CallCc(caller), 
                         1, 
-                        Primitive.ValueType.Proc)
+                        TypePrimitives.ValueType.Proc)
                 .DefinePrimitive(
                         Symbol.New("call/cc"), 
                         (args, caller) => args.First().AsProcedure().CallCc(caller), 
                         1, 
-                        Primitive.ValueType.Proc)
+                        TypePrimitives.ValueType.Proc)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("force"), 
                         (args, caller) => Force(args.First(), caller), 
                         1, 
-                        Primitive.ValueType.Proc)
+                        TypePrimitives.ValueType.Proc)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("for-each"), 
                         (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), false, caller.Env, caller), 
                          1, 
                         MaxInt,
-                        Primitive.ValueType.Proc, 
-                        Primitive.ValueType.Pair)
+                        TypePrimitives.ValueType.Proc, 
+                        TypePrimitives.ValueType.Pair)
                 //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("map"), 
                         (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), true, caller.Env, caller), 
                         1, 
                         MaxInt, 
-                        Primitive.ValueType.Proc, 
-                        Primitive.ValueType.PairOrEmpty)
+                        TypePrimitives.ValueType.Proc, 
+                        TypePrimitives.ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("procedure?"), 
                         (args, caller) => SchemeBoolean.Truth(args.First().IsProcedure()), 
                         1, 
-                        Primitive.ValueType.Obj);
+                        TypePrimitives.ValueType.Obj);
+        }
+        #endregion
+
+        #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Procedure;
         }
         #endregion
 
@@ -157,7 +160,7 @@ namespace SimpleScheme
         /// <returns>The procedure type name.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            return "<procedure>";
         }
 
         /// <summary>
@@ -230,21 +233,23 @@ namespace SimpleScheme
         /// Check the number of args passed.
         /// </summary>
         /// <param name="args">The arguments passed to the procedure.</param>
-        /// <param name="tag">Name, for the error message.</param>
+        /// <param name="tagType">Name, for the error message.</param>
         /// <returns>The number of arguments passed to the procedure.</returns>
-        protected int CheckArgs(Obj args, string tag)
+        protected int CheckArgs(Obj args, Type tagType)
         {
             int numArgs = args.ListLength();
-            if (numArgs < this.minArgs)
+            if (numArgs < this.minArgs || numArgs > this.maxArgs)
             {
-                ErrorHandlers.SemanticError(tag + ": too few args, " + numArgs + ", for " +
-                                                            this.ProcedureName + ": " + args);
-            }
-
-            if (numArgs > this.maxArgs)
-            {
-                ErrorHandlers.SemanticError(tag + ": too many args, " + numArgs + ", for " +
-                                                            this.ProcedureName + ": " + args);
+                string tag = TypePrimitives.SchemeTypeName(tagType);
+                string msg = numArgs < this.minArgs ? "few" : "many";
+                ErrorHandlers.SemanticError(
+                    string.Format(
+                       @"""{0}"" too {1} args ({2}) for {3}: ""{4}""", 
+                      tag, 
+                      msg, 
+                      numArgs, 
+                      this.ProcedureName, 
+                      args));
             }
 
             return numArgs;
@@ -305,7 +310,7 @@ namespace SimpleScheme
                 return (Procedure)x;
             }
 
-            ErrorHandlers.TypeError(Procedure.Name, x);
+            ErrorHandlers.TypeError(typeof(Procedure), x);
             return null;
         }
     }

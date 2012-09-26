@@ -481,17 +481,17 @@ namespace Tests
         [TestMethod]
         public void TypeNameTest()
         {
-            Assert.AreEqual("boolean", TypePrimitives.TypeName(SchemeBoolean.True));
-            Assert.AreEqual("symbol", TypePrimitives.TypeName(Symbol.New("sym")));
-            Assert.AreEqual("character", TypePrimitives.TypeName(Character.New('c')));
-            Assert.AreEqual("vector", TypePrimitives.TypeName(Vector.New(Number.New(3), Number.New(0))));
-            Assert.AreEqual("pair", TypePrimitives.TypeName(new Pair(null, null)));
-            Assert.AreEqual("number", TypePrimitives.TypeName(Number.New(1.0d)));
-            Assert.AreEqual("string", TypePrimitives.TypeName(SchemeString.New("abc")));
-            Assert.AreEqual("primitive", TypePrimitives.TypeName(Primitive.New((args, caller) => null, 0, 0, new Primitive.ValueType[0])));
-            Assert.AreEqual("input-port", TypePrimitives.TypeName(InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter)));
-            Assert.AreEqual("output-port", TypePrimitives.TypeName(OutputPort.New(new StringWriter(), (Interpreter)this.interpreter)));
-            Assert.AreEqual("empty-list", TypePrimitives.TypeName(EmptyList.New()));
+            Assert.AreEqual("boolean", TypePrimitives.SchemeTypeName(SchemeBoolean.True));
+            Assert.AreEqual("symbol", TypePrimitives.SchemeTypeName(Symbol.New("sym")));
+            Assert.AreEqual("character", TypePrimitives.SchemeTypeName(Character.New('c')));
+            Assert.AreEqual("vector", TypePrimitives.SchemeTypeName(Vector.New(Number.New(3), Number.New(0))));
+            Assert.AreEqual("pair", TypePrimitives.SchemeTypeName(new Pair(null, null)));
+            Assert.AreEqual("number", TypePrimitives.SchemeTypeName(Number.New(1.0d)));
+            Assert.AreEqual("string", TypePrimitives.SchemeTypeName(SchemeString.New("abc")));
+            Assert.AreEqual("primitive", TypePrimitives.SchemeTypeName(Primitive.New((args, caller) => null, 0, 0, new TypePrimitives.ValueType[0])));
+            Assert.AreEqual("input-port", TypePrimitives.SchemeTypeName(InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter)));
+            Assert.AreEqual("output-port", TypePrimitives.SchemeTypeName(OutputPort.New(new StringWriter(), (Interpreter)this.interpreter)));
+            Assert.AreEqual("empty-list", TypePrimitives.SchemeTypeName(EmptyList.New()));
         }
 
         /// <summary>

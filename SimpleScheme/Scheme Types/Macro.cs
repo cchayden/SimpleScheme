@@ -13,28 +13,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Macro : Lambda
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the scheme macro type.
-        /// </summary>
-        public new const string Name = "macro";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public new static string TypeName = Primitive.ValueType.Macro.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public new static bool Is(Obj obj)
-        {
-            return obj is Macro;
-        }
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Macro class.
@@ -45,6 +23,16 @@ namespace SimpleScheme
         private Macro(Obj parms, Obj body, Environment env)
             : base(parms, body, env)
         {
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Macro); }
         }
         #endregion
 
@@ -63,6 +51,16 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static new bool Is(Obj obj)
+        {
+            return obj is Macro;
+        }
+
         /// <summary>
         /// Write the macro to the string builder.
         /// </summary>
@@ -94,7 +92,7 @@ namespace SimpleScheme
         /// <returns>The string form of the lambda.</returns>
         public override string ToString()
         {
-            return this.ToString(Name);
+            return this.ToString("macro");
         }
         #endregion
     }
@@ -127,7 +125,7 @@ namespace SimpleScheme
                 return (Macro)obj;
             }
 
-            ErrorHandlers.TypeError(Macro.Name, obj);
+            ErrorHandlers.TypeError(typeof(Macro), obj);
             return null;
         }
     }

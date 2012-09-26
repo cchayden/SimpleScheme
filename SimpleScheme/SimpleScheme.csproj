@@ -68,6 +68,7 @@
     <Compile Include="Parser.cs" />
     <Compile Include="PrimitiveEnvironment.cs" />
     <Compile Include="Printer.cs" />
+    <Compile Include="Scheme Types\ISchemeType.cs" />
     <Compile Include="Scheme Types\IPrintable.cs" />
     <Compile Include="Scheme Types\SchemeBoolean.cs" />
     <Compile Include="Scheme Types\Lambda.cs" />

@@ -1,15 +1,16 @@
 ﻿// <copyright file="Clr.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
-using System;
-using SimpleScheme;
 
-namespace ClrTest
+namespace Clr
 {
+    using System;
+    using SimpleScheme;
+
     /// <summary>
     /// Illustrate calling methods defined in a custom class.
     /// </summary>
-    public class ClrExample
+    public class Clr
     {
         /// <summary>
         /// Read a file that defines procedures that link to properties and methods in our test class.

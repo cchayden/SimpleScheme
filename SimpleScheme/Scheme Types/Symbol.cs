@@ -12,30 +12,8 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : IPrintable, ICleanable
+    public class Symbol : IPrintable, ICleanable, ISchemeType
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the symbol type.
-        /// </summary>
-        public const string Name = "symbol";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static string TypeName = Primitive.ValueType.Symbol.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Symbol;
-        }
-
         #region Fields
         /// <summary>
         /// The symbol's value, as a string.
@@ -63,6 +41,16 @@ namespace SimpleScheme
             this.name = name;
             this.pos = -1;
             this.level = -1;
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Symbol); }
         }
         #endregion
 
@@ -104,6 +92,16 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Symbol;
+        }
+
+        /// <summary>
         /// Test two symbols for equality.
         /// </summary>
         /// <param name="obj1">The first symbol.</param>
@@ -143,13 +141,13 @@ namespace SimpleScheme
                     New("string->symbol"), 
                     (args, caller) => New(SchemeString.AsString(args.First())), 
                     1, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
                 .DefinePrimitive(
                     New("symbol?"), 
                     (args, caller) => SchemeBoolean.Truth(args.First().IsSymbol()), 
                     1, 
-                    Primitive.ValueType.Obj);
+                    TypePrimitives.ValueType.Obj);
         }
         #endregion
 
@@ -225,7 +223,7 @@ namespace SimpleScheme
                 return (Symbol)x;
             }
 
-            ErrorHandlers.TypeError(Symbol.Name, x);
+            ErrorHandlers.TypeError(typeof(Symbol), x);
             return null;
         }
     }

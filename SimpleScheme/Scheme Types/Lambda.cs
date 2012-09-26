@@ -20,13 +20,6 @@ namespace SimpleScheme
     //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
     public class Lambda : Procedure
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the lambda type.
-        /// </summary>
-        //public new const string Name = "lambda";
-        #endregion
-
         #region Fields
         /// <summary>
         /// A list of variable names, to be matched with values later.
@@ -43,11 +36,6 @@ namespace SimpleScheme
         /// </summary>
         private readonly Environment env;
         #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public new static string TypeName = Primitive.ValueType.Lambda.ToString();
 
         /// <summary>
         /// Identifies objects of this scheme type.
@@ -74,6 +62,16 @@ namespace SimpleScheme
             this.env = env;
             this.body = body;
             this.ProcessFormals();
+        }
+        #endregion
+
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Lambda); }
         }
         #endregion
 
@@ -119,7 +117,7 @@ namespace SimpleScheme
         /// <returns>The string form of the lambda.</returns>
         public override string ToString()
         {
-            return this.ToString(Name);
+            return this.ToString("lambda");
         }
         #endregion
 
@@ -149,7 +147,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            CheckArgs(args, "Lambda");
+            CheckArgs(args, typeof(Lambda));
             return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);
         }
 
@@ -227,7 +225,7 @@ namespace SimpleScheme
                 return (Lambda)obj;
             }
 
-            ErrorHandlers.TypeError(Lambda.Name, obj);
+            ErrorHandlers.TypeError(typeof(Lambda), obj);
             return null;
         }
     }

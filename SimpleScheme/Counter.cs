@@ -72,7 +72,7 @@ namespace SimpleScheme
                     Symbol.New("get-counter"), 
                     (args, caller) => caller.Interp.CurrentCounters.GetCounter(args.First()), 
                     1, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (reset-counters)
                 .DefinePrimitive(
                     Symbol.New("reset-counters"), 

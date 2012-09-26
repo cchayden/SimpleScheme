@@ -12,28 +12,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class SynchronousClrProcedure : ClrProcedure
     {
-        #region Constants
-        /// <summary>
-        /// The printable name of the synchronous clr procedure type.
-        /// </summary>
-        public new const string Name = "synchronous-clr-procedure";
-        #endregion
-
-        /// <summary>
-        /// The printable name of this scheme type.
-        /// </summary>
-        public static new string TypeName = Primitive.ValueType.SynchronousClrProcedure.ToString();
-
-        /// <summary>
-        /// Identifies objects of this scheme type.
-        /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is this scheme type.</returns>
-        public new static bool Is(Obj obj)
-        {
-            return obj is SynchronousClrProcedure;
-        }
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the SynchronousClrProcedure class.
@@ -48,10 +26,29 @@ namespace SimpleScheme
             this.SetMethodInfo(this.MethodName, this.ArgClasses);
             this.SetMinMax(this.ArgClasses.Count + (this.MethodInfo.IsStatic ? 0 : 1));
         }
+        #endregion
 
+        #region SchemeType Accessors
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        public override string TypeName
+        {
+            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Char); }
+        }
         #endregion
 
         #region Public Static Methods
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static new bool Is(Obj obj)
+        {
+            return obj is SynchronousClrProcedure;
+        }
+
         /// <summary>
         /// Creates a new instance of the SynchronousClrProcedure class.
         /// </summary>
@@ -83,7 +80,7 @@ namespace SimpleScheme
                        args.Rest().Rest()),
                     2,
                     MaxInt, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
                    Symbol.New("property-get"),
@@ -92,7 +89,7 @@ namespace SimpleScheme
                        "get_" + Printer.AsString(args.Second(), false), 
                        args.Rest().Rest()),
                     2, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
                    Symbol.New("property-set"),
@@ -101,7 +98,7 @@ namespace SimpleScheme
                        "set_" + Printer.AsString(args.Second(), false), 
                        args.Rest().Rest()),
                     3, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
                    Symbol.New("index-get"),
@@ -110,7 +107,7 @@ namespace SimpleScheme
                        "get_Item", 
                        args.Rest()),
                     2, 
-                    Primitive.ValueType.String)
+                    TypePrimitives.ValueType.String)
                 //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
                    Symbol.New("index-set"),
@@ -119,7 +116,7 @@ namespace SimpleScheme
                        "set_Item", 
                        args.Rest()),
                     3, 
-                    Primitive.ValueType.String);
+                    TypePrimitives.ValueType.String);
         }
         #endregion
 
@@ -131,7 +128,6 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>
         public new void PrintString(bool quoted, StringBuilder buf)
         {
-            buf.Append(Name + ": ");
             buf.Append(this.ToString());
         }
 
@@ -141,7 +137,7 @@ namespace SimpleScheme
         /// <returns>The string form of the procedure.</returns>
         public override string ToString()
         {
-            return "<" + Name + ">";
+            return "<synchronous-clr-procedure>";
         }
 
         /// <summary>
@@ -155,7 +151,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to excute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            CheckArgs(args, "SynchronousClrProcedure");
+            this.CheckArgs(args, typeof(SynchronousClrProcedure));
             object target = null;
             if (!this.MethodInfo.IsStatic)
             {
@@ -202,7 +198,7 @@ namespace SimpleScheme
                 return (SynchronousClrProcedure)obj;
             }
 
-            ErrorHandlers.TypeError(SynchronousClrProcedure.Name, obj);
+            ErrorHandlers.TypeError(typeof(SynchronousClrProcedure), obj);
             return null;
         }
     }

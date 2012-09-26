@@ -5,7 +5,6 @@ namespace Tests
 {
     using System;
     using System.IO;
-    using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
     using Obj = System.Object;
@@ -16,6 +15,13 @@ namespace Tests
     [TestClass]
     public class ClrTest
     {
+
+        private enum CompareType
+        {
+            Std,
+            Types,
+            Array
+        }
         /// <summary>
         /// A scheme interpreter, created for each test.
         /// </summary>
@@ -41,7 +47,7 @@ namespace Tests
               (begin
                 (define new-test-class (new ""Tests.ClrTest+ClrTestClass,Tests""))
                 new-test-class)
-            ", true);
+            ", CompareType.Types);
         }
 
         /// <summary>
@@ -229,36 +235,173 @@ namespace Tests
               (begin
                 (define reader-to-reader (method ""Tests.ClrTest+ClrTestClass,Tests"" ""TextReaderToTextReader"" ""System.IO.TextReader""))
                 (reader-to-reader (current-input-port)))
-            ", true);
+            ", CompareType.Types);
 
             // text reader to text writer
             this.Run(typeof(StreamWriter), "text writer to text writer", @"              
               (begin
                 (define writer-to-writer (method ""Tests.ClrTest+ClrTestClass,Tests"" ""TextWriterToTextWriter"" ""System.IO.TextWriter""))
                 (writer-to-writer (current-output-port)))
-            ", true);
+            ", CompareType.Types);
         }
 
         /// <summary>
+        /// A test for obuect[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void ObjectArrayClrTest()
+        {
+            var res = new object[] { 0 };
+            this.Run(res, "objarray to objarray", @"              
+              (begin
+                (define intarray-to-intarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ObjectArrayToObjectArray"" ""int[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0)
+                (objarray-to-objarray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for int[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void IntArrayClrTest()
+        {
+            var res = new int[] { 0 };
+            this.Run(res, "intarray to intarray", @"              
+              (begin
+                (define intarray-to-intarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""IntArrayToIntArray"" ""int[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0)
+                (intarray-to-intarray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for bool[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void BoolArrayClrTest()
+        {
+            var res = new bool[] { true };
+            this.Run(res, "boolarray to boolarray", @"              
+              (begin
+                (define boolarray-to-boolarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""BoolArrayToBoolArray"" ""bool[]""))
+                (define array (vector 1))
+                (vector-set! array 0 #t)
+                (boolarray-to-boolarray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for byte[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void ByteArrayClrTest()
+        {
+            var res = new byte[] { 0 };
+            this.Run(res, "bytearray to bytearray", @"              
+              (begin
+                (define bytearray-to-bytearray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ByteArrayToByteArray"" ""byte[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0)
+                (bytearray-to-bytearray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for short[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void ShortArrayClrTest()
+        {
+            var res = new short[] { 0 };
+            this.Run(res, "shortarray to shortarray", @"              
+              (begin
+                (define shortarray-to-shortarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ShortArrayToShortArray"" ""byte[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0)
+                (shortarray-to-shortarray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for long[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void LongArrayClrTest()
+        {
+            var res = new long[] { 0 };
+            this.Run(res, "longarray to longarray", @"              
+              (begin
+                (define longarray-to-longarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""LongArrayToLongArray"" ""byte[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0)
+                (longarray-to-longarray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for float[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void FloatArrayClrTest()
+        {
+            var res = new float[] { 0.0f };
+            this.Run(res, "floatarray to floatarray", @"              
+              (begin
+                (define floatarray-to-floatarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""FloatArrayToFloatArray"" ""byte[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0.0)
+                (floatarray-to-floatarray array))
+            ", CompareType.Array);
+        }
+
+        /// <summary>
+        /// A test for double[]-related CLR procedures
+        /// </summary>
+        [TestMethod]
+        public void DoubleArrayClrTest()
+        {
+            var res = new double[] { 0 };
+            this.Run(res, "doublearray to doublearray", @"              
+              (begin
+                (define doublearray-to-doublearray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""DoubleArrayToDoubleArray"" ""byte[]""))
+                (define array (vector 1))
+                (vector-set! array 0 0.0)
+                (doublearray-to-doublearray array))
+            ", CompareType.Array);
+        }
+/// <summary>
         /// Run a test and check the result.
         /// </summary>
         /// <param name="expected">The expected result.</param>
         /// <param name="label">The label to display.</param>
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="compareType">If true, compare the expected type against the result type.</param>
-        private void Run(object expected, string label, string expr, bool compareType = false)
+        private void Run(object expected, string label, string expr, CompareType compareType = CompareType.Std)
         {
             Obj res = this.interpreter.EvalStr(expr);
             string actual = res != EmptyList.New() ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
-            //Assert.AreEqual(expected, actual, "Failed");
-            if (compareType)
+            switch (compareType)
             {
-                Assert.AreEqual(expected, res.GetType(), "Failed");
-            }
-            else
-            {
-                Assert.AreEqual(expected, res, "Failed");
+                case CompareType.Std:
+                    Assert.AreEqual(expected, res, "Failed");
+                    break;
+                case CompareType.Types:
+                    Assert.AreEqual(expected, res.GetType(), "Failed");
+                    break;
+                case CompareType.Array:
+                    {
+                        var expectedArray = expected as object[];
+                        var resArray = res as object[];
+                        for (var i = 0; i < expected.ListLength(); i++)
+                        {
+                            Assert.AreEqual(expectedArray[i], resArray[i], "Failed " + i);
+                        }
+                    }
+                    break;
             }
         }
 
@@ -267,7 +410,7 @@ namespace Tests
             /// <summary>
             /// Indexer value.
             /// </summary>
-            private string[] indexerValue = new string[10];
+            private readonly string[] indexerValue = new string[10];
 
             /// <summary>
             /// Gets or sets a string attribute.
@@ -426,6 +569,86 @@ namespace Tests
             public static TextWriter TextWriterToTextWriter(TextWriter x)
             {
                 return new StreamWriter("test");
+            }
+
+            /// <summary>
+            /// An object[] method.
+            /// </summary>
+            /// <param name="x">Input object[].</param>
+            /// <returns>Input</returns>
+            public static object[] ObjectArrayToObjectArray(object[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// An int[] method.
+            /// </summary>
+            /// <param name="x">Input int[].</param>
+            /// <returns>Input</returns>
+            public static int[] IntArrayToIntArray(int[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// A bool[] method.
+            /// </summary>
+            /// <param name="x">Input bool[].</param>
+            /// <returns>Input</returns>
+            public static bool[] BoolArrayToBoolArray(bool[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// A byte[] method.
+            /// </summary>
+            /// <param name="x">Input byte[].</param>
+            /// <returns>Input</returns>
+            public static byte[] ByteArrayToByteArray(byte[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// A short[] method.
+            /// </summary>
+            /// <param name="x">Input short[].</param>
+            /// <returns>Input</returns>
+            public static short[] ShortArrayToShortArray(short[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// A long[] method.
+            /// </summary>
+            /// <param name="x">Input long[].</param>
+            /// <returns>Input</returns>
+            public static long[] LongArrayToLongArray(long[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// A float[] method.
+            /// </summary>
+            /// <param name="x">Input float[].</param>
+            /// <returns>Input</returns>
+            public static float[] FloatArrayToFloatArray(float[] x)
+            {
+                return x;
+            }
+
+            /// <summary>
+            /// A double[] method.
+            /// </summary>
+            /// <param name="x">Input double[].</param>
+            /// <returns>Input</returns>
+            public static double[] DoubleArrayToDoubleArray(double[] x)
+            {
+                return x;
             }
         }
     }

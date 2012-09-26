@@ -61,7 +61,7 @@ namespace SimpleScheme
                 var symbol = expr.First().First();
                 if (!symbol.IsSymbol())
                 {
-                    ErrorHandlers.SemanticError("Attempt to define a non-symbol: " + Printer.AsString(symbol));
+                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", Printer.AsString(symbol)));
                 }
 
                 env.Define(symbol.AsSymbol(), Lambda.New(expr.First().Rest(), expr.Rest(), env));
@@ -93,7 +93,7 @@ namespace SimpleScheme
             var symbol = s.Expr.First();
             if (!symbol.IsSymbol())
             {
-                ErrorHandlers.SemanticError("Attempt to store to a non-symbol: " + Printer.AsString(symbol));
+                ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", Printer.AsString(symbol)));
             }
 
             s.Env.Define(symbol.AsSymbol(), s.ReturnedExpr);
