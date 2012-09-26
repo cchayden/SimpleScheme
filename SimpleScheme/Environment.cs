@@ -171,20 +171,20 @@ namespace SimpleScheme
         /// <param name="val">This is the value of that variable.</param>
         public void UnsafeDefine(Obj var, Obj val)
         {
-            if (Symbol.Is(var))
+            if (!Symbol.Is(var))
             {
-                string symbol = Symbol.As(var);
-                this.symbolTable.Add(symbol, val);
-
-                if (Procedure.Is(val))
-                {
-                    Procedure.As(val).SetName(var.ToString());
-                }
-
-                return;
+                ErrorHandlers.SemanticError("Attempt tp define a non-symbol: " + Printer.AsString(var));
             }
 
-            ErrorHandlers.SemanticError("Bad variable in define: " + var);
+            string symbol = Symbol.As(var);
+            this.symbolTable.Add(symbol, val);
+
+            if (Procedure.Is(val))
+            {
+                Procedure.As(val).SetName(var.ToString());
+            }
+
+            return;
         }
 
         /// <summary>
@@ -196,6 +196,11 @@ namespace SimpleScheme
         /// <returns>The value bound to the variable.</returns>
         public Obj UnsafeLookup(Obj var)
         {
+            if (!Symbol.Is(var))
+            {
+                return ErrorHandlers.SemanticError("Attempt to look up a non-symbol: " + Printer.AsString(var));
+            }
+
             string symbol = Symbol.As(var);
             Environment env = this;
 
@@ -203,7 +208,7 @@ namespace SimpleScheme
             while (env != Empty)
             {
                 Obj val;
-                if (env.symbolTable.Lookup(symbol, out val))
+                if ((val = env.symbolTable.Lookup(symbol)) != null)
                 {
                     return val;
                 }
@@ -363,10 +368,8 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public SymbolTable(Obj symbols, Obj vals)
+            public SymbolTable(Obj symbols, Obj vals) : this(List.Length(symbols))
             {
-                this.symbolTable = new Dictionary<string, Obj>(List.Length(symbols));
-                this.lockObj = new object();
                 this.AddList(symbols, vals);
             }
 
@@ -374,13 +377,18 @@ namespace SimpleScheme
             /// Look up a symbol given its name.
             /// </summary>
             /// <param name="symbol">The symbol to look up.</param>
-            /// <param name="val">Its returned value.</param>
             /// <returns>True if found in the symbol table, false if not found.</returns>
-            public bool Lookup(string symbol, out Obj val)
+            public Obj Lookup(string symbol)
             {
                 lock (this.lockObj)
                 {
-                    return this.symbolTable.TryGetValue(symbol, out val);
+                    Obj val;
+                    if (this.symbolTable.TryGetValue(symbol, out val))
+                    {
+                        return val;
+                    }
+
+                    return null;
                 }
             }
 

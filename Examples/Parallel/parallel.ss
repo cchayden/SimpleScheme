@@ -1,7 +1,7 @@
 ;; test parallel
 
 ;; methods
-(define sleep-caller ((method "Parallel,Parallel" "CreateAsync")))
+(define sleep-caller ((method "Parallel,Parallel" "CreateAsyncDoSleep")))
 (define async-sleep (method-async "Parallel+SleepCaller,Parallel" "Invoke" "int"))
 (define (sleep duration) (async-sleep sleep-caller duration))
 

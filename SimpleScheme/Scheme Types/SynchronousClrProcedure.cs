@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
     using Obj = System.Object;
 
@@ -82,7 +81,8 @@ namespace SimpleScheme
                        Printer.AsString(List.Second(args), false), 
                        List.Rest(List.Rest(args))),
                     2,
-                    MaxInt)
+                    MaxInt, 
+                    Primitive.ValueType.String)
                 //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
                    "property-get",
@@ -90,7 +90,8 @@ namespace SimpleScheme
                        Printer.AsString(List.First(args), false), 
                        "get_" + Printer.AsString(List.Second(args), false), 
                        List.Rest(List.Rest(args))),
-                    2)
+                    2, 
+                    Primitive.ValueType.String)
                 //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
                    "property-set",
@@ -98,7 +99,8 @@ namespace SimpleScheme
                        Printer.AsString(List.First(args), false), 
                        "set_" + Printer.AsString(List.Second(args), false), 
                        List.Rest(List.Rest(args))),
-                    3)
+                    3, 
+                    Primitive.ValueType.String)
                 //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
                    "index-get",
@@ -106,7 +108,8 @@ namespace SimpleScheme
                        Printer.AsString(List.First(args), false), 
                        "get_Item", 
                        List.Rest(args)),
-                    2)
+                    2, 
+                    Primitive.ValueType.String)
                 //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
                    "index-set",
@@ -114,7 +117,8 @@ namespace SimpleScheme
                        Printer.AsString(List.First(args), false), 
                        "set_Item", 
                        List.Rest(args)),
-                    3);
+                    3, 
+                    Primitive.ValueType.String);
         }
         #endregion
 

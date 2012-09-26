@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using Obj = System.Object;
 
     /// <summary>
@@ -47,10 +48,11 @@ namespace SimpleScheme
         /// <param name="operation">The operation to perform.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
+        /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs)
+        public IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int minArgs, int maxArgs, params Primitive.ValueType[] argTypes)
         {
-            this.UnsafeDefine(name, new Primitive(operation, minArgs, maxArgs));
+            this.UnsafeDefine(name, new Primitive(operation, minArgs, maxArgs, argTypes));
             return this;
         }
 
@@ -62,10 +64,11 @@ namespace SimpleScheme
         /// <param name="name">The primitive name.</param>
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
+        /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs)
+        public IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int numberOfArgs, params Primitive.ValueType[] argTypes)
         {
-            this.UnsafeDefine(name, new Primitive(operation, numberOfArgs, numberOfArgs));
+            this.UnsafeDefine(name, new Primitive(operation, numberOfArgs, numberOfArgs, argTypes));
             return this;
         }
         #endregion
@@ -104,8 +107,9 @@ namespace SimpleScheme
                         return new Undefined();
                     },
                     0,
-                    1)
-                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2);
+                    1, 
+                    Primitive.ValueType.Number)
+                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2, Primitive.ValueType.Symbol, Primitive.ValueType.Number);
         }
         #endregion
     }

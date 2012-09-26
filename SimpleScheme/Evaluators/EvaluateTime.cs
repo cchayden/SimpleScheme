@@ -60,7 +60,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator Step1()
         {
-            return EvaluateExpression.Call(List.First(Expr), this.Env, ContinueHere(Step2));
+            return EvaluateExpression.Call(List.First(this.Expr), this.Env, ContinueHere(Step2));
         }
         #endregion
     }

@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// This evaluator is returned to suspend evaluation.
     /// It is used after calling an asynchronous operation.
     /// </summary>
-    public class SuspendedEvaluator : Evaluator
+    public sealed class SuspendedEvaluator : Evaluator
     {
         /// <summary>
         /// The printable name of the evaluator type.

@@ -34,7 +34,7 @@ namespace SimpleScheme
         /// <returns>The string representing the obj.</returns>
         public static string AsString(Obj x, bool quoted)
         {
-            StringBuilder buf = new StringBuilder();
+            var buf = new StringBuilder();
             AsString(x, quoted, buf);
             return buf.ToString();
         }
@@ -99,6 +99,101 @@ namespace SimpleScheme
                     return;
             }
         }
+
+        /// <summary>
+        /// Gets the primitive type name of an object.
+        /// </summary>
+        /// <param name="obj">The object to get the type name of.</param>
+        /// <returns>The type name.</returns>
+        public static string TypeName(Obj obj)
+        {
+            if (Pair.Is(obj))
+            {
+                return Primitive.ValueType.Pair.ToString();
+            }
+
+            if (EmptyList.Is(obj))
+            {
+                return Primitive.ValueType.Empty.ToString();
+            }
+
+            if (Number.Is(obj))
+            {
+                return Primitive.ValueType.Number.ToString();
+            }
+
+            if (Character.Is(obj))
+            {
+                return Primitive.ValueType.Char.ToString();
+            }
+
+            if (SchemeString.Is(obj))
+            {
+                return Primitive.ValueType.String.ToString();
+            }
+
+            if (Procedure.Is(obj))
+            {
+                return Primitive.ValueType.Proc.ToString();
+            }
+
+            if (Vector.Is(obj))
+            {
+                return Primitive.ValueType.Vector.ToString();
+            }
+
+            if (Symbol.Is(obj))
+            {
+                return Primitive.ValueType.Symbol.ToString();
+            }
+
+            if (SchemeBoolean.Is(obj))
+            {
+                return Primitive.ValueType.Boolean.ToString();
+            }
+
+            if (InputPort.Is(obj) || OutputPort.Is(obj))
+            {
+                return Primitive.ValueType.Port.ToString();
+            }
+
+            if (AsynchronousClrProcedure.Is(obj))
+            {
+                return Primitive.ValueType.AsynchronousClrProcedure.ToString();
+            }
+
+            if (SynchronousClrProcedure.Is(obj))
+            {
+                return Primitive.ValueType.SynchronousClrProcedure.ToString();
+            }
+
+            if (ClrConstructor.Is(obj))
+            {
+                return Primitive.ValueType.ClrConstructor.ToString();
+            }
+
+            if (Continuation.Is(obj))
+            {
+                return Primitive.ValueType.Continuation.ToString();
+            }
+
+            if (Lambda.Is(obj))
+            {
+                return Primitive.ValueType.Lambda.ToString();
+            }
+
+            if (Macro.Is(obj))
+            {
+                return Primitive.ValueType.Macro.ToString();
+            }
+
+            if (Undefined.Is(obj))
+            {
+                return Primitive.ValueType.Undefined.ToString();
+            }
+
+            return "Unknown";
+        }
         #endregion
-     }
+    }
 }

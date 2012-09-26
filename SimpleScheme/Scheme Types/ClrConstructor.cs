@@ -49,7 +49,7 @@ namespace SimpleScheme
 
             if (this.classType == null)
             {
-                ErrorHandlers.ClrError("Type cannot be found: " + Printer.AsString(targetClassName, false));
+                ErrorHandlers.ClrError("ValueType cannot be found: " + Printer.AsString(targetClassName, false));
             }
         }
 
@@ -99,7 +99,8 @@ namespace SimpleScheme
                                           Printer.AsString(List.First(args), false),
                                           List.Rest(args)),
                     1,
-                    MaxInt);
+                    MaxInt, 
+                    Primitive.ValueType.String);
         }
         #endregion
 

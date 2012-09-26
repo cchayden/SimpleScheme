@@ -103,6 +103,9 @@ namespace SimpleScheme
                 return Pair.Equal(obj1, obj2);
             }
 
+            obj1 = Number.Normalize(obj1);
+            obj2 = Number.Normalize(obj2);
+
             // delegate to first member, use C# equality
             return obj1.Equals(obj2);
         }
@@ -122,8 +125,7 @@ namespace SimpleScheme
         {
             return obj1 == obj2 || 
                 (obj1 is bool && obj1.Equals(obj2)) || 
-                (obj1 is int && obj1.Equals(obj2)) || 
-                (obj1 is double && obj1.Equals(obj2)) || 
+                (obj1 != null && Number.Normalize(obj1).Equals(Number.Normalize(obj2))) ||
                 (obj1 is char && obj1.Equals(obj2));
         }
 
@@ -172,17 +174,17 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.1">(boolean? <obj>)</r4rs>
-                .DefinePrimitive("boolean?", (args, caller) => Truth(Is(List.First(args))), 1)
+                .DefinePrimitive("boolean?", (args, caller) => Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.2">(eq? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("eq?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.2">(equal? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("equal?", (args, caller) => Truth(Equal(List.First(args), List.Second(args))), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2)
+                .DefinePrimitive("eqv?", (args, caller) => Truth(Eqv(List.First(args), List.Second(args))), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive("not", (args, caller) => Truth(Is(List.First(args)) && (bool)List.First(args) == false), 1)
+                .DefinePrimitive("not", (args, caller) => Truth(Is(List.First(args)) && (bool)List.First(args) == false), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
-                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.Is(List.First(args))), 1);
+                .DefinePrimitive("null?", (args, caller) => Truth(EmptyList.Is(List.First(args))), 1, Primitive.ValueType.Obj);
         }
         #endregion
     }

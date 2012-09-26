@@ -29,13 +29,6 @@ namespace SimpleScheme
         #region Fields
 
         /// <summary>
-        /// The name of the procedure.
-        /// This is usually set in the constructor, but when a define primitive is applied to
-        ///   a lambda, the name is set to the defined symbol.  This can only change once.
-        /// </summary>
-        private string procedureName;
-
-        /// <summary>
         /// The minimum number of args for the procedure.
         /// Set only in the constructor here and in subclasses.
         /// </summary>
@@ -56,20 +49,19 @@ namespace SimpleScheme
         /// <param name="maxArgs">The maximum number of args.</param>
         protected Procedure(int minArgs, int maxArgs)
         {
-            this.procedureName = AnonymousProc;
+            this.ProcedureName = AnonymousProc;
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
         }
         #endregion
 
         #region Accessors
+
         /// <summary>
         /// Gets all Procedures have a name.  It can be set only by the subclass.
         /// </summary>
-        public string ProcedureName
-        {
-            get { return this.procedureName; }
-        }
+        public string ProcedureName { get; private set; }
+
         #endregion
 
         #region Public Static Methods
@@ -111,19 +103,22 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => As(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller), 2, MaxInt)
+                .DefinePrimitive("apply", (args, caller) => As(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller), 2, MaxInt, 
+                            Primitive.ValueType.Proc, Primitive.ValueType.Obj)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
-                .DefinePrimitive("call-with-current-continuation", (args, caller) => As(List.First(args)).CallCc(caller), 1)
-                .DefinePrimitive("call/cc", (args, caller) => As(List.First(args)).CallCc(caller), 1)
+                .DefinePrimitive("call-with-current-continuation", (args, caller) => As(List.First(args)).CallCc(caller), 1, Primitive.ValueType.Proc)
+                .DefinePrimitive("call/cc", (args, caller) => As(List.First(args)).CallCc(caller), 1, Primitive.ValueType.Proc)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
-                .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1)
+                .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1, Primitive.ValueType.Proc)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt)
-                //// <r4rs section="6.9">(map proc <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt)
+                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt,
+                            Primitive.ValueType.Proc, Primitive.ValueType.Pair)
+                //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
+                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt, 
+                            Primitive.ValueType.Proc, Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj);
         }
         #endregion
 
@@ -185,9 +180,9 @@ namespace SimpleScheme
         /// <param name="name">The name to assign it.</param>
         public void SetName(string name)
         {
-            if (this.procedureName == AnonymousProc)
+            if (this.ProcedureName == AnonymousProc)
             {
-                this.procedureName = name;
+                this.ProcedureName = name;
             }
         }
         #endregion

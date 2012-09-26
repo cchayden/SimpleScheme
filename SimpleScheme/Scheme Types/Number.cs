@@ -75,6 +75,22 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(Name, obj);
             return 0.0D;
         }
+
+        /// <summary>
+        /// If the object is a number, make sure it is a double.
+        /// Otherwise, just keep it as-is.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The same object, normalized if necessary.</returns>
+        public static Obj Normalize(Obj obj) 
+        {
+            if (obj is byte || obj is int || obj is long || obj is float)
+            {
+                return Convert.ToDouble(obj);
+            }
+
+            return obj;
+        }
         #endregion
 
         #region Define Primitives
@@ -98,104 +114,104 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.5.5">(* <z1> ...)</r4rs>
-                .DefinePrimitive("*", (args, caller) => Compute(args, (x, y) => x * y, 1.0), 0, MaxInt)
+                .DefinePrimitive("*", (args, caller) => Compute(args, (x, y) => x * y, 1.0), 0, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(+ <z1> ...)</r4rs>
-                .DefinePrimitive("+", (args, caller) => Compute(args, (x, y) => x + y, 0.0), 0, MaxInt)
+                .DefinePrimitive("+", (args, caller) => Compute(args, (x, y) => x + y, 0.0), 0, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(- <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(- <z>)</r4rs>
-                .DefinePrimitive("-", (args, caller) => Compute(args, (x, y) => x - y, 0.0), 1, MaxInt)
+                .DefinePrimitive("-", (args, caller) => Compute(args, (x, y) => x - y, 0.0), 1, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(/ <z1> <z2>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z>)</r4rs>
                 //// <r4rs section="6.5.5">(/ <z1> <z2> ...)</r4rs>
-                .DefinePrimitive("/", (args, caller) => Compute(args, (x, y) => x / y, 1.0), 1, MaxInt)
+                .DefinePrimitive("/", (args, caller) => Compute(args, (x, y) => x / y, 1.0), 1, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("=", (args, caller) => Compare(args, (x, y) => x == y), 2, MaxInt)
+                .DefinePrimitive("=", (args, caller) => Compare(args, (x, y) => x == y), 2, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(< <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("<", (args, caller) => Compare(args, (x, y) => x < y), 2, MaxInt)
+                .DefinePrimitive("<", (args, caller) => Compare(args, (x, y) => x < y), 2, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(> <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive(">", (args, caller) => Compare(args, (x, y) => x > y), 2, MaxInt)
+                .DefinePrimitive(">", (args, caller) => Compare(args, (x, y) => x > y), 2, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(<= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive("<=", (args, caller) => Compare(args, (x, y) => x <= y), 2, MaxInt)
+                .DefinePrimitive("<=", (args, caller) => Compare(args, (x, y) => x <= y), 2, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(>= <z1> <z2> <z3> ...)</r4rs>
-                .DefinePrimitive(">=", (args, caller) => Compare(args, (x, y) => x >= y), 2, MaxInt)
+                .DefinePrimitive(">=", (args, caller) => Compare(args, (x, y) => x >= y), 2, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(abs <x>)</r4rs>
-                .DefinePrimitive("abs", (args, caller) => Math.Abs(Num(List.First(args))), 1)
+                .DefinePrimitive("abs", (args, caller) => Math.Abs(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(ceiling <x>)</r4rs>
-                .DefinePrimitive("ceiling", (args, caller) => Math.Ceiling(Num(List.First(args))), 1)
+                .DefinePrimitive("ceiling", (args, caller) => Math.Ceiling(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(floor <x>)</r4rs>
-                .DefinePrimitive("floor", (args, caller) => Math.Floor(Num(List.First(args))), 1)
+                .DefinePrimitive("floor", (args, caller) => Math.Floor(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(acos <z>)</r4rs>
-                .DefinePrimitive("acos", (args, caller) => Math.Acos(Num(List.First(args))), 1)
+                .DefinePrimitive("acos", (args, caller) => Math.Acos(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(asin <z>)</r4rs>
-                .DefinePrimitive("asin", (args, caller) => Math.Asin(Num(List.First(args))), 1)
+                .DefinePrimitive("asin", (args, caller) => Math.Asin(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(atan <z>)</r4rs>
                 //// <r4rs section="6.5.5">(atan <y> <x>)</r4rs>
-                .DefinePrimitive("atan", (args, caller) => Math.Atan(Num(List.First(args))), 1)
+                .DefinePrimitive("atan", (args, caller) => Math.Atan(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(complex? <obj>)</r4rs>
-                .DefinePrimitive("complex?", (args, caller) => Is(List.First(args)), 1)
+                .DefinePrimitive("complex?", (args, caller) => Is(List.First(args)), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(cos <z>)</r4rs>
-                .DefinePrimitive("cos", (args, caller) => Math.Cos(Num(List.First(args))), 1)
+                .DefinePrimitive("cos", (args, caller) => Math.Cos(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(even? <n>)</r4rs>
-                .DefinePrimitive("even?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 == 0), 1)
+                .DefinePrimitive("even?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 == 0), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(exact? <obj>)</r4rs>
-                .DefinePrimitive("exact?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
+                .DefinePrimitive("exact?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(exact->inexact <z>)</r4rs>
-                .DefinePrimitive("exact->inexact", (args, caller) => Num(List.First(args)), 1)
+                .DefinePrimitive("exact->inexact", (args, caller) => Num(List.First(args)), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(exp <z>)</r4rs>
-                .DefinePrimitive("exp", (args, caller) => Math.Exp(Num(List.First(args))), 1)
+                .DefinePrimitive("exp", (args, caller) => Math.Exp(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(expt <z1> <z2>)</r4rs>
-                .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2)
+                .DefinePrimitive("expt", (args, caller) => Expt(List.First(args), List.Second(args)), 2, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(gcd <n1> ...)</r4rs>
-                .DefinePrimitive("gcd", (args, caller) => EmptyList.Is(args) ? 0 : Gcd(args), 0, MaxInt)
+                .DefinePrimitive("gcd", (args, caller) => EmptyList.Is(args) ? 0 : Gcd(args), 0, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(inexact? <obj>)</r4rs>
-                .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(List.First(args))), 1)
+                .DefinePrimitive("inexact?", (args, caller) => SchemeBoolean.Truth(!IsExact(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(inexact->exact <z>)</r4rs>
-                .DefinePrimitive("inexact->exact", (args, caller) => Num(List.First(args)), 1)
+                .DefinePrimitive("inexact->exact", (args, caller) => Num(List.First(args)), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.6">(integer->char <n>)</r4rs>
-                .DefinePrimitive("integer->char", (args, caller) => Character.As((char)(int)Num(List.First(args))), 1)
+                .DefinePrimitive("integer->char", (args, caller) => Character.As((char)(int)Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(integer? <obj>)</r4rs>
-                .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
+                .DefinePrimitive("integer?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(lcm <n1> ...)</r4rs>
-                .DefinePrimitive("lcm", (args, caller) => EmptyList.Is(args) ? 1 : Lcm(args), 0, MaxInt)
+                .DefinePrimitive("lcm", (args, caller) => EmptyList.Is(args) ? 1 : Lcm(args), 0, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(log <z>)</r4rs>
-                .DefinePrimitive("log", (args, caller) => Math.Log(Num(List.First(args))), 1)
+                .DefinePrimitive("log", (args, caller) => Math.Log(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(max? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("max", (args, caller) => Compute(args, (x, y) => Math.Max(x, y), Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("max", (args, caller) => Compute(args, (x, y) => Math.Max(x, y), Num(List.First(args))), 1, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(min? <x1> <x2> ...)</r4rs>
-                .DefinePrimitive("min", (args, caller) => Compute(args, (x, y) => Math.Min(x, y), Num(List.First(args))), 1, MaxInt)
+                .DefinePrimitive("min", (args, caller) => Compute(args, (x, y) => Math.Min(x, y), Num(List.First(args))), 1, MaxInt, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(module <n1> <n2>)</r4rs>
-                .DefinePrimitive("modulo", (args, caller) => Modulo(List.First(args), List.Second(args)), 2)
+                .DefinePrimitive("modulo", (args, caller) => Modulo(List.First(args), List.Second(args)), 2, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(negative? <x>)</r4rs>
-                .DefinePrimitive("negative?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) < 0), 1)
+                .DefinePrimitive("negative?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) < 0), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.6">(number->string <number>)</r4rs>
                 //// <r4rs section="6.5.6">(number->string <number> <radix>)</r4rs>
-                .DefinePrimitive("number->string", (args, caller) => NumberToString(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("number->string", (args, caller) => NumberToString(List.First(args), List.Second(args)), 1, 2, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(number? <obj>)</r4rs>
-                .DefinePrimitive("number?", (args, caller) => Is(List.First(args)), 1)
+                .DefinePrimitive("number?", (args, caller) => Is(List.First(args)), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(odd? <n>)</r4rs>
-                .DefinePrimitive("odd?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 != 0), 1)
+                .DefinePrimitive("odd?", (args, caller) => SchemeBoolean.Truth(Math.Abs(Num(List.First(args))) % 2 != 0), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(positive? <x>)</r4rs>
-                .DefinePrimitive("positive?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) > 0), 1)
+                .DefinePrimitive("positive?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) > 0), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(quotient <n1> <n2>)</r4rs>
-                .DefinePrimitive("quotient", (args, caller) => Quotient(List.First(args), List.Second(args)), 2)
+                .DefinePrimitive("quotient", (args, caller) => Quotient(List.First(args), List.Second(args)), 2, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(rational? <obj>)</r4rs>
-                .DefinePrimitive("rational?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
+                .DefinePrimitive("rational?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(real? <obj>)</r4rs>
-                .DefinePrimitive("real?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1)
+                .DefinePrimitive("real?", (args, caller) => SchemeBoolean.Truth(IsExact(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(remainder <n1> <n2>)</r4rs>
-                .DefinePrimitive("remainder", (args, caller) => (long)Num(List.First(args)) % (long)Num(List.Second(args)), 2)
+                .DefinePrimitive("remainder", (args, caller) => (long)Num(List.First(args)) % (long)Num(List.Second(args)), 2, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(round <x>)</r4rs>
-                .DefinePrimitive("round", (args, caller) => Math.Round(Num(List.First(args))), 1)
+                .DefinePrimitive("round", (args, caller) => Math.Round(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(sin <z>)</r4rs>
-                .DefinePrimitive("sin", (args, caller) => Math.Sin(Num(List.First(args))), 1)
+                .DefinePrimitive("sin", (args, caller) => Math.Sin(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(sqrt <z>)</r4rs>
-                .DefinePrimitive("sqrt", (args, caller) => Math.Sqrt(Num(List.First(args))), 1)
+                .DefinePrimitive("sqrt", (args, caller) => Math.Sqrt(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(tan <z>)</r4rs>
-                .DefinePrimitive("tan", (args, caller) => Math.Tan(Num(List.First(args))), 1)
+                .DefinePrimitive("tan", (args, caller) => Math.Tan(Num(List.First(args))), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(truncate <x>)</r4rs>
-                .DefinePrimitive("truncate", (args, caller) => Truncate(List.First(args)), 1)
+                .DefinePrimitive("truncate", (args, caller) => Truncate(List.First(args)), 1, Primitive.ValueType.Number)
                 //// <r4rs section="6.5.5">(zero? <z>)</r4rs>
-                .DefinePrimitive("zero?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) == 0), 1);
+                .DefinePrimitive("zero?", (args, caller) => SchemeBoolean.Truth(Num(List.First(args)) == 0), 1, Primitive.ValueType.Number);
         }
         #endregion
 

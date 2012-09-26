@@ -21,15 +21,6 @@ namespace SimpleScheme
 
         #region Fields
 
-        /// <summary>
-        /// The first field of the pair.  This contains the cell's "value".
-        /// </summary>
-        private Obj first;
-
-        /// <summary>
-        /// The rest field of the pair.  This usually links to the next cell.
-        /// </summary>
-        private Obj rest;
         #endregion
 
         #region Constructor
@@ -41,8 +32,8 @@ namespace SimpleScheme
         /// referenced by this.</param>
         public Pair(Obj first, Obj rest)
         {
-            this.first = first;
-            this.rest = rest;
+            this.First = first;
+            this.Rest = rest;
         }
 
         /// <summary>
@@ -52,8 +43,8 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         public Pair(Obj first)
         {
-            this.first = first;
-            this.rest = EmptyList.Instance;
+            this.First = first;
+            this.Rest = EmptyList.Instance;
         }
 
         /// <summary>
@@ -62,27 +53,23 @@ namespace SimpleScheme
         /// </summary>
         public Pair()
         {
-            this.first = EmptyList.Instance;
-            this.rest = EmptyList.Instance;
+            this.First = EmptyList.Instance;
+            this.Rest = EmptyList.Instance;
         }
         #endregion
 
         #region Accessors
+
         /// <summary>
         /// Gets the first obj of the pair.
         /// </summary>
-        public Obj First
-        {
-            get { return this.first; }
-        }
+        public object First { get; private set; }
 
         /// <summary>
         /// Gets the rest of the objs in the list.
         /// </summary>
-        public Obj Rest
-        {
-            get { return this.rest; }
-        }
+        public object Rest { get; private set; }
+
         #endregion
 
         #region Public Static Methods
@@ -171,7 +158,7 @@ namespace SimpleScheme
         /// <returns>The new value</returns>
         public Obj SetFirst(Obj value)
         {
-            return this.first = value;
+            return this.First = value;
         }
 
         /// <summary>
@@ -181,7 +168,7 @@ namespace SimpleScheme
         /// <returns>The new value</returns>
         public Obj SetRest(Obj value)
         {
-            return this.rest = value;
+            return this.Rest = value;
         }
 
         /// <summary>

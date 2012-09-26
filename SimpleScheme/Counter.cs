@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Collections.Generic;
     using System.Text;
     using System.Threading;
@@ -63,7 +62,7 @@ namespace SimpleScheme
                 //// (get-counters)
                 .DefinePrimitive("get-counters", (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
-                .DefinePrimitive("get-counter", (args, caller) => caller.Interp.CurrentCounters.GetCounter(List.First(args)), 1)
+                .DefinePrimitive("get-counter", (args, caller) => caller.Interp.CurrentCounters.GetCounter(List.First(args)), 1, Primitive.ValueType.String)
                 //// (reset-counters)
                 .DefinePrimitive("reset-counters", (args, caller) => caller.Interp.CurrentCounters.ResetCounters(), 0);
         }

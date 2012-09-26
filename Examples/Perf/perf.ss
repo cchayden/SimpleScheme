@@ -1,7 +1,7 @@
 ;; perf.ss
 ;; performance measurements
 
-(define count 1000000)
+(define count 100000)
 (define total 0)
 (define (test f)
   (let ((t (first (second (time-call f count)))))

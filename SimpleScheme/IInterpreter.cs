@@ -54,6 +54,14 @@ namespace SimpleScheme
         object Eval(object expr);
 
         /// <summary>
+        /// Evaluate an expression (expressed as a list) in the global environment.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate, a s a string.</param>
+        /// <returns>The result of the evaluation.</returns>
+        /// <returns></returns>
+        object EvalStr(string expr);
+
+        /// <summary>
         /// Begin an asynchronous evaluation.  This may return before the evaluation is complete.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
@@ -81,13 +89,6 @@ namespace SimpleScheme
 
         #region Read/Eval Methods
         /// <summary>
-        /// Evaluate the given string.
-        /// </summary>
-        /// <param name="str">The string to evaluate.</param>
-        /// <returns>The value of the evaluated string.</returns>
-        object ReadEval(string str);
-
-        /// <summary>
         /// Read from the given input port and evaluate the expression.
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
@@ -96,6 +97,7 @@ namespace SimpleScheme
 
         /// <summary>
         /// Load the program, contained in the given string, and execute it.
+        /// This is similar to EvalStr, except that it handles any number of expressions.
         /// </summary>
         /// <param name="str">The program to load.</param>
         void Load(string str);

@@ -94,7 +94,8 @@ namespace SimpleScheme
                    "method-async",
                    (args, caller) => new AsynchronousClrProcedure(List.First(args), List.Second(args), List.Rest(List.Rest(args))),
                    2,
-                   MaxInt);
+                   MaxInt, 
+                   Primitive.ValueType.String);
         }
         #endregion
 
@@ -145,11 +146,11 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Take a list of Type or type name elements and create a corresponding 
-        ///   array of Type.
+        /// Take a list of ValueType or type name elements and create a corresponding 
+        ///   array of ValueType.
         /// Add the extra async arguments for a Begin method.
         /// </summary>
-        /// <param name="args">A list of Type or type name elements.</param>
+        /// <param name="args">A list of ValueType or type name elements.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
         private List<Type> ClassListBegin(Obj args)
         {

@@ -82,43 +82,43 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
-                .DefinePrimitive("char->integer", (args, caller) => (double)As(List.First(args)), 1)
+                .DefinePrimitive("char->integer", (args, caller) => (double)As(List.First(args)), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
-                .DefinePrimitive("char-alphabetic?", (args, caller) => SchemeBoolean.Truth(char.IsLetter(As(List.First(args)))), 1)
+                .DefinePrimitive("char-alphabetic?", (args, caller) => SchemeBoolean.Truth(char.IsLetter(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci<=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci<=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) <= 0), 2)
+                .DefinePrimitive("char-ci<=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) <= 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci<? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci<?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) < 0), 2)
+                .DefinePrimitive("char-ci<?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) < 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) == 0), 2)
+                .DefinePrimitive("char-ci=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) == 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci>=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci>=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) >= 0), 2)
+                .DefinePrimitive("char-ci>=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) >= 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-ci>? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char-ci>?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) > 0), 2)
+                .DefinePrimitive("char-ci>?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) > 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-downcase <char>)</r4rs>
-                .DefinePrimitive("char-downcase", (args, caller) => As(char.ToLower(As(List.First(args)))), 1)
+                .DefinePrimitive("char-downcase", (args, caller) => As(char.ToLower(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-lower-case? <letter>)</r4rs>
-                .DefinePrimitive("char-lower-case?", (args, caller) => SchemeBoolean.Truth(char.IsLower(As(List.First(args)))), 1)
+                .DefinePrimitive("char-lower-case?", (args, caller) => SchemeBoolean.Truth(char.IsLower(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-numeric? <char>)</r4rs>
-                .DefinePrimitive("char-numeric?", (args, caller) => SchemeBoolean.Truth(char.IsDigit(As(List.First(args)))), 1)
+                .DefinePrimitive("char-numeric?", (args, caller) => SchemeBoolean.Truth(char.IsDigit(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-upcase <char>)</r4rs>
-                .DefinePrimitive("char-upcase", (args, caller) => As(char.ToUpper(As(List.First(args)))), 1)
+                .DefinePrimitive("char-upcase", (args, caller) => As(char.ToUpper(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-upper-case? <letter>)</r4rs>
-                .DefinePrimitive("char-upper-case?", (args, caller) => SchemeBoolean.Truth(char.IsUpper(As(List.First(args)))), 1)
+                .DefinePrimitive("char-upper-case?", (args, caller) => SchemeBoolean.Truth(char.IsUpper(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-chitespace? <char>)</r4rs>
-                .DefinePrimitive("char-whitespace?", (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(As(List.First(args)))), 1)
+                .DefinePrimitive("char-whitespace?", (args, caller) => SchemeBoolean.Truth(char.IsWhiteSpace(As(List.First(args)))), 1, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char<=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char<=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) <= 0), 2)
+                .DefinePrimitive("char<=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) <= 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char<? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char<?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) < 0), 2)
+                .DefinePrimitive("char<?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) < 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) == 0), 2)
+                .DefinePrimitive("char=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) == 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char>=? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char>=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) >= 0), 2)
+                .DefinePrimitive("char>=?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) >= 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char>? <char1> <char2>)</r4rs>
-                .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) > 0), 2)
+                .DefinePrimitive("char>?", (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) > 0), 2, Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char? <obj>)</r4rs>
-                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
+                .DefinePrimitive("char?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj);
         }
         #endregion
 

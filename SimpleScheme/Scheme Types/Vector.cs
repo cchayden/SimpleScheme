@@ -58,24 +58,25 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (args, caller) => FromList(List.First(args)), 1)
+                .DefinePrimitive("list->vector", (args, caller) => FromList(List.First(args)), 1, Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (args, caller) => New(List.First(args), List.Second(args)), 1, 2)
+                .DefinePrimitive("make-vector", (args, caller) => New(List.First(args), List.Second(args)), 1, 2, Primitive.ValueType.Number, Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
-                .DefinePrimitive("vector", (args, caller) => FromList(args), 0, MaxInt)
+                .DefinePrimitive("vector", (args, caller) => FromList(args), 0, MaxInt, Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (args, caller) => ToList(List.First(args)), 1)
+                .DefinePrimitive("vector->list", (args, caller) => ToList(List.First(args)), 1, Primitive.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                .DefinePrimitive("vector-fill", (args, caller) => Fill(List.First(args), List.Second(args)), 2)
+                .DefinePrimitive("vector-fill", (args, caller) => Fill(List.First(args), List.Second(args)), 2, Primitive.ValueType.Vector, Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (args, caller) => Number.As(As(List.First(args)).Length), 1)
+                .DefinePrimitive("vector-length", (args, caller) => Number.As(As(List.First(args)).Length), 1, Primitive.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (args, caller) => Get(List.First(args), List.Second(args)), 2)
+                .DefinePrimitive("vector-ref", (args, caller) => Get(List.First(args), List.Second(args)), 2, Primitive.ValueType.Vector, Primitive.ValueType.Number)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (args, caller) => Set(List.First(args), List.Second(args), List.Third(args)), 3)
+                .DefinePrimitive("vector-set!", (args, caller) => Set(List.First(args), List.Second(args), List.Third(args)), 3, 
+                                Primitive.ValueType.Vector, Primitive.ValueType.Number, Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
+                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj);
         }
         #endregion
 
@@ -205,14 +206,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Private Static Methods
+        #region Internal Static Methods
         /// <summary>
         /// Convert a vector into a list of objs.
         /// If the obj is not a vector, return error.
         /// </summary>
         /// <param name="vector">The vector.</param>
         /// <returns>The vector as a list.</returns>
-        private static Obj ToList(Obj vector)
+        internal static Obj ToList(Obj vector)
         {
             Obj[] vec = As(vector);
             Obj result = EmptyList.Instance;
@@ -223,7 +224,9 @@ namespace SimpleScheme
 
             return result;
         }
+        #endregion
 
+        #region Private Static Methods
         /// <summary>
         /// Fill all elements of a vector with a given value
         /// </summary>

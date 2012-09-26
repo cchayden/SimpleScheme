@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.IO;
     using System.Text;
     using Obj = System.Object;
@@ -86,29 +85,36 @@ namespace SimpleScheme
 
             env
                 //// <r4rs section="6.10.1">(call-with-output-file <string> <proc>)</r4rs>
-                .DefinePrimitive("call-with-output-file", (args, caller) => EvaluateCallWithOutputFile.Call(args, caller), 2)
+                .DefinePrimitive("call-with-output-file", (args, caller) => EvaluateCallWithOutputFile.Call(args, caller), 2, 
+                            Primitive.ValueType.String, Primitive.ValueType.Proc)
                 //// <r4rs section="6.10.1">(close-output-port <port>)</r4rs>
-                .DefinePrimitive("close-output-port", (args, caller) => Port(List.First(args), caller.Interp.CurrentOutputPort).CloseOutputPort(), 1)
+                .DefinePrimitive("close-output-port", (args, caller) => Port(List.First(args), caller.Interp.CurrentOutputPort).CloseOutputPort(), 1, 
+                            Primitive.ValueType.Port)
                 //// <r4rs section="6.10.1">(current-output-port)</r4rs>
                 .DefinePrimitive("current-output-port", (args, caller) => caller.Interp.CurrentOutputPort, 0)
                 //// <r4rs section="6.10.3">(display <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(display <obj> <port>)</r4rs>
-                .DefinePrimitive("display", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Display(List.First(args)), 1, 2)
+                .DefinePrimitive("display", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Display(List.First(args)), 1, 2,
+                            Primitive.ValueType.Obj, Primitive.ValueType.Port)
                 //// <r4rs section="6.10.3">(newline)</r4rs>
                 //// <r4rs section="6.10.3">(newline <port>)</r4rs>
-                .DefinePrimitive("newline", (args, caller) => Port(List.First(args), caller.Interp.CurrentOutputPort).Newline(), 0, 1)
+                .DefinePrimitive("newline", (args, caller) => Port(List.First(args), caller.Interp.CurrentOutputPort).Newline(), 0, 1, Primitive.ValueType.Port)
                 //// <r4rs section="6.10.1">(open-output-file <filename>)</r4rs>
-                .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args), caller.Interp), 1)
+                .DefinePrimitive("open-output-file", (args, caller) => EvaluateCallWithOutputFile.OpenOutputFile(List.First(args), caller.Interp), 1, 
+                            Primitive.ValueType.String)
                 //// <r4rs section="6.10.1">(output-port? <obj>)</r4rs>
-                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1)
+                .DefinePrimitive("output-port?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.10.3">(write <obj>)</r4rs>
                 //// <r4rs section="6.10.3">(write <obj> <port>)</r4rs>
-                .DefinePrimitive("write", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Write(List.First(args)), 1, 2)
+                .DefinePrimitive("write", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).Write(List.First(args)), 1, 2, 
+                            Primitive.ValueType.Obj, Primitive.ValueType.Port)
                 //// (p <expr>)
-                .DefinePrimitive("p", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).P(List.First(args)), 1)
+                .DefinePrimitive("p", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).P(List.First(args)), 1, 
+                            Primitive.ValueType.Port, Primitive.ValueType.Pair)
                 //// <r4rs section="6.10.3">(write-char <char>)</r4rs>
                 //// <r4rs section="6.10.3">(write-char> <char> <port>)</r4rs>
-                .DefinePrimitive("write-char", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).WriteChar(List.First(args)), 1, 2)
+                .DefinePrimitive("write-char", (args, caller) => Port(List.Second(args), caller.Interp.CurrentOutputPort).WriteChar(List.First(args)), 1, 2,
+                            Primitive.ValueType.Char, Primitive.ValueType.Port)
                 //// (dump-env)
                 .DefinePrimitive("dump-env", (args, caller) => DumpEnv(caller.Env), 0);
         }

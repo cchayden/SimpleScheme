@@ -254,15 +254,15 @@ namespace Tests
         public void ListToStringTest()
         {
             var expected = new[] { 'a', 'b' };
-            var actual = SchemeString_Accessor.ListToString(List.New('a', 'b'));
+            var actual = SchemeString.ListToString(List.New('a', 'b'));
             for (int i = 0; i < expected.Length; i++)
             {
                 Assert.AreEqual(expected[i], actual[i]);
             }
 
-            actual = SchemeString_Accessor.ListToString(1);
+            actual = SchemeString.ListToString(1);
             Assert.AreEqual(0, actual.Length);
-            AssertEx.Throws(() => SchemeString_Accessor.ListToString(List.New(1, 2)));
+            AssertEx.Throws(() => SchemeString.ListToString(List.New(1, 2)));
         }
 
         /// <summary>
@@ -421,7 +421,7 @@ namespace Tests
         public void VectorToListTest()
         {
             var test = new Obj[] { 1, 2, 3 };
-            var actual = Vector_Accessor.ToList(test);
+            var actual = Vector.ToList(test);
             Assert.AreEqual(3, List.Length(actual));
             Assert.AreEqual(1, List.First(actual));
             Assert.AreEqual(2, List.Second(actual));
@@ -465,7 +465,7 @@ namespace Tests
             Assert.AreEqual("pair", TypePrimitives.TypeName(new Pair(null, null)));
             Assert.AreEqual("number", TypePrimitives.TypeName(1.0d));
             Assert.AreEqual("string", TypePrimitives.TypeName(new[] { 'a', 'b', 'c' }));
-            Assert.AreEqual("primitive", TypePrimitives.TypeName(new Primitive((args, caller) => null, 0, 0)));
+            Assert.AreEqual("primitive", TypePrimitives.TypeName(new Primitive((args, caller) => null, 0, 0, new Primitive.ValueType[0])));
             Assert.AreEqual("input-port", TypePrimitives.TypeName(new InputPort(new StringReader(string.Empty), (Interpreter)this.interpreter)));
             Assert.AreEqual("output-port", TypePrimitives.TypeName(new OutputPort(new StringWriter(), (Interpreter)this.interpreter)));
             Assert.AreEqual("empty-list", TypePrimitives.TypeName(EmptyList.Instance));

@@ -26,27 +26,6 @@ namespace SimpleScheme
 
         #region Fields
 
-        /// <summary>
-        /// The name of the class containing the CLR method.
-        /// </summary>
-        private readonly string className;
-
-        /// <summary>
-        /// The name of the CLR method.
-        /// </summary>
-        private readonly string methodName;
-
-        /// <summary>
-        /// The MethodInfo describing the method.
-        /// Immutable after construction.
-        /// </summary>
-        private MethodInfo methodInfo;
-
-        /// <summary>
-        /// A list of types, describing the method arguments.
-        /// Immutable after construction.
-        /// </summary>
-        private List<Type> argClasses;
         #endregion
 
         #region Constructor
@@ -63,44 +42,34 @@ namespace SimpleScheme
         protected ClrProcedure(Obj className, Obj methodName) :
             base(0, 0)
         {
-            this.className = Printer.AsString(className, false);
-            this.methodName = Printer.AsString(methodName, false);
+            this.ClassName = Printer.AsString(className, false);
+            this.MethodName = Printer.AsString(methodName, false);
             this.SetName(this.ClassName + "." + this.MethodName);
         }
         #endregion
 
         #region Accessors
+
         /// <summary>
         /// Gets the name of the class containing the method to invoke.
         /// </summary>
-        protected string ClassName
-        {
-            get { return this.className; }
-        }
+        protected string ClassName { get; private set; }
 
         /// <summary>
         /// Gets the name of the method.
         /// </summary>
-        protected string MethodName
-        {
-            get { return this.methodName; }
-        }
+        protected string MethodName { get; private set; }
 
         /// <summary>
         /// Gets information about the CLR method to be called.
         /// </summary>
-        protected MethodInfo MethodInfo
-        {
-            get { return this.methodInfo; }
-        }
+        protected MethodInfo MethodInfo { get; private set; }
 
         /// <summary>
         /// Gets the types of the arguments.
         /// </summary>
-        protected List<Type> ArgClasses
-        {
-            get { return this.argClasses; }
-        }
+        protected List<Type> ArgClasses { get; private set; }
+
         #endregion
 
         #region Public Static Methods
@@ -140,11 +109,11 @@ namespace SimpleScheme
         {
             env
                 //// (class <class-name>)
-                .DefinePrimitive("class", (args, caller) => Class(List.First(args)), 1)
+                .DefinePrimitive("class", (args, caller) => Class(List.First(args)), 1, Primitive.ValueType.String)
                 //// (new <class-name>)
-                .DefinePrimitive("new", (args, caller) => New(List.First(args)), 1)
+                .DefinePrimitive("new", (args, caller) => New(List.First(args)), 1, Primitive.ValueType.String)
                 //// (new-array <class-name> <length>)
-                .DefinePrimitive("new-array", (args, caller) => NewArray(List.First(args), List.Second(args)), 2);
+                .DefinePrimitive("new-array", (args, caller) => NewArray(List.First(args), List.Second(args)), 2, Primitive.ValueType.String, Primitive.ValueType.Number);
         }
         #endregion
 
@@ -182,11 +151,17 @@ namespace SimpleScheme
         {
             try
             {
-                Type cls = TypePrimitives.ToClass(this.className);
+                Type cls = TypePrimitives.ToClass(this.ClassName);
+                if (cls == null)
+                {
+                    ErrorHandlers.ClrError("Can't find class: " + this.ClassName);
+                    return null;
+                }
+
                 MethodInfo info = cls.GetMethod(theMethodName, argClassList.ToArray());
                 if (info == null)
                 {
-                    ErrorHandlers.ClrError("Can't find method: " + this.className + ":" + theMethodName);
+                    ErrorHandlers.ClrError("Can't find method: " + this.ClassName + ":" + theMethodName);
                     return null;
                 }
 
@@ -194,7 +169,7 @@ namespace SimpleScheme
             }
             catch (TypeLoadException)
             {
-                ErrorHandlers.ClrError("Bad class, can't load: " + this.className);
+                ErrorHandlers.ClrError("Bad class, can't load: " + this.ClassName);
                 return null;
             }
         }
@@ -207,7 +182,7 @@ namespace SimpleScheme
         /// <param name="argClassList">The argument types.</param>
         protected void SetMethodInfo(string theMethodName, List<Type> argClassList)
         {
-            this.methodInfo = this.GetMethodInfo(theMethodName, argClassList);
+            this.MethodInfo = this.GetMethodInfo(theMethodName, argClassList);
         }
 
         /// <summary>
@@ -217,14 +192,14 @@ namespace SimpleScheme
         /// <param name="argClassList">The list of argument classes.</param>
         protected void SetArgClasses(List<Type> argClassList)
         {
-            this.argClasses = argClassList;
+            this.ArgClasses = argClassList;
         }
 
         /// <summary>
-        /// Take a list of Type or type name elements and create a corresponding 
-        ///   List of Type.
+        /// Take a list of ValueType or type name elements and create a corresponding 
+        ///   List of ValueType.
         /// </summary>
-        /// <param name="args">A list of Type or type name elements.  There may be more than this.</param>
+        /// <param name="args">A list of ValueType or type name elements.  There may be more than this.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
         protected List<Type> ClassList(Obj args)
         {
@@ -258,7 +233,7 @@ namespace SimpleScheme
             {
                 ErrorHandlers.SemanticError(Math.Abs(diff) + 
                     " too " + (diff > 0 ? "many" : "few") + 
-                    " args to " + ProcedureName);
+                    " args to " + this.ProcedureName);
             }
 
             object[] array = new object[n + additionalN];
@@ -324,7 +299,7 @@ namespace SimpleScheme
             Type type = TypePrimitives.ToClass(className);
             if (type == null)
             {
-                ErrorHandlers.ClrError("Type cannot be found: " + Printer.AsString(className, false));
+                ErrorHandlers.ClrError("ValueType cannot be found: " + Printer.AsString(className, false));
                 return null;
             }
 

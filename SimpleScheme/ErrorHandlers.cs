@@ -37,7 +37,7 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// (error <message> ...)
-                .DefinePrimitive("error", (args, caller) => Error(Printer.AsString(args)), 0, MaxInt);
+                .DefinePrimitive("error", (args, caller) => Error(Printer.AsString(args)), 0, MaxInt, Primitive.ValueType.String);
         }
         #endregion
 

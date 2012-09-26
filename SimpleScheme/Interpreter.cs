@@ -283,6 +283,24 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Evaluate an expression (expressed as a string) in the global environment.
+        /// </summary>
+        /// <param name="str">The expression to evaluate.</param>
+        /// <returns>The result of the evaluation.</returns>
+        public Obj EvalStr(string str)
+        {
+            try
+            {
+                return this.UnsafeEval(this.UnsafeRead(str));
+            }
+            catch (Exception ex)
+            {
+                ErrorHandlers.PrintException(ex);
+                return new Undefined();
+            }
+        }
+
+        /// <summary>
         /// Begin an asynchronous evaluation.
         /// Catch any exceptions that might happen.
         /// </summary>
@@ -314,7 +332,7 @@ namespace SimpleScheme
         {
             try
             {
-                return this.UnsafeEndEval(ar);
+                return UnsafeEndEval(ar);
             }
             catch (Exception ex)
             {
@@ -362,7 +380,7 @@ namespace SimpleScheme
                     expr,
                     ar =>
                         {
-                            object val = this.UnsafeEndEval(ar);
+                            object val = UnsafeEndEval(ar);
                             if (val != new Undefined())
                             {
                                 string output = Printer.AsString(val, false);
@@ -452,7 +470,7 @@ namespace SimpleScheme
         {
             try
             {
-                return this.UnsafeRead(inp);
+                return UnsafeRead(inp);
             }
             catch (Exception ex)
             {
@@ -488,25 +506,7 @@ namespace SimpleScheme
         {
             try
             {
-                return this.UnsafeEval(this.UnsafeRead(inp));
-            }
-            catch (Exception ex)
-            {
-                ErrorHandlers.PrintException(ex);
-                return new Undefined();
-            }
-        }
-
-        /// <summary>
-        /// Evaluate a string and return the result.
-        /// </summary>
-        /// <param name="str">The program to evaluate.</param>
-        /// <returns>The evaluation result.</returns>
-        public Obj ReadEval(string str)
-        {
-            try
-            {
-                return this.UnsafeEval(this.UnsafeRead(str));
+                return this.UnsafeEval(UnsafeRead(inp));
             }
             catch (Exception ex)
             {
@@ -525,7 +525,7 @@ namespace SimpleScheme
         {
             try
             {
-                return Printer.AsString(this.UnsafeEval(this.UnsafeRead(inp)));
+                return Printer.AsString(this.UnsafeEval(UnsafeRead(inp)));
             }
             catch (Exception ex)
             {
@@ -691,7 +691,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The object that was read.</returns>
-        private Obj UnsafeRead(InputPort inp)
+        private static Obj UnsafeRead(InputPort inp)
         {
             return inp.Read();
         }
@@ -705,7 +705,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                return this.UnsafeRead(new InputPort(reader, this));
+                return UnsafeRead(new InputPort(reader, this));
             }
         }
 
@@ -748,7 +748,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="ar">Async result from callback.</param>
         /// <returns>The expression value.</returns>
-        private object UnsafeEndEval(IAsyncResult ar)
+        private static object UnsafeEndEval(IAsyncResult ar)
         {
             return ((AsyncResult<object>)ar).EndInvoke();
         }

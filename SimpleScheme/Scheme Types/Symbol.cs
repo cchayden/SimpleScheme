@@ -20,6 +20,16 @@ namespace SimpleScheme
         public const string Name = "symbol";
         #endregion
 
+        #region Public Static Properties
+        /// <summary>
+        /// Gets the scheme type name.
+        /// </summary>
+        public static string TypeName
+        {
+            get { return "Symbol"; }
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Write the symbol to the string builder.
@@ -80,9 +90,9 @@ namespace SimpleScheme
         {
             env
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
-                .DefinePrimitive("string->symbol", (args, caller) => New(List.First(args)), 1)
+                .DefinePrimitive("string->symbol", (args, caller) => New(List.First(args)), 1, Primitive.ValueType.String)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
-                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1);
+                .DefinePrimitive("symbol?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj);
         }
         #endregion
     }

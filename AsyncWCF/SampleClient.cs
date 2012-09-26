@@ -5,7 +5,6 @@ namespace AsyncWCF
 {
     using System;
     using System.ServiceModel;
-    using System.ServiceModel.Channels;
 
     /// <summary>
     /// Sample client asks server to get content length of a uri.

@@ -1,10 +1,21 @@
-﻿// Illustrates the use of an explicit primitive environment and shows
-//  how an application can defind primitives and variables.
+﻿// <copyright file="Customize.cs" company="Charles Hayden">
+// Copyright © 2011 by Charles Hayden.
+// </copyright>
 using System;
 using SimpleScheme;
-class Customize
+
+/// <summary>
+/// Illustrates the use of an explicit primitive environment and shows
+///   how an application can define primitives and variables.
+/// </summary>
+public class Customize
 {
-    static void Main()
+    /// <summary>
+    /// Create an explicit prmitive environment and use it to create an interpreter.
+    /// Define some variables in the interpreter's top level environment, and define
+    ///   a primitive in the primitive environment.
+    /// </summary>
+    public static void Main()
     {
         IPrimitiveEnvironment primEnvironment = PrimitiveEnvironment.New();
         IInterpreter interp = Interpreter.New(primEnvironment);
@@ -16,11 +27,11 @@ class Customize
         // define a primitive in the global environment
         primEnvironment.DefinePrimitive("plus-one", (args, caller) => Number.As(List.First(args)) + 1, 1);
 
-        // load a program stored in a string
-        interp.Load("(p (plus-one x))");    // -> 11
+        // evaluate a program stored in a string for its side effects
+        interp.EvalStr("(p (plus-one x))");    // -> 11
 
-        // evaluate a program stored in a string
-        object res = interp.ReadEval("(plus-one y)");  // -> 21
+        // evaluate a program stored in a string and get its result
+        object res = interp.EvalStr("(plus-one y)");  // -> 21
         Console.WriteLine(res);
         Console.ReadLine();
     }

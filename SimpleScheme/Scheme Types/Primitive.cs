@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Text;
     using Obj = System.Object;
 
@@ -24,7 +25,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(Name);
+        private static readonly int Counter = SimpleScheme.Counter.Create(Name);
         #endregion
 
         #region Fields
@@ -38,7 +39,13 @@ namespace SimpleScheme
         /// (1) a value, the operation result, or
         /// (2) a Evaluator, The next evaluator to execute. 
         /// </summary>
-        private readonly Op operation;
+        private readonly Func<object, Evaluator, object> operation;
+
+        /// <summary>
+        /// The argument types.
+        /// Arguments are checked against these types, if they are supplied.
+        /// </summary>
+        private readonly ValueType[] argTypes;
         #endregion
 
         #region Constructor
@@ -48,42 +55,129 @@ namespace SimpleScheme
         /// <param name="operation">The code to carry out the operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
-        public Primitive(Op operation, int minArgs, int maxArgs) :
+        /// <param name="argTypes">The argument types.</param>
+        public Primitive(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, ValueType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
+            this.argTypes = argTypes;
+            if (maxArgs > 0 && argTypes.Length == 0)
+            {
+                throw new ErrorHandlers.SchemeException("Invalid primitive: " + operation);
+            }
         }
         #endregion
 
-        #region Delegates
+        #region Enums
         /// <summary>
-        /// The signature for primitives.
+        /// This enum contains all the types that values can have.  It also contains
+        /// a few combination types that are used in checking arguments to
+        /// primitives.
         /// </summary>
-        /// <param name="args">The primitive's arguments</param>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The primitive's result.</returns>
-        public delegate Obj Op(Obj args, Evaluator caller);
-        #endregion
-
-        #region Public Static Methods
-        /// <summary>
-        /// Tests whether to given object is a scheme primitive.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme primitive.</returns>
-        public static new bool Is(Obj obj)
+        public enum ValueType
         {
-            return obj is Primitive;
-        }
+            /// <summary>
+            /// Any object is required.
+            /// </summary>
+            Obj,
 
-        /// <summary>
-        /// Convert an object to a primitive.
-        /// </summary>
-        /// <param name="obj">The primitive as an object.</param>
-        /// <returns>The primitive.</returns>
-        public static new Primitive As(Obj obj)
-        {
-            return (Primitive)obj;
+            /// <summary>
+            /// A pair is required..
+            /// </summary>
+            Pair,
+
+            /// <summary>
+            /// A pair or the empty object is required.
+            /// </summary>
+            PairOrEmpty,
+
+            /// <summary>
+            /// A pair or a symbol is required.
+            /// </summary>
+            PairOrSymbol,
+
+            /// <summary>
+            /// A number is required.
+            /// </summary>
+            Number,
+
+            /// <summary>
+            /// A character is required.
+            /// </summary>
+            Char,
+
+            /// <summary>
+            /// A string is required.
+            /// </summary>
+            String,
+
+            /// <summary>
+            /// A procedure is required.  This includes macros and primitives, as well
+            /// as lambdas.
+            /// </summary>
+            Proc,
+
+            /// <summary>
+            /// A vector is required.
+            /// </summary>
+            Vector,
+
+            /// <summary>
+            /// A symbol is required.
+            /// </summary>
+            Symbol,
+
+            /// <summary>
+            /// A boolean is required.
+            /// </summary>
+            Boolean,
+
+            /// <summary>
+            /// A port is required.
+            /// </summary>
+            Port,
+
+            //// The following are not used as primitive arguments.
+
+            /// <summary>
+            /// The empty list.
+            /// </summary>
+            Empty,
+
+            /// <summary>
+            /// An asynchronous clr procedure.
+            /// </summary>
+            AsynchronousClrProcedure,
+
+            /// <summary>
+            /// A synchronous clr procedure.
+            /// </summary>
+            SynchronousClrProcedure,
+
+            /// <summary>
+            /// A CLR constructor.
+            /// </summary>
+            ClrConstructor,
+
+            /// <summary>
+            /// A continuation.
+            /// </summary>
+            Continuation,
+
+            /// <summary>
+            /// A lambda.
+            /// </summary>
+            Lambda,
+
+            /// <summary>
+            /// A macro
+            /// </summary>
+            Macro,
+
+            /// <summary>
+            /// The undefined object.
+            /// </summary>
+            Undefined
         }
         #endregion
 
@@ -123,16 +217,18 @@ namespace SimpleScheme
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
             // First check the number of arguments
-            CheckArgs(args, "Primitive");
-            caller.IncrementCounter(counter);
+            this.CheckArgs(args, "Primitive");
+            this.CheckArgTypes(args);
+            caller.IncrementCounter(Counter);
 
             // Execute the operation
-            Obj res = this.operation(args, caller);
+            var res = this.operation(args, caller);
 
             // See if the operation returns a result or another evaluator
-            if (res is Evaluator)
+            var evaluator = res as Evaluator;
+            if (evaluator != null)
             {
-                return (Evaluator)res;
+                return evaluator;
             }
 
             // Operation returned a result -- just return this
@@ -140,5 +236,125 @@ namespace SimpleScheme
             return caller.UpdateReturnValue(res);
         }
         #endregion
+
+        /// <summary>
+        /// Check the argument types
+        /// </summary>
+        /// <param name="args">The arguments passed to the primitive.</param>
+        private void CheckArgTypes(Obj args)
+        {
+            int numArgs = List.Length(args);
+            int numTypes = this.argTypes.Length - 1;
+            for (int i = 0; i < numArgs; i++)
+            {
+                if (args == null)
+                {
+                    return;
+                }
+
+                int t = i < numTypes ? i : numTypes;
+                this.CheckArgType(List.First(args), this.argTypes[t]);
+                args = List.Rest(args);
+            }
+        }
+
+        /// <summary>
+        /// Check one of the arguments
+        /// </summary>
+        /// <param name="arg">An argument passed to the primitive.</param>
+        /// <param name="argType">The expected argument type.</param>
+        private void CheckArgType(Obj arg, ValueType argType)
+        {
+            switch (argType)
+            {
+                case ValueType.Obj:
+                    return;
+                case ValueType.Pair:
+                    if (Pair.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.PairOrEmpty:
+                    if (Pair.Is(arg) || EmptyList.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.PairOrSymbol:
+                    if (Pair.Is(arg) || Symbol.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Number:
+                    if (Number.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Char:
+                    if (Character.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.String:
+                    if (SchemeString.Is(arg)) 
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Proc:
+                    if (Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Vector:
+                    if (Vector.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Boolean:
+                    if (SchemeBoolean.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Symbol:
+                    if (Symbol.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+                case ValueType.Port:
+                    if (InputPort.Is(arg) || OutputPort.Is(arg))
+                    {
+                        return;
+                    }
+
+                    break;
+            }
+
+            var msg = string.Format(
+                "Primitive {0} invalid argument {1} type: {2} expected: {3}", 
+                this.ProcedureName, 
+                Printer.AsString(arg),
+                Printer.TypeName(arg), 
+                argType.ToString());
+            ErrorHandlers.SemanticError(msg);
+        }
     }
 }

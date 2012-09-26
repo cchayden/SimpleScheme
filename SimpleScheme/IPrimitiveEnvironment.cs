@@ -3,6 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+    using Obj = System.Object;
+
     /// <summary>
     /// The interface for the SimpleScheme primitive environment.
     /// The primitive environment holds the primitive definitions, and is the
@@ -18,8 +21,9 @@ namespace SimpleScheme
         /// <param name="operation">A function that performs the primitive operation.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
+        /// <param name="argTypes">The argument types.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(string name, Primitive.Op operation, int minArgs, int maxArgs);
+        IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int minArgs, int maxArgs, params Primitive.ValueType[] argTypes);
 
         /// <summary>
         /// Define a primitive in the environment.
@@ -27,7 +31,8 @@ namespace SimpleScheme
         /// <param name="name">The primitive name.  Must be a symbol.</param>
         /// <param name="operation">A function that performs the primitive operation.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
+        /// <param name="argTypes">The argument types.</param>
         /// <returns>The environment.</returns>
-        IPrimitiveEnvironment DefinePrimitive(string name, Primitive.Op operation, int numberOfArgs);
+        IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int numberOfArgs, params Primitive.ValueType[] argTypes);
     }
 }

@@ -141,7 +141,7 @@ namespace SimpleScheme
         /// Either it already holds a type, or else it holds a type name.
         /// If it is a name, then create the type from the name.
         /// </summary>
-        /// <param name="arg">A Type or a type name.</param>
+        /// <param name="arg">A ValueType or a type name.</param>
         /// <returns>The type corresponding to the name.</returns>
         public static Type ToClass(Obj arg)
         {

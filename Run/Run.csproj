@@ -5,14 +5,13 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{047CC36C-1D0B-4907-94D8-77DCF0731CD2}</ProjectGuid>
+    <ProjectGuid>{2B338B6E-4160-4826-9B09-ADE10A2EB888}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Couch</RootNamespace>
-    <AssemblyName>Couch</AssemblyName>
+    <RootNamespace>Run</RootNamespace>
+    <AssemblyName>Run</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -36,29 +35,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Run.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CouchLib\CouchLib.csproj">
-      <Project>{D4199E94-C919-4360-8E27-1CFD5CA04895}</Project>
-      <Name>CouchLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LitJson\LitJson.csproj">
-      <Project>{67F185EA-F7DE-437C-8D57-A7C1AACFD705}</Project>
-      <Name>LitJson</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\SimpleScheme\SimpleScheme.csproj">
+    <ProjectReference Include="..\SimpleScheme\SimpleScheme.csproj">
       <Project>{0BE1BA31-6648-4A16-834C-C29AF39239F5}</Project>
       <Name>SimpleScheme</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="couch-interface.ss" />
-    <None Include="couch.ss" />
+    <None Include="count-down.ss" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

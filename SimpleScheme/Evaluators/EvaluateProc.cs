@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
-    public class EvaluateProc : Evaluator
+    public sealed class EvaluateProc : Evaluator
     {
         #region Fields
         /// <summary>
@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        protected EvaluateProc(Obj args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
+        private EvaluateProc(Obj args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
             : base(args, env, caller)
         {
             this.fn = fn;

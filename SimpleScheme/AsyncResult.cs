@@ -36,11 +36,6 @@ namespace SimpleScheme
         private readonly AsyncCallback ayncCallback;
 
         /// <summary>
-        /// The state object that was passed in BeginEval.
-        /// </summary>
-        private readonly object asyncState;
-
-        /// <summary>
         /// The current completion state, changed as the evaluation takes place.
         /// </summary>
         private int completedState = StatePending;
@@ -50,11 +45,6 @@ namespace SimpleScheme
         /// final result.
         /// </summary>
         private ManualResetEvent asyncWaitHandle;
-
-        /// <summary>
-        /// The evaluation result is stored here when it is ready.
-        /// </summary>
-        private TResult result;
 
         /// <summary>
         /// If evaluation caused an exception, it is stored here.
@@ -71,22 +61,17 @@ namespace SimpleScheme
         public AsyncResult(AsyncCallback asyncCallback, object state)
         {
             this.ayncCallback = asyncCallback;
-            this.asyncState = state;
+            this.AsyncState = state;
         }
         #endregion
 
         #region Accessors
+
         /// <summary>
         /// Gets the AsyncState.
         /// </summary>
         /// <value>The AsyncState obect.</value>
-        public object AsyncState
-        {
-            get
-            {
-                return this.asyncState;
-            }
-        }
+        public object AsyncState { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether the Async operation completed synchronously.
@@ -153,13 +138,8 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the async result.
         /// </summary>
-        public TResult Result
-        {
-            get
-            {
-                return this.result;
-            }
-        }
+        public TResult Result { get; private set; }
+
         #endregion
 
         #region Public Methods
@@ -171,7 +151,7 @@ namespace SimpleScheme
         public void SetAsCompleted(TResult taskResult, bool completedSynchronously)
         {
             // Save the asynchronous operation's result);
-            this.result = taskResult;
+            this.Result = taskResult;
 
             // Tell the base class that the operation completed 
             // sucessfully (no exception)
@@ -215,7 +195,7 @@ namespace SimpleScheme
                 throw this.exception;
             }
 
-            return this.result;
+            return this.Result;
         }
         #endregion
 

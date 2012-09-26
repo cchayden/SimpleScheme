@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-
     using Obj = System.Object;
 
     /// <summary>

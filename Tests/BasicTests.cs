@@ -5,7 +5,6 @@
 namespace Tests
 {
     using System;
-    using System.IO;
     using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using SimpleScheme;
@@ -100,25 +99,25 @@ namespace Tests
             this.Run("<undefined>", "define", "((lambda (fun)(fun 'a)) define)");
 
             this.Run("True", "do", "(procedure? do)");
-            this.Run("<undefined>", "do", "((lambda (fun)(fun 0)) do)");
+            this.Run("<undefined>", "do", "((lambda (fun)(fun (list 0))) do)");
 
             this.Run("True", "if", "(procedure? if)");
             this.Run("<undefined>", "if", "((lambda (fun)(fun 0)) if)");
 
             this.Run("True", "let", "(procedure? let)");
-            this.Run("<undefined>", "let", "((lambda (fun)(fun 0)) let)");
+            this.Run("<undefined>", "let", "((lambda (fun)(fun (list 0))) let)");
 
             this.Run("True", "let*", "(procedure? let*)");
-            this.Run("<undefined>", "let*", "((lambda (fun)(fun 0)) let*)");
+            this.Run("<undefined>", "let*", "((lambda (fun)(fun (list 0))) let*)");
 
             this.Run("True", "letrec", "(procedure? letrec)");
-            this.Run("<undefined>", "letrec", "((lambda (fun)(fun 0)) letrec)");
+            this.Run("<undefined>", "letrec", "((lambda (fun)(fun (list 0))) letrec)");
 
             this.Run("True", "lambda", "(procedure? lambda)");
-            this.Run("(lambda 0 )", "lambda", "((lambda (fun)(fun 0)) lambda)");
+            this.Run("(lambda (0) )", "lambda", "((lambda (fun)(fun (list 0))) lambda)");
 
             this.Run("True", "macro", "(procedure? macro)");
-            this.Run("(macro 0 )", "lambda", "((lambda (fun)(fun 0)) macro)");
+            this.Run("(macro (0) )", "lambda", "((lambda (fun)(fun (list 0))) macro)");
 
             this.Run("True", "quote", "(procedure? quote)");
             this.Run("0", "quote", "((lambda (fun)(fun 0)) quote)");
@@ -540,7 +539,7 @@ namespace Tests
         /// <returns>The value of the last expression.</returns>
         private Obj ReadAndEvaluate(string str) 
         {
-            return this.interpreter.ReadEval(str);
+            return this.interpreter.EvalStr(str);
         }
 
         /// <summary>

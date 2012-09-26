@@ -2,6 +2,7 @@
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
@@ -11,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Charles Hayden")]
-[assembly: AssemblyProduct("Tests")]
+[assembly: AssemblyProduct("Tests2")]
 [assembly: AssemblyCopyright("Copyright © Charles Hayden 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -22,7 +23,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8f5476fe-9a4e-43ba-b6c5-cbf15a59866b")]
+[assembly: Guid("1cfa7444-bf91-4914-91a7-55ccf855d34c")]
 
 // Version information for an assembly consists of the following four values:
 //
