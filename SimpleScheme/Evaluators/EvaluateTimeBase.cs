@@ -44,17 +44,15 @@ namespace SimpleScheme
         /// <param name="count">The number of times to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="counterId">The counter id of the evaluator.</param>
-        protected EvaluateTimeBase Initialize(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
+        protected EvaluateTimeBase Initialize(SchemeObject expr, int count, Environment env, Evaluator caller)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counterId >= 0);
             this.counter = count;
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
-            Initialize(OpCode.Initial, expr, env, caller, counter);
+            Initialize(OpCode.Initial, expr, env, caller);
             return this;
         }
         #endregion

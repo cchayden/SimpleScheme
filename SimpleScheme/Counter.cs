@@ -5,8 +5,8 @@ namespace SimpleScheme
 {
     using System.Collections.Generic;
     using System.Diagnostics.Contracts;
+    using System.Linq;
     using System.Text;
-    using System.Threading;
 
     /// <summary>
     /// Handles perf counters.
@@ -19,35 +19,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The maximum number of counters supported.
-        /// Increase this if more counters are added and the increment function
-        ///   starts throwing index out of bounds exceptions.
-        /// It would be better if this was determined automatically, but that is expensive.
-        /// </summary>
-        private const int MaxCounters = 30;
-
-        /// <summary>
-        /// The counterNames are stored here.
-        /// </summary>
-        private static readonly Dictionary<string, int> counterNames = new Dictionary<string, int>();
-
-        /// <summary>
         /// The actual counters.
         /// </summary>
-        private readonly int[] counters;
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the Counter class.
-        /// Creates a new counter for each of the counter names.
-        /// Counter names should all be created before instances are created.
-        /// </summary>
-        internal Counter()
-        {
-            Contract.Ensures(Contract.ForAll(this.counters, elem => elem == 0));
-            this.counters = new int[MaxCounters];
-        }
+        private Dictionary<string, int> counters = new Dictionary<string, int>();
         #endregion
 
         #region Define Primitives
@@ -82,48 +56,24 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Static Methods
-        /// <summary>
-        /// Create a new counter id, given its name.
-        /// If the counter already exists, return its id.
-        /// Counters are normally created by static constructors, which execute at 
-        ///   unpredictable times.  So it is impossible to know when all counters have
-        ///   been created.  This is what makes it impossible to allocate the counter
-        ///   array itself.
-        /// </summary>
-        /// <param name="name">The counter name.</param>
-        /// <returns>The counter id.</returns>
-        internal static int Create(string name)
-        {
-            Contract.Ensures(Contract.Result<int>() >= 0);
-            lock (counterNames)
-            {
-                if (counterNames.ContainsKey(name))
-                {
-                    Contract.Assume(counterNames[name] >= 0);
-                    return counterNames[name];
-                }
-
-                int num = counterNames.Count;
-                Contract.Assert(num >= 0);
-                counterNames.Add(name, num);
-                return num;
-            }
-        }
-        #endregion
-
         #region Internal Methods
         /// <summary>
         /// Increment a counter, given its id.
         /// </summary>
-        /// <param name="id">The counter id.</param>
-        internal void Increment(int id)
+        /// <param name="counter">The counter name.</param>
+        internal void Increment(string counter)
         {
-            Contract.Requires(id >= 0);
-            Contract.Ensures(this.counters[id] >= 0);
-            Contract.Assume(id < this.counters.Length);
-            Contract.Assert(this.counters != null);
-            Interlocked.Increment(ref this.counters[id]);
+            lock(this)
+            {
+                if (counters.ContainsKey(counter))
+                {
+                    this.counters[counter]++;
+                }
+                else
+                {
+                    counters[counter] = 1;
+                }
+            }
         }
         #endregion
 
@@ -149,16 +99,18 @@ namespace SimpleScheme
         private SchemeObject GetCounters()
         {
             SchemeObject res = EmptyList.Instance;
-            foreach (var kvp in counterNames)
+            lock (this)
             {
-                int count = this.counters[kvp.Value];
-                if (count > 0)
+                foreach (var kvp in counters)
                 {
-                    Contract.Assume(kvp.Key != null);
-                    res = List.Cons(List.Cons((Symbol)kvp.Key, (Number)count), res);
+                    int count = kvp.Value;
+                    if (count > 0)
+                    {
+                        Contract.Assume(kvp.Key != null);
+                        res = List.Cons(List.Cons((Symbol)(kvp.Key), (Number)count), res);
+                    }
                 }
             }
-
             return res;
         }
 
@@ -171,12 +123,16 @@ namespace SimpleScheme
         {
             Contract.Requires(name != null);
             string counterName = name.ToString();
-            if (counterNames.ContainsKey(counterName))
+            lock (this)
             {
-                var index = counterNames[counterName];
-                Contract.Assume(index >= 0);
-                Contract.Assume(index < this.counters.Length);
-                return (Number)this.counters[index];
+                foreach (var kvp in counters)
+                {
+                    if (kvp.Key == counterName)
+                    {
+                        return (Number)kvp.Value;
+                    }
+
+                }
             }
 
             return Undefined.Instance;
@@ -190,12 +146,15 @@ namespace SimpleScheme
         private void Dump(StringBuilder sb)
         {
             Contract.Requires(sb != null);
-            foreach (var kvp in counterNames)
+            lock (this)
             {
-                int count = this.counters[kvp.Value];
-                if (count > 0)
+                foreach (var kvp in counters.OrderBy(elem => elem.Key))
                 {
-                    sb.AppendFormat("{0} {1}\n", kvp.Key, count);
+                    int count = kvp.Value;
+                    if (count > 0)
+                    {
+                        sb.AppendFormat("{0} {1}\n", kvp.Key, count);
+                    }
                 }
             }
         }
@@ -207,10 +166,9 @@ namespace SimpleScheme
         /// <returns>The result is unspecified.</returns>
         private SchemeObject ResetCounters()
         {
-            Contract.Ensures(Contract.ForAll(this.counters, elem => elem == 0));
-            for (int i = 0; i < this.counters.Length; i++)
+            lock (this)
             {
-                this.counters[i] = 0;
+                this.counters = new Dictionary<string, int>();
             }
 
             return Undefined.Instance;

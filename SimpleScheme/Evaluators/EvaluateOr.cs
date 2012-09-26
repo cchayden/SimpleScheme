@@ -12,13 +12,6 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
     internal sealed class EvaluateOr : Evaluator
     {
-        #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-or");
-        #endregion
-
         #region Call
         /// <summary>
         /// Calls an or evaluator.
@@ -114,8 +107,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            Initialize(OpCode.EvalTest, expr, env, caller, counter);
+            Initialize(OpCode.EvalTest, expr, env, caller);
             return this;
         }
         #endregion

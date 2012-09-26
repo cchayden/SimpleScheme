@@ -13,11 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-set");
-
-        /// <summary>
         /// The variable of the assignment.
         /// </summary>
         private SchemeObject lhs;
@@ -107,10 +102,9 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
             this.lhs = First(expr);
             this.rhs = Second(expr);
-            Initialize(OpCode.Initial, expr, env, caller, counter);
+            Initialize(OpCode.Initial, expr, env, caller);
             return this;
         }
         #endregion

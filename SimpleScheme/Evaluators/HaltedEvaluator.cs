@@ -11,13 +11,6 @@ namespace SimpleScheme
     /// </summary>
     internal class HaltedEvaluator : Evaluator
     {
-        #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("halted");
-        #endregion
-
         #region Initialize
         /// <summary>
         /// Initializes a new instance of the HaltedEvaluator class.
@@ -26,7 +19,7 @@ namespace SimpleScheme
         internal HaltedEvaluator Initialize(Environment env)
         {
             Contract.Requires(env != null);
-            base.Initialize(OpCode.End, Undefined.Instance, env, FinalEvaluator.New(Undefined.Instance), counter);
+            Initialize(OpCode.End, Undefined.Instance, env, FinalEvaluator.New(Undefined.Instance));
             return this;
         }
 

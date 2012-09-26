@@ -16,11 +16,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-cond");
-
-        /// <summary>
         /// The value of the test expr
         /// </summary>
         private SchemeObject test;
@@ -182,8 +177,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            Initialize(OpCode.EvalClause, expr, env, caller, counter);
+            Initialize(OpCode.EvalClause, expr, env, caller);
             this.clauses = expr;
             this.test = EmptyList.Instance;
             this.clause = EmptyList.Instance;

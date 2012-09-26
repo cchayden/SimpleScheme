@@ -234,7 +234,6 @@ namespace SimpleScheme
         /// <param name="additionalArgs">A list of the additional args, not supplied by the caller. 
         /// These are part of the asynchronous calling pattern.</param>
         /// <param name="evaluatorName">The evaluator name, for the error message.</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <returns>An array of arguments for the method call.</returns>
         protected object[] ToArgList(SchemeObject args, object[] additionalArgs, string evaluatorName)
         {

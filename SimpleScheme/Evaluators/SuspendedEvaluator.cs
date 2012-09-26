@@ -11,14 +11,7 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class SuspendedEvaluator : Evaluator
     {
-        #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("suspended");
-        #endregion
-
-        #region Steps
+         #region Steps
         /// <summary>
         /// The step that ends evaluation
         /// </summary>
@@ -96,7 +89,7 @@ namespace SimpleScheme
         {
             Contract.Requires(res != null);
             Contract.Requires(caller != null);
-            base.Initialize(OpCode.ContinueAfterSuspended, res, env, caller, counter);
+            base.Initialize(OpCode.ContinueAfterSuspended, res, env, caller);
             this.ReturnedExpr = new ClrObject(this);
             return this;
         }

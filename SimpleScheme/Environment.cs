@@ -4,6 +4,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics.Contracts;
     using System.Text;
@@ -18,11 +19,6 @@ namespace SimpleScheme
     public class Environment : IEnvironment
     {
         #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("environment");
-
         /// <summary>
         /// The interpreter.
         /// </summary>
@@ -66,7 +62,7 @@ namespace SimpleScheme
             this.lexicalParent = lexicalParent;
             this.symbolTable = new List<NameValuePair>();
             this.primitive = this.empty = false;
-            interp.IncrementCounter(counter);
+            interp.IncrementCounter(this.GetType().Name + ":ctor");
         }
 
         /// <summary>
@@ -98,6 +94,7 @@ namespace SimpleScheme
             this.symbolTable = new List<NameValuePair>(List.ListLength(formals));
             this.primitive = this.empty = false;
             this.AddSymbolList(formals, inits);
+            interp.IncrementCounter(this.GetType().Name + ":ctor");
         }
 
         /// <summary>
@@ -454,12 +451,12 @@ namespace SimpleScheme
         /// <summary>
         /// Increment the given counter.
         /// </summary>
-        /// <param name="counterId">The counter id</param>
-        internal void IncrementCounter(int counterId)
+        /// <param name="counter">The counter name.</param>
+        internal void IncrementCounter(string counter)
         {
             if (this.interp != null)
             {
-                this.interp.IncrementCounter(counterId);
+                this.interp.IncrementCounter(counter);
             }
         }
         #endregion

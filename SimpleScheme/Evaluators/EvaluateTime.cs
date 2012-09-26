@@ -11,14 +11,6 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateTime : EvaluateTimeBase
     {
-        #region Fields
-       /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-time");
-
-        #endregion
-
         #region Initialize
         /// <summary>
         /// Initializes a new instance of the EvaluateTime class.
@@ -31,8 +23,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            base.Initialize(expr, 1, env, caller, counter);
+            base.Initialize(expr, 1, env, caller);
             return this;
         }
 

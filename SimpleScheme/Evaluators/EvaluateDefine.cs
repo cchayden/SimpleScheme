@@ -14,13 +14,6 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateDefine : Evaluator
     {
-        #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-define");
-        #endregion
-
         #region Call
         /// <summary>
         /// Call a define evaluator.
@@ -106,8 +99,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            Initialize(OpCode.Initial, expr, env, caller, counter);
+            Initialize(OpCode.Initial, expr, env, caller);
             return this;
         }
         #endregion

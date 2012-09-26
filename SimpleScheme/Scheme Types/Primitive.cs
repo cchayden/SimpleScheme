@@ -165,13 +165,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Primitive : Procedure
     {
-        #region Constants
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("procedure");
-        #endregion
-
         #region Fields
         /// <summary>
         /// The code to perform the operation.
@@ -242,7 +235,6 @@ namespace SimpleScheme
         ///   in ReturnedResult and returning to the caller.
         /// </summary>
         /// <param name="args">The arguments to the primitive.</param>
-        /// <param name="caller">The calling Evaluator.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <returns>The next evaluator to execute.</returns>
         internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
@@ -263,7 +255,6 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the primitive.</param>
         /// <param name="env">The environment in which the application should take place.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
-        /// <param name="caller">The calling Evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
         internal Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo)
         {
@@ -276,7 +267,7 @@ namespace SimpleScheme
             this.CheckArgTypes(args);
 #endif
 #if Diagnostics
-            returnTo.IncrementCounter(counter);
+            returnTo.IncrementCounter(this + ":apply");
 #endif
 
             // Execute the operation

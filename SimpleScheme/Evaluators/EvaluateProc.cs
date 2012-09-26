@@ -12,11 +12,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-proc");
-
-        /// <summary>
         /// The proc or primitive to apply.
         /// </summary>
         private Procedure fn;
@@ -111,9 +106,8 @@ namespace SimpleScheme
             Contract.Requires(args != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
             this.fn = fun;
-            Initialize(OpCode.Apply, args, env, caller, counter);
+            Initialize(OpCode.Apply, args, env, caller);
             return this;
         }
         #endregion

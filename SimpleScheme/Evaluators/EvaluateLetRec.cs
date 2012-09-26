@@ -16,11 +16,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-letrec");
-
-        /// <summary>
         /// The body of the let.
         /// </summary>
         private SchemeObject body;
@@ -165,7 +160,6 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
             SchemeObject bindings = First(expr);
             //// In the bindings, the variables are first, the values are second, and anything left over is discarded.
             //// If either is missing, an empty list is used instead.
@@ -175,7 +169,7 @@ namespace SimpleScheme
             this.vars = formals;
             this.inits = MapFun(Second, bindings);
             this.vals = EmptyList.Instance;
-            Initialize(OpCode.EvalInit, expr, env, caller, counter);
+            Initialize(OpCode.EvalInit, expr, env, caller);
             return this;
         }
         #endregion

@@ -16,12 +16,7 @@ namespace SimpleScheme
     internal sealed class EvaluateLet : Evaluator
     {
         #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-let");
-
-        /// <summary>
+         /// <summary>
         /// Name, for named let.
         /// </summary>
         private Symbol name;
@@ -164,7 +159,6 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
 
             SchemeObject bindings;
             if (First(expr) is Symbol)
@@ -183,7 +177,7 @@ namespace SimpleScheme
 
             this.vars = MapFun(First, bindings);
             this.inits = MapFun(Second, bindings);
-            Initialize(OpCode.Initial, expr, env, caller, counter);
+            Initialize(OpCode.Initial, expr, env, caller);
             return this;
         }
         #endregion

@@ -17,11 +17,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-do");
-
-        /// <summary>
         /// The list of variables to bind.
         /// </summary>
         private SchemeObject vars;
@@ -203,7 +198,6 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
             var bindings = First(expr);
             this.vars = MapFun(First, bindings);
             this.inits = MapFun(Second, bindings);
@@ -212,7 +206,7 @@ namespace SimpleScheme
             this.commands = Rest(Rest(expr));
             var test = First(Second(expr));
             this.testProc = new Lambda(vars, MakeList(test), env);
-            Initialize(OpCode.Initial, expr, new Environment(env), caller, counter);
+            Initialize(OpCode.Initial, expr, new Environment(env), caller);
             return this;
         }
         #endregion

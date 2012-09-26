@@ -84,7 +84,6 @@ namespace SimpleScheme
         /// Match all arguments supplied up to the constructor's types.
         /// </summary>
         /// <param name="args">Arguments to pass to the constructor.</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <returns>The next evaluator to excute.</returns>
         internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)

@@ -125,8 +125,6 @@ namespace SimpleScheme
         /// The type of return (synchronous or asynchronous).
         /// </summary>
         private ReturnType returnFlag;
-
-        private static int evalCount = 0;
         #endregion
 
         #region Constructor
@@ -194,6 +192,7 @@ namespace SimpleScheme
             FreeList.Add(typeof(SuspendedEvaluator), new ConcurrentStack<Evaluator>());
         }
 
+        private static int evalCount = 0;
         /// <summary>
         /// Initializes a new instance of the Evaluator class.
         /// For use by FinalEvaluator only.
@@ -201,9 +200,13 @@ namespace SimpleScheme
         protected internal Evaluator()
         {
             this.Initialize();
-            Console.WriteLine("Construct " + this.GetType().Name + " " + evalCount++);
+//            Console.WriteLine("Construct " + this.GetType().Name + " " + evalCount++);
         }
 
+        /// <summary>
+        /// Initialize a degnerate evaluator.
+        /// </summary>
+        /// <returns>The initialized evaluator.</returns>
         protected Evaluator Initialize()
         {
             this.pc = OpCode.Illegal;
@@ -218,8 +221,7 @@ namespace SimpleScheme
         /// <param name="exp">The expression to evaluate.</param>
         /// <param name="envir">The evaluator environment.</param>
         /// <param name="returnTo">The caller evaluator.</param>
-        /// <param name="counterId">The counter ID associated with this evaluator.</param>
-        protected Evaluator Initialize(OpCode initialPc, SchemeObject exp, Environment envir, Evaluator returnTo, int counterId)
+        protected Evaluator Initialize(OpCode initialPc, SchemeObject exp, Environment envir, Evaluator returnTo)
         {
             Contract.Requires(exp != null);
             Contract.Requires(envir != null);
@@ -232,9 +234,10 @@ namespace SimpleScheme
             this.returnedExpr = Undefined.Instance;
             this.returnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
+            var modif = this.degenerate ? ":ctor" : ":init";
             this.degenerate = false;
 #if Diagnostics
-            this.IncrementCounter(counterId);
+            this.IncrementCounter(this.GetType().Name + modif);
 #endif
             return this;
         }
@@ -531,13 +534,13 @@ namespace SimpleScheme
         /// <summary>
         /// Increment the given counter.
         /// </summary>
-        /// <param name="counterIdent">The counter id</param>
-        internal void IncrementCounter(int counterIdent)
+        /// <param name="counter">The counter name.</param>
+        internal void IncrementCounter(string counter)
         {
-            Contract.Requires(counterIdent >= 0);
+            Contract.Requires(counter  != null);
             if (this.env != null)
             {
-                this.Env.IncrementCounter(counterIdent);
+                this.Env.IncrementCounter(counter);
             }
         }
         #endregion

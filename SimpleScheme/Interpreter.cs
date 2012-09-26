@@ -710,13 +710,13 @@ namespace SimpleScheme
         /// Increment the given counter.
         /// Skip if if counting is turned off.
         /// </summary>
-        /// <param name="counterId">The counter to increment.</param>
-        internal void IncrementCounter(int counterId)
+        /// <param name="counter">The counter to increment.</param>
+        internal void IncrementCounter(string counter)
         {
-            Contract.Requires(counterId >= 0);
+            Contract.Requires(counter != null);
             if (this.Count)
             {
-                this.CurrentCounters.Increment(counterId);
+                this.CurrentCounters.Increment(counter);
             }
         }
         #endregion

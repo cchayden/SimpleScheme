@@ -15,11 +15,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-map");
-
-        /// <summary>
         /// The proc to apply to each element of the list.
         /// </summary>
         private Procedure proc;
@@ -128,6 +123,8 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="proc">The proc to apply to each element of the list.</param>
+        /// <param name="result">Accumulate the result here, if not null.</param>
         /// <returns>Initialized evaluator.</returns>
         private static EvaluateMap New(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
         {
@@ -155,11 +152,10 @@ namespace SimpleScheme
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             Contract.Requires(proc != null);
-            Contract.Requires(counter >= 0);
             //// result can be null if the caller does not need the result
             this.proc = proc;
             this.result = result;
-            Initialize(OpCode.ApplyFun, expr, env, caller, counter);
+            Initialize(OpCode.ApplyFun, expr, env, caller);
             return this;
         }
         #endregion

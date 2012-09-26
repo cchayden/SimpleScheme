@@ -12,52 +12,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-expand-macro");
-
-        /// <summary>
         /// The macro to expand.
         /// </summary>
         private Macro fn;
-        #endregion
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the EvaluateExpandMacro class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="fn">The macro to expand.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private EvaluateExpandMacro Initialize(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(fn != null);
-            Contract.Requires(counter >= 0);
-            this.fn = fn;
-            base.Initialize(OpCode.Expand, expr, env, caller, counter);
-            return this;
-        }
-
-        /// <summary>
-        /// Creates and initializes a new instance of the EvaluateExpandMacro class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="fn">The macro to expand.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateExpandMacro New(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return new EvaluateExpandMacro().Initialize(expr, env, caller, fn);
-        }
         #endregion
 
         #region Call
@@ -109,6 +66,43 @@ namespace SimpleScheme
             Evaluator c = this.Caller;
             this.Reclaim();
             return EvaluateExpression.Call(obj, ev, c);
+        }
+        #endregion
+
+        #region Initialize
+        /// <summary>
+        /// Creates and initializes a new instance of the EvaluateExpandMacro class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fn">The macro to expand.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private static EvaluateExpandMacro New(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return new EvaluateExpandMacro().Initialize(expr, env, caller, fn);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateExpandMacro class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="fun">The macro to expand.</param>
+        /// <returns>Initialized evaluator.</returns>
+        private EvaluateExpandMacro Initialize(SchemeObject expr, Environment env, Evaluator caller, Macro fun)
+        {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(fun != null);
+            this.fn = fun;
+            Initialize(OpCode.Expand, expr, env, caller);
+            return this;
         }
         #endregion
 

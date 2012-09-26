@@ -119,7 +119,6 @@ namespace SimpleScheme
         /// The outer environment is supplied from the Lambda itself.
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from returnTo if this is the last step in evaluation</param>
         /// <returns>The next evaluator to execute.</returns>
         internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)

@@ -13,11 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("call-with-input-file");
-
-        /// <summary>
         /// The input port to be used during the evaluation.
         /// </summary>
         private InputPort port;
@@ -120,9 +115,8 @@ namespace SimpleScheme
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             Contract.Requires(p != null);
-            Contract.Requires(counter >= 0);
             this.port = p;
-            Initialize(OpCode.Initial, args, env, caller, counter);
+            Initialize(OpCode.Initial, args, env, caller);
             return this;
         }
         #endregion

@@ -342,7 +342,6 @@ namespace SimpleScheme
         /// Apply the procedure to the args.
         /// </summary>
         /// <param name="args">The procedure arguments.</param>
-        /// <param name="caller">The caller.</param>
         /// <param name="returnTo">When done, return control here.</param>
         /// <returns>An evaluator to continue the computation.</returns>
         internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)

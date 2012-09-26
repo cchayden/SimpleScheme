@@ -12,13 +12,6 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateTimeCall : EvaluateTimeBase
     {
-        #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-time-call");
-        #endregion
-
         #region Initialize
         /// <summary>
         /// Initializes a new instance of the EvaluateTimeCall class.
@@ -33,8 +26,7 @@ namespace SimpleScheme
             Contract.Requires(proc != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            base.Initialize(proc, count, env, caller, counter);
+            base.Initialize(proc, count, env, caller);
             return this;
         }
 
@@ -51,7 +43,6 @@ namespace SimpleScheme
             Contract.Requires(proc != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
             return new EvaluateTimeCall().Initialize(proc, count, env, caller);
         }
         #endregion

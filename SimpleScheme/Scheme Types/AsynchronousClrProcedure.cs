@@ -94,7 +94,6 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <param name="caller">The calling evaluator.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <returns>The next evaluator to execute.</returns>
         internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)

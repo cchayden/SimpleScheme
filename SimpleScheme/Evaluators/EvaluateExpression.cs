@@ -28,11 +28,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-expression");
-
-        /// <summary>
         /// This is used to detect symbols that can be handled specially.
         /// </summary>
         private static readonly Dictionary<string, SpecialAction> specialActions;
@@ -460,10 +455,9 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
             var args = Rest(expr);
             this.fn = First(expr);
-            Initialize(OpCode.Initial, args, env, caller, counter);
+            Initialize(OpCode.Initial, args, env, caller);
             if (fn is Procedure)
             {
                 // If the fun is already a procedure, skip to apply step

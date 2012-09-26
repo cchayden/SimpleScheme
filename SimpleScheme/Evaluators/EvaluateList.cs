@@ -17,11 +17,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-list");
-
-        /// <summary>
         /// The result that will be returned.
         /// </summary>
         private SchemeObject result;
@@ -229,13 +224,12 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
 
             // Start with an empty list.  As exprs are evaluated, they will be consed on the
             //  front.  The list will be reversed before it is returned.  Because this is done
             //  destructively, cloning needs to copy the result.
             this.result = EmptyList.Instance;
-            Initialize(OpCode.EvalExpr, expr, env, caller, counter);
+            Initialize(OpCode.EvalExpr, expr, env, caller);
             return this;
         }
         #endregion

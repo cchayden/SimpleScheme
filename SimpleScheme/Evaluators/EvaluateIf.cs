@@ -15,13 +15,6 @@ namespace SimpleScheme
     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
     internal sealed class EvaluateIf : Evaluator
     {
-        #region Fields
-        /// <summary>
-        /// The counter id.
-        /// </summary>
-        private static readonly int counter = Counter.Create("evaluate-if");
-        #endregion
-
         #region Call
         /// <summary>
         /// Creates an if evaluator.
@@ -83,8 +76,7 @@ namespace SimpleScheme
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
-            Contract.Requires(counter >= 0);
-            base.Initialize(OpCode.EvalTest, expr, env, caller, counter);
+            base.Initialize(OpCode.EvalTest, expr, env, caller);
             return this;
         }
 
