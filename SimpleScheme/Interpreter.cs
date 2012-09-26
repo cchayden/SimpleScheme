@@ -59,8 +59,8 @@ namespace SimpleScheme
             this.Trace = false;
             this.Count = false;
             this.Transcript = new TranscriptLogger(this);
-            this.CurrentInputPort = new InputPort(reader ?? Console.In, this);
-            this.CurrentOutputPort = new OutputPort(writer ?? Console.Out, this);
+            this.CurrentInputPort = InputPort.New(reader ?? Console.In, this);
+            this.CurrentOutputPort = OutputPort.New(writer ?? Console.Out, this);
             this.PrimEnvironment = primEnvironment ?? new PrimitiveEnvironment();
 
             this.CurrentCounters = new Counter();
@@ -278,7 +278,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return new Undefined();
+                return Undefined.New();
             }
         }
 
@@ -296,7 +296,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return new Undefined();
+                return Undefined.New();
             }
         }
 
@@ -355,7 +355,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return new Undefined();
+                return Undefined.New();
             }
         }
 
@@ -381,7 +381,7 @@ namespace SimpleScheme
                     ar =>
                         {
                             object val = UnsafeEndEval(ar);
-                            if (val != new Undefined())
+                            if (val != Undefined.New())
                             {
                                 string output = Printer.AsString(val, false);
                                 this.CurrentOutputPort.WriteLine(output);
@@ -431,7 +431,7 @@ namespace SimpleScheme
                 name = Printer.AsString(fileName, false);
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
-                    this.Load(new InputPort(new StreamReader(fs), this));
+                    this.Load(InputPort.New(new StreamReader(fs), this));
                 }
             }
             catch (IOException)
@@ -452,7 +452,7 @@ namespace SimpleScheme
             {
                 using (StringReader reader = new StringReader(str))
                 {
-                    this.Load(new InputPort(reader, this));
+                    this.Load(InputPort.New(reader, this));
                 }
             }
             catch (Exception ex)
@@ -475,7 +475,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return new Undefined();
+                return Undefined.New();
             }
         }
 
@@ -493,7 +493,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return new Undefined();
+                return Undefined.New();
             }
         }
 
@@ -511,7 +511,7 @@ namespace SimpleScheme
             catch (Exception ex)
             {
                 ErrorHandlers.PrintException(ex);
-                return new Undefined();
+                return Undefined.New();
             }
         }
 
@@ -627,7 +627,7 @@ namespace SimpleScheme
                 if (InputPort.IsEof(input = inp.Read()))
                 {
                     inp.Close();
-                    return new Undefined();
+                    return Undefined.New();
                 }
 
                 this.Eval(input);
@@ -658,7 +658,7 @@ namespace SimpleScheme
         private static Obj SetTraceFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Trace = flag;
-            return new Undefined();
+            return Undefined.New();
         }
 
         /// <summary>
@@ -670,7 +670,7 @@ namespace SimpleScheme
         private static Obj SetCountFlag(Evaluator caller, bool flag)
         {
             caller.Interp.Count = flag;
-            return new Undefined();
+            return Undefined.New();
         }
 
         /// <summary>
@@ -681,7 +681,7 @@ namespace SimpleScheme
         private static Obj Backtrace(Evaluator caller)
         {
             caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
-            return new Undefined();
+            return Undefined.New();
         }
         #endregion
 
@@ -705,7 +705,7 @@ namespace SimpleScheme
         {
             using (StringReader reader = new StringReader(str))
             {
-                return UnsafeRead(new InputPort(reader, this));
+                return UnsafeRead(InputPort.New(reader, this));
             }
         }
 
@@ -768,7 +768,7 @@ namespace SimpleScheme
             }
 
             Obj val = this.UnsafeEval(expr);
-            if (val != new Undefined())
+            if (val != Undefined.New())
             {
                 string output = Printer.AsString(val, false);
                 if (output.Length > 0)

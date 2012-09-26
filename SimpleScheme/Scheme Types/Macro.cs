@@ -27,7 +27,7 @@ namespace SimpleScheme
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        public Macro(Obj parms, Obj body, Environment env)
+        private Macro(Obj parms, Obj body, Environment env)
             : base(parms, body, env)
         {
         }
@@ -35,29 +35,15 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme macro.
+        /// Creates a new instance of the Macro class.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme macro.</returns>
-        public static new bool Is(Obj obj)
+        /// <param name="parms">The macro params.</param>
+        /// <param name="body">The macro body.</param>
+        /// <param name="env">The environment that the macro is defined in.</param>
+        /// <returns>A new macro.</returns>
+        public static new Macro New(Obj parms, Obj body, Environment env)
         {
-            return obj is Macro;
-        }
-
-        /// <summary>
-        /// Convert object to macro.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a macro.</returns>
-        public static new Macro As(Obj obj)
-        {
-            if (Is(obj))
-            {
-                return (Macro)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
+            return new Macro(parms, body, env);
         }
         #endregion
 
@@ -67,7 +53,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -96,5 +82,37 @@ namespace SimpleScheme
             return this.ToString(Name);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extensions for Macro
+    /// </summary>
+    public static class MacroExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme macro.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme macro.</returns>
+        public static bool IsMacro(this Obj obj)
+        {
+            return obj is Macro;
+        }
+
+        /// <summary>
+        /// Convert object to macro.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a macro.</returns>
+        public static Macro AsMacro(Obj obj)
+        {
+            if (obj.IsMacro())
+            {
+                return (Macro)obj;
+            }
+
+            ErrorHandlers.TypeError(Macro.Name, obj);
+            return null;
+        }
     }
 }

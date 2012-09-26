@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {

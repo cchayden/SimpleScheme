@@ -66,7 +66,7 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         public static object TypeError(string expected, object got)
         {
-            string message = String.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), Printer.AsString(got));
+            string message = string.Format("Invalid type: expected a {0}, got {1}: {2}", expected, TypePrimitives.TypeName(got), Printer.AsString(got));
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }
@@ -125,6 +125,20 @@ namespace SimpleScheme
         {
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
+        }
+
+        /// <summary>
+        /// Handle an error by printing a message on the console 
+        ///    and throwing an exception.
+        /// This is an invalid operation.
+        /// </summary>
+        /// <param name="message">The message to display and to put 
+        ///    into the exception.</param>
+        /// <returns>Actually, does not return.</returns>
+        public static object InvalidOperationError(string message)
+        {
+            Console.Error.WriteLine("**** INVALID OPERATION ERROR: {0}", message);
+            throw new InvalidOperationException(message);
         }
 
         /// <summary>

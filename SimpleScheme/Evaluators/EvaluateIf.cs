@@ -63,7 +63,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(EvalAlternativeStep));
+            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(EvalAlternativeStep));
         }
 
         /// <summary>
@@ -75,9 +75,9 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            Obj toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr) ? List.Second(s.Expr) : List.Third(s.Expr);
+            Obj toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr) ? s.Expr.Second() : s.Expr.Third();
             return EvaluateExpression.Call(
-                EmptyList.Is(toEvaluate) ? new Undefined() : toEvaluate, s.Env, s.Caller);
+                toEvaluate.IsEmptyList() ? Undefined.New() : toEvaluate, s.Env, s.Caller);
         }
         #endregion
     }

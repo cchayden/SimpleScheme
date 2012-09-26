@@ -73,31 +73,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Static Methods
-        /// <summary>
-        /// Tests whether to given object is a CLR procedure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a CLR procedure.</returns>
-        public static new bool Is(Obj obj)
-        {
-            return obj is ClrProcedure;
-        }
-
-        /// <summary>
-        /// Convert object to clr procedure.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a clr procedure.</returns>
-        public static new ClrProcedure As(Obj obj)
-        {
-            if (Is(obj))
-            {
-                return (ClrProcedure)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
-        }
         #endregion
 
         #region Define Primitives
@@ -109,11 +84,11 @@ namespace SimpleScheme
         {
             env
                 //// (class <class-name>)
-                .DefinePrimitive("class", (args, caller) => Class(List.First(args)), 1, Primitive.ValueType.String)
+                .DefinePrimitive("class", (args, caller) => Class(args.First()), 1, Primitive.ValueType.String)
                 //// (new <class-name>)
-                .DefinePrimitive("new", (args, caller) => New(List.First(args)), 1, Primitive.ValueType.String)
+                .DefinePrimitive("new", (args, caller) => New(args.First()), 1, Primitive.ValueType.String)
                 //// (new-array <class-name> <length>)
-                .DefinePrimitive("new-array", (args, caller) => NewArray(List.First(args), List.Second(args)), 2, Primitive.ValueType.String, Primitive.ValueType.Number);
+                .DefinePrimitive("new-array", (args, caller) => NewArray(args.First(), args.Second()), 2, Primitive.ValueType.String, Primitive.ValueType.Number);
         }
         #endregion
 
@@ -123,7 +98,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(Name + ": ");
             buf.Append(this.ToString());
@@ -203,13 +178,13 @@ namespace SimpleScheme
         /// <returns>An array of Types corresponding to the list.</returns>
         protected List<Type> ClassList(Obj args)
         {
-            int n = List.Length(args);
-            List<Type> array = new List<Type>(n);
+            int n = args.ListLength();
+            var array = new List<Type>(n);
 
-            while (Pair.Is(args))
+            while (args.IsPair())
             {
-                array.Add(TypePrimitives.ToClass(List.First(args)));
-                args = List.Rest(args);
+                array.Add(TypePrimitives.ToClass(args.First()));
+                args = args.Rest();
             }
 
             return array;
@@ -226,7 +201,7 @@ namespace SimpleScheme
         /// <returns>An array of arguments for the method call.</returns>
         protected object[] ToArgList(object args, object[] additionalArgs)
         {
-            int n = List.Length(args);
+            int n = args.ListLength();
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
@@ -236,16 +211,16 @@ namespace SimpleScheme
                     " args to " + this.ProcedureName);
             }
 
-            object[] array = new object[n + additionalN];
+            var array = new object[n + additionalN];
 
             int i = 0;
             int a = 0;
-            while (Pair.Is(args))
+            while (args.IsPair())
             {
-                Obj elem = List.First(args);
+                Obj elem = args.First();
                 if (this.ArgClasses[i] == typeof(int))
                 {
-                    array[a++] = (int)Number.As(elem);
+                    array[a++] = Number.AsInt(elem);
                 }
                 else if (this.ArgClasses[i] == typeof(string))
                 {
@@ -257,7 +232,7 @@ namespace SimpleScheme
                 }
 
                 i++;
-                args = List.Rest(args);
+                args = args.Rest();
             }
 
             // required by style cop
@@ -318,8 +293,40 @@ namespace SimpleScheme
         private static Obj NewArray(Obj className, Obj length)
         {
             Type type = TypePrimitives.ToClass(className);
-            return Array.CreateInstance(type, (int)Number.As(length));
+            return Array.CreateInstance(type, Number.AsInt(length));
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extensions for ClrProcedure
+    /// </summary>
+    public static class ClrProcedureExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a CLR procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a CLR procedure.</returns>
+        public static bool IsClrProcedure(this Obj obj)
+        {
+            return obj is ClrProcedure;
+        }
+
+        /// <summary>
+        /// Convert object to clr procedure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a clr procedure.</returns>
+        public static ClrProcedure AsClrProcedure(this Obj obj)
+        {
+            if (obj.IsClrProcedure())
+            {
+                return (ClrProcedure)obj;
+            }
+
+            ErrorHandlers.TypeError(ClrProcedure.Name, obj);
+            return null;
+        }
     }
 }

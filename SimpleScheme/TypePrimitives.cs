@@ -71,7 +71,7 @@ namespace SimpleScheme
                     return SchemeBoolean.Name;
                 case "System.Char[]":
                     return SchemeString.Name;
-                case "System.String":
+                case "SimpleScheme.Symbol":
                     return Symbol.Name;
                 case "SimpleScheme.SynchronousClrProcedure":
                     return SynchronousClrProcedure.Name;

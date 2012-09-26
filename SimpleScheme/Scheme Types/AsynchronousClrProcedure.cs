@@ -44,39 +44,24 @@ namespace SimpleScheme
         {
             this.SetArgClasses(this.ClassListBegin(argClassNames));
             this.SetMethodInfo("Begin" + this.MethodName, this.ArgClasses);
-            this.SetMinMax(this.ArgClasses.Count - 2);
+            this.SetMinMax(this.ArgClasses.Count - 1);
 
-            List<Type> endClasses = new List<Type>(1) { typeof(IAsyncResult) };
+            var endClasses = new List<Type>(1) { typeof(IAsyncResult) };
             this.endMethodInfo = this.GetMethodInfo("End" + this.MethodName, endClasses);
         }
-
         #endregion
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is an asynchronous CLR procedure.
+        /// Creates a new instance of the AsynchronousClrProcedure class.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a synchronous CLR procedure.</returns>
-        public static new bool Is(Obj obj)
+        /// <param name="targetClassName">The class name of the CLR function.</param>
+        /// <param name="methodName">The method name of the CLR function.</param>
+        /// <param name="argClassNames">The types of all method arguments.</param>
+        /// <returns>A new AsynchronousClrProcedure</returns>
+        public static AsynchronousClrProcedure New(Obj targetClassName, Obj methodName, Obj argClassNames)
         {
-            return obj is AsynchronousClrProcedure;
-        }
-
-        /// <summary>
-        /// Convert object to asynchronous clr procedure.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a asynchronous clr procedure.</returns>
-        public static new AsynchronousClrProcedure As(Obj obj)
-        {
-            if (Is(obj))
-            {
-                return (AsynchronousClrProcedure)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
+            return new AsynchronousClrProcedure(targetClassName, methodName, argClassNames);
         }
         #endregion
 
@@ -92,7 +77,7 @@ namespace SimpleScheme
                 //// (method-async <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method-async",
-                   (args, caller) => new AsynchronousClrProcedure(List.First(args), List.Second(args), List.Rest(List.Rest(args))),
+                   (args, caller) => new AsynchronousClrProcedure(args.First(), args.Second(), args.Rest().Rest()),
                    2,
                    MaxInt, 
                    Primitive.ValueType.String);
@@ -114,7 +99,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
@@ -134,12 +119,21 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
-            bool isStatic = this.MethodInfo.IsStatic;
-            Obj target = isStatic ? new Undefined() : List.First(args);
-            CheckArgs(isStatic ? args : List.Rest(args), "AsynchronousClrProcedure");
-            Obj[] argArray = this.ToArgListBegin(isStatic ? args : List.Rest(args), new Tuple<object, Evaluator>(target, caller));
+            CheckArgs(args, "AsynchronousClrProcedure");
+            object target = null;
+            if (!this.MethodInfo.IsStatic)
+            {
+                target = args.First();
+                args = args.Rest();
+            }
 
-            IAsyncResult res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
+            if (target != null && target.IsSymbol())
+            {
+                target = target.ToString();
+            }
+            
+            var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(target, caller));
+            var res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
             return new SuspendedEvaluator(res, caller);
         }
         #endregion
@@ -195,5 +189,37 @@ namespace SimpleScheme
             caller.EvalStep();
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Static class for async extensions.
+    /// </summary>
+    public static class AsynchronousClrProcedureExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is an asynchronous CLR procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a synchronous CLR procedure.</returns>
+        public static bool IsAsynchronousClrProcedure(this Obj obj)
+        {
+            return obj is AsynchronousClrProcedure;
+        }
+
+        /// <summary>
+        /// Convert object to asynchronous clr procedure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a asynchronous clr procedure.</returns>
+        public static AsynchronousClrProcedure AsAsynchronousClrProcedure(Obj obj)
+        {
+            if (obj.IsAsynchronousClrProcedure())
+            {
+                return (AsynchronousClrProcedure)obj;
+            }
+
+            ErrorHandlers.TypeError(AsynchronousClrProcedure.Name, obj);
+            return null;
+        }
     }
 }

@@ -62,16 +62,16 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator EvalExprStep(Evaluator s)
         {
-            if (EmptyList.Is(List.Rest(s.Expr)))
+            if (s.Expr.Rest().IsEmptyList())
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
                 // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
                 //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(s.Expr.First(), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>

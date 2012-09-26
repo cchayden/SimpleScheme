@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{F45E09F5-4512-4760-8536-016F968B180C}</ProjectGuid>
+    <ProjectGuid>{EBF40338-1914-47B1-A8B1-5706C01DD8D3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Perf</RootNamespace>
-    <AssemblyName>Perf</AssemblyName>
+    <RootNamespace>Fib</RootNamespace>
+    <AssemblyName>Fib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -39,7 +39,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Perf.cs" />
+    <Compile Include="Fib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -49,8 +49,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fib.ss" />
-    <None Include="perf.ss">
+    <None Include="fib.ss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

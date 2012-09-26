@@ -50,7 +50,7 @@ namespace Tests
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
             Obj res = this.ReadAndEvaluate(Test);
-            Assert.AreEqual(17, List.Length(res), "Failed " + this.section);
+            Assert.AreEqual(17, res.ListLength(), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
 
@@ -1246,7 +1246,7 @@ namespace Tests
             this.Run("#t", "output-port?", "(output-port? test-file)");
             this.Run("#t", "close-output-port", @"(close-output-port test-file)
                                (check-test-file ""tmp2"")");
-            Assert.AreEqual(EmptyList.Instance, this.ReadAndEvaluate("errs"));
+            Assert.AreEqual(EmptyList.New(), this.ReadAndEvaluate("errs"));
         }
 
         /// <summary>
@@ -1336,8 +1336,8 @@ namespace Tests
         {
             using (StringReader reader = new StringReader(str))
             {
-                InputPort inp = new InputPort(reader, (Interpreter)this.interpreter);
-                Obj last = EmptyList.Instance;
+                InputPort inp = InputPort.New(reader, (Interpreter)this.interpreter);
+                Obj last = EmptyList.New();
                 while (true)
                 {
                     Obj x;

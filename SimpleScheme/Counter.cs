@@ -62,7 +62,7 @@ namespace SimpleScheme
                 //// (get-counters)
                 .DefinePrimitive("get-counters", (args, caller) => caller.Interp.CurrentCounters.GetCounters(), 0)
                 //// (get-counter <name>)
-                .DefinePrimitive("get-counter", (args, caller) => caller.Interp.CurrentCounters.GetCounter(List.First(args)), 1, Primitive.ValueType.String)
+                .DefinePrimitive("get-counter", (args, caller) => caller.Interp.CurrentCounters.GetCounter(args.First()), 1, Primitive.ValueType.String)
                 //// (reset-counters)
                 .DefinePrimitive("reset-counters", (args, caller) => caller.Interp.CurrentCounters.ResetCounters(), 0);
         }
@@ -117,7 +117,7 @@ namespace SimpleScheme
             StringBuilder sb = new StringBuilder();
             this.Dump(sb);
             port.WriteLine(sb.ToString());
-            return new Undefined();
+            return Undefined.New();
         }
 
         /// <summary>
@@ -126,13 +126,13 @@ namespace SimpleScheme
         /// <returns>The list of counterName/count pairs.</returns>
         private Obj GetCounters()
         {
-            Obj res = EmptyList.Instance;
+            Obj res = EmptyList.New();
             foreach (var kvp in counterNames)
             {
                 int count = this.counters[kvp.Value];
                 if (count > 0)
                 {
-                    res = Pair.Cons(Pair.Cons(kvp.Key, count), res);
+                    res = kvp.Key.Cons(count).Cons(res);
                 }
             }
 
@@ -152,7 +152,7 @@ namespace SimpleScheme
                 return this.counters[counterNames[counterName]];
             }
 
-            return new Undefined();
+            return Undefined.New();
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace SimpleScheme
                 this.counters[i] = 0;
             }
 
-            return new Undefined();
+            return Undefined.New();
         }
         #endregion
     }

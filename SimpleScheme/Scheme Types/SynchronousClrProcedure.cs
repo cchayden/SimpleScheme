@@ -38,29 +38,15 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a synchronous CLR procedure.
+        /// Creates a new instance of the SynchronousClrProcedure class.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a synchronous CLR procedure.</returns>
-        public static new bool Is(Obj obj)
+        /// <param name="targetClassName">The class of the object to invoke.</param>
+        /// <param name="methodName">The method to invoke.</param>
+        /// <param name="argClassNames">The types of each argument.</param>
+        /// <returns>The SynchronousClrProcedure.</returns>
+        public static SynchronousClrProcedure New(Obj targetClassName, Obj methodName, Obj argClassNames)
         {
-            return obj is SynchronousClrProcedure;
-        }
-
-        /// <summary>
-        /// Convert object to synchronous clr procedure.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a synchronous clr procedure.</returns>
-        public static new SynchronousClrProcedure As(Obj obj)
-        {
-            if (Is(obj))
-            {
-                return (SynchronousClrProcedure)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
+            return new SynchronousClrProcedure(targetClassName, methodName, argClassNames);
         }
         #endregion
 
@@ -76,47 +62,47 @@ namespace SimpleScheme
                 //// (method <target-class-name> <method-name> <arg-class-name> ...)
                 .DefinePrimitive(
                    "method",
-                   (args, caller) => new SynchronousClrProcedure(
-                       Printer.AsString(List.First(args), false), 
-                       Printer.AsString(List.Second(args), false), 
-                       List.Rest(List.Rest(args))),
+                   (args, caller) => New(
+                       Printer.AsString(args.First(), false), 
+                       Printer.AsString(args.Second(), false), 
+                       args.Rest().Rest()),
                     2,
                     MaxInt, 
                     Primitive.ValueType.String)
                 //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
                    "property-get",
-                   (args, caller) => new SynchronousClrProcedure(
-                       Printer.AsString(List.First(args), false), 
-                       "get_" + Printer.AsString(List.Second(args), false), 
-                       List.Rest(List.Rest(args))),
+                   (args, caller) => New(
+                       Printer.AsString(args.First(), false), 
+                       "get_" + Printer.AsString(args.Second(), false), 
+                       args.Rest().Rest()),
                     2, 
                     Primitive.ValueType.String)
                 //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
                    "property-set",
-                   (args, caller) => new SynchronousClrProcedure(
-                       Printer.AsString(List.First(args), false), 
-                       "set_" + Printer.AsString(List.Second(args), false), 
-                       List.Rest(List.Rest(args))),
+                   (args, caller) => New(
+                       Printer.AsString(args.First(), false), 
+                       "set_" + Printer.AsString(args.Second(), false), 
+                       args.Rest().Rest()),
                     3, 
                     Primitive.ValueType.String)
                 //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
                    "index-get",
-                   (args, caller) => new SynchronousClrProcedure(
-                       Printer.AsString(List.First(args), false), 
+                   (args, caller) => New(
+                       Printer.AsString(args.First(), false), 
                        "get_Item", 
-                       List.Rest(args)),
+                       args.Rest()),
                     2, 
                     Primitive.ValueType.String)
                 //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
                    "index-set",
-                   (args, caller) => new SynchronousClrProcedure(
-                       Printer.AsString(List.First(args), false), 
+                   (args, caller) => New(
+                       Printer.AsString(args.First(), false), 
                        "set_Item", 
-                       List.Rest(args)),
+                       args.Rest()),
                     3, 
                     Primitive.ValueType.String);
         }
@@ -128,7 +114,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(Name + ": ");
             buf.Append(this.ToString());
@@ -155,13 +141,54 @@ namespace SimpleScheme
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
             CheckArgs(args, "SynchronousClrProcedure");
-            object target = this.MethodInfo.IsStatic ? null : List.First(args);
-            object[] argArray = this.ToArgList(this.MethodInfo.IsStatic ? args : List.Rest(args), null);
+            object target = null;
+            if (!this.MethodInfo.IsStatic)
+            {
+                target = args.First();
+                args = args.Rest();
+            }
 
-            Obj res = this.MethodInfo.Invoke(target, argArray);
-            res = res ?? new Undefined();
+            if (target != null && target.IsSymbol())
+            {
+                target = target.ToString();
+            }
+
+            var res = this.MethodInfo.Invoke(target, this.ToArgList(args, null));
+            res = res ?? Undefined.New();
             return caller.UpdateReturnValue(res);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extension class for SynchronousClrProcedure
+    /// </summary>
+    public static class SynchronousClrCprcedureExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a synchronous CLR procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a synchronous CLR procedure.</returns>
+        public static bool IsSynchronousClrProcedure(this Obj obj)
+        {
+            return obj is SynchronousClrProcedure;
+        }
+
+        /// <summary>
+        /// Convert object to synchronous clr procedure.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a synchronous clr procedure.</returns>
+        public static SynchronousClrProcedure AsSynchronousClrProcedure(this Obj obj)
+        {
+            if (obj.IsSynchronousClrProcedure())
+            {
+                return (SynchronousClrProcedure)obj;
+            }
+
+            ErrorHandlers.TypeError(SynchronousClrProcedure.Name, obj);
+            return null;
+        }
     }
 }

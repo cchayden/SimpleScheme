@@ -44,7 +44,7 @@ namespace SimpleScheme
         public Pair(Obj first)
         {
             this.First = first;
-            this.Rest = EmptyList.Instance;
+            this.Rest = EmptyList.New();
         }
 
         /// <summary>
@@ -53,8 +53,8 @@ namespace SimpleScheme
         /// </summary>
         public Pair()
         {
-            this.First = EmptyList.Instance;
-            this.Rest = EmptyList.Instance;
+            this.First = EmptyList.New();
+            this.Rest = EmptyList.New();
         }
         #endregion
 
@@ -74,32 +74,6 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme pair.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme pair.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Pair;
-        }
-
-        /// <summary>
-        /// Convert an object into a pair.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a pair.</returns>
-        public static Pair As(Obj obj)
-        {
-            if (Is(obj))
-            {
-                return (Pair)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
-        }
-
-        /// <summary>
         /// Tests whether two pairs are equal.
         /// The first object must be a pair.
         /// If the list is circulr, this will loop forever.
@@ -109,43 +83,32 @@ namespace SimpleScheme
         /// <returns>True if they are both pairs and all elements are equal.</returns>
         public static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!Is(obj2))
+            if (!obj2.IsPair())
             {
                 return false;
             }
 
-            Pair pair1 = (Pair)obj1;
-            Pair pair2 = (Pair)obj2;
+            var pair1 = obj1.AsPair();
+            var pair2 = obj2.AsPair();
 
             while (true)
             {
-                if (!SchemeBoolean.Equal(List.First(pair1), List.First(pair2)))
+                if (!SchemeBoolean.Equal(pair1.First(), pair2.First()))
                 {
                     return false;
                 }
 
-                obj1 = List.Rest(pair1);
-                obj2 = List.Rest(pair2);
+                obj1 = pair1.Rest();
+                obj2 = pair2.Rest();
 
-                if (!Is(obj1) || !Is(obj2))
+                if (!obj1.IsPair() || !obj2.IsPair())
                 {
                     return SchemeBoolean.Equal(obj1, obj2);
                 }
 
-                pair1 = (Pair)obj1;
-                pair2 = (Pair)obj2;
+                pair1 = obj1.AsPair();
+                pair2 = obj2.AsPair();
             }
-        }
-
-        /// <summary>
-        /// Construct a pair from two objs.
-        /// </summary>
-        /// <param name="a">The first obj.</param>
-        /// <param name="b">The rest of the objs.</param>
-        /// <returns>The pair resulting from the construction.</returns>
-        public static Pair Cons(Obj a, Obj b)
-        {
-            return new Pair(a, b);
         }
         #endregion
 
@@ -179,29 +142,33 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
-            Obj tail = List.Rest(this);
-            if (Is(tail) && EmptyList.Is(List.Rest(tail)))
+            Obj tail = this.Rest();
+            if (tail.IsPair() && tail.Rest().IsEmptyList())
             {
                 string special = null;
 
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
-                switch (List.First(this) as string)
+                var curr = this.First();
+                if (curr.IsSymbol())
                 {
-                    case "quote":
-                        special = "'";
-                        break;
-                    case "quasiquote":
-                        special = "`";
-                        break;
-                    case "unquote":
-                        special = ",";
-                        break;
-                    case "unquote-splicing":
-                        special = ",@";
-                        break;
+                    switch (curr.ToString())
+                    {
+                        case "quote":
+                            special = "'";
+                            break;
+                        case "quasiquote":
+                            special = "`";
+                            break;
+                        case "unquote":
+                            special = ",";
+                            break;
+                        case "unquote-splicing":
+                            special = ",@";
+                            break;
+                    }
                 }
 
                 if (special != null)
@@ -209,28 +176,28 @@ namespace SimpleScheme
                     // There was a special form, and one more thing.
                     // Append a special symbol and the remaining thing.
                     buf.Append(special);
-                    Printer.AsString(List.Second(this), quoted, buf);
+                    Printer.PrintString(this.Second(), quoted, buf);
                     return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
             buf.Append('(');
-            Printer.AsString(List.First(this), quoted, buf);
+            Printer.PrintString(this.First(), quoted, buf);
 
             int len = 0;
-            while (Is(tail))
+            while (tail.IsPair())
             {
                 buf.Append(' ');
-                Printer.AsString(List.First(tail), quoted, buf);
+                Printer.PrintString(tail.First(), quoted, buf);
                 Obj oldTail = tail;
-                tail = List.Rest(tail);
+                tail = tail.Rest();
                 len++;
                 if (tail == oldTail)
                 {
                     // this is a circular structure -- truncate
                     buf.Append(" ... [circular list]");
-                    tail = EmptyList.Instance;
+                    tail = EmptyList.New();
                     break;
                 }
 
@@ -238,15 +205,15 @@ namespace SimpleScheme
                 {
                     // maybe this is a circular structure -- truncate
                     buf.Append(" ... [too long]");
-                    tail = EmptyList.Instance;
+                    tail = EmptyList.New();
                     break;
                 }
             }
 
-            if (!EmptyList.Is(tail))
+            if (!tail.IsEmptyList())
             {
                 buf.Append(" . ");
-                Printer.AsString(tail, quoted, buf);
+                Printer.PrintString(tail, quoted, buf);
             }
 
             buf.Append(')');
@@ -261,5 +228,37 @@ namespace SimpleScheme
             return Printer.AsString(this, true);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extension for Pair
+    /// </summary>
+    public static class PairExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme pair.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme pair.</returns>
+        public static bool IsPair(this Obj obj)
+        {
+            return obj is Pair;
+        }
+
+        /// <summary>
+        /// Convert an object into a pair.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a pair.</returns>
+        public static Pair AsPair(this Obj obj)
+        {
+            if (obj.IsPair())
+            {
+                return (Pair)obj;
+            }
+
+            ErrorHandlers.TypeError(Pair.Name, obj);
+            return null;
+        }
     }
 }

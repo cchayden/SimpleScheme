@@ -50,7 +50,7 @@ namespace SimpleScheme
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
                 return caller.UpdateReturnValue(SchemeBoolean.False);
             }
@@ -67,14 +67,14 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            if (EmptyList.Is(List.Rest(s.Expr)))
+            if (s.Expr.Rest().IsEmptyList())
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(s.Expr.First(), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>

@@ -6,8 +6,8 @@ namespace SimpleScheme
     using System.Text;
 
     /// <summary>
-    /// A printable class is one that has an AsString method, that let's it
-    ///   be converted to a string for printing.
+    /// A printable class is one that has an PrintString method, 
+    ///   which appends a printable representation to a string builder.
     /// </summary>
     public abstract class Printable
     {
@@ -16,6 +16,6 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public abstract void AsString(bool quoted, StringBuilder buf);
+        public abstract void PrintString(bool quoted, StringBuilder buf);
     }
 }

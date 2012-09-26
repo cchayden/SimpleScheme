@@ -52,7 +52,7 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int minArgs, int maxArgs, params Primitive.ValueType[] argTypes)
         {
-            this.UnsafeDefine(name, new Primitive(operation, minArgs, maxArgs, argTypes));
+            this.Define(Symbol.New(name), Primitive.New(operation, minArgs, maxArgs, argTypes));
             return this;
         }
 
@@ -68,7 +68,7 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(string name, Func<Obj, Evaluator, Obj> operation, int numberOfArgs, params Primitive.ValueType[] argTypes)
         {
-            this.UnsafeDefine(name, new Primitive(operation, numberOfArgs, numberOfArgs, argTypes));
+            this.Define(Symbol.New(name), Primitive.New(operation, numberOfArgs, numberOfArgs, argTypes));
             return this;
         }
         #endregion
@@ -103,13 +103,13 @@ namespace SimpleScheme
                     "exit",
                     (args, caller) =>
                     {
-                        System.Environment.Exit(EmptyList.Is(List.First(args)) ? 0 : (int)Number.As(List.First(args)));
-                        return new Undefined();
+                        System.Environment.Exit(args.First().IsEmptyList() ? 0 : Number.AsInt(args.First()));
+                        return Undefined.New();
                     },
                     0,
                     1, 
                     Primitive.ValueType.Number)
-                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2, Primitive.ValueType.Symbol, Primitive.ValueType.Number);
+                .DefinePrimitive("time-call", (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 1, 2, Primitive.ValueType.Proc, Primitive.ValueType.Number);
         }
         #endregion
     }

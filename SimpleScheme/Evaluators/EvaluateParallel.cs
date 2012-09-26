@@ -72,7 +72,7 @@ namespace SimpleScheme
             : base(expr, env, caller)
         {
             this.forked = this.joined = 0;
-            this.accum = EmptyList.Instance;
+            this.accum = EmptyList.New();
             ContinueHere(InitialStep);
             IncrementCounter(counter);
         }
@@ -88,9 +88,9 @@ namespace SimpleScheme
         /// <returns>The parallel evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
-                return caller.ReturnFromStep(EmptyList.Instance);
+                return caller.ReturnFromStep(EmptyList.New());
             }
 
             return new EvaluateParallel(expr, env, caller);
@@ -145,7 +145,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpressionWithCatch.Call(s.Expr.First(), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -173,18 +173,18 @@ namespace SimpleScheme
                         // return after suspension
                         // Record return result and either end the thread or 
                         //  return from the whole thing.
-                        step.accum = Pair.Cons(step.ReturnedExpr, step.accum);
+                        step.accum = step.ReturnedExpr.Cons(step.accum);
                         step.joined++;
-                        return (step.joined < step.forked || !EmptyList.Is(s.Expr)) ? step.ReturnEnded() : step.ReturnFromStep(step.accum);
+                        return (step.joined < step.forked || !s.Expr.IsEmptyList()) ? step.ReturnEnded() : step.ReturnFromStep(step.accum);
 
                     case ReturnType.SynchronousReturn:
                         // synchronous return
-                        step.accum = Pair.Cons(step.ReturnedExpr, step.accum);
+                        step.accum = step.ReturnedExpr.Cons(step.accum);
                         break;
                 }
 
                 s.StepDownExpr();
-                if (EmptyList.Is(s.Expr))
+                if (s.Expr.IsEmptyList())
                 {
                     // finished with expressions -- either suspend (if there is more pending) or
                     //   return from the whole thing
@@ -193,7 +193,7 @@ namespace SimpleScheme
                         s.ReturnFromStep(step.accum);
                 }
 
-                return EvaluateExpressionWithCatch.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+                return EvaluateExpressionWithCatch.Call(s.Expr.First(), s.Env, s.ContinueHere(LoopStep));
             }
         }
 

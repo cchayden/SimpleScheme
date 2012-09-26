@@ -44,9 +44,9 @@ namespace Tests
         [TestMethod]
         public void ReadCharTest()
         {
-            using (StringReader reader = new StringReader("abc"))
+            using (var reader = new StringReader("abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('a', port.Parser.ReadChar(null));
                 Assert.AreEqual('b', port.Parser.ReadChar(null));
                 Assert.AreEqual('c', port.Parser.ReadChar(null));
@@ -60,9 +60,9 @@ namespace Tests
         [TestMethod]
         public void ReadCharTestWithPeekCh()
         {
-            using (StringReader reader = new StringReader("a"))
+            using (var reader = new StringReader("a"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('a', port.Parser.PeekChar());
                 Assert.AreEqual('a', port.Parser.ReadChar(null));
                 Assert.AreEqual(InputPort.Eof, port.Parser.ReadChar(null));
@@ -75,9 +75,9 @@ namespace Tests
         [TestMethod]
         public void ReadCharTestWithPeekEof()
         {
-            using (StringReader reader = new StringReader("a"))
+            using (var reader = new StringReader("a"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('a', port.Parser.PeekChar());
                 Assert.AreEqual('a', port.Parser.ReadChar(null));
                 port.Parser.PeekChar();
@@ -159,26 +159,26 @@ namespace Tests
         [DeploymentItem("SimpleScheme.dll")]
         public void PopTokenTest()
         {
-            using (StringReader reader = new StringReader("#\\stop"))
+            using (var reader = new StringReader("#\\stop"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('s', port.Parser.NextToken());
                 Assert.AreEqual("top", port.Parser.NextToken());
             }
 
-            using (StringReader reader = new StringReader("#\\stop#t"))
+            using (var reader = new StringReader("#\\stop#t"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('s', port.Parser.NextToken());
                 Assert.AreEqual("top", port.Parser.NextToken());
                 Assert.AreEqual(true, port.Parser.NextToken());
             }
 
-            using (StringReader reader = new StringReader("#\\s top"))
+            using (var reader = new StringReader("#\\s top"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual('s', port.Parser.NextToken());
-                Assert.AreEqual("top", port.Parser.NextToken());
+                Assert.AreEqual("top", port.Parser.NextToken().AsSymbol().ToString());
             }
         }
 
@@ -188,82 +188,82 @@ namespace Tests
         [TestMethod]
         public void ReadTest()
         {
-            using (StringReader reader = new StringReader(string.Empty))
+            using (var reader = new StringReader(string.Empty))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual(InputPort.Eof, port.Read());
             }
 
-            using (StringReader reader = new StringReader("abc"))
+            using (var reader = new StringReader("abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual("abc", port.Read());
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
+                Assert.AreEqual("abc", port.Read().AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader("(1 2 3)"))
+            using (var reader = new StringReader("(1 2 3)"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual(1.0, List.First(actual));
-                Assert.AreEqual(2.0, List.Second(actual));
-                Assert.AreEqual(3.0, List.Third(actual));
+                Assert.AreEqual(1.0, actual.First());
+                Assert.AreEqual(2.0, actual.Second());
+                Assert.AreEqual(3.0, actual.Third());
             }
 
-            using (StringReader reader = new StringReader("('a 'b 'c)"))
+            using (var reader = new StringReader("('a 'b 'c)"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("quote", List.First(List.First(actual)));
-                Assert.AreEqual("a", List.Second(List.First(actual)));
-                Assert.AreEqual("quote", List.First(List.Second(actual)));
-                Assert.AreEqual("b", List.Second(List.Second(actual)));
-                Assert.AreEqual("c", List.Second(List.Third(actual)));
+                Assert.AreEqual("quote", actual.First().First().AsSymbol().ToString());
+                Assert.AreEqual("a", actual.First().Second().AsSymbol().ToString());
+                Assert.AreEqual("quote", actual.Second().First().AsSymbol().ToString());
+                Assert.AreEqual("b", actual.Second().Second().AsSymbol().ToString());
+                Assert.AreEqual("c", actual.Third().Second().AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader(")abc"))
+            using (var reader = new StringReader(")abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("abc", actual);
+                Assert.AreEqual("abc", actual.AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader(". abc"))
+            using (var reader = new StringReader(". abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("abc", actual);
+                Assert.AreEqual("abc", actual.AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader("'abc"))
+            using (var reader = new StringReader("'abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("quote", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("quote", actual.First().AsSymbol().ToString());
+                Assert.AreEqual("abc", actual.Rest().First().AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader("`abc"))
+            using (var reader = new StringReader("`abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("quasiquote", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("quasiquote", actual.First().AsSymbol().ToString());
+                Assert.AreEqual("abc", actual.Rest().First().AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader(",abc"))
+            using (var reader = new StringReader(",abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("unquote", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("unquote", actual.First().AsSymbol().ToString());
+                Assert.AreEqual("abc", actual.Rest().First().AsSymbol().ToString());
             }
 
-            using (StringReader reader = new StringReader(",@abc"))
+            using (var reader = new StringReader(",@abc"))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual("unquote-splicing", List.First(actual));
-                Assert.AreEqual("abc", List.First(List.Rest(actual)));
+                Assert.AreEqual("unquote-splicing", actual.First().AsSymbol().ToString());
+                Assert.AreEqual("abc", actual.Rest().First().AsSymbol().ToString());
             }
         }
 
@@ -274,14 +274,18 @@ namespace Tests
         /// <param name="expected">Expected token</param>
         private void TestNextToken(string input, string expected)
         {
-            using (StringReader reader = new StringReader(input))
+            using (var reader = new StringReader(input))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Parser.NextToken();
                 if (actual is string)
                 {
                     Assert.AreEqual(expected, actual);
-                } 
+                }
+                else if (actual.IsSymbol())
+                {
+                    Assert.AreEqual(expected, actual.AsSymbol().ToString());
+                }
                 else if (actual is char)
                 {
                     Assert.AreEqual(1, expected.Length);
@@ -308,9 +312,9 @@ namespace Tests
         /// <param name="expected">Expected value</param>
         private void TestNextToken(string input, double expected)
         {
-            using (StringReader reader = new StringReader(input))
+            using (var reader = new StringReader(input))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual(expected, port.Parser.NextToken());
             }
         }
@@ -322,9 +326,9 @@ namespace Tests
         /// <param name="expected">Expected value</param>
         private void TestNextToken(string input, int expected)
         {
-            using (StringReader reader = new StringReader(input))
+            using (var reader = new StringReader(input))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual(expected, port.Parser.NextToken());
             }
         }
@@ -336,15 +340,16 @@ namespace Tests
         /// <param name="expected">Expected value</param>
         private void TestNextToken(string input, Obj[] expected)
         {
-            using (StringReader reader = new StringReader(input))
+            using (var reader = new StringReader(input))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Parser.NextToken() as object[];
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Length, actual.Length);
                 for (int i = 0; i < expected.Length; i++)
                 {
-                    Assert.AreEqual(expected[i], actual[i]);
+                    var a = actual[i].IsSymbol() ? actual[i].AsSymbol().ToString() : actual[i];
+                    Assert.AreEqual(expected[i], a);
                 }
             }
         }
@@ -356,9 +361,9 @@ namespace Tests
         /// <param name="expected">Expected value</param>
         private void TestNextToken(string input, bool expected)
         {
-            using (StringReader reader = new StringReader(input))
+            using (var reader = new StringReader(input))
             {
-                InputPort port = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 Assert.AreEqual(expected, port.Parser.NextToken());
             }
         }

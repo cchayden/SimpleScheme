@@ -60,7 +60,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator Step1()
         {
-            return Procedure.As(List.First(this.Expr)).Apply(EmptyList.Instance, ContinueHere(Step2));
+            return this.Expr.First().AsProcedure().Apply(EmptyList.New(), ContinueHere(Step2));
         }
         #endregion
     }

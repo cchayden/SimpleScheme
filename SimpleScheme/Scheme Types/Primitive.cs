@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int Counter = SimpleScheme.Counter.Create(Name);
+        private static readonly int counter = Counter.Create(Name);
         #endregion
 
         #region Fields
@@ -56,7 +56,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
-        public Primitive(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, ValueType[] argTypes) :
+        private Primitive(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, ValueType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
@@ -67,6 +67,19 @@ namespace SimpleScheme
             }
         }
         #endregion
+
+        /// <summary>
+        /// Initializes a new instance of the Primitive class.
+        /// </summary>
+        /// <param name="operation">The code to carry out the operation.</param>
+        /// <param name="minArgs">The minimum number of arguments.</param>
+        /// <param name="maxArgs">The maximum number of arguments.</param>
+        /// <param name="argTypes">The argument types.</param>
+        /// <returns>A new primitive.</returns>
+        public static Primitive New(Func<object, Evaluator, object> operation, int minArgs, int maxArgs, ValueType[] argTypes)
+        {
+            return new Primitive(operation, minArgs, maxArgs, argTypes);
+        }
 
         #region Enums
         /// <summary>
@@ -187,7 +200,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -219,7 +232,7 @@ namespace SimpleScheme
             // First check the number of arguments
             this.CheckArgs(args, "Primitive");
             this.CheckArgTypes(args);
-            caller.IncrementCounter(Counter);
+            caller.IncrementCounter(counter);
 
             // Execute the operation
             var res = this.operation(args, caller);
@@ -243,7 +256,7 @@ namespace SimpleScheme
         /// <param name="args">The arguments passed to the primitive.</param>
         private void CheckArgTypes(Obj args)
         {
-            int numArgs = List.Length(args);
+            int numArgs = args.ListLength();
             int numTypes = this.argTypes.Length - 1;
             for (int i = 0; i < numArgs; i++)
             {
@@ -253,8 +266,8 @@ namespace SimpleScheme
                 }
 
                 int t = i < numTypes ? i : numTypes;
-                this.CheckArgType(List.First(args), this.argTypes[t]);
-                args = List.Rest(args);
+                this.CheckArgType(args.First(), this.argTypes[t]);
+                args = args.Rest();
             }
         }
 
@@ -270,77 +283,77 @@ namespace SimpleScheme
                 case ValueType.Obj:
                     return;
                 case ValueType.Pair:
-                    if (Pair.Is(arg))
+                    if (arg.IsPair())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.PairOrEmpty:
-                    if (Pair.Is(arg) || EmptyList.Is(arg))
+                    if (arg.IsPair() || arg.IsEmptyList())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.PairOrSymbol:
-                    if (Pair.Is(arg) || Symbol.Is(arg))
+                    if (arg.IsPair() || arg.IsSymbol())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Number:
-                    if (Number.Is(arg))
+                    if (arg.IsNumber())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Char:
-                    if (Character.Is(arg))
+                    if (arg.IsCharacter())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.String:
-                    if (SchemeString.Is(arg)) 
+                    if (arg.IsSchemeString()) 
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Proc:
-                    if (Is(arg))
+                    if (arg.IsProcedure())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Vector:
-                    if (Vector.Is(arg))
+                    if (arg.IsVector())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Boolean:
-                    if (SchemeBoolean.Is(arg))
+                    if (arg.IsSchemeBoolean())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Symbol:
-                    if (Symbol.Is(arg))
+                    if (arg.IsSymbol())
                     {
                         return;
                     }
 
                     break;
                 case ValueType.Port:
-                    if (InputPort.Is(arg) || OutputPort.Is(arg))
+                    if (arg.IsInputPort() || arg.IsOutputPort())
                     {
                         return;
                     }
@@ -353,7 +366,7 @@ namespace SimpleScheme
                 this.ProcedureName, 
                 Printer.AsString(arg),
                 Printer.TypeName(arg), 
-                argType.ToString());
+                argType);
             ErrorHandlers.SemanticError(msg);
         }
     }

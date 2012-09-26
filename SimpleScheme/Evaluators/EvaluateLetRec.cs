@@ -69,7 +69,7 @@ namespace SimpleScheme
             this.vars = vars;
             this.inits = inits;
             this.formals = vars;
-            this.vals = EmptyList.Instance;
+            this.vals = EmptyList.New();
             ContinueHere(EvalInitStep);
             IncrementCounter(counter);
         }
@@ -85,28 +85,28 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
                 ErrorHandlers.SemanticError("No arguments for letrec");
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            if (!Pair.Is(expr))
+            if (!expr.IsPair())
             {
                 ErrorHandlers.SemanticError("Bad arg list for letrec: " + expr);
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            Obj body = List.Rest(expr);
-            if (EmptyList.Is(body))
+            Obj body = expr.Rest();
+            if (body.IsEmptyList())
             {
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            Obj bindings = List.First(expr);
-            Obj formals = List.MapFun(List.First, List.New(bindings));
-            Obj inits = List.MapFun(List.Second, List.New(bindings));
-            Obj initVals = List.Fill(List.Length(formals), new Undefined());
+            Obj bindings = expr.First();
+            Obj formals = List.MapFun(List.First, bindings.MakeList());
+            Obj inits = List.MapFun(List.Second, bindings.MakeList());
+            Obj initVals = List.Fill(formals.ListLength(), Undefined.New());
 
             return new EvaluateLetRec(expr, new Environment(formals, initVals, env), caller, body, formals, inits);
         }
@@ -121,12 +121,12 @@ namespace SimpleScheme
         private static Evaluator EvalInitStep(Evaluator s)
         {
             var step = (EvaluateLetRec)s;
-            if (EmptyList.Is(step.inits))
+            if (step.inits.IsEmptyList())
             {
                 return s.ContinueHere(ApplyProcStep);
             }
 
-            Lambda fun = new Lambda(step.formals, List.New(List.First(step.inits)), s.Env);  
+            Lambda fun = Lambda.New(step.formals, step.inits.First().MakeList(), s.Env);  
             return fun.ApplyWithtEnv(s.Env, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -140,9 +140,9 @@ namespace SimpleScheme
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
             var step = (EvaluateLetRec)s;
-            step.vals = Pair.Cons(s.ReturnedExpr, step.vals);
-            step.vars = List.Rest(step.vars);
-            step.inits = List.Rest(step.inits);
+            step.vals = s.ReturnedExpr.Cons(step.vals);
+            step.vars = step.vars.Rest();
+            step.inits = step.inits.Rest();
             return s.ContinueHere(EvalInitStep);
         }
 
@@ -157,17 +157,17 @@ namespace SimpleScheme
 
             // assign the inits into the env
             Obj var = step.formals;
-            Obj vals = List.Reverse(step.vals);
-            int n = List.Length(step.formals);
+            Obj vals = step.vals.ReverseList();
+            int n = step.formals.ListLength();
             for (int i = 0; i < n; i++)
             {
-                s.Env.Set(List.First(var), List.First(vals));
-                var = List.Rest(var);
-                vals = List.Rest(vals);
+                s.Env.Set(var.First(), vals.First());
+                var = var.Rest();
+                vals = vals.Rest();
             }
 
             // apply the fun to the vals and return
-            Lambda fun = new Lambda(step.formals, step.body, s.Env);
+            Lambda fun = Lambda.New(step.formals, step.body, s.Env);
             return fun.ApplyWithtEnv(s.Env, s.Caller);
         }
         #endregion

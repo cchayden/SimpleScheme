@@ -35,7 +35,7 @@ namespace SimpleScheme
         ///   clone necessary.
         /// </summary>
         /// <param name="eval">The continuation to return to when applied.</param>
-        public Continuation(Evaluator eval) : 
+        private Continuation(Evaluator eval) : 
             base(1, 1)
         {
             this.savedEvaluator = eval.CloneChain(); 
@@ -44,23 +44,17 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme continuation.
+        /// Creates a new instance of the Continuation class.
+        /// The evaluator and its chain of evaluators back to the beginning have to be cloned because they
+        ///   hold information about the progress of the evaluation.  When the evaluation proceeds
+        ///   these evaluators might be altered, damaging the ability to continue, which is what makes the
+        ///   clone necessary.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme continuation.</returns>
-        public static new bool Is(Obj obj)
+        /// <param name="eval">The continuation to return to when applied.</param>
+        /// <returns>A new continuation.</returns>
+        public static Continuation New(Evaluator eval)
         {
-            return obj is Continuation;
-        }
-
-        /// <summary>
-        /// Convert an object to a continuation.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The continuation.</returns>
-        public static new Continuation As(Obj obj)
-        {
-            return (Continuation)obj;
+            return new Continuation(eval);
         }
         #endregion
 
@@ -70,7 +64,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append("<" + Name + ">");
         }
@@ -98,8 +92,34 @@ namespace SimpleScheme
         public override Evaluator Apply(Obj args, Evaluator caller)
         {
             CheckArgs(args, "Continuation");
-            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), List.First(args), this.savedEvaluator.Env);
+            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), args.First(), this.savedEvaluator.Env);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extensions for Continuation
+    /// </summary>
+    public static class ContinuationExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme continuation.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme continuation.</returns>
+        public static bool IsContinuation(this Obj obj)
+        {
+            return obj is Continuation;
+        }
+
+        /// <summary>
+        /// Convert an object to a continuation.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The continuation.</returns>
+        public static Continuation AsContinuation(Obj obj)
+        {
+            return (Continuation)obj;
+        }
     }
 }

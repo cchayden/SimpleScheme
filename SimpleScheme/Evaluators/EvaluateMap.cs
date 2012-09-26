@@ -74,18 +74,18 @@ namespace SimpleScheme
         public static Evaluator Call(Procedure proc, Obj expr, bool returnResult, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
-                return caller.UpdateReturnValue(EmptyList.Instance);
+                return caller.UpdateReturnValue(EmptyList.New());
             }
 
-            if (!Pair.Is(expr))
+            if (!expr.IsPair())
             {
                 ErrorHandlers.SemanticError("Bad args for map: " + expr);
-                return caller.UpdateReturnValue(EmptyList.Instance);
+                return caller.UpdateReturnValue(EmptyList.New());
             }
 
-            Obj result = returnResult ? EmptyList.Instance : null;
+            Obj result = returnResult ? EmptyList.New() : null;
             return new EvaluateMap(expr, env, caller, proc, result);
         }
         #endregion
@@ -100,15 +100,15 @@ namespace SimpleScheme
         private static Evaluator ApplyFunStep(Evaluator s)
         {
             var step = (EvaluateMap)s;
-            if (Pair.Is(List.First(s.Expr)))
+            if (s.Expr.First().IsPair())
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return step.proc.Apply(List.MapFun(List.First, List.New(s.Expr)), s.ContinueHere(CollectAndLoopStep));
+                return step.proc.Apply(List.MapFun(List.First, s.Expr.MakeList()), s.ContinueHere(CollectAndLoopStep));
             }
 
             // if we are done, return the reversed result list
-            return s.ReturnFromStep(step.result != null ? List.Reverse(step.result) : new Undefined());
+            return s.ReturnFromStep(step.result != null ? step.result.ReverseList() : Undefined.New());
         }
 
         /// <summary>
@@ -124,11 +124,11 @@ namespace SimpleScheme
             if (step.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = Pair.Cons(s.ReturnedExpr, step.result);
+                step.result = s.ReturnedExpr.Cons(step.result);
             }
 
             // Move down each of the lists
-            step.UpdateExpr(List.MapFun(List.Rest, List.New(s.Expr)));
+            step.UpdateExpr(List.MapFun(List.Rest, s.Expr.MakeList()));
             return s.ContinueHere(ApplyFunStep);
         }
         #endregion

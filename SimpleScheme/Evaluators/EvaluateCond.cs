@@ -68,7 +68,7 @@ namespace SimpleScheme
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
                 return caller.UpdateReturnValue(SchemeBoolean.False);
             }
@@ -88,14 +88,15 @@ namespace SimpleScheme
         private static Evaluator EvalClauseStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            step.clause = List.First(step.clauses);
-            if (List.First(step.clause) as string == "else")
+            step.clause = step.clauses.First();
+            var clause = step.clause.First();
+            if (clause.IsSymbol() && clause.ToString() == "else")
             {
-                step.test = EmptyList.Instance;
+                step.test = EmptyList.New();
                 return s.ContinueHere(EvalConsequentStep);
             }
 
-            return EvaluateExpression.Call(List.First(step.clause), s.Env, s.ContinueHere(TestClauseStep));
+            return EvaluateExpression.Call(step.clause.First(), s.Env, s.ContinueHere(TestClauseStep));
         }
 
         /// <summary>
@@ -115,8 +116,8 @@ namespace SimpleScheme
                 return s.ContinueHere(EvalConsequentStep);
             }
 
-            step.clauses = List.Rest(step.clauses);
-            if (EmptyList.Is(step.clauses))
+            step.clauses = step.clauses.Rest();
+            if (step.clauses.IsEmptyList())
             {
                 return s.ReturnUndefined();
             }
@@ -134,20 +135,21 @@ namespace SimpleScheme
         private static Evaluator EvalConsequentStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            if (EmptyList.Is(List.Rest(step.clause)))
+            if (step.clause.Rest().IsEmptyList())
             {
                 // no consequent: return the test as the result
                 return s.ReturnFromStep(step.test);
             }
 
-            if (List.Second(step.clause) as string == "=>")
+            var clause = step.clause.Second();
+            if (clause.IsSymbol() && clause.ToString() == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(List.Third(step.clause), s.Env, s.ContinueHere(ApplyRecipientStep));
+                return EvaluateExpression.Call(step.clause.Third(), s.Env, s.ContinueHere(ApplyRecipientStep));
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(List.Rest(step.clause), s.Env, s.Caller);
+            return EvaluateSequence.Call(step.clause.Rest(), s.Env, s.Caller);
         }
 
         /// <summary>
@@ -158,7 +160,7 @@ namespace SimpleScheme
         private static Evaluator ApplyRecipientStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            return EvaluateProc.CallQuoted(Procedure.As(s.ReturnedExpr), List.New(step.test), s.Env, s.Caller);
+            return EvaluateProc.CallQuoted(s.ReturnedExpr.AsProcedure(), step.test.MakeList(), s.Env, s.Caller);
         }
         #endregion
     }

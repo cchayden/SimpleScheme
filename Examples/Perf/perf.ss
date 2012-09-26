@@ -4,7 +4,7 @@
 (define count 100000)
 (define total 0)
 (define (test f)
-  (let ((t (first (second (time-call f count)))))
+  (let ((t (second (time-call f count))))
     (set! total (+ total t))
     (display t)
     (display #\tab) (p f))

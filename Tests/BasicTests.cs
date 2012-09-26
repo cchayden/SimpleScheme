@@ -199,6 +199,13 @@ namespace Tests
                 (trim-chars 'yyyxxxyyy ""y""))
             ");
 
+            // member method with symbol arg
+            this.Run("3", "sync indexOf symbol", @"
+              (begin
+                (define index-of (method ""System.String"" ""IndexOf"" ""string""))
+                (index-of 'yyyxxxyyy (string->symbol ""x"")))
+            ");
+
             // property get
             this.Run("3", "sync length", @"
               (begin
@@ -527,7 +534,7 @@ namespace Tests
         private void Run(string expected, string label, string expr)
         {
             Obj res = this.ReadAndEvaluate(expr);
-            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
+            string actual = res != EmptyList.New() ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
@@ -551,7 +558,7 @@ namespace Tests
         private void RunAsync(string expected, string label, string expr)
         {
             Obj res = this.ReadAndEvaluateAsync(expr);
-            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
+            string actual = res != EmptyList.New() ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }

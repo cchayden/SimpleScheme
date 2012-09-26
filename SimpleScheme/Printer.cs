@@ -35,19 +35,19 @@ namespace SimpleScheme
         public static string AsString(Obj x, bool quoted)
         {
             var buf = new StringBuilder();
-            AsString(x, quoted, buf);
+            PrintString(x, quoted, buf);
             return buf.ToString();
         }
 
         /// <summary>
-        /// Convert an obj into a string representation.
+        /// Convert an obj into a string representation and write to string builder.
         /// First gets the actual type, then calls a type-specific routine.
         /// If not one of the predefined types, use generic ToString.
         /// </summary>
         /// <param name="x">The obj to convert.</param>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <param name="buf">The buffer to accumulate the string into.</param>
-        public static void AsString(Obj x, bool quoted, StringBuilder buf)
+        public static void PrintString(Obj x, bool quoted, StringBuilder buf)
         {
             if (x == null)
             {
@@ -58,16 +58,13 @@ namespace SimpleScheme
             {
                 // Names for types implementing Scheme values, used for error messages.
                 case "System.Boolean":
-                    SchemeBoolean.AsString(SchemeBoolean.Truth(x), quoted, buf);
-                    return;
-                case "System.String":
-                    Symbol.AsString(Symbol.As(x), quoted, buf);
+                    SchemeBoolean.Truth(x).PrintString(quoted, buf);
                     return;
                 case "System.Char":
-                    Character.AsString(Character.As(x), quoted, buf);
+                    x.AsCharacter().PrintString(quoted, buf);
                     return;
                 case "System.Object[]":
-                    Vector.AsString(Vector.As(x), quoted, buf);
+                    x.AsVector().PrintString(quoted, buf);
                     return;
                 case "System.Byte":
                 case "System.Int32":
@@ -75,11 +72,12 @@ namespace SimpleScheme
                 case "System.Int64":
                 case "System.Single": 
                 case "System.Double":
-                    Number.AsString(Number.As(x), quoted, buf);
+                    x.AsNumber().PrintString(quoted, buf);
                     return;
                 case "System.Char[]":
-                    SchemeString.AsString(SchemeString.As(x), quoted, buf);
+                    x.AsSchemeString().PrintString(quoted, buf);
                     return;
+                case "SimpleScheme.Symbol":
                 case "SimpleScheme.Pair":
                 case "SimpleScheme.Procedure":
                 case "SimpleScheme.Primitive":
@@ -91,7 +89,7 @@ namespace SimpleScheme
                 case "SimpleScheme.EmptyList":
                 case "SimpleScheme.Evaluator":
                 case "SimpleScheme.Undefined":
-                    ((Printable)x).AsString(quoted, buf);
+                    ((Printable)x).PrintString(quoted, buf);
                     return;
                 default:
                     // use the built-in ToString
@@ -107,87 +105,87 @@ namespace SimpleScheme
         /// <returns>The type name.</returns>
         public static string TypeName(Obj obj)
         {
-            if (Pair.Is(obj))
+            if (obj.IsPair())
             {
                 return Primitive.ValueType.Pair.ToString();
             }
 
-            if (EmptyList.Is(obj))
+            if (obj.IsEmptyList())
             {
                 return Primitive.ValueType.Empty.ToString();
             }
 
-            if (Number.Is(obj))
+            if (obj.IsNumber())
             {
                 return Primitive.ValueType.Number.ToString();
             }
 
-            if (Character.Is(obj))
+            if (obj.IsCharacter())
             {
                 return Primitive.ValueType.Char.ToString();
             }
 
-            if (SchemeString.Is(obj))
+            if (obj.IsSchemeString())
             {
                 return Primitive.ValueType.String.ToString();
             }
 
-            if (Procedure.Is(obj))
+            if (obj.IsProcedure())
             {
                 return Primitive.ValueType.Proc.ToString();
             }
 
-            if (Vector.Is(obj))
+            if (obj.IsVector())
             {
                 return Primitive.ValueType.Vector.ToString();
             }
 
-            if (Symbol.Is(obj))
+            if (obj.IsSymbol())
             {
                 return Primitive.ValueType.Symbol.ToString();
             }
 
-            if (SchemeBoolean.Is(obj))
+            if (obj.IsSchemeBoolean())
             {
                 return Primitive.ValueType.Boolean.ToString();
             }
 
-            if (InputPort.Is(obj) || OutputPort.Is(obj))
+            if (obj.IsInputPort() || obj.IsOutputPort())
             {
                 return Primitive.ValueType.Port.ToString();
             }
 
-            if (AsynchronousClrProcedure.Is(obj))
+            if (obj.IsAsynchronousClrProcedure())
             {
                 return Primitive.ValueType.AsynchronousClrProcedure.ToString();
             }
 
-            if (SynchronousClrProcedure.Is(obj))
+            if (obj.IsSynchronousClrProcedure())
             {
                 return Primitive.ValueType.SynchronousClrProcedure.ToString();
             }
 
-            if (ClrConstructor.Is(obj))
+            if (obj.IsClrConstructor())
             {
                 return Primitive.ValueType.ClrConstructor.ToString();
             }
 
-            if (Continuation.Is(obj))
+            if (obj.IsContinuation())
             {
                 return Primitive.ValueType.Continuation.ToString();
             }
 
-            if (Lambda.Is(obj))
+            if (obj.IsLambda())
             {
                 return Primitive.ValueType.Lambda.ToString();
             }
 
-            if (Macro.Is(obj))
+            if (obj.IsMacro())
             {
                 return Primitive.ValueType.Macro.ToString();
             }
 
-            if (Undefined.Is(obj))
+            if (obj.IsUndefined())
             {
                 return Primitive.ValueType.Undefined.ToString();
             }

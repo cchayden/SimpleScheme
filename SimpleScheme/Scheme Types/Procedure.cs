@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
     using Obj = System.Object;
 
@@ -64,34 +63,6 @@ namespace SimpleScheme
 
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Tests whether to given object is a procedure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme procedure.</returns>
-        public static bool Is(Obj obj)
-        {
-            return obj is Procedure;
-        }
-
-        /// <summary>
-        /// Cast the given object to a procedure.
-        /// </summary>
-        /// <param name="x">The obj to test.</param>
-        /// <returns>The procedure.</returns>
-        public static Procedure As(Obj x)
-        {
-            if (Is(x))
-            {
-                return (Procedure)x;
-            }
-
-            ErrorHandlers.TypeError(Name, x);
-            return null;
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the procedure primitives.
@@ -99,26 +70,41 @@ namespace SimpleScheme
         /// <param name="env">The environment to define the primitives into.</param>
         public static void DefinePrimitives(PrimitiveEnvironment env)
         {
-            const int MaxInt = Int32.MaxValue;
+            const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.9">(apply <proc> <args>)</r4rs>
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
-                .DefinePrimitive("apply", (args, caller) => As(List.First(args)).Apply(List.ListStar(List.Rest(args)), caller), 2, MaxInt, 
-                            Primitive.ValueType.Proc, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                "apply", 
+                (args, caller) => args.First().AsProcedure().Apply(args.Rest().ListStar(), caller), 
+                2, 
+                MaxInt, 
+                Primitive.ValueType.Proc, 
+                Primitive.ValueType.Obj)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
-                .DefinePrimitive("call-with-current-continuation", (args, caller) => As(List.First(args)).CallCc(caller), 1, Primitive.ValueType.Proc)
-                .DefinePrimitive("call/cc", (args, caller) => As(List.First(args)).CallCc(caller), 1, Primitive.ValueType.Proc)
+                .DefinePrimitive("call-with-current-continuation", (args, caller) => args.First().AsProcedure().CallCc(caller), 1, Primitive.ValueType.Proc)
+                .DefinePrimitive("call/cc", (args, caller) => args.First().AsProcedure().CallCc(caller), 1, Primitive.ValueType.Proc)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
-                .DefinePrimitive("force", (args, caller) => Force(List.First(args), caller), 1, Primitive.ValueType.Proc)
+                .DefinePrimitive("force", (args, caller) => Force(args.First(), caller), 1, Primitive.ValueType.Proc)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("for-each", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), false, caller.Env, caller), 1, MaxInt,
-                            Primitive.ValueType.Proc, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                "for-each", 
+                (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), false, caller.Env, caller), 
+                1, 
+                MaxInt,
+                Primitive.ValueType.Proc, 
+                Primitive.ValueType.Pair)
                 //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
-                .DefinePrimitive("map", (args, caller) => EvaluateMap.Call(As(List.First(args)), List.Rest(args), true, caller.Env, caller), 1, MaxInt, 
-                            Primitive.ValueType.Proc, Primitive.ValueType.PairOrEmpty)
+                .DefinePrimitive(
+                "map", 
+                (args, caller) => EvaluateMap.Call(args.First().AsProcedure(), args.Rest(), true, caller.Env, caller), 
+                1, 
+                MaxInt, 
+                Primitive.ValueType.Proc, 
+                Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
-                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive("procedure?", (args, caller) => SchemeBoolean.Truth(args.First().IsProcedure()), 1, Primitive.ValueType.Obj);
         }
         #endregion
 
@@ -128,7 +114,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -216,7 +202,7 @@ namespace SimpleScheme
         /// <param name="tag">Name, for the error message.</param>
         protected void CheckArgs(Obj args, string tag)
         {
-            int numArgs = List.Length(args);
+            int numArgs = args.ListLength();
             if (numArgs < this.minArgs)
             {
                 ErrorHandlers.SemanticError(tag + ": too few args, " + numArgs + ", for " +
@@ -240,7 +226,7 @@ namespace SimpleScheme
         /// <returns>The result of applying the proc.</returns>
         private static Obj Force(Obj promise, Evaluator caller)
         {
-            return !Is(promise) ? promise : As(promise).Apply(null, caller);
+            return !promise.IsProcedure() ? promise : promise.AsProcedure().Apply(null, caller);
         }
         #endregion
 
@@ -254,8 +240,37 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private Obj CallCc(Evaluator caller)
         {
-            return this.Apply(List.New(new Continuation(caller)), caller);
+            return this.Apply(Continuation.New(caller).MakeList(), caller);
         }
         #endregion
+    }
+
+    static class ProcedureExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a procedure.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme procedure.</returns>
+        public static bool IsProcedure(this Obj obj)
+        {
+            return obj is Procedure;
+        }
+
+        /// <summary>
+        /// Cast the given object to a procedure.
+        /// </summary>
+        /// <param name="x">The obj to test.</param>
+        /// <returns>The procedure.</returns>
+        public static Procedure AsProcedure(this Obj x)
+        {
+            if (x.IsProcedure())
+            {
+                return (Procedure)x;
+            }
+
+            ErrorHandlers.TypeError(Procedure.Name, x);
+            return null;
+        }
     }
 }

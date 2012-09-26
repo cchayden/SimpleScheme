@@ -16,15 +16,15 @@ namespace SimpleScheme
     {
         #region Constants
         /// <summary>
-        /// The empty list is represented by a distinguished obj.
-        /// It would also work to have the empty list be represeted by null.
-        /// </summary>
-        public static readonly Obj Instance = new EmptyList();
-
-        /// <summary>
         /// The printable name of the empty list type.
         /// </summary>
         public const string Name = "empty-list";
+
+        /// <summary>
+        /// The empty list is represented by a distinguished obj.
+        /// It would also work to have the empty list be represeted by null.
+        /// </summary>
+        private static readonly EmptyList Instance = new EmptyList();
         #endregion
 
         #region Constructor
@@ -38,23 +38,13 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme empty list.
+        /// Create a new empty list.
+        /// Actually, returns the single instance.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme empty list.</returns>
-        public static bool Is(Obj obj)
+        /// <returns>An empty list.</returns>
+        public static EmptyList New()
         {
-            return obj is EmptyList;
-        }
-
-        /// <summary>
-        /// Convert object to EmptyList.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an empty list.</returns>
-        public static EmptyList As(Obj obj)
-        {
-            return (EmptyList)obj;
+            return Instance;
         }
         #endregion
 
@@ -64,7 +54,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -78,5 +68,31 @@ namespace SimpleScheme
             return "()";
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extension class for EmptyList
+    /// </summary>
+    public static class ExptyListExtension
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme empty list.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme empty list.</returns>
+        public static bool IsEmptyList(this Obj obj)
+        {
+            return obj is EmptyList;
+        }
+
+        /// <summary>
+        /// Convert object to EmptyList.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as an empty list.</returns>
+        public static EmptyList AsEmptyList(this Obj obj)
+        {
+            return (EmptyList)obj;
+        }
     }
 }

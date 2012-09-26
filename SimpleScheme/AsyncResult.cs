@@ -212,7 +212,7 @@ namespace SimpleScheme
 
             if (prevState != StatePending)
             {
-                throw new InvalidOperationException("You can set a result only once");
+                ErrorHandlers.InvalidOperationError("You can set a result only once");
             }
 
             // If the event exists, set it

@@ -99,33 +99,33 @@ namespace SimpleScheme
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // Test for errors before creating the object.
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
                 ErrorHandlers.SemanticError("No body for do");
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            if (!Pair.Is(expr))
+            if (!expr.IsPair())
             {
                 ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            Obj bindings = List.First(expr);
-            Obj vars = List.MapFun(List.First, List.New(bindings));
-            Obj inits = List.MapFun(List.Second, List.New(bindings));
-            Obj steps = List.MapFun(ThirdOrFirst, List.New(bindings));
-            Obj exprs = List.Rest(List.Second(expr));
-            Obj commands = List.Rest(List.Rest(expr));
+            Obj bindings = expr.First();
+            Obj vars = List.MapFun(List.First, bindings.MakeList());
+            Obj inits = List.MapFun(List.Second, bindings.MakeList());
+            Obj steps = List.MapFun(ThirdOrFirst, bindings.MakeList());
+            Obj exprs = expr.Second().Rest();
+            Obj commands = expr.Rest().Rest();
 
-            Obj test = List.First(List.Second(expr));
-            if (EmptyList.Is(test))
+            Obj test = expr.Second().First();
+            if (test.IsEmptyList())
             {
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
             // prepare test proc to execute each time through
-            Lambda testProc = new Lambda(vars, List.New(test), env);
+            Lambda testProc = Lambda.New(vars, test.MakeList(), env);
             EvaluateDo eval = new EvaluateDo(expr, env, caller, vars, inits, steps, exprs, commands, testProc);
 
             // push an empty environment, to hold the iteration variables
@@ -143,8 +143,8 @@ namespace SimpleScheme
         /// <returns>The third, if it exists, otherwise the first.</returns>
         private static Obj ThirdOrFirst(Obj x)
         {
-            Obj res = List.Third(x);
-            return EmptyList.Is(res) ? List.First(x) : res;
+            Obj res = x.Third();
+            return res.IsEmptyList() ? x.First() : res;
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace SimpleScheme
                 // Evaluate exprs and return the value of the last
                 //   in the environment of the vars.
                 // If no exprs, unspecified.
-                if (EmptyList.Is(step.exprs))
+                if (step.exprs.IsEmptyList())
                 {
                     return step.ReturnUndefined();
                 }

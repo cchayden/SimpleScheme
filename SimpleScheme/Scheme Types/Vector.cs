@@ -25,7 +25,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme vector.</returns>
-        public static bool Is(Obj obj)
+        public static bool IsVector(this Obj obj)
         {
             return obj is Obj[];
         }
@@ -35,9 +35,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme vector.</returns>
-        public static Obj[] As(Obj obj)
+        public static Obj[] AsVector(this Obj obj)
         {
-            if (Is(obj)) 
+            if (obj.IsVector()) 
             {
                 return (Obj[])obj;
             }
@@ -46,6 +46,15 @@ namespace SimpleScheme
             return null;
         }
 
+        /// <summary>
+        /// Create a new Vector.
+        /// </summary>
+        /// <param name="count">The size for the new vector.</param>
+        /// <returns>The vector.</returns>
+        public static Obj[] New(int count)
+        {
+            return new Obj[count];
+        }
         #endregion
 
         #region Define Primitives
@@ -58,25 +67,67 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.8">(list->vector <vector>)</r4rs>
-                .DefinePrimitive("list->vector", (args, caller) => FromList(List.First(args)), 1, Primitive.ValueType.PairOrEmpty)
+                .DefinePrimitive(
+                        "list->vector", 
+                        (args, caller) => FromList(args.First()), 
+                        1, 
+                        Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.8">(make-vector <k>)</r4rs>
                 //// <r4rs section="6.8">(make-vector <k> <fill>)</r4rs>
-                .DefinePrimitive("make-vector", (args, caller) => New(List.First(args), List.Second(args)), 1, 2, Primitive.ValueType.Number, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        "make-vector", 
+                        (args, caller) => New(args.First(), args.Second()), 
+                        1, 
+                        2, 
+                        Primitive.ValueType.Number, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector <obj>)</r4rs>
-                .DefinePrimitive("vector", (args, caller) => FromList(args), 0, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        "vector", 
+                        (args, caller) => FromList(args), 
+                        0, 
+                        MaxInt, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector->list <vector>)</r4rs>
-                .DefinePrimitive("vector->list", (args, caller) => ToList(List.First(args)), 1, Primitive.ValueType.Vector)
+                .DefinePrimitive(
+                        "vector->list", 
+                        (args, caller) => ToList(args.First()), 
+                        1, 
+                        Primitive.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-fill! <vector> <fill>)</r4rs>
-                .DefinePrimitive("vector-fill", (args, caller) => Fill(List.First(args), List.Second(args)), 2, Primitive.ValueType.Vector, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        "vector-fill", 
+                        (args, caller) => Fill(args.First(), args.Second()), 
+                        2, 
+                        Primitive.ValueType.Vector, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector-length <vector>)</r4rs>
-                .DefinePrimitive("vector-length", (args, caller) => Number.As(As(List.First(args)).Length), 1, Primitive.ValueType.Vector)
+                .DefinePrimitive(
+                        "vector-length", 
+                        (args, caller) => args.First().AsVector().Length, 
+                        1, 
+                        Primitive.ValueType.Vector)
                 //// <r4rs section="6.8">(vector-ref <vector> <k>)</r4rs>
-                .DefinePrimitive("vector-ref", (args, caller) => Get(List.First(args), List.Second(args)), 2, Primitive.ValueType.Vector, Primitive.ValueType.Number)
+                .DefinePrimitive(
+                        "vector-ref", 
+                        (args, caller) => Get(args.First(), args.Second()), 
+                        2, 
+                        Primitive.ValueType.Vector, 
+                        Primitive.ValueType.Number)
                 //// <r4rs section="6.8">(vector-set <vector> <k> <obj>)</r4rs>
-                .DefinePrimitive("vector-set!", (args, caller) => Set(List.First(args), List.Second(args), List.Third(args)), 3, 
-                                Primitive.ValueType.Vector, Primitive.ValueType.Number, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                        "vector-set!", 
+                        (args, caller) => Set(args.First(), args.Second(), args.Third()), 
+                        3, 
+                        Primitive.ValueType.Vector, 
+                        Primitive.ValueType.Number, 
+                        Primitive.ValueType.Obj)
                 //// <r4rs section="6.8">(vector? <obj>)</r4rs>
-                .DefinePrimitive("vector?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj);
+                .DefinePrimitive( 
+                        "vector?", 
+                        (args, caller) => SchemeBoolean.Truth(args.First().IsVector()), 
+                        1, 
+                        Primitive.ValueType.Obj);
         }
         #endregion
 
@@ -87,14 +138,14 @@ namespace SimpleScheme
         /// <param name="vec">The vector.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(Obj[] vec, bool quoted, StringBuilder buf)
+        public static void PrintString(this Obj[] vec, bool quoted, StringBuilder buf)
         {
             buf.Append("#(");
             if (vec.Length > 0)
             {
                 foreach (Obj v in vec)
                 {
-                    Printer.AsString(v, quoted, buf);
+                    Printer.PrintString(v, quoted, buf);
                     buf.Append(' ');
                 }
 
@@ -113,13 +164,13 @@ namespace SimpleScheme
         /// all elements are equal.</returns>
         public static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!Is(obj2))
+            if (!obj2.IsVector())
             {
                 return false;
             }
 
-            Obj[] vector1 = (Obj[])obj1;
-            Obj[] vector2 = (Obj[])obj2;
+            var vector1 = (Obj[])obj1;
+            var vector2 = (Obj[])obj2;
             if (vector1.Length != vector2.Length)
             {
                 return false;
@@ -144,10 +195,10 @@ namespace SimpleScheme
         /// <returns>A vector of the objs filled with the fill object.</returns>
         public static Obj[] New(Obj length, Obj fill)
         {
-            Obj[] vec = new Obj[(int)Number.As(length)];
-            if (EmptyList.Is(fill))
+            var vec = New(Number.AsInt(length));
+            if (fill.IsEmptyList())
             {
-                fill = new Undefined();
+                fill = Undefined.New();
             }
 
             for (int i = 0; i < vec.Length; i++)
@@ -166,7 +217,7 @@ namespace SimpleScheme
         /// <returns>The vector element.</returns>
         public static Obj Get(Obj vector, Obj k)
         {
-            return As(vector)[(int)Number.As(k)];
+            return vector.AsVector()[Number.AsInt(k)];
         }
 
         /// <summary>
@@ -178,8 +229,8 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         public static Obj Set(Obj vector, Obj index, Obj obj)
         {
-            As(vector)[(int)Number.As(index)] = obj;
-            return new Undefined();
+            vector.AsVector()[Number.AsInt(index)] = obj;
+            return Undefined.New();
         }
 
         /// <summary>
@@ -189,17 +240,17 @@ namespace SimpleScheme
         /// <returns>A vector of the objs.</returns>
         public static Obj[] FromList(Obj objs)
         {
-            Obj[] vec = new Obj[List.Length(objs)];
-            if (!Pair.Is(objs))
+            Obj[] vec = New(objs.ListLength());
+            if (!objs.IsPair())
             {
                 return vec;
             }
 
             int i = 0;
-            while (Pair.Is(objs))
+            while (objs.IsPair())
             {
-                vec[i++] = List.First(objs);
-                objs = List.Rest(objs);
+                vec[i++] = objs.First();
+                objs = objs.Rest();
             }
 
             return vec;
@@ -215,11 +266,11 @@ namespace SimpleScheme
         /// <returns>The vector as a list.</returns>
         internal static Obj ToList(Obj vector)
         {
-            Obj[] vec = As(vector);
-            Obj result = EmptyList.Instance;
+            Obj[] vec = vector.AsVector();
+            Obj result = EmptyList.New();
             for (int i = vec.Length - 1; i >= 0; i--)
             {
-                result = Pair.Cons(vec[i], result);
+                result = vec[i].Cons(result);
             }
 
             return result;
@@ -235,13 +286,13 @@ namespace SimpleScheme
         /// <returns>Return value is unspecified.</returns>
         private static Obj Fill(Obj vector, Obj fill)
         {
-            Obj[] vec = As(vector);
+            Obj[] vec = vector.AsVector();
             for (int i = 0; i < vec.Length; i++)
             {
                 vec[i] = fill;
             }
 
-            return new Undefined();
+            return Undefined.New();
         }
         #endregion
     }

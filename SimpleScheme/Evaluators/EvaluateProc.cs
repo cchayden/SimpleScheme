@@ -121,7 +121,7 @@ namespace SimpleScheme
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("{0}: ({1} {2})", EvaluatorName, fn.ProcedureName, List.First(s.ReturnedExpr)));
+                    String.Format("{0}: ({1} {2})", EvaluatorName, fn.ProcedureName, s.ReturnedExpr.First()));
             }
 
             // Pass s.Caller to return to the caller rather than to here, since there is

@@ -54,7 +54,7 @@ namespace SimpleScheme
         /// <returns>The created evaluator.</returns>
         public static Evaluator Call(Obj expr, Evaluator caller)
         {
-            InputPort port = OpenInputFile(List.First(expr), caller.Interp);
+            InputPort port = OpenInputFile(expr.First(), caller.Interp);
             return new EvaluateCallWithInputFile(expr, caller.Env, caller, port);
         }
 
@@ -68,7 +68,7 @@ namespace SimpleScheme
         {
             try
             {
-                return new InputPort(new StreamReader(Printer.AsString(filename, false)), interp);
+                return InputPort.New(new StreamReader(Printer.AsString(filename, false)), interp);
             }
             catch (FileNotFoundException)
             {
@@ -90,7 +90,7 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateCallWithInputFile)s;
-            return Procedure.As(List.Second(s.Expr)).Apply(List.New(step.port), s.ContinueHere(CloseStep));
+            return s.Expr.Second().AsProcedure().Apply(step.port.MakeList(), s.ContinueHere(CloseStep));
         }
 
         /// <summary>

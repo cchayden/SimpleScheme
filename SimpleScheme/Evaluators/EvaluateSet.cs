@@ -62,9 +62,9 @@ namespace SimpleScheme
         /// <returns>The set evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            Obj lhs = List.First(expr);
-            Obj rhs = List.Second(expr);
-            if (!Symbol.Is(lhs))
+            Obj lhs = expr.First();
+            Obj rhs = expr.Second();
+            if (!lhs.IsSymbol())
             {
                 ErrorHandlers.SemanticError("Set: first argument must be a symbol.  Got: " + lhs);
             }

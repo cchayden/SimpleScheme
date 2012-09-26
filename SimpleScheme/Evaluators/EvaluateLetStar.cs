@@ -88,30 +88,30 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
                 ErrorHandlers.SemanticError("No arguments arguments for let*");
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            if (!Pair.Is(expr))
+            if (!expr.IsPair())
             {
                 ErrorHandlers.SemanticError("Bad arg list for let*: " + expr);
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            Obj bindings = List.First(expr);
-            Obj body = List.Rest(expr);
+            Obj bindings = expr.First();
+            Obj body = expr.Rest();
 
-            if (EmptyList.Is(body))
+            if (body.IsEmptyList())
             {
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            Obj vars = List.MapFun(List.First, List.New(bindings));
-            Obj inits = List.MapFun(List.Second, List.New(bindings));
-            Obj formals = EmptyList.Instance;
-            Obj vals = EmptyList.Instance;
+            Obj vars = List.MapFun(List.First, bindings.MakeList());
+            Obj inits = List.MapFun(List.Second, bindings.MakeList());
+            Obj formals = EmptyList.New();
+            Obj vals = EmptyList.New();
             return new EvaluateLetStar(expr, env, caller, body, vars, inits, formals, vals);
         }
         #endregion
@@ -126,12 +126,12 @@ namespace SimpleScheme
         private static Evaluator EvalInitStep(Evaluator s)
         {
             var step = (EvaluateLetStar)s;
-            if (EmptyList.Is(step.inits))
+            if (step.inits.IsEmptyList())
             {
                 return s.ContinueHere(ApplyProcStep);
             }
 
-            Procedure fun = new Lambda(step.formals, List.New(List.First(step.inits)), s.Env);
+            Procedure fun = Lambda.New(step.formals, step.inits.First().MakeList(), s.Env);
             return fun.Apply(step.vals, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -145,10 +145,10 @@ namespace SimpleScheme
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
             var step = (EvaluateLetStar)s;
-            step.formals = Pair.Cons(List.First(step.vars), step.formals);
-            step.vals = Pair.Cons(s.ReturnedExpr, step.vals);
-            step.vars = List.Rest(step.vars);
-            step.inits = List.Rest(step.inits);
+            step.formals = step.vars.First().Cons(step.formals);
+            step.vals = s.ReturnedExpr.Cons(step.vals);
+            step.vars = step.vars.Rest();
+            step.inits = step.inits.Rest();
             return s.ContinueHere(EvalInitStep);
         }
 
@@ -162,7 +162,7 @@ namespace SimpleScheme
             var step = (EvaluateLetStar)s;
 
             // apply the fun to the vals
-            Lambda fun = new Lambda(step.formals, step.body, s.Env);
+            Lambda fun = Lambda.New(step.formals, step.body, s.Env);
             return fun.Apply(step.vals, s.Caller);
         }
         #endregion

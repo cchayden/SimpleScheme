@@ -64,7 +64,7 @@ namespace SimpleScheme
             this.CallerCaller = caller;
             this.Expr = args;
             this.Env = env;
-            this.ReturnedExpr = new Undefined();
+            this.ReturnedExpr = Undefined.New();
             this.ReturnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
             this.traced = false;
@@ -194,7 +194,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
@@ -390,7 +390,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is this evaluator.</returns>
         public Evaluator StepDownExpr()
         {
-            this.Expr = List.Rest(this.Expr);
+            this.Expr = this.Expr.Rest();
             return this;
         }
 
@@ -524,7 +524,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator, which is in the caller.</returns>
         public Evaluator ReturnUndefined()
         {
-            return ReturnFromStep(new Undefined());
+            return ReturnFromStep(Undefined.New());
         }
         #endregion
 
@@ -555,7 +555,7 @@ namespace SimpleScheme
         private void DumpStep(StringBuilder buf)
         {
             buf.AppendFormat("Exaluator {0}\n", TypePrimitives.TypeName(this));
-            string exp = EmptyList.Is(this.Expr) ? "()" : this.Expr.ToString();
+            string exp = this.Expr.IsEmptyList() ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
             if (this.Env != null)
             {

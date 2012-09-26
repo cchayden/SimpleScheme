@@ -86,9 +86,7 @@ namespace SimpleScheme
             long time = step.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - step.startMem;
             return s.ReturnFromStep(
-                    Pair.Cons(
-                        s.ReturnedExpr, 
-                        List.New(List.New(Number.As(time), "msec"), List.New(Number.As(mem), "bytes"))));
+                s.ReturnedExpr.Cons(time.AsNumber().MakeList("msec", mem.AsNumber(), "bytes")));
         }
         #endregion
 
@@ -109,8 +107,8 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateTimeBase)s;
-            Obj y = List.Second(s.Expr);
-            step.counter = EmptyList.Is(y) ? 1 : (int)Number.As(y);
+            Obj y = s.Expr.Second();
+            step.counter = y.IsEmptyList() ? 1 : Number.AsInt(y);
             step.i = 0;
             return s.ContinueHere(Step1);
         }

@@ -20,7 +20,7 @@ namespace SimpleScheme
         /// Used where we need a list to start with, the first cell is normally trimmed off later.
         /// </summary>
         /// <returns>A list whose first cell is null.</returns>
-        public static Pair New()
+        public static Pair MakeList()
         {
             return new Pair();
         }
@@ -31,7 +31,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="a">The object to put into the list.</param>
         /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair New(Obj a)
+        public static Pair MakeList(this Obj a)
         {
             return new Pair(a);
         }
@@ -43,9 +43,9 @@ namespace SimpleScheme
         /// <param name="a">The first obj.</param>
         /// <param name="b">The second obj.</param>
         /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair New(Obj a, Obj b)
+        public static Pair MakeList(this Obj a, Obj b)
         {
-            return new Pair(a, new Pair(b));
+            return new Pair(a, b.MakeList());
         }
 
         /// <summary>
@@ -56,9 +56,9 @@ namespace SimpleScheme
         /// <param name="b">The second obj.</param>
         /// <param name="c">The third obj.</param>
         /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair New(Obj a, Obj b, Obj c)
+        public static Pair MakeList(this Obj a, Obj b, Obj c)
         {
-            return new Pair(a, new Pair(b, new Pair(c)));
+            return a.MakeList(MakeList(b, c.MakeList()));
         }
 
         /// <summary>
@@ -70,9 +70,20 @@ namespace SimpleScheme
         /// <param name="c">The third obj.</param>
         /// <param name="d">The fourth obj.</param>
         /// <returns>The Pair making up the head of the list.</returns>
-        public static Pair New(Obj a, Obj b, Obj c, Obj d)
+        public static Pair MakeList(this Obj a, Obj b, Obj c, Obj d)
         {
-            return new Pair(a, new Pair(b, new Pair(c, new Pair(d))));
+            return a.MakeList(MakeList(b, MakeList(c, d.MakeList())));
+        }
+
+        /// <summary>
+        /// Construct a pair from two objs.
+        /// </summary>
+        /// <param name="a">The first obj.</param>
+        /// <param name="b">The rest of the objs.</param>
+        /// <returns>The pair resulting from the construction.</returns>
+        public static Pair Cons(this Obj a, Obj b)
+        {
+            return new Pair(a, b);
         }
 
         /// <summary>
@@ -80,9 +91,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="list">The list to use.</param>
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
-        public static Obj First(Obj list)
+        public static Obj First(this Obj list)
         {
-            return Pair.Is(list) ? ((Pair)list).First : EmptyList.Instance;
+            return list.IsPair() ? list.AsPair().First : EmptyList.New();
         }
 
         /// <summary>
@@ -91,9 +102,9 @@ namespace SimpleScheme
         /// <param name="list">The list to use.</param>
         /// <returns>The second member of the list, 
         /// or the empty list if there is none.</returns>
-        public static Obj Second(Obj list)
+        public static Obj Second(this Obj list)
         {
-            return First(Rest(list));
+            return list.Rest().First();
         }
 
         /// <summary>
@@ -101,9 +112,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="list">The list to use.</param>
         /// <returns>The third member of the list, or the empty list if there is none.</returns>
-        public static Obj Third(Obj list)
+        public static Obj Third(this Obj list)
         {
-            return First(Rest(Rest(list)));
+            return list.Rest().Rest().First();
         }
 
         /// <summary>
@@ -112,9 +123,9 @@ namespace SimpleScheme
         /// <param name="list">The list to use.</param>
         /// <returns>The rest -- the list with the first stripped off, 
         /// or the empty list if there is none.</returns>
-        public static Obj Rest(Obj list)
+        public static Obj Rest(this Obj list)
         {
-            return Pair.Is(list) ? ((Pair)list).Rest : EmptyList.Instance;
+            return list.IsPair() ? list.AsPair().Rest : EmptyList.New();
         }
 
         /// <summary>
@@ -122,13 +133,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="list">The list to measure.</param>
         /// <returns>The list length.</returns>
-        public static int Length(Obj list)
+        public static int ListLength(this Obj list)
         {
             int len = 0;
-            while (Pair.Is(list))
+            while (list.IsPair())
             {
                 len++;
-                list = Rest(list);
+                list = list.Rest();
             }
 
             return len;
@@ -142,12 +153,12 @@ namespace SimpleScheme
         /// <param name="pair">The pair whose First cell we want to modify.</param>
         /// <param name="newValue">The new value to put into it.</param>
         /// <returns>Undefined instance.</returns>
-        public static Obj SetFirst(Obj pair, Obj newValue)
+        public static Obj SetFirst(this Obj pair, Obj newValue)
         {
-            if (Pair.Is(pair))
+            if (pair.IsPair())
             {
-                ((Pair)pair).SetFirst(newValue);
-                return new Undefined();
+                pair.AsPair().SetFirst(newValue);
+                return Undefined.New();
             }
 
             return ErrorHandlers.SemanticError("Attempt to set-car! of a non-Pair: " + Printer.AsString(pair));
@@ -159,12 +170,12 @@ namespace SimpleScheme
         /// <param name="pair">The pair whose Rest cell we want to modify.</param>
         /// <param name="newTail">The new value to put into it.</param>
         /// <returns>Undefined instance.</returns>
-        public static Obj SetRest(Obj pair, Obj newTail)
+        public static Obj SetRest(this Obj pair, Obj newTail)
         {
-            if (Pair.Is(pair))
+            if (pair.IsPair())
             {
-                ((Pair)pair).SetRest(newTail);
-                return new Undefined();
+                pair.AsPair().SetRest(newTail);
+                return Undefined.New();
             }
 
             return ErrorHandlers.SemanticError("Attempt to set-cdr! of a non-Pair: " + Printer.AsString(pair));
@@ -178,38 +189,38 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">The obj to make into a list.</param>
         /// <returns>The items appended.</returns>
-        public static Obj ListStar(Obj args)
+        public static Obj ListStar(this Obj args)
         {
             // only one arg -- take it
-            if (EmptyList.Is(Rest(args)))
+            if (args.Rest().IsEmptyList())
             {
-                return First(args);
+                return args.First();
             }
 
             // More than one arg:
             // Copy all but last into a list.
             // Then splice in the last.
-            Pair result = New();
+            Pair result = MakeList();
             Pair accum = result;
             Obj expr = args;
 
             // Iterate down the list, building a list of the results.
-            while (!EmptyList.Is(Rest(expr)))
+            while (!expr.Rest().IsEmptyList())
             {
-                accum = (Pair)accum.SetRest(New(First(expr)));
-                expr = Rest(expr);
+                accum = accum.SetRest(expr.First().MakeList()).AsPair();
+                expr = expr.Rest();
             }
 
             // Splice on the last arg
             // First, check that the last arg is a list.
-            Obj rest = First(expr);
-            if (!Pair.Is(rest))
+            Obj rest = expr.First();
+            if (!rest.IsPair())
             {
                 ErrorHandlers.Error("ListStar: last argument is not a list: " + args);
             }
 
             accum.SetRest(rest);
-            return Rest(result);
+            return result.Rest();
         }
 
         /// <summary>
@@ -217,13 +228,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The list to reverse.</param>
         /// <returns>The reversed list.</returns>
-        public static Obj Reverse(Obj x)
+        public static Obj ReverseList(this Obj x)
         {
-            Obj result = EmptyList.Instance;
-            while (Pair.Is(x))
+            Obj result = EmptyList.New();
+            while (x.IsPair())
             {
-                result = Pair.Cons(First(x), result);
-                x = Rest(x);
+                result = x.First().Cons(result);
+                x = x.Rest();
             }
 
             return result;
@@ -237,10 +248,10 @@ namespace SimpleScheme
         /// <returns>A list filled with the given element.</returns>
         public static Obj Fill(int n, Obj fill)
         {
-            Obj res = EmptyList.Instance;
+            Obj res = EmptyList.New();
             for (int i = 0; i < n; i++)
             {
-                res = Pair.Cons(fill, res);
+                res = fill.Cons(res);
             }
 
             return res;
@@ -256,18 +267,18 @@ namespace SimpleScheme
         /// <returns>A list made up of the function results of each input element.  Could be the empty list.</returns>
         public static Obj MapFun(Func<Obj, Obj> fun, Obj expr)
         {
-            Pair result = New();
+            Pair result = MakeList();
             Pair accum = result;
 
             // Iterate down the list, taking the function and building a list of the results.
-            expr = First(expr);
-            while (Pair.Is(expr))
+            expr = expr.First();
+            while (expr.IsPair())
             {
-                accum = (Pair)accum.SetRest(New(fun(First(expr))));
-                expr = Rest(expr);
+                accum = accum.SetRest(fun(expr.First()).MakeList()).AsPair();
+                expr = expr.Rest();
             }
 
-            return Rest(result);
+            return result.Rest();
         }
         #endregion
 
@@ -282,62 +293,111 @@ namespace SimpleScheme
             env
                 //// <r4rs section="6.3">(append <list> ...)</r4rs>
                 .DefinePrimitive("append", (args, caller) => Append(args), 0, MaxInt, Primitive.ValueType.Obj)
-// TODO tighten up arg check
                 //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
-                .DefinePrimitive("assoc", (args, caller) => MemberAssoc(First(args), Second(args), x => First(x), (x, y) => SchemeBoolean.Equal(x, y)), 2,
-                                Primitive.ValueType.Obj, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    "assoc", 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Equal(x, y)), 
+                    2,
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
-                .DefinePrimitive("assq", (args, caller) => MemberAssoc(First(args), Second(args), x => First(x), (x, y) => x == y), 2, 
-                                Primitive.ValueType.Obj, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    "assq", 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    2, 
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(assv <obj> <alist>)</r4rs>
-                .DefinePrimitive("assv", (args, caller) => MemberAssoc(First(args), Second(args), x => First(x), (x, y) => SchemeBoolean.Eqv(x, y)), 2, 
-                                Primitive.ValueType.Obj, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    "assv", 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    2, 
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(car <pair>)</r4rs>
-                .DefinePrimitive("car", (args, caller) => First(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("car", (args, caller) => args.First().First(), 1, Primitive.ValueType.Pair)
                 //// (first <pair>)
-                .DefinePrimitive("first", (args, caller) => First(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("first", (args, caller) => args.First().First(), 1, Primitive.ValueType.Pair)
                 //// (second <pair>)
-                .DefinePrimitive("second", (args, caller) => Second(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("second", (args, caller) => args.First().Second(), 1, Primitive.ValueType.Pair)
                 //// (third <pair>)
-                .DefinePrimitive("third", (args, caller) => Third(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("third", (args, caller) => args.First().Third(), 1, Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(cdr <pair>)</r4rs>
-                .DefinePrimitive("cdr", (args, caller) => Rest(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("cdr", (args, caller) => args.First().Rest(), 1, Primitive.ValueType.Pair)
                 //// (rest <pair>)
-                .DefinePrimitive("rest", (args, caller) => Rest(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("rest", (args, caller) => args.First().Rest(), 1, Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(cons <obj1> <obj2>)</r4rs>
-                .DefinePrimitive("cons", (args, caller) => Pair.Cons(First(args), Second(args)), 2, Primitive.ValueType.Obj)
+                .DefinePrimitive("cons", (args, caller) => args.First().Cons(args.Second()), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(length <list> ...)</r4rs>
-                .DefinePrimitive("length", (args, caller) => Number.As(Length(First(args))), 1, Primitive.ValueType.PairOrEmpty)
+                .DefinePrimitive("length", (args, caller) => args.First().ListLength(), 1, Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.3">(list <obj> ...)</r4rs>
                 .DefinePrimitive("list", (args, caller) => args, 0, MaxInt, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(list-ref <list> <k>)</r4rs>
-                .DefinePrimitive("list-ref", (args, caller) => ListRef(First(args), Second(args)), 2, Primitive.ValueType.Pair, Primitive.ValueType.Number)
+                .DefinePrimitive(
+                    "list-ref", 
+                    (args, caller) => ListRef(args.First(), args.Second()), 
+                    2, 
+                    Primitive.ValueType.Pair, 
+                    Primitive.ValueType.Number)
                 //// <r4rs section="6.3">(list-tail <list> <k>)</r4rs>
-                .DefinePrimitive("list-tail", (args, caller) => ListTail(First(args), Second(args)), 2, Primitive.ValueType.Pair, Primitive.ValueType.Number)
-                .DefinePrimitive("list*", (args, caller) => ListStar(args), 2, MaxInt, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    "list-tail", 
+                    (args, caller) => ListTail(args.First(), args.Second()), 
+                    2, 
+                    Primitive.ValueType.Pair, 
+                    Primitive.ValueType.Number)
+                .DefinePrimitive("list*", (args, caller) => args.ListStar(), 2, MaxInt, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(list? <obj>)</r4rs>
-                .DefinePrimitive("list?", (args, caller) => SchemeBoolean.Truth(IsList(First(args))), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive("list?", (args, caller) => SchemeBoolean.Truth(IsList(args.First())), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
-                .DefinePrimitive("member", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y)), 2,
-                          Primitive.ValueType.Obj, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    "member", 
+                    (args, caller) => MemberAssoc(args.First(), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y)), 
+                    2,
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(memq <obj> <list>)</r4rs>
-                .DefinePrimitive("memq", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => x == y), 2,
-                          Primitive.ValueType.Obj, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    "memq", 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    2,
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
-                .DefinePrimitive("memv", (args, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 2,
-                          Primitive.ValueType.Obj, Primitive.ValueType.Pair)
+                .DefinePrimitive(
+                    "memv", 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    2,
+                    Primitive.ValueType.Obj, 
+                    Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(pair? <obj>)</r4rs>
-                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(Pair.Is(First(args))), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive("pair?", (args, caller) => SchemeBoolean.Truth(args.First().IsPair()), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(reverse <list>)</r4rs>
-                .DefinePrimitive("reverse", (args, caller) => Reverse(First(args)), 1, Primitive.ValueType.Pair)
+                .DefinePrimitive("reverse", (args, caller) => args.First().ReverseList(), 1, Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(set-car! <pair> <obj>)</r4rs>
-                .DefinePrimitive("set-car!", (args, caller) => SetFirst(First(args), Second(args)), 2, Primitive.ValueType.Pair, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    "set-car!", (args, caller) => args.First().SetFirst(args.Second()), 
+                    2, 
+                    Primitive.ValueType.Pair, 
+                    Primitive.ValueType.Obj)
                 //// (set-first! <pair> <obj>)
-                .DefinePrimitive("set-first!", (args, caller) => SetFirst(First(args), Second(args)), 2, Primitive.ValueType.Pair, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    "set-first!", (args, caller) => args.First().SetFirst(args.Second()), 
+                    2, 
+                    Primitive.ValueType.Pair, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(set-cdr! <pair> <obj>)</r4rs>
-                .DefinePrimitive("set-cdr!", (args, caller) => SetRest(First(args), Second(args)), 2, Primitive.ValueType.Pair, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    "set-cdr!", (args, caller) => args.First().SetRest(args.Second()), 
+                    2, 
+                    Primitive.ValueType.Pair, 
+                    Primitive.ValueType.Obj)
                 //// (set-rest! <pair> <obj>)
-                .DefinePrimitive("set-rest!", (args, caller) => SetRest(First(args), Second(args)), 2, Primitive.ValueType.Pair, Primitive.ValueType.Obj);
+                .DefinePrimitive(
+                    "set-rest!", (args, caller) => args.First().SetRest(args.Second()), 
+                    2, 
+                    Primitive.ValueType.Pair, 
+                    Primitive.ValueType.Obj);
 
             DefineAccessPrimitives(env, "aa");
             DefineAccessPrimitives(env, "ad");
@@ -355,10 +415,10 @@ namespace SimpleScheme
         /// <returns>The result of the operation.</returns>
         private static Obj Cxr(string name, Obj args)
         {
-            Obj first = First(args);
+            Obj first = args.First();
             for (int i = name.Length - 2; i >= 1; i--)
             {
-                first = name[i] == 'a' ? First(first) : Rest(first);
+                first = name[i] == 'a' ? first.First() : first.Rest();
             }
 
             return first;
@@ -391,23 +451,23 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static Obj Append(Obj args)
         {
-            if (EmptyList.Is(args))
+            if (args.IsEmptyList())
             {
-                return EmptyList.Instance;
+                return EmptyList.New();
             }
 
-            Pair result = New();
+            Pair result = MakeList();
             Pair accum = result;
 
-            while (!EmptyList.Is(Rest(args)))
+            while (!args.Rest().IsEmptyList())
             {
-                accum = Append(accum, First(args));
-                args = Rest(args);
+                accum = Append(accum, args.First());
+                args = args.Rest();
             }
 
-            accum.SetRest(First(args));
+            accum.SetRest(args.First());
 
-            return Rest(result);
+            return result.Rest();
         }
 
         /// <summary>
@@ -420,11 +480,11 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, Obj toCopy)
         {
-            while (!EmptyList.Is(toCopy))
+            while (!toCopy.IsEmptyList())
             {
-                tail.SetRest(New(First(toCopy)));
-                toCopy = Rest(toCopy);
-                tail = (Pair)Rest(tail);
+                tail.SetRest(toCopy.First().MakeList());
+                toCopy = toCopy.Rest();
+                tail = tail.Rest().AsPair();
             }
 
             return tail;
@@ -440,17 +500,17 @@ namespace SimpleScheme
         {
             while (true)
             {
-                if (EmptyList.Is(x))
+                if (x.IsEmptyList())
                 {
                     return true;
                 }
 
-                if (!Pair.Is(x))
+                if (!x.IsPair())
                 {
                     return false;
                 }
 
-                Obj rest = Rest(x);
+                Obj rest = x.Rest();
                 if (rest == x)
                 {
                     return false;
@@ -468,12 +528,12 @@ namespace SimpleScheme
         /// <returns>The element after stepping down k steps.</returns>
         private static Obj ListRef(Obj list, Obj k)
         {
-            for (int i = (int)Number.As(k); i > 0; i--)
+            for (int i = Number.AsInt(k); i > 0; i--)
             {
-                list = Rest(list);
+                list = list.Rest();
             }
 
-            return First(list);
+            return list.First();
         }
 
         /// <summary>
@@ -484,9 +544,9 @@ namespace SimpleScheme
         /// <returns>The list after stepping down k steps.</returns>
         private static Obj ListTail(Obj list, Obj k)
         {
-            for (int i = (int)Number.As(k); i > 0; i--)
+            for (int i = Number.AsInt(k); i > 0; i--)
             {
-                list = Rest(list);
+                list = list.Rest();
             }
 
             return list;
@@ -503,14 +563,14 @@ namespace SimpleScheme
         /// <returns>The results that were found.</returns>
         private static Obj MemberAssoc(Obj obj, Obj list, Func<Obj, Obj> sel, Func<Obj, Obj, bool> eq)
         {
-            while (Pair.Is(list))
+            while (list.IsPair())
             {
-                if (eq(sel(First(list)), obj))
+                if (eq(sel(list.First()), obj))
                 {
                     return sel(list);
                 }
 
-                list = Rest(list);
+                list = list.Rest();
             }
 
             return SchemeBoolean.False;

@@ -38,11 +38,11 @@
 		(let* 
           ((buffer (new-array "byte" 256)) 
 		   (len (stream.ReadStream stream buffer 0 256)))
-		  (display (string-append len))(newline)
+		  (display (string-append (number->string len)))(newline)
 		  (if (> len 0)
               (set! out (cons (decode buffer len) out)))
 		  len))  
-    (display (string-append uri " " (resp.ContentLength resp)))(newline)
+    (display (string-append uri " " (number->string (resp.ContentLength resp))))(newline)
     (do ((len 1 (read-buffer)))
         ((= len 0) (string-concat (reverse out))))
   ))

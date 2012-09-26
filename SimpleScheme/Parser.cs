@@ -118,7 +118,7 @@ namespace SimpleScheme
                 return InputPort.Eof;
             }
 
-            return Character.As((char)p);
+            return Character.New((char)p);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace SimpleScheme
                     return InputPort.Eof;
                 }
 
-                return Character.As((char)ch);
+                return Character.New((char)ch);
             }
             catch (IOException ex)
             {
@@ -333,21 +333,21 @@ namespace SimpleScheme
                                 string tok = this.NextWord(char.IsLetter);
                                 if (tok.Length == 1)
                                 {
-                                    return Character.As((char)ch);
+                                    return Character.New((char)ch);
                                 }
 
                                 tok = tok.ToLower();
                                 if (charNames.ContainsKey(tok))
                                 {
-                                    return Character.As(charNames[tok]);
+                                    return Character.New(charNames[tok]);
                                 }
 
                                 // At this point there is a token and also a buffered character
                                 this.PushTokenBuffer(tok.Substring(1));
-                                return Character.As((char)ch);
+                                return Character.New((char)ch);
                             }
 
-                            return Character.As((char)ch);
+                            return Character.New((char)ch);
 
                         case 'e':
                         case 'i':
@@ -385,8 +385,13 @@ namespace SimpleScheme
                             }
                         }
 
+                        if (buf == ".")
+                        {
+                            return buf;
+                        }
+
                         // read a symbol
-                        return string.Intern(buf.ToLower());
+                        return Symbol.New(buf.ToLower());
                     }
             }
         }
@@ -481,16 +486,16 @@ namespace SimpleScheme
                         token = this.Read();
                         break;
                     case "'": 
-                        token = List.New("quote", this.Read());
+                        token = Symbol.New("quote").MakeList(this.Read());
                         break;
                     case "`":
-                        token = List.New("quasiquote", this.Read());
+                        token = Symbol.New("quasiquote").MakeList(this.Read());
                         break;
                     case ",": 
-                        token = List.New("unquote", this.Read());
+                        token = Symbol.New("unquote").MakeList(this.Read());
                         break;
                     case ",@": 
-                        token = List.New("unquote-splicing", this.Read());
+                        token = Symbol.New("unquote-splicing").MakeList(this.Read());
                         break;
                     default:
                         break;
@@ -594,7 +599,7 @@ namespace SimpleScheme
 
             if (tok == ")")
             {
-                return EmptyList.Instance;  // there was no more
+                return EmptyList.New();  // there was no more
             }
 
             if (tok == ".")
@@ -616,7 +621,7 @@ namespace SimpleScheme
             }
 
             this.PushTokenBuffer(token);
-            return Pair.Cons(this.Read(), this.ReadTail(true));
+            return this.Read().Cons(this.ReadTail(true));
         }
         #endregion
     }

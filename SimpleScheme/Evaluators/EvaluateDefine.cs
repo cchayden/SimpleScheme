@@ -55,11 +55,17 @@ namespace SimpleScheme
         /// <returns>The define evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            if (Pair.Is(List.First(expr)))
+            if (expr.First().IsPair())
             {
                 // Defun case -- create a lambda and bind it to the variable.
-                env.UnsafeDefine(List.First(List.First(expr)), new Lambda(List.Rest(List.First(expr)), List.Rest(expr), env));
-                return caller.UpdateReturnValue(new Undefined());
+                var symbol = expr.First().First();
+                if (!symbol.IsSymbol())
+                {
+                    ErrorHandlers.SemanticError("Attempt to define a non-symbol: " + Printer.AsString(symbol));
+                }
+
+                env.Define(symbol.AsSymbol(), Lambda.New(expr.First().Rest(), expr.Rest(), env));
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
             return new EvaluateDefine(expr, env, caller);
@@ -74,7 +80,7 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpression.Call(List.Second(s.Expr), s.Env, s.ContinueHere(StoreDefineStep));
+            return EvaluateExpression.Call(s.Expr.Second(), s.Env, s.ContinueHere(StoreDefineStep));
         }
 
         /// <summary>
@@ -84,9 +90,16 @@ namespace SimpleScheme
         /// <returns>Execution continues in the caller.</returns>
         private static Evaluator StoreDefineStep(Evaluator s)
         {
-            s.Env.UnsafeDefine(List.First(s.Expr), s.ReturnedExpr);
+            var symbol = s.Expr.First();
+            if (!symbol.IsSymbol())
+            {
+                ErrorHandlers.SemanticError("Attempt to store to a non-symbol: " + Printer.AsString(symbol));
+            }
+
+            s.Env.Define(symbol.AsSymbol(), s.ReturnedExpr);
             return s.ReturnUndefined();
         }
+
         #endregion
     }
 }

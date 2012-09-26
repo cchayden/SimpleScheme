@@ -57,29 +57,14 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a CLR constructor.
+        /// Creates a new instance of the ClrConstructor class.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a CLR constructor.</returns>
-        public static new bool Is(Obj obj)
+        /// <param name="targetClassName">The class of the object to invoke.</param>
+        /// <param name="argClassNames">The types of each argument.</param>
+        /// <returns>A new ClrConstructor.</returns>
+        public static ClrConstructor New(Obj targetClassName, Obj argClassNames)
         {
-            return obj is ClrConstructor;
-        }
-
-        /// <summary>
-        /// Convert object to clr constructor.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a clr constructor.</returns>
-        public static new ClrConstructor As(Obj obj)
-        {
-            if (Is(obj))
-            {
-                return (ClrConstructor)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
+            return new ClrConstructor(targetClassName, argClassNames);
         }
         #endregion
 
@@ -95,9 +80,9 @@ namespace SimpleScheme
                 //// (constructor <class-name> <arg-class-name> ...)
                 .DefinePrimitive(
                     "constructor",
-                    (args, caller) => new ClrConstructor(
-                                          Printer.AsString(List.First(args), false),
-                                          List.Rest(args)),
+                    (args, caller) => New(
+                                          Printer.AsString(args.First(), false),
+                                          args.Rest()),
                     1,
                     MaxInt, 
                     Primitive.ValueType.String);
@@ -110,7 +95,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(Name + ": ");
             buf.Append(this.ToString());
@@ -138,9 +123,41 @@ namespace SimpleScheme
             Assembly assembly = this.classType.Assembly;
             object[] argArray = ToArgList(args, null);
             Obj res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
-            res = res ?? new Undefined();
+            res = res ?? Undefined.New();
             return caller.UpdateReturnValue(res);
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extensions for ClrConstructor
+    /// </summary>
+    public static class ClrConstructorExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a CLR constructor.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a CLR constructor.</returns>
+        public static bool IsClrConstructor(this Obj obj)
+        {
+            return obj is ClrConstructor;
+        }
+
+        /// <summary>
+        /// Convert object to clr constructor.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a clr constructor.</returns>
+        public static ClrConstructor AsClrConstructor(this Obj obj)
+        {
+            if (obj.IsClrConstructor())
+            {
+                return (ClrConstructor)obj;
+            }
+
+            ErrorHandlers.TypeError(ClrConstructor.Name, obj);
+            return null;
+        }
     }
 }

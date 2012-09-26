@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System.Text;
+
     using Obj = System.Object;
 
     /// <summary>
@@ -13,35 +14,35 @@ namespace SimpleScheme
     public class Undefined : Printable
     {
         #region Constants
+
         /// <summary>
         /// The printable name of the undefined type.
         /// </summary>
         public const string Name = "undefined";
+
         #endregion
+
+        /// <summary>
+        /// Prevents a default instance of the <see cref="Undefined"/> class from being created. 
+        /// </summary>
+        private Undefined()
+        {
+        }
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme undefined object.
+        /// Create a new undefined object.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme undefined object.</returns>
-        public static bool Is(Obj obj)
+        /// <returns>A new undefined object.</returns>
+        public static Undefined New()
         {
-            return obj is Undefined;
+            return new Undefined();
         }
 
-        /// <summary>
-        /// Convert object to undefined object.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an undefined object.</returns>
-        public static Undefined As(Obj obj)
-        {
-            return (Undefined)obj;
-        }
         #endregion
 
         #region Public Methods
+
         /// <summary>
         /// Write the undefined object to the string builder.
         /// If not quoted, write nothing.
@@ -49,7 +50,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
@@ -66,6 +67,33 @@ namespace SimpleScheme
         {
             return "<" + Name + ">";
         }
+
         #endregion
     }
+
+    /// <summary>
+    /// Extensions for Undefined
+    /// </summary>
+    public static class UndefinedExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme undefined object.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme undefined object.</returns>
+        public static bool IsUndefined(this Obj obj)
+        {
+            return obj is Undefined;
+        }
+
+        /// <summary>
+        /// Convert object to undefined object.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as an undefined object.</returns>
+        public static Undefined AsUndefined(this Obj obj)
+        {
+            return (Undefined)obj;
+        }
+    }    
 }

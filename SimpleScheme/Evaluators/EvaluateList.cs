@@ -47,7 +47,7 @@ namespace SimpleScheme
             // Start with an empty list.  As exprs are evaluated, they will be consed on the
             //  front.  The list will be reversed before it is returned.  Do this rather than
             //  building a list in place so that the evaluator can be cloned.
-            this.result = EmptyList.Instance;
+            this.result = EmptyList.New();
             ContinueHere(EvalExprStep);
             IncrementCounter(counter);
         }
@@ -65,15 +65,15 @@ namespace SimpleScheme
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
-                return caller.UpdateReturnValue(EmptyList.Instance);
+                return caller.UpdateReturnValue(EmptyList.New());
             }
 
-            if (!Pair.Is(expr))
+            if (!expr.IsPair())
             {
                 ErrorHandlers.SemanticError("Bad args for list: " + expr);
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
             return new EvaluateList(expr, env, caller);
@@ -89,7 +89,7 @@ namespace SimpleScheme
         private static Evaluator EvalExprStep(Evaluator s)
         {
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(s.Expr.First(), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -103,22 +103,22 @@ namespace SimpleScheme
             var step = (EvaluateList)s;
 
             // back from the evaluation -- save the result and keep going with the rest
-            step.result = Pair.Cons(s.ReturnedExpr, step.result);
+            step.result = s.ReturnedExpr.Cons(step.result);
             step.StepDownExpr();
 
-            if (Pair.Is(s.Expr))
+            if (s.Expr.IsPair())
             {
                 // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s);
+                return EvaluateExpression.Call(s.Expr.First(), s.Env, s);
             }
 
             // We are done.  Reverse the list and return it.
-            if (EmptyList.Is(step.result) || EmptyList.Is(List.Rest(step.result)))
+            if (step.result.IsEmptyList() || step.result.Rest().IsEmptyList())
             {
                 return s.ReturnFromStep(step.result);
             }
 
-            return s.ReturnFromStep(List.Reverse(step.result));
+            return s.ReturnFromStep(step.result.ReverseList());
         }
         #endregion
     }

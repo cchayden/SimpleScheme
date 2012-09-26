@@ -28,7 +28,7 @@ namespace SimpleScheme
         /// <param name="str">The string.</param>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public static void AsString(char[] str, bool quoted, StringBuilder buf)
+        public static void PrintString(this char[] str, bool quoted, StringBuilder buf)
         {
             if (!quoted)
             {
@@ -59,7 +59,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to test</param>
         /// <returns>True if the object is a scheme string.</returns>
-        public static bool Is(Obj obj)
+        public static bool IsSchemeString(this Obj obj)
         {
             return obj is char[];
         }
@@ -69,11 +69,28 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The scheme string.</returns>
-        public static char[] As(Obj obj)
+        public static char[] AsSchemeString(this Obj obj)
         {
-            if (Is(obj))
+            if (obj.IsSchemeString())
             {
                 return (char[])obj;
+            }
+
+            ErrorHandlers.TypeError(Name, obj);
+            return null;
+        }
+
+        /// <summary>
+        /// Check that the object is a scheme string, and
+        /// convert it into a S# string.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The C# string of the schee string.</returns>
+        public static string AsString(Obj obj)
+        {
+            if (obj.IsSchemeString())
+            {
+                return new string((char[])obj);
             }
 
             ErrorHandlers.TypeError(Name, obj);
@@ -91,67 +108,80 @@ namespace SimpleScheme
             const int MaxInt = int.MaxValue;
             env
                 //// <r4rs section="6.7">(list->string <chars>)</r4rs>
-                .DefinePrimitive("list->string", (args, caller) => ListToString(List.First(args)), 1, Primitive.ValueType.PairOrEmpty)
+                .DefinePrimitive("list->string", (args, caller) => ListToString(args.First()), 1, Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.7">(make-string <k>)</r4rs>
                 //// <r4rs section="6.7">(make-string <k> <char>)</r4rs>
-                .DefinePrimitive("make-string", (args, caller) => New(List.First(args), List.Second(args)), 1, 2, Primitive.ValueType.Number, Primitive.ValueType.Char)
+                .DefinePrimitive("make-string", (args, caller) => New(args.First(), args.Second()), 1, 2, Primitive.ValueType.Number, Primitive.ValueType.Char)
                 //// <r4rs section="6.7">(string <char> ...)</r4rs>
                 .DefinePrimitive("string", (args, caller) => ListToString(args), 0, MaxInt, Primitive.ValueType.Char)
                 //// <r4rs section="6.7">(string->list <string>)</r4rs>
-                .DefinePrimitive("string->list", (args, caller) => ToList(List.First(args)), 1, Primitive.ValueType.String)
+                .DefinePrimitive("string->list", (args, caller) => ToList(args.First()), 1, Primitive.ValueType.String)
                 //// <r4rs section="6.5.6">(string->number <number>)</r4rs>
                 //// <r4rs section="6.5.6">(string->number <number> <radix>)</r4rs>
-                .DefinePrimitive("string->number", (args, caller) => ToNumber(List.First(args), List.Second(args)), 1, 2, Primitive.ValueType.String, Primitive.ValueType.Number)
+                .DefinePrimitive("string->number", (args, caller) => ToNumber(args.First(), args.Second()), 1, 2, Primitive.ValueType.String, Primitive.ValueType.Number)
                 //// <r4rs section="6.7">(string-append <string> ...)</r4rs>
                 .DefinePrimitive("string-append", (args, caller) => Append(args), 0, MaxInt, Primitive.ValueType.String)
-                .DefinePrimitive("string-concat", (args, caller) => Append(List.First(args)), 1, Primitive.ValueType.String)
+                .DefinePrimitive("string-concat", (args, caller) => Append(args.First()), 1, Primitive.ValueType.Pair)
                 //// <r4rs section="6.7">(string-ci<=? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string-ci<=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) <= 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) <= 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-ci<? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string-ci<?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) < 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) < 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-ci=? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string-ci=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) == 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) == 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-ci>=? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string-ci>=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) >= 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) >= 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-ci>? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string-ci>?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), true) > 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), true) > 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-copy <string>)</r4rs>
-                .DefinePrimitive("string-copy", (args, caller) => Copy(List.First(args)), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                    "string-copy", 
+                    (args, caller) => Copy(args.First()), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-fill! <string> <char>)</r4rs>
-                .DefinePrimitive("string-fill!", (args, caller) => Fill(List.First(args), List.Second(args)), 2, Primitive.ValueType.String, Primitive.ValueType.Char)
+                .DefinePrimitive(
+                    "string-fill!", 
+                    (args, caller) => Fill(args.First(), args.Second()), 
+                    2, 
+                    Primitive.ValueType.String, 
+                    Primitive.ValueType.Char)
                 //// <r4rs section="6.7">(string-length <string>)</r4rs>
-                .DefinePrimitive("string-length", (args, caller) => Length(As(List.First(args))), 1, Primitive.ValueType.String)
+                .DefinePrimitive(
+                    "string-length", 
+                    (args, caller) => Length(args.First().AsSchemeString()), 
+                    1, 
+                    Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string-ref <string> <k>)</r4rs>
                 .DefinePrimitive(
                     "string-ref",
-                    (args, caller) => Character.As(As(List.First(args))[(int)Number.As(List.Second(args))]),
+                    (args, caller) => Character.New(args.First().AsSchemeString()[Number.AsInt(args.Second())]),
                     2,
                     Primitive.ValueType.String,
                     Primitive.ValueType.Number)
                 //// <r4rs section="6.7">(string-set! <string> <k> <char>)</r4rs>
                 .DefinePrimitive(
                     "string-set!",
-                    (args, caller) => Set(List.First(args), List.Second(args), List.Third(args)),
+                    (args, caller) => Set(args.First(), args.Second(), args.Third()),
                     3,
                     Primitive.ValueType.String,
                     Primitive.ValueType.Number,
@@ -159,49 +189,53 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string<=? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string<=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) <= 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) <= 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string<?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) < 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) < 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string=? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) == 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) == 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string>=? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string>=?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) >= 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) >= 0),
                     2,
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string<? <string1> <string2>)</r4rs>
                 .DefinePrimitive(
                     "string>?",
-                    (args, caller) => SchemeBoolean.Truth(Compare(List.First(args), List.Second(args), false) > 0),
+                    (args, caller) => SchemeBoolean.Truth(Compare(args.First(), args.Second(), false) > 0),
                     2, 
                     Primitive.ValueType.String)
                 //// <r4rs section="6.7">(string? <obj>)</r4rs>
-                .DefinePrimitive("string?", (args, caller) => SchemeBoolean.Truth(Is(List.First(args))), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(
+                    "string?", 
+                    (args, caller) => SchemeBoolean.Truth(args.First().IsSchemeString()), 
+                    1, 
+                    Primitive.ValueType.Obj)
                 //// <r4rs section="6.7">(substring <string> <start> <end>)</r4rs>
                 .DefinePrimitive(
                 "substring", 
                 (args, caller) => 
                     Substr(
-                    List.First(args), 
-                    List.Second(args), 
-                    List.Third(args)), 
+                    args.First(), 
+                    args.Second(), 
+                    args.Third()), 
                     3, 
                     Primitive.ValueType.String, 
                     Primitive.ValueType.Number, 
                     Primitive.ValueType.Number)
                 //// <r4rs section="6.4">(symbol->string <symbol>)</r4rs>
-                .DefinePrimitive("symbol->string", (args, caller) => New(List.First(args)), 1, Primitive.ValueType.Symbol);
+                .DefinePrimitive("symbol->string", (args, caller) => New(args.First()), 1, Primitive.ValueType.Symbol);
         }
         #endregion
 
@@ -224,7 +258,7 @@ namespace SimpleScheme
         /// <returns>The scheme string.</returns>
         public static char[] New(Obj str)
         {
-            return Symbol.As(str).ToCharArray();
+            return str.AsSymbol().ToString().ToCharArray();
         }
 
         /// <summary>
@@ -235,7 +269,7 @@ namespace SimpleScheme
         /// <returns>True if the strings are equal.</returns>
         public static bool Equal(Obj obj1, Obj obj2)
         {
-            if (!Is(obj2))
+            if (!obj2.IsSchemeString())
             {
                 return false;
             }
@@ -271,10 +305,10 @@ namespace SimpleScheme
         internal static char[] ListToString(Obj chars)
         {
             var str = new StringBuilder();
-            while (Pair.Is(chars))
+            while (chars.IsPair())
             {
-                str.Append(Character.As(List.First(chars)));
-                chars = List.Rest(chars);
+                str.Append(chars.First().AsCharacter());
+                chars = chars.Rest();
             }
 
             return New(str);
@@ -290,8 +324,8 @@ namespace SimpleScheme
         /// <returns>The new scheme string.</returns>
         private static char[] New(Obj length, Obj fill)
         {
-            char c = EmptyList.Is(fill) ? (char)0 : Character.As(fill);
-            return new string(c, (int)Number.As(length)).ToCharArray();
+            char c = fill.IsEmptyList() ? (char)0 : fill.AsCharacter();
+            return new string(c, Number.AsInt(length)).ToCharArray();
         }
 
         /// <summary>
@@ -323,13 +357,13 @@ namespace SimpleScheme
         /// <returns>The substring starting with the starting position and ending with the ending position.</returns>
         private static char[] Substr(Obj str, Obj start, Obj end)
         {
-            var startPos = (int)Number.As(start);
-            var endPos = (int)Number.As(end);
+            var startPos = Number.AsInt(start);
+            var endPos = Number.AsInt(end);
             var len = endPos - startPos;
             var newStr = new char[len];
             for (int i = 0; i < len; i++)
             {
-                newStr[i] = As(str)[startPos + i];
+                newStr[i] = str.AsSchemeString()[startPos + i];
             }
 
             return newStr;
@@ -342,11 +376,11 @@ namespace SimpleScheme
         /// <returns>A list of the characters.</returns>
         private static Obj ToList(Obj s)
         {
-            Obj result = EmptyList.Instance;
-            char[] str = As(s);
+            Obj result = EmptyList.New();
+            char[] str = s.AsSchemeString();
             for (int i = str.Length - 1; i >= 0; i--)
             {
-                result = Pair.Cons(Character.As(str[i]), result);
+                result = Character.New(str[i]).Cons(result);
             }
 
             return result;
@@ -361,8 +395,8 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         private static Obj Set(Obj str, Obj index, Obj chr)
         {
-            As(str)[(int)Number.As(index)] = Character.As(chr);
-            return new Undefined();
+            str.AsSchemeString()[Number.AsInt(index)] = chr.AsCharacter();
+            return Undefined.New();
         }
 
         /// <summary>
@@ -372,7 +406,7 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static Obj Copy(Obj str)
         {
-            return New(As(str));
+            return New(str.AsSchemeString());
         }
 
         /// <summary>
@@ -383,13 +417,13 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static Obj Fill(Obj str, Obj fill)
         {
-            char[] ss = As(str);
+            char[] ss = str.AsSchemeString();
             for (int i = 0; i < ss.Length; i++)
             {
-                ss[i] = Character.As(fill);
+                ss[i] = fill.AsCharacter();
             }
 
-            return new Undefined();
+            return Undefined.New();
         }
 
         /// <summary>
@@ -402,10 +436,10 @@ namespace SimpleScheme
         {
             var result = new StringBuilder();
 
-            while (Pair.Is(args))
+            while (args.IsPair())
             {
-                result.Append(Printer.AsString(List.First(args), false));
-                args = List.Rest(args);
+                result.Append(Printer.AsString(args.First(), false));
+                args = args.Rest();
             }
 
             return New(result);
@@ -422,7 +456,7 @@ namespace SimpleScheme
         /// positive if first is greater.</returns>
         private static int Compare(Obj x, Obj y, bool caseInsensitive)
         {
-            if (Is(x) && Is(y))
+            if (x.IsSchemeString() && y.IsSchemeString())
             {
                 return Compare((char[])x, (char[])y, caseInsensitive);
             }
@@ -473,12 +507,12 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         private static Obj ToNumber(Obj val, Obj bas)
         {
-            int numberBase = Number.Is(bas) ? (int)Number.As(bas) : 10;
+            int numberBase = bas.IsNumber() ? Number.AsInt(bas) : 10;
             try
             {
                 return numberBase == 10
                            ? double.Parse(Printer.AsString(val, false))
-                           : Number.As(Convert.ToInt64(Printer.AsString(val, false), numberBase));
+                           : Convert.ToInt64(Printer.AsString(val, false), numberBase).AsNumber();
             }
             catch (FormatException)
             {

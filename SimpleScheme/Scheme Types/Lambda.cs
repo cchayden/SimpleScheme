@@ -52,7 +52,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        public Lambda(Obj formalParameters, Obj body, Environment env) :
+        protected Lambda(Obj formalParameters, Obj body, Environment env) :
             base(0, 0)
         {
             this.formalParameters = formalParameters;
@@ -74,23 +74,16 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Tests whether to given object is a scheme lambda.
+        /// Create a new Lambda.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme lambda.</returns>
-        public static new bool Is(Obj obj)
+        /// <param name="formalParameters">A list of variable names, to be matched with 
+        ///    values given later.</param>
+        /// <param name="body">The program to execute.</param>
+        /// <param name="env">The environment in which to execute it.</param>
+        /// <returns>A new Lambda.</returns>
+        public static Lambda New(Obj formalParameters, Obj body, Environment env)
         {
-            return obj is Lambda;
-        }
-
-        /// <summary>
-        /// Convert object to lambda.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a lambda.</returns>
-        public static new Lambda As(Obj obj)
-        {
-            return (Lambda)obj;
+            return new Lambda(formalParameters, body, env);
         }
 
         #region Public Methods
@@ -99,7 +92,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public override void AsString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -126,8 +119,8 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
         {
-            return EmptyList.Is(List.Rest(this.body)) ? 
-                EvaluateExpression.Call(List.First(this.body), givenEnv, caller) : 
+            return this.body.Rest().IsEmptyList() ? 
+                EvaluateExpression.Call(this.body.First(), givenEnv, caller) : 
                 EvaluateSequence.Call(this.body, givenEnv, caller);
         }
 
@@ -172,22 +165,48 @@ namespace SimpleScheme
             Obj vars = this.formalParameters;
             while (true)
             {
-                if (EmptyList.Is(vars))
+                if (vars.IsEmptyList())
                 {
                     this.SetMinMax(count);
                     return;
                 }
 
-                if (!Pair.Is(vars))
+                if (!vars.IsPair())
                 {
-                    this.SetMinMax(count, Symbol.Is(vars) ? MaxInt : count);
+                    this.SetMinMax(count, vars.IsSymbol() ? MaxInt : count);
                     return;
                 }
 
-                vars = List.Rest(vars);
+                vars = vars.Rest();
                 count++;
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Extensions for Lambda
+    /// </summary>
+    public static class LambdaExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme lambda.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme lambda.</returns>
+        public static bool IsLambda(this Obj obj)
+        {
+            return obj is Lambda;
+        }
+
+        /// <summary>
+        /// Convert object to lambda.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The object as a lambda.</returns>
+        public static Lambda AsLambda(this Obj obj)
+        {
+            return (Lambda)obj;
+        }
     }
 }

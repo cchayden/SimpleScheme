@@ -83,41 +83,41 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         public static Evaluator Call(Obj expr, Environment env, Evaluator caller)
         {
-            if (EmptyList.Is(expr))
+            if (expr.IsEmptyList())
             {
                 ErrorHandlers.SemanticError("No arguments for let");
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            if (!Pair.Is(expr))
+            if (!expr.IsPair())
             {
                 ErrorHandlers.SemanticError("Bad arg list for let: " + expr);
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
             string name = null;
             Obj bindings;
             Obj body;
-            if (Symbol.Is(List.First(expr)))
+            if (expr.First().IsSymbol())
             {
                 // named let
-                name = Symbol.As(List.First(expr));
-                bindings = List.Second(expr);
-                body = List.Rest(List.Rest(expr));
+                name = expr.First().ToString();   // TODO keep as symbol?
+                bindings = expr.Second();
+                body = expr.Rest().Rest();
             }
             else
             {
-                bindings = List.First(expr);
-                body = List.Rest(expr);
+                bindings = expr.First();
+                body = expr.Rest();
             }
 
-            if (EmptyList.Is(body))
+            if (body.IsEmptyList())
             {
-                return caller.UpdateReturnValue(new Undefined());
+                return caller.UpdateReturnValue(Undefined.New());
             }
 
-            Obj vars = List.MapFun(List.First, List.New(bindings));
-            Obj inits = List.MapFun(List.Second, List.New(bindings));
+            Obj vars = List.MapFun(List.First, bindings.MakeList());
+            Obj inits = List.MapFun(List.Second, bindings.MakeList());
             return new EvaluateLet(expr, env, caller, name, body, vars, inits);
         }
         #endregion
@@ -136,7 +136,7 @@ namespace SimpleScheme
             if (step.name == null)
             {
                 // regular let -- create a lambda for the body, bind inits to it, and apply it
-                return EvaluateProc.Call(new Lambda(step.vars, step.body, s.Env), step.inits, s.Env, s.Caller);
+                return EvaluateProc.Call(Lambda.New(step.vars, step.body, s.Env), step.inits, s.Env, s.Caller);
             }
 
             // named let -- eval the inits in the outer environment
@@ -154,8 +154,8 @@ namespace SimpleScheme
         private static Evaluator ApplyNamedLetStep(Evaluator s)
         {
             var step = (EvaluateLet)s;
-            Lambda fn = new Lambda(step.vars, step.body, s.Env);
-            fn.Env.UnsafeDefine(step.name, fn);
+            Lambda fn = Lambda.New(step.vars, step.body, s.Env);
+            fn.Env.Define(Symbol.New(step.name), fn);
             return fn.Apply(s.ReturnedExpr, s.Caller);
         }
         #endregion
