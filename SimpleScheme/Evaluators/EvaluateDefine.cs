@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
@@ -12,6 +14,16 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateDefine : Evaluator
     {
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper storeDefineStep = GetStepper("StoreDefineStep");
+
         #region Fields
         /// <summary>
         /// The counter id.
@@ -27,8 +39,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateDefine(SchemeObject expr, Environment env, Evaluator caller)
-            : base(InitialStep, expr, env, caller, counter)
+            : base(initialStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -46,6 +62,9 @@ namespace SimpleScheme
         /// <returns>The define evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             if (First(expr) is Pair)
             {
                 // Defun case -- create a lambda and bind it to the variable.
@@ -68,31 +87,22 @@ namespace SimpleScheme
         /// <summary>
         /// Start by evaluating the expression.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Continue by evaluating the expression.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        protected override Evaluator InitialStep()
         {
-            s.Pc = StoreDefineStep;
-            return EvaluateExpression.Call(Second(s.Expr), s.Env, s);
+            this.Pc = storeDefineStep;
+            return EvaluateExpression.Call(Second(this.Expr), this.Env, this);
         }
 
         /// <summary>
         /// Back from expression evaluation.  Store the result as the value of the symbol
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues in the caller.</returns>
-        private static Evaluator StoreDefineStep(Evaluator s)
+        protected override Evaluator StoreDefineStep()
         {
-            var symbol = First(s.Expr);
-            if (!(symbol is Symbol))
-            {
-                ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)), null);
-            }
-
-            s.Env.Define((Symbol)symbol, s.ReturnedExpr);
-            Evaluator caller = s.Caller;
-            caller.ReturnedExpr = Undefined.Instance;
-            return caller;
+            this.Env.Define((Symbol)First(this.Expr), this.ReturnedExpr);
+            this.Caller.ReturnedExpr = Undefined.Instance;
+            return this.Caller;
         }
 
         #endregion

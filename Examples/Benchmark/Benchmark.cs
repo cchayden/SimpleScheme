@@ -21,7 +21,7 @@ namespace Benchmark
         {
             string[] files = new[] { filenameBase + ".ss", "common.ss" };
             IInterpreter interp = Interpreter.New(files);
-            interp.GlobalEnv.Define("input-filename", (SchemeString)(filenameBase + ".input"));
+            interp.GlobalEnvironment.Define("input-filename", (SchemeString)(filenameBase + ".input"));
             var res = interp.Eval(interp.Read("(main1 input-filename)"));
             var name = List.First(res);
             var count = List.Nth(res, (Number)1);

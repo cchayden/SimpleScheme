@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Extensions for SchemeObject
@@ -108,6 +109,7 @@ namespace SimpleScheme
         /// <returns>The scheme type name.</returns>
         public static string SchemeTypeName(this object obj)
         {
+            Contract.Requires(obj != null);
             return SchemeTypeName(obj.GetType());
         }
 
@@ -119,6 +121,7 @@ namespace SimpleScheme
         /// <returns>The scheme type name.</returns>
         public static string SchemeTypeName(this Type t)
         {
+            Contract.Requires(t != null);
             string fullName = t.FullName;
             if (fullName == null)
             {
@@ -138,6 +141,8 @@ namespace SimpleScheme
         /// <returns>The type corresponding to the name.</returns>
         public static Type ToClass(this object obj)
         {
+            Contract.Requires(obj != null);
+            //// return null if the type is not found
             string abbrev = obj.ToString();
             string typeName;
             if (clrTranslator.TryGetValue(abbrev, out typeName))

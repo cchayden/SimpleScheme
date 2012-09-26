@@ -3,7 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Represents a continuation.
@@ -30,6 +30,7 @@ namespace SimpleScheme
         private Continuation(Evaluator eval) : 
             base(null, new ArgsInfo(1, 1, false))
         {
+            Contract.Requires(eval != null);
             this.savedEvaluator = eval.CloneChain(); 
         }
         #endregion
@@ -46,6 +47,7 @@ namespace SimpleScheme
         /// <returns>A new continuation.</returns>
         public static Continuation New(Evaluator eval)
         {
+            Contract.Requires(eval != null);
             return new Continuation(eval);
         }
         #endregion
@@ -69,11 +71,10 @@ namespace SimpleScheme
         ///   does not alter the evaluation, making it impossible to return back to the continuation.
         /// </summary>
         /// <param name="args">The value to return.</param>
-        /// <param name="env"></param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
         {
 #if Check
             this.CheckArgCount(ListLength(args), args, "Continuation", caller);
@@ -82,6 +83,17 @@ namespace SimpleScheme
             nextStep.ReturnedExpr = First(args);
             nextStep.ReturnedEnv = this.savedEvaluator.Env;
             return nextStep;
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.savedEvaluator != null);
         }
         #endregion
     }

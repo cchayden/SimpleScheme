@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate a do expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -14,6 +16,26 @@ namespace SimpleScheme
     internal sealed class EvaluateDo : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper testStep = GetStepper("TestStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper iterateStep = GetStepper("IterateStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper loopStep = GetStepper("LoopStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -64,8 +86,18 @@ namespace SimpleScheme
         /// <param name="commands">The commands.</param>
         /// <param name="testProc">The test proc to execute each interation.</param>
         private EvaluateDo(SchemeObject expr, Environment env, Evaluator caller, SchemeObject vars, SchemeObject inits, SchemeObject steps, SchemeObject exprs, SchemeObject commands, Lambda testProc)
-            : base(InitialStep, expr, new Environment(env), caller, counter)
+            : base(initialStep, expr, new Environment(env), caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(vars != null);
+            Contract.Requires(inits != null);
+            Contract.Requires(steps != null);
+            Contract.Requires(exprs != null);
+            Contract.Requires(commands != null);
+            Contract.Requires(testProc != null);
+            Contract.Requires(counter >= 0);
             this.vars = vars;
             this.inits = inits;
             this.steps = steps;
@@ -89,6 +121,10 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+
             // Test for errors before creating the object.
             if (expr is EmptyList)
             {
@@ -100,12 +136,12 @@ namespace SimpleScheme
                 ErrorHandlers.SemanticError("Bad arg list for do: " + expr, null);
             }
 
-            SchemeObject bindings = First(expr);
-            SchemeObject vars = MapFun(First, bindings);
-            SchemeObject inits = MapFun(Second, bindings);
-            SchemeObject steps = MapFun(ThirdOrFirst, bindings);
-            SchemeObject exprs = Rest(Second(expr));
-            SchemeObject commands = Rest(Rest(expr));
+            var bindings = First(expr);
+            var vars = MapFun(First, bindings);
+            var inits = MapFun(Second, bindings);
+            var steps = MapFun(ThirdOrFirst, bindings);
+            var exprs = Rest(Second(expr));
+            var commands = Rest(Rest(expr));
 
             SchemeObject test = First(Second(expr));
             if (test is EmptyList)
@@ -120,6 +156,70 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Steps
+        /// <summary>
+        /// Start by evaluating the inits.
+        /// </summary>
+        /// <returns>Continues by evaluating the inits.</returns>
+        protected override Evaluator InitialStep()
+        {
+            this.Pc = testStep;
+            return EvaluateList.Call(this.inits, this.Env, this);
+        }
+
+        /// <summary>
+        /// Evaluate the test expr in the environment containing the variables with their new values.
+        /// These are the init values or the step values.
+        /// </summary>
+        /// <returns>The next step, which tests the result.</returns>
+        protected override Evaluator TestStep()
+        {
+            this.UpdateEnvironment(this.vars, this.ReturnedExpr);
+            this.Pc = iterateStep;
+            return this.testProc.ApplyWithGivenEnv(this.Env, this);
+        }
+
+        /// <summary>
+        /// Iterate: if test is true, eval the exprs and return.
+        /// Otherwise, evaluate the commands.
+        /// </summary>
+        /// <returns>The next step.</returns>
+        protected override Evaluator IterateStep()
+        {
+            if (SchemeBoolean.Truth(this.ReturnedExpr).Value)
+            {
+                // test is true
+                // Evaluate exprs and return the value of the last
+                //   in the environment of the vars.
+                // If no exprs, unspecified.
+                if (this.exprs is EmptyList)
+                {
+                    Evaluator caller = this.Caller;
+                    caller.ReturnedExpr = Undefined.Instance;
+                    return caller;
+                }
+
+                return EvaluateSequence.Call(this.exprs, this.Env, this.Caller);
+            }
+            
+            // test is false
+            // evaluate the steps in the environment of the vars
+            // bind to fresh copies of the vars
+            this.Pc = loopStep;
+            return EvaluateList.Call(this.commands, this.Env, this);
+        }
+
+        /// <summary>
+        /// Evaluate the step expressions.  
+        /// </summary>
+        /// <returns>The next step.</returns>
+        protected override Evaluator LoopStep()
+        {
+            this.Pc = testStep;
+            return EvaluateList.Call(this.steps, this.Env, this);
+        }
+        #endregion
+
         #region Private Methods
         /// <summary>
         /// Extract the steps (third element in list).
@@ -129,80 +229,25 @@ namespace SimpleScheme
         /// <returns>The third, if it exists, otherwise the first.</returns>
         private static SchemeObject ThirdOrFirst(SchemeObject x)
         {
+            Contract.Requires(x != null);
             SchemeObject res = Third(x);
             return res is EmptyList ? First(x) : res;
         }
         #endregion
 
-        #region Steps
+        #region Contract Invariant
         /// <summary>
-        /// Start by evaluating the inits.
+        /// Describes invariants on the member variables.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>Continues by evaluating the inits.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        [ContractInvariantMethod]
+        private void ContractInvariant()
         {
-            var step = (EvaluateDo)s;
-            s.Pc = TestStep;
-            return EvaluateList.Call(step.inits, s.Env, s);
-        }
-
-        /// <summary>
-        /// Evaluate the test expr in the environment containing the variables with their new values.
-        /// These are the init values or the step values.
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next step, which tests the result.</returns>
-        private static Evaluator TestStep(Evaluator s)
-        {
-            var step = (EvaluateDo)s;
-            step.UpdateEnvironment(step.vars, s.ReturnedExpr);
-            s.Pc = IterateStep;
-            return step.testProc.ApplyWithtEnv(s.Env, s);
-        }
-
-        /// <summary>
-        /// Iterate: if test is true, eval the exprs and return.
-        /// Otherwise, evaluate the commands.
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next step.</returns>
-        private static Evaluator IterateStep(Evaluator s)
-        {
-            var step = (EvaluateDo)s;
-            if (SchemeBoolean.Truth(step.ReturnedExpr).Value)
-            {
-                // test is true
-                // Evaluate exprs and return the value of the last
-                //   in the environment of the vars.
-                // If no exprs, unspecified.
-                if (step.exprs is EmptyList)
-                {
-                    Evaluator caller = step.Caller;
-                    caller.ReturnedExpr = Undefined.Instance;
-                    return caller;
-                }
-
-                return EvaluateSequence.Call(step.exprs, s.Env, step.Caller);
-            }
-            
-            // test is false
-            // evaluate the steps in the environment of the vars
-            // bind to fresh copies of the vars
-            s.Pc = LoopStep;
-            return EvaluateList.Call(step.commands, s.Env, s);
-        }
-
-        /// <summary>
-        /// Evaluate the step expressions.  
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next step.</returns>
-        private static Evaluator LoopStep(Evaluator s)
-        {
-            var step = (EvaluateDo)s;
-            s.Pc = TestStep;
-            return EvaluateList.Call(step.steps, s.Env, s);
+            Contract.Invariant(this.vars != null);
+            Contract.Invariant(this.inits != null);
+            Contract.Invariant(this.steps != null);
+            Contract.Invariant(this.exprs != null);
+            Contract.Invariant(this.commands != null);
+            Contract.Invariant(this.testProc != null);
         }
         #endregion
     }

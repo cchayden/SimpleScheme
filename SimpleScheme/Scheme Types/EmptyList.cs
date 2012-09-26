@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
     using System.Text;
 
     /// <summary>
@@ -35,7 +36,11 @@ namespace SimpleScheme
         /// <returns>An empty list.</returns>
         internal static EmptyList Instance
         {
-            get { return instance; }
+            get
+            {
+                Contract.Ensures(Contract.Result<EmptyList>() != null);
+                return instance;
+            }
         }
         #endregion
 

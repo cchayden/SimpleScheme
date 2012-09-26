@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.Contracts;
     using System.Reflection;
 
     /// <summary>
@@ -55,6 +56,10 @@ namespace SimpleScheme
         protected ClrProcedure(string className, string methodName, MethodInfo methodInfo, Type instanceClass, Type[] argClassTypes, int numberOfArgs) :
             base(className + "." + methodName, new ArgsInfo(numberOfArgs, numberOfArgs, false))
         {
+            Contract.Requires(className != null);
+            Contract.Requires(methodName != null);
+            //// methodInfo and instanceClass can be null (for constructors)
+            Contract.Requires(argClassTypes != null);
             this.className = className;
             this.methodInfo = methodInfo;
             this.instanceClass = (methodInfo == null || methodInfo.IsStatic || methodInfo.IsConstructor) ? null : instanceClass;
@@ -96,6 +101,17 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Display the CLR proc name as a string.  
+        /// </summary>
+        /// <returns>The string form of the procedure.</returns>
+        public override string ToString()
+        {
+            return string.Format("clr-procedure: {0}", this.ProcedureName);
+        }
+        #endregion
+
         #region Define Primitives
         /// <summary>
         /// Define the clr procedure primitives.
@@ -103,6 +119,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                     "class", 
@@ -127,17 +144,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Display the CLR proc name as a string.  
-        /// </summary>
-        /// <returns>The string form of the procedure.</returns>
-        public override string ToString()
-        {
-            return string.Format("clr-procedure: {0}", this.ProcedureName);
-        }
-        #endregion
-
         #region Protected Methods
         /// <summary>
         /// Look up the method info.
@@ -153,6 +159,11 @@ namespace SimpleScheme
             Type[] argClassList, 
             Evaluator caller)
         {
+            Contract.Requires(className != null);
+            Contract.Requires(theMethodName != null);
+            Contract.Requires(argClassList != null);
+            Contract.Requires(caller != null);
+
             // TODO use caller to get line number
             caller.FindLineNumberInCallStack();
             try
@@ -189,6 +200,7 @@ namespace SimpleScheme
         /// <returns>An array of Types corresponding to the list.</returns>
         protected static Type[] ClassList(SchemeObject args, int extra = 0)
         {
+            Contract.Requires(args != null);
             var array = new Type[ListLength(args) + extra];
 
             int i = 0;
@@ -208,6 +220,7 @@ namespace SimpleScheme
         /// <returns>The object's class.</returns>
         protected static Type Class(SchemeObject arg)
         {
+            Contract.Requires(arg != null);
             return arg.ToClass();
         }
 
@@ -225,9 +238,16 @@ namespace SimpleScheme
         /// <returns>An array of arguments for the method call.</returns>
         protected object[] ToArgList(SchemeObject args, object[] additionalArgs, string evaluatorName, Evaluator caller)
         {
+            Contract.Requires(args != null);
+            //// additionalArgs can be null
+            Contract.Requires(evaluatorName != null);
+            Contract.Requires(caller != null);
+            Contract.Assert(this.argClasses != null);
+
             // This has been checked once already, in Procedure.CheckArgCount, but that included
             //  an instance argument.  Check again to protect the rest of this method.
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
+            Contract.Assert(additionalArgs != null || additionalN == 0);
             int numArgs = ListLength(args) + additionalN;
             int expectedArgs = this.ArgClasses.Length;
             if (numArgs != expectedArgs)
@@ -247,7 +267,7 @@ namespace SimpleScheme
 
             for (int i = 0; i < additionalN; i++)
             {
-                Debug.Assert(additionalArgs != null, "ClrProcedure: additionalArgs != null");
+                Contract.Assume(additionalArgs != null);
                 array[a++] = additionalArgs[i];
             }
 
@@ -265,6 +285,8 @@ namespace SimpleScheme
         /// <returns>The type object.</returns>
         private static Type Class(string className)
         {
+            Contract.Requires(className != null);
+            //// can return null
             return className.ToClass();
         }
 
@@ -279,6 +301,7 @@ namespace SimpleScheme
         /// <returns>A new instance of the class.</returns>
         private static object New(string className)
         {
+            Contract.Requires(className != null);
             Type type = Class(className);
             if (type == null)
             {
@@ -299,7 +322,28 @@ namespace SimpleScheme
         /// <returns>An array of the given length.</returns>
         private static object NewArray(string className, SchemeObject length)
         {
-            return Array.CreateInstance(Class(className), Number.AsInt(length));
+            Contract.Requires(className != null);
+            Contract.Requires(length != null);
+            Contract.Requires(Number.AsInt(length) >= 0);
+            var cls = Class(className);
+            if (cls == null)
+            {
+                ErrorHandlers.ClrError("Class could not be found: " + className);
+                return null;
+            }
+
+            return Array.CreateInstance(cls, Number.AsInt(length));
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.argClasses != null);
         }
         #endregion
     }

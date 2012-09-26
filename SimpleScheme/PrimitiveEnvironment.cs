@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
     using System.Reflection;
 
     /// <summary>
@@ -89,27 +90,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the counter primitives.
-        /// </summary>
-        /// <param name="primEnv">The environment to define the primitives into.</param>
-        internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
-        {
-            primEnv
-                .DefinePrimitive(
-                    "exit",
-                    new[] { "(exit)" },
-                    (args, env, caller) => Exit(args, caller),
-                    new ArgsInfo(0, 1, ArgType.Number))
-                .DefinePrimitive(
-                    "time-call",
-                    new[] { "(time-call <thunk>)", "(time-call <thunk> <count>)" },
-                    (args, env, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller),
-                    new ArgsInfo(1, 2, ArgType.Proc, ArgType.Number));
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Define a primitive, taking a variable number of arguments.
@@ -123,10 +103,46 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, ArgsInfo argsInfo)
         {
+            if (name == null)
+            {
+                ErrorHandlers.ArgumentError("DefinePrimitives: name must not be null");
+                return null;
+            }
+
+            if (operation == null)
+            {
+                ErrorHandlers.ArgumentError("DefinePrimitives: operation must not be null");
+                return null;
+            }
+
             this.Define(name, new Primitive(name.SymbolName, operation, description, argsInfo));
             return this;
         }
+        #endregion
 
+        #region Define Primitives
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
+        {
+            Contract.Requires(primEnv != null);
+            primEnv
+                .DefinePrimitive(
+                    "exit",
+                    new[] { "(exit)" },
+                    (args, env, caller) => Exit(args),
+                    new ArgsInfo(0, 1, ArgType.Number))
+                .DefinePrimitive(
+                    "time-call",
+                    new[] { "(time-call <thunk>)", "(time-call <thunk> <count>)" },
+                    (args, env, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller),
+                    new ArgsInfo(1, 2, ArgType.Proc, ArgType.Number));
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Create a list of the primitives in the environment.
         /// </summary>
@@ -142,10 +158,10 @@ namespace SimpleScheme
         /// Exit the whole process.
         /// </summary>
         /// <param name="args">If given, the process exit code.</param>
-        /// <param name="caller">The calling evaluator (not used).</param>
         /// <returns>Does not return.</returns>
-        private static SchemeObject Exit(SchemeObject args, Evaluator caller)
+        private static SchemeObject Exit(SchemeObject args)
         {
+            Contract.Requires(args != null);
             System.Environment.Exit(List.First(args) is EmptyList ? 0 : Number.AsInt(List.First(args)));
             return Undefined.Instance;
         }

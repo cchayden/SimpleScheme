@@ -21,8 +21,8 @@ public class Customize
         IInterpreter interp = Interpreter.New(primEnvironment);
 
         // define a variable in the global environment
-        interp.GlobalEnv.Define("x", (Number)10);
-        interp.GlobalEnv.Define("y", (Number)20);
+        interp.GlobalEnvironment.Define("x", (Number)10);
+        interp.GlobalEnvironment.Define("y", (Number)20);
 
         // define a primitive in the global environment
         primEnvironment.DefinePrimitive(

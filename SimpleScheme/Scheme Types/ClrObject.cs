@@ -6,6 +6,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
     using System.IO;
 
     /// <summary>
@@ -98,6 +99,7 @@ namespace SimpleScheme
         /// <param name="clrObject">The wrapped clr object.</param>
         private ClrObject(object clrObject)
         {
+            Contract.Requires(clrObject != null);
             this.clrObject = clrObject;
         }
         #endregion
@@ -108,7 +110,11 @@ namespace SimpleScheme
         /// </summary>
         public object Value
         {
-            get { return this.clrObject; }
+            get
+            {
+                Contract.Ensures(Contract.Result<object>() != null);
+                return this.clrObject;
+            }
         }
         #endregion
 
@@ -120,6 +126,8 @@ namespace SimpleScheme
         /// <returns>The ClrObject wrapper.</returns>
         public static ClrObject New(object clrObject)
         {
+            Contract.Requires(clrObject != null);
+            Contract.Ensures(Contract.Result<ClrObject>() != null);
             if (clrObject == null)
             {
                 clrObject = Undefined.Instance;
@@ -138,6 +146,8 @@ namespace SimpleScheme
         /// <returns>The converted object.</returns>
         public static object ToClrObject(SchemeObject elem, Type clrClass)
         {
+            // elem can be null (for static methods)
+            // clrClass can be null (for constructors)
             if (elem is ClrObject)
             {
                 var value = ((ClrObject)elem).Value;
@@ -149,7 +159,9 @@ namespace SimpleScheme
 
             if (clrClass != null && toClrMap.ContainsKey(clrClass))
             {
-                return toClrMap[clrClass](elem);
+                var map = toClrMap[clrClass];
+                Contract.Assume(map != null);
+                return map(elem);
             }
 
             return elem;
@@ -162,6 +174,8 @@ namespace SimpleScheme
         /// <returns>Corresponding scheme object.</returns>
         public static SchemeObject FromClrObject(object elem)
         {
+            Contract.Requires(elem != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             Type elemType = elem.GetType();
             if (elemType == typeof(ClrObject))
             {
@@ -171,7 +185,11 @@ namespace SimpleScheme
 
             if (fromClrMap.ContainsKey(elemType))
             {
-                return fromClrMap[elemType](elem);
+                var map = fromClrMap[elemType];
+                Contract.Assume(map != null);
+                var res = map(elem);
+                Contract.Assume(res != null);
+                return res;
             }
 
             return new ClrObject(elem);
@@ -186,6 +204,17 @@ namespace SimpleScheme
         public override string ToString()
         {
             return this.Value.ToString();
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.clrObject != null);
         }
         #endregion
     }

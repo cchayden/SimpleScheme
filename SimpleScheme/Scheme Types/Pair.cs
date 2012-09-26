@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
     using System.Text;
 
     /// <summary>
@@ -11,6 +12,18 @@ namespace SimpleScheme
     /// </summary>
     public class Pair : SchemeObject
     {
+        #region Fields
+        /// <summary>
+        /// The first object of the pair.
+        /// </summary>
+        private SchemeObject firstCell;
+
+        /// <summary>
+        /// The rest object of the pair.
+        /// </summary>
+        private SchemeObject restCell;
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Pair class.
@@ -20,8 +33,12 @@ namespace SimpleScheme
         /// referenced by this.</param>
         protected Pair(SchemeObject first, SchemeObject rest)
         {
-            this.FirstCell = first;
-            this.RestCell = rest;
+            Contract.Requires(first != null);
+            Contract.Requires(rest != null);
+            Contract.Ensures(this.firstCell != null);
+            Contract.Ensures(this.restCell != null);
+            this.firstCell = first;
+            this.restCell = rest;
         }
 
         /// <summary>
@@ -33,8 +50,12 @@ namespace SimpleScheme
         /// <param name="lineNumber">The line where the Pair is read.</param>
         protected Pair(SchemeObject first, SchemeObject rest, int lineNumber) : base(lineNumber)
         {
-            this.FirstCell = first;
-            this.RestCell = rest;
+            Contract.Requires(first != null);
+            Contract.Requires(rest != null);
+            Contract.Ensures(this.firstCell != null);
+            Contract.Ensures(this.restCell != null);
+            this.firstCell = first;
+            this.restCell = rest;
         }
 
         /// <summary>
@@ -44,8 +65,11 @@ namespace SimpleScheme
         /// <param name="first">The first object.</param>
         protected Pair(SchemeObject first)
         {
-            this.FirstCell = first;
-            this.RestCell = EmptyList.Instance;
+            Contract.Requires(first != null);
+            Contract.Ensures(this.firstCell != null);
+            Contract.Ensures(this.restCell != null);
+            this.firstCell = first;
+            this.restCell = EmptyList.Instance;
         }
 
         /// <summary>
@@ -54,8 +78,10 @@ namespace SimpleScheme
         /// </summary>
         protected Pair()
         {
-            this.FirstCell = EmptyList.Instance;
-            this.RestCell = EmptyList.Instance;
+            Contract.Ensures(this.firstCell != null);
+            Contract.Ensures(this.restCell != null);
+            this.firstCell = EmptyList.Instance;
+            this.restCell = EmptyList.Instance;
         }
         #endregion
 
@@ -63,12 +89,27 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the first obj of the pair.
         /// </summary>
-        internal SchemeObject FirstCell { get; private set; }
+        internal SchemeObject FirstCell 
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<SchemeObject>() != null);
+                return this.firstCell;
+            }
+        }
 
         /// <summary>
         /// Gets the rest of the objs in the list.
         /// </summary>
-        internal SchemeObject RestCell { get; private set; }
+        internal SchemeObject RestCell
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<SchemeObject>() != null);
+                return this.restCell;
+            }
+        }
+
         #endregion
 
         #region New
@@ -90,6 +131,8 @@ namespace SimpleScheme
         /// <returns>A new Pair.</returns>
         public static Pair New(SchemeObject first)
         {
+            Contract.Requires(first != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return new Pair(first);
         }
 
@@ -102,6 +145,9 @@ namespace SimpleScheme
         /// <returns>A new Pair.</returns>
         public static Pair New(SchemeObject first, SchemeObject rest)
         {
+            Contract.Requires(first != null);
+            Contract.Requires(rest != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return new Pair(first, rest);
         }
 
@@ -115,6 +161,9 @@ namespace SimpleScheme
         /// <returns>A new Pair.</returns>
         public static Pair New(SchemeObject first, SchemeObject rest, int lineNumber)
         {
+            Contract.Requires(first != null);
+            Contract.Requires(rest != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return new Pair(first, rest, lineNumber);
         }
         #endregion
@@ -130,6 +179,8 @@ namespace SimpleScheme
         /// <returns>True if they are both pairs and all elements are equal.</returns>
         public static SchemeBoolean Equal(Pair elem1, SchemeObject elem2)
         {
+            Contract.Requires(elem1 != null);
+            Contract.Requires(elem2 != null);
             if (!(elem2 is Pair))
             {
                 return SchemeBoolean.False;
@@ -137,6 +188,8 @@ namespace SimpleScheme
 
             var pair1 = elem1;
             var pair2 = (Pair)elem2;
+            Contract.Assert(pair1 != null);
+            Contract.Assert(pair2 != null);
 
             while (true)
             {
@@ -155,6 +208,8 @@ namespace SimpleScheme
 
                 pair1 = (Pair)obj1;
                 pair2 = (Pair)obj2;
+                Contract.Assert(pair1 != null);
+                Contract.Assert(pair2 != null);
             }
         }
         #endregion
@@ -180,12 +235,14 @@ namespace SimpleScheme
         /// <returns>The reversed list.</returns>
         internal static SchemeObject ReverseListInPlace(SchemeObject expr)
         {
+            Contract.Requires(expr != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             SchemeObject prev = EmptyList.Instance;
             SchemeObject curr = expr;
             while (curr is Pair)
             {
                 SchemeObject temp = ((Pair)curr).RestCell;
-                ((Pair)curr).RestCell = prev;
+                ((Pair)curr).restCell = prev;
                 prev = curr;
                 curr = temp;
             }
@@ -216,7 +273,9 @@ namespace SimpleScheme
         /// <returns>The new value</returns>
         internal SchemeObject SetFirst(SchemeObject value)
         {
-            return this.FirstCell = value;
+            Contract.Requires(value != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return this.firstCell = value;
         }
 
         /// <summary>
@@ -228,7 +287,9 @@ namespace SimpleScheme
         /// <returns>The new value</returns>
         internal T SetRest<T>(T value) where T : SchemeObject
         {
-            this.RestCell = value;
+            Contract.Requires(value != null);
+            Contract.Ensures(Contract.Result<T>() != null);
+            this.restCell = value;
             return value;
         }
 
@@ -301,6 +362,18 @@ namespace SimpleScheme
 
             buf.Append(')');
             return buf.ToString();
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.firstCell != null);
+            Contract.Invariant(this.restCell != null);
         }
         #endregion
     }

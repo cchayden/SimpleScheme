@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate an if expression.
     /// Evaluate the first part, then depending on its truth value, either
@@ -13,6 +15,16 @@ namespace SimpleScheme
     internal sealed class EvaluateIf : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalTestStep = GetStepper("EvalTestStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalAlternativeStep = GetStepper("EvalAlternativeStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -27,8 +39,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateIf(SchemeObject expr, Environment env, Evaluator caller)
-            : base(EvalTestStep, expr, env, caller, counter)
+            : base(evalTestStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -42,6 +58,9 @@ namespace SimpleScheme
         /// <returns>The if evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             return new EvaluateIf(expr, env, caller);
         }
         #endregion
@@ -50,12 +69,11 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private static Evaluator EvalTestStep(Evaluator s)
+        protected override Evaluator EvalTestStep()
         {
-            s.Pc = EvalAlternativeStep;
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
+            this.Pc = evalAlternativeStep;
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
         /// <summary>
@@ -63,13 +81,12 @@ namespace SimpleScheme
         /// Evaluate and return either the second or third expression.
         /// If there is no thid, the empty list will be evaluated, which is OK.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with the return.</returns>
-        private static Evaluator EvalAlternativeStep(Evaluator s)
+        protected override Evaluator EvalAlternativeStep()
         {
-            SchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? Second(s.Expr) : Third(s.Expr);
+            SchemeObject toEvaluate = SchemeBoolean.Truth(this.ReturnedExpr).Value ? Second(this.Expr) : Third(this.Expr);
             return EvaluateExpression.Call(
-                toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
+                toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, this.Env, this.Caller);
         }
         #endregion
     }

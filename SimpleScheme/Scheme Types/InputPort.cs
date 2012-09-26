@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.IO;
     using System.Text;
 
@@ -49,6 +50,8 @@ namespace SimpleScheme
         /// <param name="interp">The interpreter.</param>
         private InputPort(TextReader inp, Interpreter interp)
         {
+            Contract.Requires(interp != null);
+            Contract.Requires(inp != null);
             this.inp = inp;
             this.transcript = interp.Transcript;
             this.parser = new Parser(inp);
@@ -73,11 +76,11 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// True if reading from Console
+        /// Gets a value indicating whether input is coming from the Console
         /// </summary>
         internal bool IsConsole
         {
-            get { return this.inp == Console.In;}
+            get { return this.inp == Console.In; }
         }
         #endregion
 
@@ -91,7 +94,22 @@ namespace SimpleScheme
         /// <returns>An input port.</returns>
         public static InputPort New(TextReader inp, Interpreter interp)
         {
+            Contract.Requires(inp != null);
+            Contract.Requires(interp != null);
+            Contract.Ensures(Contract.Result<InputPort>() != null);
             return new InputPort(inp, interp);
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Display the input port as a string.
+        /// Since there is nothing to show, at least give the type.
+        /// </summary>
+        /// <returns>The input port type name.</returns>
+        public override string ToString()
+        {
+            return "<input-port>";
         }
         #endregion
 
@@ -108,6 +126,7 @@ namespace SimpleScheme
             //// <r4rs section="6.10.2">(char-ready?)</r4rs>
             //// <r4rs section="6.10.2">(char-ready? <port>)</r4rs>
 
+            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                         "eof-object?", 
@@ -172,17 +191,26 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region CLR Type Converters
         /// <summary>
-        /// Display the input port as a string.
-        /// Since there is nothing to show, at least give the type.
+        /// Convert to text writer.
         /// </summary>
-        /// <returns>The input port type name.</returns>
-        public override string ToString()
+        /// <param name="obj">The object.</param>
+        /// <returns>The text reader.</returns>
+        internal static TextReader AsTextReader(SchemeObject obj)
         {
-            return "<input-port>";
-        }
+            Contract.Requires(obj != null);
+            if (obj is InputPort)
+            {
+                return ((InputPort)obj).Parser.Reader;
+            }
 
+            ErrorHandlers.TypeError(typeof(InputPort), obj);
+            return null;
+        }
+        #endregion
+
+        #region Internal Methods
         /// <summary>
         /// Read an expression from the given input port.
         /// If none given, uses the default input port.
@@ -190,6 +218,7 @@ namespace SimpleScheme
         /// <returns>The expression read.</returns>
         internal SchemeObject Read()
         {
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             var sb = new StringBuilder();
             SchemeObject expr = this.parser.ReadExpr(sb);
             this.transcript.LogInputLine(sb.ToString().Trim(), this);
@@ -206,24 +235,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region CLR Type Converters
-        /// <summary>
-        /// Convert to text writer.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The text reader.</returns>
-        internal static TextReader AsTextReader(SchemeObject obj)
-        {
-            if (obj is InputPort)
-            {
-                return ((InputPort)obj).Parser.Reader;
-            }
-
-            ErrorHandlers.TypeError(typeof(InputPort), obj);
-            return null;
-        }
-        #endregion
-
         #region Private Static Methods
         /// <summary>
         /// Determine the port object to use with the InputPort primitives.
@@ -235,6 +246,8 @@ namespace SimpleScheme
         /// <returns>The port to use.</returns>
         private static InputPort Port(SchemeObject port, InputPort curr)
         {
+            Contract.Requires(port != null);
+            Contract.Requires(curr != null);
             return port is EmptyList ? curr : (InputPort)port;
         }
 
@@ -246,6 +259,8 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject LoadFile(SchemeObject filename, Interpreter interp)
         {
+            Contract.Requires(filename != null);
+            Contract.Requires(interp != null);
             interp.LoadFile(filename, null);
             return Undefined.Instance;
         }
@@ -258,6 +273,8 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject TranscriptOn(SchemeObject filename, TranscriptLogger transcript)
         {
+            Contract.Requires(filename != null);
+            Contract.Requires(transcript != null);
             transcript.TranscriptOn(filename);
             return Undefined.Instance;
         }
@@ -269,6 +286,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject TranscriptOff(TranscriptLogger transcript)
         {
+            Contract.Requires(transcript != null);
             transcript.TranscriptOff();
             return Undefined.Instance;
         }
@@ -304,6 +322,18 @@ namespace SimpleScheme
             SchemeObject expr = this.parser.ReadChar(sb);
             this.transcript.LogInputLine(sb.ToString().Trim(), this);
             return expr;
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.parser != null);
+            Contract.Invariant(this.transcript != null);
         }
         #endregion
     }

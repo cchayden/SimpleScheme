@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
     using System.IO;
     using System.Text;
 
@@ -103,6 +104,9 @@ namespace SimpleScheme
         /// <param name="inp">The input TextReader we are reading from.</param>
         internal Parser(TextReader inp)
         {
+            Contract.Requires(inp != null);
+            Contract.Ensures(this.lineBuffer != null);
+            Contract.Ensures(this.charBuffer != null);
             this.inp = inp;
             this.lineBuffer = new LineBuffer(inp);
         }
@@ -137,6 +141,7 @@ namespace SimpleScheme
         /// <returns>The expression that was read.</returns>
         internal SchemeObject ReadExpr(StringBuilder sb)
         {
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             this.logger = sb;
             return this.Read();
         }
@@ -209,6 +214,7 @@ namespace SimpleScheme
         /// <returns>The next word.  Could be empty string.</returns>
         internal string NextWord(Func<char, bool> test)
         {
+            Contract.Requires(test != null);
             var sb = new StringBuilder();
             while (true)
             {
@@ -230,6 +236,8 @@ namespace SimpleScheme
         /// <returns>The next token.</returns>
         internal SchemeObject NextToken()
         {
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+
             // See if we should re-use a pushed token or character
             SchemeObject token = this.tokBuffer.Get();
             if (token != null)
@@ -455,6 +463,7 @@ namespace SimpleScheme
         /// <returns>The expression as a list.</returns>
         private SchemeObject Read()
         {
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             try
             {
                 SchemeObject token = this.NextToken();
@@ -493,11 +502,13 @@ namespace SimpleScheme
                     }
                 }
 
+                Contract.Assume(token != null);
                 return token;
             }
             catch (IOException ex)
             {
                 ErrorHandlers.Warn("On input, exception:" + ex);
+                Contract.Assume(InputPort.Eof != null);
                 return InputPort.Eof;
             }
         }
@@ -582,13 +593,15 @@ namespace SimpleScheme
         /// <returns>A list of the tokens read.</returns>
         private SchemeObject ReadTail(bool dotOk)
         {
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             SchemeObject token = this.NextToken();
             if (token is Token)
             {
                 string tok = token.ToString();
                 if (tok == "#EOF!")
                 {
-                    return ErrorHandlers.IoError("EOF during read.");
+                    ErrorHandlers.IoError("EOF during read.");
+                    return null;
                 }
 
                 if (tok == ")")
@@ -711,6 +724,7 @@ namespace SimpleScheme
             /// <param name="token">The token to push.</param>
             internal void Push(SchemeObject token)
             {
+                Contract.Requires(token != null);
                 this.present = true;
                 this.buffer = token;
             }
@@ -763,6 +777,8 @@ namespace SimpleScheme
             /// </param>
             internal LineBuffer(TextReader inp)
             {
+                Contract.Requires(inp != null);
+                Contract.Ensures(this.buffer != null);
                 this.inp = inp;
                 this.buffer = string.Empty;
                 this.pos = 0;
@@ -803,7 +819,9 @@ namespace SimpleScheme
                         this.buffer += System.Environment.NewLine;
                     }
 
-                    ch = this.buffer[pos++];
+                    Contract.Assume(pos >= 0);
+                    Contract.Assert(this.pos < this.buffer.Length);
+                    ch = this.buffer[this.pos++];
                 }
                 else
                 {
@@ -818,6 +836,20 @@ namespace SimpleScheme
 
                 return ch;
             }
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.inp != null);
+            Contract.Invariant(this.tokBuffer != null);
+            Contract.Invariant(this.charBuffer != null);
+            Contract.Invariant(this.lineBuffer != null);
         }
         #endregion
     }

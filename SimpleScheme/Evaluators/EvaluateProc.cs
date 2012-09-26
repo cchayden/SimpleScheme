@@ -3,12 +3,24 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate args and apply a proc to it.
     /// </summary>
     internal sealed class EvaluateProc : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalArgsStep = GetStepper("EvalArgsStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper applyStep = GetStepper("ApplyStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -29,10 +41,14 @@ namespace SimpleScheme
         /// <param name="args">The arguments to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        private EvaluateProc(Procedure fn, SchemeObject args, Environment env, Evaluator caller, bool evaluate)
-            : base(EvalArgsStep, args, env, caller, counter)
+        private EvaluateProc(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
+            : base(evalArgsStep, args, env, caller, counter)
         {
+            Contract.Requires(fn != null);
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
             this.fn = fn;
         }
         #endregion
@@ -48,7 +64,12 @@ namespace SimpleScheme
         /// <returns>The proc evaluator.</returns>
         internal static Evaluator Call(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
         {
-            return new EvaluateProc(fn, args, env, caller, true);
+            Contract.Requires(fn != null);
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Ensures(Contract.Result<Evaluator>() != null);
+            return new EvaluateProc(fn, args, env, caller);
         }
 
         /// <summary>
@@ -62,7 +83,11 @@ namespace SimpleScheme
         /// <returns>The proc evaluator.</returns>
         internal static Evaluator CallQuoted(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
         {
-            return fn.Apply(args, null, caller, caller);
+            Contract.Requires(fn != null);
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return fn.Apply(args, caller, caller);
         }
         #endregion
 
@@ -82,35 +107,44 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating all the arguments.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Next action to evaluate the args.</returns>
-        private static Evaluator EvalArgsStep(Evaluator s)
+        protected override Evaluator EvalArgsStep()
         {
-            s.Pc = ApplyStep;
-// TODO fold EvaluateList steps into here
-            return EvaluateList.Call(s.Expr, s.Env, s);
+            this.Pc = applyStep;
+            //// TODO fold EvaluateList steps into here
+            return EvaluateList.Call(this.Expr, this.Env, this);
         }
 
         /// <summary>
         /// Back here after args have been evaluated.  
         /// Apply the proc to the evaluated args.  
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The result, or the next step to obtain it.</returns>
-        private static Evaluator ApplyStep(Evaluator s)
+        protected override Evaluator ApplyStep()
         {
-            Procedure fn = ((EvaluateProc)s).fn;
+            Procedure proc = this.fn;
 #if Diagnostics
-            if (s.Interp.Trace)
+            if (this.Interp.Trace)
             {
-                s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    string.Format("evaluate-proc: {0} applied to {1}", fn.ProcedureName, s.ReturnedExpr));
+                this.Caller.Interp.CurrentOutputPort.WriteLine(
+                    string.Format("evaluate-proc: {0} applied to {1}", proc.ProcedureName, this.ReturnedExpr));
             }
 #endif
 
-            // Pass s.Caller to return to the caller rather than to here, since there is
+            // Pass this.Caller to return to the caller rather than to here, since there is
             //  nothing left to do.
-            return fn.Apply(s.ReturnedExpr, null, s.Caller, s);
+            return proc.Apply(this.ReturnedExpr, this.Caller, this);
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.fn != null);
         }
         #endregion
     }

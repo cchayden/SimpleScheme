@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate an expression with the ability to catch suspension.
     /// Anything that this calls that returns a suspended evaluator will be "caught"
@@ -16,6 +18,16 @@ namespace SimpleScheme
     internal sealed class EvaluateExpressionWithCatch : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper doneStep = GetStepper("DoneStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -36,8 +48,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpressionWithCatch(SchemeObject expr, Environment env, Evaluator caller)
-            : base(InitialStep, expr, env, caller, counter)
+            : base(initialStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
             this.catchSuspended = true;
         }
         #endregion
@@ -64,6 +80,9 @@ namespace SimpleScheme
         /// <returns>The expression evaluator.</returns>
         internal static EvaluateExpressionWithCatch Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             return new EvaluateExpressionWithCatch(expr, env, caller);
         }
         #endregion
@@ -72,39 +91,37 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the expression.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Steps to evaluate the expression.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        protected override Evaluator InitialStep()
         {
-            s.Pc = DoneStep;
-            return EvaluateExpression.Call(s.Expr, s.Env, s);
+            this.Pc = doneStep;
+            return EvaluateExpression.Call(this.Expr, this.Env, this);
         }
 
         /// <summary>
         /// Back here after the expression has been evaluated.
         /// Return to caller.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with the return.</returns>
-        private static Evaluator DoneStep(Evaluator s)
+        protected override Evaluator DoneStep()
         {
             // If we get here because a suspend was caught, then return Undefined
             // and set a return flag so that the caller can recognize it.
             // Then do not catch any further suspensions.
             // If we get here because of a normal or asynchronous return, then set
             // the return value and set an appropriate flag value.
-            var step = (EvaluateExpressionWithCatch)s;
-            Evaluator caller = step.Caller;
-            caller.ReturnedExpr = s.ReturnedExpr;
+            Evaluator caller = this.Caller;
+            Contract.Assert(caller != null);
+            caller.ReturnedExpr = this.ReturnedExpr;
             ReturnType returnType;
-            if (step.FetchAndResetCaught() > 0)
+            if (this.FetchAndResetCaught() > 0)
             {
-                step.catchSuspended = false;
+                this.catchSuspended = false;
                 returnType = ReturnType.CaughtSuspended;
             }
             else
             {
-                returnType = step.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn;
+                returnType = this.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn;
             }
 
             caller.UpdateReturnFlag(returnType);

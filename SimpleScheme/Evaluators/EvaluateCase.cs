@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate a case expression.
     /// First evaluate the key.
@@ -17,6 +19,16 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
     internal sealed class EvaluateCase : Evaluator
     {
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalKeyStep = GetStepper("EvalKeyStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper checkClauseStep = GetStepper("CheckClauseStep");
+
         #region Fields
         /// <summary>
         /// The counter id.
@@ -48,8 +60,13 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="clauses">The case clauses.</param>
         private EvaluateCase(SchemeObject expr, Environment env, Evaluator caller, SchemeObject clauses)
-            : base(EvalKeyStep, expr, env, caller, counter)
+            : base(evalKeyStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(clauses != null);
+            Contract.Requires(counter >= 0);
             this.clauses = clauses;
         }
         #endregion
@@ -64,6 +81,9 @@ namespace SimpleScheme
         /// <returns>The case evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             return new EvaluateCase(expr, env, caller, Rest(expr));
         }
         #endregion
@@ -72,12 +92,11 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Steps to evaluate the test.</returns>
-        private static Evaluator EvalKeyStep(Evaluator s)
+        protected override Evaluator EvalKeyStep()
         {
-            s.Pc = CheckClauseStep;
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
+            this.Pc = checkClauseStep;
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
         /// <summary>
@@ -86,15 +105,13 @@ namespace SimpleScheme
         /// If no clauses left, return empty list.
         /// If clause matches, start evaluating expressions.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The steps to test che clauses.</returns>
-        private static Evaluator CheckClauseStep(Evaluator s)
+        protected override Evaluator CheckClauseStep()
         {
-            var step = (EvaluateCase)s;
-            step.keyVal = s.ReturnedExpr;
-            while (!(step.clauses is EmptyList))
+            this.keyVal = this.ReturnedExpr;
+            while (!(this.clauses is EmptyList))
             {
-                SchemeObject clause = First(step.clauses);
+                SchemeObject clause = First(this.clauses);
                 if (!(clause is Pair))
                 {
                     ErrorHandlers.SemanticError("Bad syntax in case: " + clause, null);
@@ -102,31 +119,31 @@ namespace SimpleScheme
                 }
 
                 SchemeObject data = First(clause);
-                step.exprList = Rest(clause);
+                this.exprList = Rest(clause);
 
                 // look for else datum
                 if (data is Symbol && data.ToString() == "else")
                 {
-                    return step.EvalExpr();
+                    return this.EvalExpr();
                 }
 
                 // look for a match within the list of datum items
                 while (data is Pair)
                 {
-                    if (SchemeBoolean.Eqv(step.keyVal, First(data)).Value)
+                    if (SchemeBoolean.Eqv(this.keyVal, First(data)).Value)
                     {
-                        return step.EvalExpr();
+                        return this.EvalExpr();
                     }
 
                     data = Rest(data);
                 }
 
                 // didn't find a match -- look at the next clause
-               step.clauses = Rest(step.clauses);
+               this.clauses = Rest(this.clauses);
             }
 
             // no clauses matched -- unspecified
-            Evaluator caller = step.Caller;
+            Evaluator caller = this.Caller;
             caller.ReturnedExpr = Undefined.Instance;
             return caller;
         }
@@ -141,12 +158,25 @@ namespace SimpleScheme
             {
                 // if no expressions, return key value
                 Evaluator caller = this.Caller;
+                Contract.Assume(this.keyVal != null);
                 caller.ReturnedExpr = this.keyVal;
                 return caller;
             }
 
             // eval and return last expr
+            Contract.Assume(this.exprList != null);
             return EvaluateSequence.Call(this.exprList, this.Env, this.Caller);
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.clauses != null);
         }
         #endregion
     }

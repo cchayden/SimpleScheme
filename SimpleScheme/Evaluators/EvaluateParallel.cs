@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Evaluate a sequence of exprs in parallel by evaluating each member.
@@ -13,6 +14,16 @@ namespace SimpleScheme
     internal sealed class EvaluateParallel : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper loopStep = GetStepper("LoopStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -63,8 +74,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateParallel(SchemeObject expr, Environment env, Evaluator caller)
-            : base(InitialStep, expr, env, caller, counter)
+            : base(initialStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
             this.forked = this.joined = 0;
             this.accum = EmptyList.Instance;
         }
@@ -80,9 +95,14 @@ namespace SimpleScheme
         /// <returns>The parallel evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+
             if (expr is EmptyList)
             {
                 caller = caller.Caller;
+                Contract.Assert(caller != null);
                 caller.ReturnedExpr = EmptyList.Instance;
                 return caller;
             }
@@ -123,7 +143,87 @@ namespace SimpleScheme
                 this.returnQueue.Enqueue(new Tuple<SchemeObject, ReturnType>(this.ReturnedExpr, flag));
             }
         }
+        #endregion
 
+        #region Steps
+        /// <summary>
+        /// Initial step: evaluate the first expression.
+        /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
+        ///   execution and halts the evaluation.
+        /// </summary>
+        /// <returns>The next evaluator.</returns>
+        protected override Evaluator InitialStep()
+        {
+            this.Pc = loopStep;
+            return EvaluateExpressionWithCatch.Call(First(this.Expr), this.Env, this);
+        }
+
+        /// <summary>
+        /// Comes back here after evaluation completes synchronously or is suspended.
+        /// If evaluation is suspended, then EvaluateExpressionWithCatch will catch and return undefined.
+        /// Loop back and evaluate another expression.
+        /// Continue looping until all evaluations return an actual result.
+        /// Accumulate the results and return when everything finishes.
+        /// </summary>
+        /// <returns>Immediately steps back.</returns>
+        protected override Evaluator LoopStep()
+        {
+            lock (this.lockObj)
+            {
+                this.FetchReturnValue();
+                switch (this.ReturnFlag)
+                {
+                    case ReturnType.CaughtSuspended:
+                        // caught an asynchronous suspension -- go on to the next expr
+                        this.forked++;
+                        break;
+                    case ReturnType.AsynchronousReturn:
+                        // return after suspension
+                        // Record return result and either end the thread or 
+                        //  return from the whole thing.
+                        Contract.Assume(this.accum != null);
+                        this.accum = Cons(this.ReturnedExpr, this.accum);
+                        this.joined++;
+                        if (this.joined < this.forked || !(this.Expr is EmptyList))
+                        {
+                            return new FinalEvaluator(Undefined.Instance);
+                        }
+
+                        Evaluator caller = this.Caller;
+                        caller.ReturnedExpr = this.accum;
+                        return caller;
+
+                    case ReturnType.SynchronousReturn:
+                        // synchronous return
+                        Contract.Assume(this.accum != null);
+                        this.accum = Cons(this.ReturnedExpr, this.accum);
+                        break;
+                }
+
+                this.Expr = Rest(this.Expr);
+                if (this.Expr is EmptyList)
+                {
+                    // finished with expressions -- either suspend (if there is more pending) or
+                    //   return from the whole thing
+                    if (this.joined < this.forked)
+                    {
+                        this.Pc = loopStep;
+                        return new SuspendedEvaluator(this.ReturnedExpr, this);
+                    }
+
+                    Evaluator caller = this.Caller;
+                    Contract.Assume(this.accum != null);
+                    caller.ReturnedExpr = this.accum;
+                    return caller;
+                }
+
+                this.Pc = loopStep;
+                return EvaluateExpressionWithCatch.Call(First(this.Expr), this.Env, this);
+            }
+        }
+        #endregion
+
+        #region PrivateMethods
         /// <summary>
         /// Get return value and flag from queue.
         /// This MUST be called within the mutex.
@@ -137,82 +237,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Steps
+        #region Contract Invariant
         /// <summary>
-        /// Initial step: evaluate the first expression.
-        /// Instead of calling normal EvaluateExpression, call a variant that catches suspended
-        ///   execution and halts the evaluation.
+        /// Describes invariants on the member variables.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next evaluator.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        [ContractInvariantMethod]
+        private void ContractInvariant()
         {
-            s.Pc = LoopStep;
-            return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s);
-        }
-
-        /// <summary>
-        /// Comes back here after evaluation completes synchronously or is suspended.
-        /// If evaluation is suspended, then EvaluateExpressionWithCatch will catch and return undefined.
-        /// Loop back and evaluate another expression.
-        /// Continue looping until all evaluations return an actual result.
-        /// Accumulate the results and return when everything finishes.
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>Immediately steps back.</returns>
-        private static Evaluator LoopStep(Evaluator s)
-        {
-            var step = (EvaluateParallel)s;
-            lock (step.lockObj)
-            {
-                step.FetchReturnValue();
-                switch (step.ReturnFlag)
-                {
-                    case ReturnType.CaughtSuspended:
-                        // caught an asynchronous suspension -- go on to the next expr
-                        step.forked++;
-                        break;
-                    case ReturnType.AsynchronousReturn:
-                        // return after suspension
-                        // Record return result and either end the thread or 
-                        //  return from the whole thing.
-                        step.accum = Cons(step.ReturnedExpr, step.accum);
-                        step.joined++;
-                        if (step.joined < step.forked || !(s.Expr is EmptyList))
-                        {
-                            step.ReturnedExpr = Undefined.Instance;
-                            return null;
-                        }
-
-                        Evaluator caller = step.Caller;
-                        caller.ReturnedExpr = step.accum;
-                        return caller;
-
-                    case ReturnType.SynchronousReturn:
-                        // synchronous return
-                        step.accum = Cons(step.ReturnedExpr, step.accum);
-                        break;
-                }
-
-                s.Expr = Rest(s.Expr);
-                if (s.Expr is EmptyList)
-                {
-                    // finished with expressions -- either suspend (if there is more pending) or
-                    //   return from the whole thing
-                    if (step.joined < step.forked)
-                    {
-                        s.Pc = LoopStep;
-                        return new SuspendedEvaluator(s.ReturnedExpr, s);
-                    }
-
-                    Evaluator caller = step.Caller;
-                    caller.ReturnedExpr = step.accum;
-                    return caller;
-                }
-
-                s.Pc = LoopStep;
-                return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s);
-            }
+            Contract.Invariant(this.returnQueue != null);
         }
         #endregion
     }

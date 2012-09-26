@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Operations on boolean values.
@@ -42,6 +43,7 @@ namespace SimpleScheme
         /// </summary>
         static SchemeBoolean()
         {
+//            Contract.Ensures(Contract.ForAll(equalMap, elem => elem.Value != null));
             equalMap = new Dictionary<string, Func<SchemeObject, SchemeObject, SchemeBoolean>>
                 {
                     { "SimpleScheme.EmptyList", (obj1, obj2) => obj2 is EmptyList ? True : False },
@@ -81,7 +83,10 @@ namespace SimpleScheme
         /// </summary>
         public bool Value
         {
-            get { return this.value; }
+            get
+            {
+                return this.value;
+            }
         }
         #endregion
 
@@ -93,6 +98,7 @@ namespace SimpleScheme
         /// <returns>The corresponding Schemeboolean.</returns>
         public static implicit operator SchemeBoolean(bool b)
         {
+            Contract.Ensures(Contract.Result<SchemeBoolean>() != null);
             return New(b);
         }
 
@@ -103,6 +109,7 @@ namespace SimpleScheme
         /// <returns>Equivalent scheme boolean.</returns>
         public static SchemeBoolean New(bool val)
         {
+            Contract.Ensures(Contract.Result<SchemeBoolean>() != null);
             return val ? True : False;
         }
 
@@ -114,6 +121,7 @@ namespace SimpleScheme
         /// <returns>Equivalent scheme boolean.</returns>
         public static SchemeBoolean New(bool val, int lineNumber)
         {
+            Contract.Ensures(Contract.Result<SchemeBoolean>() != null);
             return val ? new SchemeBoolean(true, lineNumber) : new SchemeBoolean(false, lineNumber);
         }
 
@@ -130,15 +138,67 @@ namespace SimpleScheme
         /// <returns>True if the objs are equal.</returns>
         public static SchemeBoolean Equal(SchemeObject obj1, SchemeObject obj2)
         {
+            Contract.Requires(obj1 != null);
+            Contract.Requires(obj2 != null);
             Func<SchemeObject, SchemeObject, SchemeBoolean> action;
             if (equalMap.TryGetValue(obj1.ClrTypeName, out action))
             {
+                Contract.Assume(action != null);
                 return action(obj1, obj2);
             }
 
             // delegate to first member, use C# equality
             return obj1.Equals(obj2) ? True : False;
         }
+
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal boolean values.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is SchemeBoolean))
+            {
+                return false;
+            }
+
+            return this.Equals((SchemeBoolean)other);
+        }
+
+        /// <summary>
+        /// Compares two SchemeBoolean values by comparing their underlying boolean value.
+        /// </summary>
+        /// <param name="other">The other SchemeBoolean.</param>
+        /// <returns>True if they have the same boolean value.</returns>
+        public bool Equals(SchemeBoolean other)
+        {
+            Contract.Assume(other != null);
+            return this.value == other.value;
+        }
+
+        /// <summary>
+        /// The hash code is the boolean's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.value.GetHashCode();
+        }
+
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Convert the SchemeBoolean value to a string for printing.
+        /// </summary>
+        /// <returns>The boolean value as a string.</returns>
+        public override string ToString()
+        {
+            return this.value ? "True" : "False";
+        }
+        #endregion
 
         /// <summary>
         /// Equivalence test.
@@ -153,6 +213,9 @@ namespace SimpleScheme
         /// <returns>True if they are equivalent.</returns>
         internal static SchemeBoolean Eqv(SchemeObject obj1, SchemeObject obj2)
         {
+            Contract.Requires(obj1 != null);
+            Contract.Requires(obj2 != null);
+            Contract.Ensures(Contract.Result<SchemeBoolean>() != null);
             return
                 New(
                     obj1 == obj2 
@@ -170,6 +233,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         internal static bool IsFalse(SchemeObject value)
         {
+            Contract.Requires(value != null);
             return value is SchemeBoolean && !((SchemeBoolean)value).Value;
         }
 
@@ -181,6 +245,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
         internal static bool IsTrue(SchemeObject value)
         {
+            Contract.Requires(value != null);
             return value is SchemeBoolean && ((SchemeBoolean)value).Value;
         }
 
@@ -193,6 +258,8 @@ namespace SimpleScheme
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
         internal static SchemeBoolean Truth(SchemeObject obj)
         {
+            Contract.Requires(obj != null);
+            Contract.Ensures(Contract.Result<SimpleScheme.SchemeBoolean>() != null);
             return !IsFalse(obj) ? True : False;
         }
 
@@ -203,6 +270,7 @@ namespace SimpleScheme
         /// <returns>The SchemeBoolean value.</returns>
         internal static SchemeBoolean Truth(bool b)
         {
+            Contract.Ensures(Contract.Result<SimpleScheme.SchemeBoolean>() != null);
             return b ? True : False;
         }
 
@@ -215,6 +283,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                     "boolean?", 
@@ -257,6 +326,7 @@ namespace SimpleScheme
         /// <returns>The corresponding boolean.</returns>
         internal static bool AsBool(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is SchemeBoolean)
             {
                 return IsTrue(x);
@@ -264,54 +334,6 @@ namespace SimpleScheme
 
             ErrorHandlers.TypeError(typeof(SchemeBoolean), x);
             return false;
-        }
-        #endregion
-
-        #region Equality
-        /// <summary>
-        /// Provide our own version of the Equals method.
-        /// </summary>
-        /// <param name="other">The other object.</param>
-        /// <returns>True if they are equal boolean values.</returns>
-        public override bool Equals(object other)
-        {
-            if (!(other is SchemeBoolean))
-            {
-                return false;
-            }
-
-            return this.Equals((SchemeBoolean)other);
-        }
-
-        /// <summary>
-        /// Compares two SchemeBoolean values by comparing their underlying boolean value.
-        /// </summary>
-        /// <param name="other">The other SchemeBoolean.</param>
-        /// <returns>True if they have the same boolean value.</returns>
-        public bool Equals(SchemeBoolean other)
-        {
-            return this.value == other.value;
-        }
-
-        /// <summary>
-        /// The hash code is the boolean's hash code.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return this.value.GetHashCode();
-        }
-
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Convert the SchemeBoolean value to a string for printing.
-        /// </summary>
-        /// <returns>The boolean value as a string.</returns>
-        public override string ToString()
-        {
-            return this.value ? "True" : "False";
         }
         #endregion
 

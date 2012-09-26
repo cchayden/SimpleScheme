@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.Reflection;
 
     /// <summary>
@@ -39,8 +40,25 @@ namespace SimpleScheme
                 argClasses, 
                 argClasses.Length - 1)
         {
+            Contract.Requires(targetClassName != null);
+            Contract.Requires(methodName != null);
+            Contract.Requires(instanceClass != null);
+            Contract.Requires(argClasses != null);
+            Contract.Requires(caller != null);
+            Contract.Assert(this.MethodInfo != null);
             var endClasses = new[] { typeof(IAsyncResult) };
             this.endMethodInfo = GetMethodInfo(targetClassName, "End" + methodName, endClasses, caller);
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Display the asynchronous clr procedure as a string.  
+        /// </summary>
+        /// <returns>The string form of the procedure.</returns>
+        public override string ToString()
+        {
+            return "<asynchronous-clr-procedure>";
         }
         #endregion
 
@@ -51,6 +69,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
@@ -66,16 +85,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Display the asynchronous clr procedure as a string.  
-        /// </summary>
-        /// <returns>The string form of the procedure.</returns>
-        public override string ToString()
-        {
-            return "<asynchronous-clr-procedure>";
-        }
-
+        #region Internal Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -83,11 +93,10 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <param name="env">The environment of the application.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
         {
 #if Check
             this.CheckArgCount(ListLength(args), args, "AsynchronousClrProcedure", caller);
@@ -96,16 +105,24 @@ namespace SimpleScheme
             if (!this.MethodInfo.IsStatic)
             {
                 target = First(args);
+                Contract.Assert(target != null);
                 args = Rest(args);
+                Contract.Assert(args != null);
             }
 
             var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
             var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(actualTarget, returnTo), caller);
             var res = this.MethodInfo.Invoke(actualTarget, argArray) as IAsyncResult;
+            if (res == null)
+            {
+                ErrorHandlers.ClrError("Async method does not return IAsyncResult");
+                return null;
+            }
 
             // res is not converted because it is IAsyncResult -- convert in completion method
             return new SuspendedEvaluator(ClrObject.New(res), returnTo);
         }
+
         #endregion
 
         #region Private Methods
@@ -118,6 +135,7 @@ namespace SimpleScheme
         /// <returns>An array of Types corresponding to the list.</returns>
         private static Type[] ClassListBegin(SchemeObject args)
         {
+            Contract.Requires(args != null);
             Type[] array = ClassList(args, 2);
             array[array.Length - 2] = typeof(AsyncCallback);
             array[array.Length - 1] = typeof(object);
@@ -137,6 +155,9 @@ namespace SimpleScheme
         /// <returns>An array of arguments for the method call.</returns>
         private object[] ToArgListBegin(SchemeObject args, object state, Evaluator caller)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(state != null);
+            Contract.Requires(caller != null);
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
             return this.ToArgList(args, additionalArgs, "AsynchronousClrProcedure", caller);
         }
@@ -148,12 +169,16 @@ namespace SimpleScheme
         /// <param name="result">The async result, used to get operation result.</param>
         private void CompletionMethod(IAsyncResult result)
         {
+            Contract.Requires(result != null);
+            Contract.Requires(result.AsyncState != null);
+            Contract.Requires(this.endMethodInfo != null);
             object[] args = { result };
             var state = (Tuple<object, Evaluator>)result.AsyncState;
             Evaluator caller = state.Item2;
+            Contract.Assert(caller != null);
             object res = this.endMethodInfo.Invoke(state.Item1, args);
             res = res ?? Undefined.Instance;
-            state.Item2.ReturnedExpr = ClrObject.FromClrObject(res);
+            caller.ReturnedExpr = ClrObject.FromClrObject(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.

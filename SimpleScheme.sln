@@ -37,6 +37,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf", "Examples\Perf\Perf.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Examples\Benchmark\Benchmark.csproj", "{9AE99053-3E45-4408-BC04-49C8483C034C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{827C9CB9-C717-4B14-9CD0-260D852D9223}"
+	ProjectSection(SolutionItems) = preProject
+		Performance2.psess = Performance2.psess
+		Performance3.psess = Performance3.psess
+		Performance4.psess = Performance4.psess
+		Performance5.psess = Performance5.psess
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = SimpleScheme.vsmdi

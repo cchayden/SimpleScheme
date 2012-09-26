@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Handles normal synchronous CLR method calls.
@@ -29,6 +30,22 @@ namespace SimpleScheme
                 argClasses, 
                 argClasses.Length)
         {
+            Contract.Requires(targetClassName != null);
+            Contract.Requires(methodName != null);
+            Contract.Requires(instanceClass != null);
+            Contract.Requires(argClasses != null);
+            Contract.Requires(caller != null);
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Display the synchronous clr procedure as a string.  
+        /// </summary>
+        /// <returns>The string form of the procedure.</returns>
+        public override string ToString()
+        {
+            return "<synchronous-clr-procedure>";
         }
         #endregion
 
@@ -39,6 +56,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
@@ -94,16 +112,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Display the synchronous clr procedure as a string.  
-        /// </summary>
-        /// <returns>The string form of the procedure.</returns>
-        public override string ToString()
-        {
-            return "<synchronous-clr-procedure>";
-        }
-
+        #region Internal Methods
         /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
@@ -111,11 +120,10 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
-        /// <param name="env">The environment of the application.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
         {
             SchemeObject target = null;
             if (!this.MethodInfo.IsStatic)

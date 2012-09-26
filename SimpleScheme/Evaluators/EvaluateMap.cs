@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -12,6 +14,16 @@ namespace SimpleScheme
     internal sealed class EvaluateMap : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper applyFunStep = GetStepper("ApplyFunStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper collectAndLoopStep = GetStepper("CollectAndLoopStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -44,8 +56,14 @@ namespace SimpleScheme
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
         private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-            : base(ApplyFunStep, expr, env, caller, counter)
+            : base(applyFunStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(proc != null);
+            Contract.Requires(counter >= 0);
+            //// result can be null if the caller does not need the result
             this.proc = proc;
             this.result = result;
         }
@@ -63,6 +81,11 @@ namespace SimpleScheme
         /// <returns>The evaluator to execute.</returns>
         internal static Evaluator Call(Procedure proc, SchemeObject expr, bool returnResult, Environment env, Evaluator caller)
         {
+            Contract.Requires(proc != null);
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+
             // first check for degenerate cases
             if (expr is EmptyList)
             {
@@ -99,47 +122,43 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the map function to an element of the list and grab the result.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>If apply recurses, return that evaluator.  Otherwise go on to save result.
         /// If we are done, return the collected results.</returns>
-        private static Evaluator ApplyFunStep(Evaluator s)
+        protected override Evaluator ApplyFunStep()
         {
-            var step = (EvaluateMap)s;
-            if (First(s.Expr) is Pair)
+            if (First(this.Expr) is Pair)
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                s.Pc = CollectAndLoopStep;
-                return step.proc.Apply(MapFun(First, s.Expr), null, s, s);
+                this.Pc = collectAndLoopStep;
+                return this.proc.Apply(MapFun(First, this.Expr), this, this);
             }
 
             // if we are done, return the reversed result list
             // We cannot do this destructively without breaking call/cc.
-            Evaluator caller = step.Caller;
-            caller.ReturnedExpr = step.result != null ? Pair.ReverseListInPlace(step.result) : Undefined.Instance;
+            Evaluator caller = this.Caller;
+            Contract.Assert(caller != null);
+            caller.ReturnedExpr = this.result != null ? Pair.ReverseListInPlace(this.result) : Undefined.Instance;
             return caller;
         }
 
         /// <summary>
         /// Collect the result of the function application and loop back to do the next one.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Continue back in apply fun step.</returns>
-        private static Evaluator CollectAndLoopStep(Evaluator s)
+        protected override Evaluator CollectAndLoopStep()
         {
-            var step = (EvaluateMap)s;
-
             // back from the evaluation -- save the result and keep going with the rest
-            if (step.result != null)
+            if (this.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = Cons(s.ReturnedExpr, step.result);
+                this.result = Cons(this.ReturnedExpr, this.result);
             }
 
             // Move down each of the lists
-            step.Expr = MapFun(Rest, s.Expr);
-            s.Pc = ApplyFunStep;
-            return s;
+            this.Expr = MapFun(Rest, this.Expr);
+            this.Pc = applyFunStep;
+            return this;
         }
         #endregion
     }

@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate a sequence of clauses by evaluating each member.
     /// If a value is not #f then return it.  Otherwise return the last value.
@@ -11,6 +13,16 @@ namespace SimpleScheme
     internal sealed class EvaluateOr : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalTestStep = GetStepper("EvalTestStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper loopStep = GetStepper("LoopStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -25,8 +37,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateOr(SchemeObject expr, Environment env, Evaluator caller)
-            : base(EvalTestStep, expr, env, caller, counter)
+            : base(evalTestStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -40,6 +56,10 @@ namespace SimpleScheme
         /// <returns>The or evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+
             // If no expr, avoid creating an evaluator.
             if (expr is EmptyList)
             {
@@ -55,39 +75,38 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Steps to evaluate the expression.</returns>
-        private static Evaluator EvalTestStep(Evaluator s)
+        protected override Evaluator EvalTestStep()
         {
-            if (Rest(s.Expr) is EmptyList)
+            if (Rest(this.Expr) is EmptyList)
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
             }
 
-            s.Pc = LoopStep;
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
+            this.Pc = loopStep;
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
         /// <summary>
         /// If the expression evaluated to true, we are done and we can return the expression value.
         /// Otherwise, move down the list.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The evaluation result, or loops back to evaluate the next item.</returns>
-        private static Evaluator LoopStep(Evaluator s)
+        protected override Evaluator LoopStep()
         {
-            if (SchemeBoolean.Truth(s.ReturnedExpr).Value)
+            if (SchemeBoolean.Truth(this.ReturnedExpr).Value)
             {
-                Evaluator caller = s.Caller;
-                caller.ReturnedExpr = s.ReturnedExpr;
+                Evaluator caller = this.Caller;
+                Contract.Assert(caller != null);
+                caller.ReturnedExpr = this.ReturnedExpr;
                 return caller;
             }
 
-            s.Expr = Rest(s.Expr);
-            s.Pc = EvalTestStep;
-            return s;
+            this.Expr = Rest(this.Expr);
+            this.Pc = evalTestStep;
+            return this;
         }
         #endregion
     }

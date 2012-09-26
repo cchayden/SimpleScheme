@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate a sequence by evaluating each member and returning the last value.
     /// </summary>
@@ -10,6 +12,16 @@ namespace SimpleScheme
     internal sealed class EvaluateSequence : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalExprStep = GetStepper("EvalExprStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper loopStep = GetStepper("LoopStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -24,8 +36,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateSequence(SchemeObject expr, Environment env, Evaluator caller)
-            : base(EvalExprStep, expr, env, caller, counter)
+            : base(evalExprStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -39,7 +55,12 @@ namespace SimpleScheme
         /// <returns>The sequence evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            return new EvaluateSequence(expr, env, caller);
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            return Rest(expr) is EmptyList ?
+                EvaluateExpression.Call(First(expr), env, caller) :
+                new EvaluateSequence(expr, env, caller);
         }
         #endregion
 
@@ -49,33 +70,31 @@ namespace SimpleScheme
         /// If not, evaluate the next expression.
         /// If we are, evaluate and return the last expr.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator.</returns>
-        private static Evaluator EvalExprStep(Evaluator s)
+        protected override Evaluator EvalExprStep()
         {
-            if (Rest(s.Expr) is EmptyList)
+            if (Rest(this.Expr) is EmptyList)
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
                 // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
                 //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
             }
 
-            s.Pc = LoopStep;
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
+            this.Pc = loopStep;
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
         /// <summary>
         /// Comes back here after expression evaluation.  Loop back and evaluate another.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Immediately steps back.</returns>
-        private static Evaluator LoopStep(Evaluator s)
+        protected override Evaluator LoopStep()
         {
-            s.Expr = Rest(s.Expr);
-            s.Pc = EvalExprStep;
-            return s;
+            this.Expr = Rest(this.Expr);
+            this.Pc = evalExprStep;
+            return this;
         }
         #endregion
     }

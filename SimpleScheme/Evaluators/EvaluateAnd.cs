@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate a sequence by evaluating each member.
     /// If a value is #f then return it.  Otherwise return the last value.
@@ -22,6 +24,16 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create("evaluate-and");
         #endregion
 
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalTestStep = GetStepper("EvalTestStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper loopStep = GetStepper("LoopStep");
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the EvaluateAnd class.
@@ -30,8 +42,12 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateAnd(SchemeObject expr, Environment env, Evaluator caller)
-            : base(EvalTestStep, expr, env, caller, counter)
+            : base(evalTestStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -45,10 +61,14 @@ namespace SimpleScheme
         /// <returns>The and evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+
             // If no expr, avoid creating an evaluator.
             if (expr is EmptyList)
             {
-                caller.ReturnedExpr = (SchemeBoolean)true;
+                caller.ReturnedExpr = SchemeBoolean.True;
                 return caller;
             }
 
@@ -60,39 +80,40 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the next test expression in the list.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        private static Evaluator EvalTestStep(Evaluator s)
+        protected override Evaluator EvalTestStep()
         {
-            if (Rest(s.Expr) is EmptyList)
+            Contract.Assert(this.Expr != null);
+            if (Rest(this.Expr) is EmptyList)
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
             }
 
-            s.Pc = LoopStep;
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
+            this.Pc = loopStep;
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
         /// <summary>
         /// If the evaluated expression is false, we are done.
         /// Otherwise, move down the list and try again at EvalTestStep.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The result, or this evaluator to loop back to previous step.</returns>
-        private static Evaluator LoopStep(Evaluator s)
+        protected override Evaluator LoopStep()
         {
-            if (SchemeBoolean.IsFalse(s.ReturnedExpr))
+            Contract.Assert(this.ReturnedExpr != null);
+            if (SchemeBoolean.IsFalse(this.ReturnedExpr))
             {
-                Evaluator caller = s.Caller;
-                caller.ReturnedExpr = (SchemeBoolean)false;
+                Evaluator caller = this.Caller;
+                Contract.Assert(this.Caller != null);
+                caller.ReturnedExpr = SchemeBoolean.False;
                 return caller;
             }
 
-            s.Expr = Rest(s.Expr);
-            s.Pc = EvalTestStep;
-            return s;
+            this.Expr = Rest(this.Expr);
+            this.Pc = evalTestStep;
+            return this;
         }
         #endregion
     }

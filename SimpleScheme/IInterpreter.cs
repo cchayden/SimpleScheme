@@ -4,10 +4,13 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Interface for the SimpleScheme interpreter.
     /// </summary>
+    [ContractClass(typeof(IInterpreterContract))]
     public interface IInterpreter
     {
         #region Accessors
@@ -16,14 +19,14 @@ namespace SimpleScheme
         /// Each interpreter has its own global environment.
         /// The primitive environment is "below" this and so it can shared between interpreter instances.
         /// </summary>
-        IEnvironment GlobalEnv { get; }
+        IEnvironment GlobalEnvironment { get; }
 
         /// <summary>
         /// Gets the primitive environment for the interpreter.
         /// Each interpreter has one primitive environment.
         /// The primitive environment is the only one in which primitives can be defined.
         /// </summary>
-        IPrimitiveEnvironment PrimEnv { get; }
+        IPrimitiveEnvironment PrimEnvironment { get; }
         #endregion
 
         #region Setup Methods
@@ -136,5 +139,121 @@ namespace SimpleScheme
         /// <param name="fileName">The file to load.</param>
         /// <param name="outp">Input and results are written to this port, if not null.</param>
         void LoadFile(SchemeObject fileName, OutputPort outp);
+    }
+
+    /// <summary>
+    /// Define the contract for IInterpreter
+    /// </summary>    
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1611:ElementParametersMustBeDocumented", Justification = "Contract.")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1615:ElementReturnValueMustBeDocumented", Justification = "Contract.")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:ElementsMustBeDocumented", Justification = "Contract.")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:ElementsMustBeDocumented", Justification = "Reviewed. Suppression is OK here.")]
+    [ContractClassFor(typeof(IInterpreter))]
+    internal abstract class IInterpreterContract : IInterpreter
+    {
+        public IEnvironment GlobalEnvironment
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IEnvironment>() != null);
+                return null;
+            }
+        }
+
+        public IPrimitiveEnvironment PrimEnvironment
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IPrimitiveEnvironment>() != null);
+                return null;
+            }
+        }
+
+        public SchemeObject Read(string str)
+        {
+            Contract.Requires(str != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return null;
+        }
+
+        public SchemeObject Read(InputPort inp)
+        {
+            Contract.Requires(inp != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return null;
+        }
+
+        public SchemeObject Eval(SchemeObject expr)
+        {
+            Contract.Requires(expr != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return null;
+        }
+
+        public SchemeObject Eval(string expr)
+        {
+            Contract.Requires(expr != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return null;
+        }
+
+        public IAsyncResult BeginEval(SchemeObject expr, AsyncCallback cb, object state)
+        {
+            Contract.Requires(expr != null);
+            return null;
+        }
+
+        public SchemeObject EndEval(IAsyncResult ar)
+        {
+            Contract.Requires(ar != null);
+            return null;
+        }
+
+        public string Print(SchemeObject obj)
+        {
+            Contract.Requires(obj != null);
+            Contract.Ensures(Contract.Result<string>() != null);
+            return null;
+        }
+
+        public SchemeObject ReadEval(InputPort inp)
+        {
+            Contract.Requires(inp != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return null;
+        }
+
+        public void Load(string str)
+        {
+            Contract.Requires(str != null);
+        }
+
+        public string ReadEvalPrint(InputPort inp)
+        {
+            Contract.Requires(inp != null);
+            Contract.Ensures(Contract.Result<string>() != null);
+            return null;
+        }
+
+        public string ReadEvalPrint(string str)
+        {
+            Contract.Requires(str != null);
+            Contract.Ensures(Contract.Result<string>() != null);
+            return null;
+        }
+
+        public void ReadEvalPrintLoop()
+        {
+        }
+
+        public IAsyncResult ReadEvalPrintAsync()
+        {
+            return null;
+        }
+
+        public void LoadFile(SchemeObject fileName, OutputPort outp)
+        {
+            Contract.Requires(fileName != null);
+        }
     }
 }

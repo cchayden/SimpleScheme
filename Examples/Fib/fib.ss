@@ -31,7 +31,7 @@
       ((>= i m) 'done)
       (test fib25))))
 (define fib25 (lambda () (fib 25)))
-(run-fib 1)
+(run-fib 10)
 ;(p (fib-iter 1000))
 ;(debug)
 

@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
@@ -11,9 +13,15 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper doneStep = GetStepper("DoneStep");
+
+        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-time");
+
         #endregion
 
         #region Constructor
@@ -26,6 +34,10 @@ namespace SimpleScheme
         private EvaluateTime(SchemeObject expr, Environment env, Evaluator caller)
             : base(expr, 1, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -39,6 +51,9 @@ namespace SimpleScheme
         /// <returns>The timed evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             return new EvaluateTime(expr, env, caller);
         }
         #endregion
@@ -52,7 +67,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator EvaluateStep()
         {
-            this.Pc = CompleteStep;
+            this.Pc = doneStep;
             return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
         #endregion

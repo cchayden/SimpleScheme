@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Handles a scheme character.
@@ -94,47 +95,42 @@ namespace SimpleScheme
 
             return new Character(c);
         }
-
-        /// <summary>
-        /// Create a new Character.
-        /// </summary>
-        /// <param name="c">The char.</param>
-        /// <param name="lineNumber">The line where the character is read.</param>
-        /// <returns>The corresponding Character.</returns>
-        internal static Character New(char c, int lineNumber)
-        {
-            Character res;
-            if (fixedChars.TryGetValue(c, out res))
-            {
-                return res;
-            }
-
-            return new Character(c, lineNumber);
-        }
         #endregion
 
-        #region Private Static
+        #region Equality
         /// <summary>
-        /// Tests whether two Characters are equal.
+        /// Provide our own version of the Equals method.
         /// </summary>
-        /// <param name="obj1">The first object (must be a scheme Character).</param>
-        /// <param name="obj2">The other object.</param>
-        /// <returns>True if they are both the same character.</returns>
-        internal static SchemeBoolean Equal(Character obj1, SchemeObject obj2)
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal as characters.</returns>
+        public override bool Equals(object other)
         {
-            if (!(obj2 is Character))
+            if (!(other is Character))
             {
                 return false;
             }
 
-            var char1 = obj1;
-            var char2 = (Character)obj2;
-            if (char1.c != char2.C)
-            {
-                return false;
-            }
+            return this.Equals((Character)other);
+        }
 
-            return true;
+        /// <summary>
+        /// Compares two Character values by comparing their underlying character.
+        /// </summary>
+        /// <param name="other">The other Character.</param>
+        /// <returns>True if they have the same char.</returns>
+        public bool Equals(Character other)
+        {
+            Contract.Assume(other != null);
+            return this.c == other.c;
+        }
+
+        /// <summary>
+        /// The hash code is simply the character.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.c;
         }
         #endregion
 
@@ -145,6 +141,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                         "char->integer", 
@@ -246,37 +243,28 @@ namespace SimpleScheme
 
         #region Equality
         /// <summary>
-        /// Provide our own version of the Equals method.
+        /// Tests whether two Characters are equal.
         /// </summary>
-        /// <param name="other">The other object.</param>
-        /// <returns>True if they are equal as characters.</returns>
-        public override bool Equals(object other)
+        /// <param name="obj1">The first object (must be a scheme Character).</param>
+        /// <param name="obj2">The other object.</param>
+        /// <returns>True if they are both the same character.</returns>
+        internal static SchemeBoolean Equal(Character obj1, SchemeObject obj2)
         {
-            if (!(other is Character))
+            Contract.Requires(obj1 != null);
+            Contract.Requires(obj2 != null);
+            if (!(obj2 is Character))
             {
                 return false;
             }
 
-            return this.Equals((Character)other);
-        }
+            var char1 = obj1;
+            var char2 = (Character)obj2;
+            if (char1.c != char2.C)
+            {
+                return false;
+            }
 
-        /// <summary>
-        /// Compares two Character values by comparing their underlying character.
-        /// </summary>
-        /// <param name="other">The other Character.</param>
-        /// <returns>True if they have the same char.</returns>
-        public bool Equals(Character other)
-        {
-            return this.c == other.c;
-        }
-
-        /// <summary>
-        /// The hash code is simply the character.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return this.c;
+            return true;
         }
         #endregion
 
@@ -288,6 +276,7 @@ namespace SimpleScheme
         /// <returns>The corresponding char.</returns>
         internal static char AsChar(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Character)
             {
                 return ((Character)x).C;
@@ -299,6 +288,25 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
+        /// <summary>
+        /// Create a new Character.
+        /// </summary>
+        /// <param name="c">The char.</param>
+        /// <param name="lineNumber">The line where the character is read.</param>
+        /// <returns>The corresponding Character.</returns>
+        internal static Character New(char c, int lineNumber)
+        {
+            Contract.Ensures(Contract.Result<Character>() != null);
+            Character res;
+            if (fixedChars.TryGetValue(c, out res))
+            {
+                Contract.Assume(res != null);
+                return res;
+            }
+
+            return new Character(c, lineNumber);
+        }
+
         /// <summary>
         /// Return the character, possibly quoted, as a string.
         /// </summary>
@@ -336,6 +344,8 @@ namespace SimpleScheme
         /// or 0 if they are the same.</returns>
         private static int Compare(Character char1, Character char2, bool caseInsensitive)
         {
+            Contract.Requires(char1 != null);
+            Contract.Requires(char2 != null);
             char c1 = char1.C;
             char c2 = char2.C;
             return caseInsensitive ? char.ToLower(c1) - char.ToLower(c2) : c1 - c2;

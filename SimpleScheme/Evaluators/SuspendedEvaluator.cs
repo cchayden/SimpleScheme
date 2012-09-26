@@ -3,17 +3,27 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// This evaluator is returned to suspend evaluation.
     /// It is used after calling an asynchronous operation.
     /// </summary>
     internal sealed class SuspendedEvaluator : Evaluator
     {
+        #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper continueAfterSuspendedStep = GetStepper("ContinueAfterSuspendedStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("suspended");
+        #endregion
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the SuspendedEvaluator class.
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
@@ -26,32 +36,15 @@ namespace SimpleScheme
         /// <param name="res">The IAsyncResult associated with the suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
         internal SuspendedEvaluator(SchemeObject res, Evaluator caller) : 
-            base(null, res, null, caller, counter)
+            base(continueAfterSuspendedStep, res, Environment.EmptyEnvironment, caller, counter)
         {
+            Contract.Requires(res != null);
+            Contract.Requires(caller != null);
             this.ReturnedExpr = ClrObject.New(this);
         }
+        #endregion
 
-        /// <summary>
-        /// Divert execution if there is a suspension handler.
-        /// Pass the async result to the resumed step.
-        /// </summary>
-        /// <returns>Null to return from main loop, or else the step to run next.</returns>
-        internal override Evaluator NextStep()
-        {
-            // See if evaluator wants to handle
-            Evaluator step = this.SearchForHandler();
-            if (step == null)
-            {
-                // nope -- just break
-                return null;
-            }
-
-            // this evaluator wants to handle -- run it now
-            step.IncrementCaught();
-            step.ReturnedExpr = this.Expr;  // the AsyncResult
-            return step;
-        }
-
+        #region Internal Methods
         /// <summary>
         /// Convert an obj into a string representation.
         /// </summary>
@@ -61,7 +54,32 @@ namespace SimpleScheme
         {
             return "<suspended-evaluator>";
         }
+        #endregion
 
+
+        #region Steps
+        /// <summary>
+        /// The step that ends evaluation
+        /// </summary>
+        /// <returns>The next evaluator to execute.</returns>
+        protected override Evaluator ContinueAfterSuspendedStep()
+        {
+            // See if evaluator wants to handle
+            Evaluator step = this.SearchForHandler();
+            if (step == null)
+            {
+                // nope -- just break
+                return new FinalEvaluator(this.ReturnedExpr);
+            }
+
+            // this evaluator wants to handle -- run it now
+            step.IncrementCaught();
+            step.ReturnedExpr = this.Expr;  // the AsyncResult
+            return step;
+        }
+        #endregion
+
+        #region Private Methods
         /// <summary>
         /// When a step is suspended, check with each caller up the chain, seeing if any
         ///   one of them want to resume.
@@ -70,7 +88,7 @@ namespace SimpleScheme
         private Evaluator SearchForHandler()
         {
             Evaluator step = this;
-            while (step != null)
+            while (!(step is FinalEvaluator))
             {
                 if (step.CatchSuspended)
                 {
@@ -82,6 +100,6 @@ namespace SimpleScheme
 
             return null;
         }
-
+        #endregion
     }
 }

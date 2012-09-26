@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Reduce a conditiona;
     /// </summary>
@@ -12,6 +14,26 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
     internal sealed class EvaluateCond : Evaluator
     {
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalClauseStep = GetStepper("EvalClauseStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper checkClauseStep = GetStepper("CheckClauseStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evalConsequentStep = GetStepper("EvalConsequentStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper applyRecipientStep = GetStepper("ApplyRecipientStep");
+
         #region Fields
         /// <summary>
         /// The counter id.
@@ -42,9 +64,15 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateCond(SchemeObject expr, Environment env, Evaluator caller)
-            : base(EvalClauseStep, expr, env, caller, counter)
+            : base(evalClauseStep, expr, env, caller, counter)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
             this.clauses = expr;
+            this.test = EmptyList.Instance;
+            this.clause = EmptyList.Instance;
         }
         #endregion
 
@@ -58,6 +86,10 @@ namespace SimpleScheme
         /// <returns>The reduce cond evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+
             // If no expr, avoid creating an evaluator.
             if (expr is EmptyList)
             {
@@ -75,22 +107,19 @@ namespace SimpleScheme
         ///   such as else or the end of the list.
         /// Most often it evaluates the first clause.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Usually, This evaluator the first clause.</returns>
-        private static Evaluator EvalClauseStep(Evaluator s)
+        protected override Evaluator EvalClauseStep()
         {
-            var step = (EvaluateCond)s;
-            step.clause = First(step.clauses);
-            var clause = First(step.clause);
-            if (clause is Symbol && clause.ToString() == "else")
+            this.clause = First(this.clauses);
+            var clause1 = First(this.clause);
+            if (clause1 is Symbol && clause1.ToString() == "else")
             {
-                step.test = EmptyList.Instance;
-                s.Pc = EvalConsequentStep;
-                return s;
+                this.Pc = evalConsequentStep;
+                return this;
             }
 
-            s.Pc = TestClauseStep;
-            return EvaluateExpression.Call(First(step.clause), s.Env, s);
+            this.Pc = checkClauseStep;
+            return EvaluateExpression.Call(First(this.clause), this.Env, this);
         }
 
         /// <summary>
@@ -99,28 +128,26 @@ namespace SimpleScheme
         /// Otherwise, go back to initial step.
         /// The list was stepped down already in the previous step.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The next step, either loop or finish.</returns>
-        private static Evaluator TestClauseStep(Evaluator s)
+        protected override Evaluator CheckClauseStep()
         {
-            var step = (EvaluateCond)s;
-            step.test = s.ReturnedExpr;
-            if (SchemeBoolean.Truth(step.test).Value)
+            this.test = this.ReturnedExpr;
+            if (SchemeBoolean.Truth(this.test).Value)
             {
-                s.Pc = EvalConsequentStep;
-                return s;
+                this.Pc = evalConsequentStep;
+                return this;
             }
 
-            step.clauses = Rest(step.clauses);
-            if (step.clauses is EmptyList)
+            this.clauses = Rest(this.clauses);
+            if (this.clauses is EmptyList)
             {
-                Evaluator caller = step.Caller;
+                Evaluator caller = this.Caller;
                 caller.ReturnedExpr = Undefined.Instance;
                 return caller;
             }
 
-            s.Pc = EvalClauseStep;
-            return s;
+            this.Pc = evalClauseStep;
+            return this;
         }
 
         /// <summary>
@@ -128,45 +155,51 @@ namespace SimpleScheme
         /// Handle the varous forms for conequent.
         /// Evaluate and return the consequent.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Execution continues with the caller.</returns>
-        private static Evaluator EvalConsequentStep(Evaluator s)
+        protected override Evaluator EvalConsequentStep()
         {
-            var step = (EvaluateCond)s;
-            if (Rest(step.clause) is EmptyList)
+            if (Rest(this.clause) is EmptyList)
             {
                 // no consequent: return the test as the result
-                Evaluator caller = step.Caller;
-                caller.ReturnedExpr = step.test;
+                Evaluator caller = this.Caller;
+                caller.ReturnedExpr = this.test;
                 return caller;
             }
 
-            var clause = Second(step.clause);
-            if (clause is Symbol && clause.ToString() == "=>")
+            var clause2 = Second(this.clause);
+            if (clause2 is Symbol && clause2.ToString() == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                s.Pc = ApplyRecipientStep;
-                return EvaluateExpression.Call(Third(step.clause), s.Env, s);
+                this.Pc = applyRecipientStep;
+                return EvaluateExpression.Call(Third(this.clause), this.Env, this);
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(Rest(step.clause), s.Env, s.Caller);
+            return EvaluateSequence.Call(Rest(this.clause), this.Env, this.Caller);
         }
 
         /// <summary>
         /// Apply the recipient function to the value of the test.
         /// The recipient must evaluate to a procecure.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator to execute (the return).</returns>
-        private static Evaluator ApplyRecipientStep(Evaluator s)
+        protected override Evaluator ApplyRecipientStep()
         {
-            var step = (EvaluateCond)s;
-            return EvaluateProc.CallQuoted(
-                Procedure.EnsureProcedure(s.ReturnedExpr), 
-                MakeList(step.test), 
-                s.Env, 
-                s.Caller);
+            var proc = Procedure.EnsureProcedure(this.ReturnedExpr);
+            return EvaluateProc.CallQuoted(proc, MakeList(this.test), this.Env, this.Caller);
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.test != null);
+            Contract.Invariant(this.clauses != null);
+            Contract.Invariant(this.clause != null);
         }
         #endregion
     }

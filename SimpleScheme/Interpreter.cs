@@ -5,7 +5,7 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
+    using System.Diagnostics.Contracts;
     using System.IO;
 
     /// <summary>
@@ -15,6 +15,37 @@ namespace SimpleScheme
     public sealed class Interpreter : IInterpreter
     {
         #region Fields
+
+        /// <summary>
+        /// The global environment.
+        /// </summary>
+        private readonly Environment globalEnvironment;
+
+        /// <summary>
+        /// The primitive environment.
+        /// </summary>
+        private readonly PrimitiveEnvironment primEnvironment;
+
+        /// <summary>
+        /// The current input port.
+        /// </summary>
+        private readonly InputPort currentInputPort;
+
+        /// <summary>
+        /// The current output port.
+        /// </summary>
+        private readonly OutputPort currentOutputPort;
+
+        /// <summary>
+        /// The current counters.
+        /// </summary>
+        private readonly Counter currentCounters;
+
+        /// <summary>
+        /// The transcript logger.
+        /// </summary>
+        private readonly TranscriptLogger transcript;
+
         /// <summary>
         /// The initial step.  When complete, evaluation is done.
         /// </summary>
@@ -44,16 +75,19 @@ namespace SimpleScheme
             TextReader reader, 
             TextWriter writer)
         {
+            Contract.Assume(Console.In != null);
+            Contract.Assume(Console.Out != null);
+            //// arguments can be null, in which case the appropriate objects are created.
             this.Trace = false;
             this.Count = false;
-            this.Transcript = new TranscriptLogger(this);
-            this.CurrentInputPort = InputPort.New(reader ?? Console.In, this);
-            this.CurrentOutputPort = OutputPort.New(writer ?? Console.Out, this);
-            this.PrimEnvironment = primEnvironment ?? new PrimitiveEnvironment();
+            this.transcript = new TranscriptLogger(this);
+            this.currentInputPort = InputPort.New(reader ?? Console.In, this);
+            this.currentOutputPort = OutputPort.New(writer ?? Console.Out, this);
+            this.primEnvironment = primEnvironment ?? new PrimitiveEnvironment();
 
-            this.CurrentCounters = new Counter();
-            this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
-            this.halted = new HaltedEvaluator(this.GlobalEnvironment);
+            this.currentCounters = new Counter();
+            this.globalEnvironment = new Environment(this.primEnvironment, this);
+            this.halted = new HaltedEvaluator(this.globalEnvironment);
             var echo = (writer != null) ? this.CurrentOutputPort : null;
             try
             {
@@ -102,43 +136,86 @@ namespace SimpleScheme
         /// Gets the global environment.
         /// For this accessor, the environment is exposed as the environment interface.
         /// </summary>
-        public IEnvironment GlobalEnv
+        public IEnvironment GlobalEnvironment
         {
-            get { return this.GlobalEnvironment; }
+            get
+            {
+                return this.globalEnvironment;
+            }
         }
 
         /// <summary>
         /// Gets the primitive environment.
         /// </summary>
-        public IPrimitiveEnvironment PrimEnv
+        public IPrimitiveEnvironment PrimEnvironment
         {
-            get { return this.PrimEnvironment; }
+            get
+            {
+                return this.primEnvironment;
+            }
         }
 
         /// <summary>
-        /// Gets the global environment for the interpreter.
+        /// Gets the global environment.
+        /// For internal use, returns the actual environment instead of the interface.
         /// </summary>
-        internal Environment GlobalEnvironment { get; private set; }
+        public Environment GlobalEnv
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<Environment>() != null);
+                return this.globalEnvironment;
+            }
+        }
 
         /// <summary>
-        /// Gets the rimitive environment for the interpreter.
+        /// Gets the primitive environment.
+        /// For internal use, returns the actual environment instead of the interface.
         /// </summary>
-        internal PrimitiveEnvironment PrimEnvironment { get; private set; }
+        internal PrimitiveEnvironment PrimEnv
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<PrimitiveEnvironment>() != null);
+                return this.primEnvironment;
+            }
+        }
 
         /// <summary>
         /// Gets the input port.
         /// </summary>
-        internal InputPort CurrentInputPort { get; private set; }
+        internal InputPort CurrentInputPort
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<InputPort>() != null);
+                return this.currentInputPort;
+            }
+        }
 
         /// <summary>
         /// Gets the output port.
         /// </summary>
-        internal OutputPort CurrentOutputPort { get; private set; }
+        internal OutputPort CurrentOutputPort
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<OutputPort>() != null);
+                return this.currentOutputPort;
+            }
+        }
 
         /// <summary>
         /// Gets the counters collection.
         /// </summary>
-        internal Counter CurrentCounters { get; private set; }
+        internal Counter CurrentCounters
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<Counter>() != null);
+                return this.currentCounters;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether to trace.
@@ -153,7 +230,14 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the transcript logger.
         /// </summary>
-        internal TranscriptLogger Transcript { get; private set; }
+        internal TranscriptLogger Transcript
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<TranscriptLogger>() != null);
+                return this.transcript;
+            }
+        }
         #endregion
 
         #region Public Factory Methods
@@ -163,6 +247,7 @@ namespace SimpleScheme
         /// <returns>An interpreter.</returns>
         public static IInterpreter New()
         {
+            Contract.Ensures(Contract.Result<IInterpreter>() != null);
             return new Interpreter(true, null, null, null, null);
         }
 
@@ -174,6 +259,7 @@ namespace SimpleScheme
         /// <returns>A scheme interpreter.</returns>
         public static IInterpreter New(IEnumerable<string> files, bool echo)
         {
+            Contract.Ensures(Contract.Result<IInterpreter>() != null);
             return new Interpreter(true, null, files, null, echo ? Console.Out : null);
         }
 
@@ -184,16 +270,18 @@ namespace SimpleScheme
         /// <returns>A scheme interpreter.</returns>
         public static IInterpreter New(IEnumerable<string> files)
         {
+            Contract.Ensures(Contract.Result<IInterpreter>() != null);
             return new Interpreter(true, null, files, null, null);
         }
 
         /// <summary>
-        /// Create a new interpeter with a given set of files to run initially, a given environment, and given streams..
+        /// Create a new interpeter with a given primitive environment.
         /// </summary>
         /// <param name="primEnvironment">Environment containing the primitives.  If null, create one.</param>
         /// <returns>A scheme interpreter.</returns>
         public static IInterpreter New(IPrimitiveEnvironment primEnvironment)
         {
+            Contract.Ensures(Contract.Result<IInterpreter>() != null);
             return new Interpreter(true, primEnvironment, null, null, null);
         }
 
@@ -380,10 +468,14 @@ namespace SimpleScheme
         /// <param name="outp">If not null, input and results are written here.</param>
         public void LoadFile(SchemeObject fileName, OutputPort outp)
         {
-            string name = string.Empty;
+            string name = fileName.ToString();
+            if (string.IsNullOrEmpty(name))
+            {
+                ErrorHandlers.ArgumentError("Filename is null or empty");
+            }
+
             try
             {
-                name = fileName.ToString();
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
                     this.Load(InputPort.New(new StreamReader(fs), this), outp);
@@ -551,6 +643,8 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         internal SchemeObject Eval(SchemeObject expr, Environment env)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
             return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
 
@@ -564,20 +658,17 @@ namespace SimpleScheme
         /// <returns>The evaluation result, or suspended evaluator.</returns>
         internal SchemeObject EvalSteps(Evaluator evaluator)
         {
-            Debug.Assert(evaluator != null, "SchemeObject:EvalSteps evaluator != null");
+            Contract.Requires(evaluator != null);
             while (true)
             {
-                Evaluator nextEvaluator = evaluator.NextStep();
-                if (nextEvaluator == null)
+                // Get the PC from the evaluator and call the action it points to
+                // The delegate is to an open instance, so we are actually calling an instance method.
+                Contract.Assume(evaluator != null);
+                evaluator = evaluator.Pc(evaluator);
+
+                if (evaluator is FinalEvaluator)
                 {
                     return evaluator.ReturnedExpr;
-                }
-
-                // Get the PC from the evaluator and call the action it points to, passing it the evaluator instance.
-                evaluator = nextEvaluator.Pc(nextEvaluator);
-                if (evaluator == null)
-                {
-                    return nextEvaluator.ReturnedExpr;
                 }
             }
         }
@@ -593,6 +684,8 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         internal SchemeObject Load(InputPort inp, OutputPort outp)
         {
+            Contract.Requires(inp != null);
+            //// outp can be null
             while (true)
             {
                 SchemeObject input;
@@ -622,6 +715,7 @@ namespace SimpleScheme
         /// <param name="counterId">The counter to increment.</param>
         internal void IncrementCounter(int counterId)
         {
+            Contract.Requires(counterId >= 0);
             if (this.Count)
             {
                 this.CurrentCounters.Increment(counterId);
@@ -637,6 +731,8 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         private static SchemeObject UnsafeRead(InputPort inp)
         {
+            Contract.Requires(inp != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             return inp.Read();
         }
 
@@ -647,6 +743,7 @@ namespace SimpleScheme
         /// <returns>The expression value.</returns>
         private static SchemeObject UnsafeEndEval(IAsyncResult ar)
         {
+            Contract.Requires(ar != null);
             var res = ((AsyncResult<SchemeObject>)ar).EndInvoke();
             return res;
         }
@@ -658,6 +755,8 @@ namespace SimpleScheme
         /// <returns>The object that was read.</returns>
         private SchemeObject UnsafeRead(string str)
         {
+            Contract.Requires(str != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             using (var reader = new StringReader(str))
             {
                 return UnsafeRead(InputPort.New(reader, this));
@@ -671,7 +770,9 @@ namespace SimpleScheme
         /// <returns>The result of the evaluation.</returns>
         private SchemeObject UnsafeEval(SchemeObject expr)
         {
-            return this.Eval(expr, this.GlobalEnvironment);
+            Contract.Requires(expr != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            return this.Eval(expr, this.GlobalEnv);
         }
 
         /// <summary>
@@ -683,8 +784,9 @@ namespace SimpleScheme
         /// <returns>Async result, used to monitor progress.</returns>
         private IAsyncResult UnsafeBeginEval(SchemeObject expr, AsyncCallback cb, object state)
         {
+            Contract.Requires(expr != null);
             this.asyncResult = new AsyncResult<SchemeObject>(cb, state);
-            SchemeObject res = this.Eval(expr, this.GlobalEnvironment);
+            SchemeObject res = this.Eval(expr, this.GlobalEnv);
             if ((res is ClrObject) && ((ClrObject)res).Value is SuspendedEvaluator)
             {
                 return this.asyncResult;
@@ -725,6 +827,23 @@ namespace SimpleScheme
             }
 
             return val;
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.globalEnvironment != null);
+            Contract.Invariant(this.primEnvironment != null);
+            Contract.Invariant(this.currentInputPort != null);
+            Contract.Invariant(this.currentOutputPort != null);
+            Contract.Invariant(this.currentCounters != null);
+            Contract.Invariant(this.transcript != null);
+            Contract.Invariant(this.halted != null);
         }
         #endregion
     }

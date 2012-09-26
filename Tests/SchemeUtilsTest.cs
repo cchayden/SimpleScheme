@@ -155,8 +155,8 @@ namespace Tests
         [TestMethod]
         public void EqvTest()
         {
-            Assert.IsTrue(SchemeBoolean.Eqv(null, null).Value);
-            Assert.IsFalse(SchemeBoolean.Eqv(null, (Number)1).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(Undefined.Instance, Undefined.Instance).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(Undefined.Instance, (Number)1).Value);
             SchemeString abc = "abc";
             SchemeString ab = "ab";
             var n1 = (Number)1;
@@ -231,7 +231,7 @@ namespace Tests
         [TestMethod]
         public void LengthTest()
         {
-            Assert.AreEqual(0, List.ListLength(null));
+            Assert.AreEqual(0, List.ListLength(Undefined.Instance));
             Assert.AreEqual(0, List.ListLength((Number)0));
             var actual = List.Cons((Number)1, (Number)2);
             Assert.AreEqual(1, List.ListLength(actual));
@@ -509,7 +509,7 @@ namespace Tests
             Assert.AreEqual("symbol", ((Symbol)"sym").SchemeTypeName());
             Assert.AreEqual("character", ((Character)'c').SchemeTypeName());
             Assert.AreEqual("vector", Vector.New((Number)3, (Number)0).SchemeTypeName());
-            Assert.AreEqual("pair", Pair.New(null, null).SchemeTypeName());
+            Assert.AreEqual("pair", Pair.New(Undefined.Instance, Undefined.Instance).SchemeTypeName());
             Assert.AreEqual("number", ((Number)1.0d).SchemeTypeName());
             Assert.AreEqual("string", ((SchemeString)"abc").SchemeTypeName());
             Assert.AreEqual("primitive", (new Primitive("primitive", (args, env, caller) => null, new[] {string.Empty}, new ArgsInfo(0, 0, false, new ArgType[0]))).SchemeTypeName());

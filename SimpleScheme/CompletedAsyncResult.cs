@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.Threading;
 
     /// <summary>
@@ -36,7 +37,11 @@ namespace SimpleScheme
         /// </summary>
         public bool IsCompleted
         {
-            get { return true; }
+            get
+            {
+                Contract.Ensures(Contract.Result<bool>() == true);
+                return true;
+            }
         }
 
         /// <summary>
@@ -58,6 +63,7 @@ namespace SimpleScheme
                     }
                 }
 
+                Contract.Assume(this.asyncWaitHandle != null);
                 return this.asyncWaitHandle;
             }
         }
@@ -75,7 +81,11 @@ namespace SimpleScheme
         /// </summary>
         public bool CompletedSynchronously
         {
-            get { return true; }
+            get
+            {
+                Contract.Ensures(Contract.Result<bool>() == true);
+                return true;
+            }
         }
     }
 }

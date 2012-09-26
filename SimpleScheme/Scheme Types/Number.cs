@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.Globalization;
 
     /// <summary>
@@ -93,6 +94,7 @@ namespace SimpleScheme
         /// <returns>A number corresponding to the given int.</returns>
         public static implicit operator Number(int x)
         {
+            Contract.Ensures(Contract.Result<Number>() != null);
             return New(x);
         }
 
@@ -103,11 +105,10 @@ namespace SimpleScheme
         /// <returns>A number corresponding to the given double.</returns>
         public static implicit operator Number(double x)
         {
+            Contract.Ensures(Contract.Result<Number>() != null);
             return New(x);
         }
-        #endregion
 
-        #region New
         /// <summary>
         /// Create a new number from a long.
         /// </summary>
@@ -158,6 +159,7 @@ namespace SimpleScheme
         /// <returns>A Number</returns>
         public static Number New(double number, int lineNumber)
         {
+            Contract.Ensures(Contract.Result<Number>() != null);
             if (number == 0.0)
             {
                 return Zero;
@@ -194,8 +196,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding Number.</returns>
+        [Pure]
         public static int AsInt(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Number)
             {
                 return Convert.ToInt32(((Number)x).N);
@@ -212,6 +216,7 @@ namespace SimpleScheme
         /// <returns>The corresponding double.</returns>
         public static double AsDouble(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Number)
             {
                 return ((Number)x).N;
@@ -228,6 +233,7 @@ namespace SimpleScheme
         /// <returns>The corresponding float.</returns>
         public static float AsFloat(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (float)((Number)x).N;
@@ -244,6 +250,7 @@ namespace SimpleScheme
         /// <returns>The corresponding short.</returns>
         public static short AsShort(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (short)((Number)x).N;
@@ -260,6 +267,7 @@ namespace SimpleScheme
         /// <returns>The corresponding short.</returns>
         public static long AsLong(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (long)((Number)x).N;
@@ -276,6 +284,7 @@ namespace SimpleScheme
         /// <returns>The corresponding byte.</returns>
         public static byte AsByte(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (byte)((Number)x).N;
@@ -286,6 +295,59 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal numbers.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is Number))
+            {
+                return false;
+            }
+
+            return this.Equals((Number)other);
+        }
+
+        /// <summary>
+        /// Compares two Number values by comparing their underlying numerical value.
+        /// </summary>
+        /// <param name="other">The other Number.</param>
+        /// <returns>True if they have the same number value.</returns>
+        public bool Equals(Number other)
+        {
+            Contract.Assume(other != null);
+            return this.n == other.n;
+        }
+
+        /// <summary>
+        /// The hash code is the number's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.n.GetHashCode();
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Create a string representation of the number for printing.
+        /// </summary>
+        /// <returns>The number as a string.</returns>
+        public override string ToString()
+        {
+            if (this.n == Math.Round(this.n))
+            {
+                return ((long)Num(this)).ToString(CultureInfo.InvariantCulture);
+            }
+
+            return Num(this).ToString(CultureInfo.InvariantCulture);
+        }
+        #endregion
+
         #region Define Primitives
         /// <summary>
         /// Define the numeric primitives.
@@ -293,7 +355,9 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            // not implemented
+            Contract.Requires(primEnv != null);
+
+            //// not implemented
             //// <r4rs section="6.5.5">(numerator <q>)</r4rs>
             //// <r4rs section="6.5.5">(denominator <q>)</r4rs>
             //// <r4rs section="6.5.5">(rationalize <x> <y>)</r4rs>
@@ -544,58 +608,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Equality
-        /// <summary>
-        /// Provide our own version of the Equals method.
-        /// </summary>
-        /// <param name="other">The other object.</param>
-        /// <returns>True if they are equal numbers.</returns>
-        public override bool Equals(object other)
-        {
-            if (!(other is Number))
-            {
-                return false;
-            }
-
-            return this.Equals((Number)other);
-        }
-
-        /// <summary>
-        /// Compares two Number values by comparing their underlying numerical value.
-        /// </summary>
-        /// <param name="other">The other Number.</param>
-        /// <returns>True if they have the same number value.</returns>
-        public bool Equals(Number other)
-        {
-            return this.n == other.n;
-        }
-
-        /// <summary>
-        /// The hash code is the number's hash code.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return this.n.GetHashCode();
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Create a string representation of the number for printing.
-        /// </summary>
-        /// <returns>The number as a string.</returns>
-        public override string ToString()
-        {
-            if (this.n == Math.Round(this.n))
-            {
-                return ((long)Num(this)).ToString(CultureInfo.InvariantCulture);
-            }
-
-            return Num(this).ToString(CultureInfo.InvariantCulture);
-        }
-        #endregion
-
         #region New
         /// <summary>
         /// Create a new number from an int.
@@ -638,6 +650,7 @@ namespace SimpleScheme
         /// <returns>The object, cast to double.</returns>
         private static double Num(SchemeObject obj)
         {
+            Contract.Requires(obj != null);
             return ((Number)obj).N;
         }
 
@@ -648,6 +661,7 @@ namespace SimpleScheme
         /// <returns>The greatest common divisor.</returns>
         private static double Gcd(SchemeObject args)
         {
+            Contract.Requires(args != null);
             long gcd = 0;
             while (args is Pair)
             {
@@ -680,6 +694,7 @@ namespace SimpleScheme
         /// <returns>True if the number is exact.</returns>
         private static bool IsExact(SchemeObject x)
         {
+            Contract.Requires(x != null);
             if (!(x is Number))
             {
                 return false;
@@ -696,6 +711,7 @@ namespace SimpleScheme
         /// <returns>The LCM of these numbers.</returns>
         private static double Lcm(SchemeObject args)
         {
+            Contract.Requires(args != null);
             long lcm = 1;
             while (args is Pair)
             {
@@ -720,6 +736,12 @@ namespace SimpleScheme
             int b = numberBase is Number ? (int)Num(numberBase) : 10;
             if (b != 10 || num == Math.Round(num))
             {
+                if (!(b == 2 || b == 8 || b == 10 || b == 16))
+                {
+                    ErrorHandlers.InvalidOperationError("Invalid number base: " + b);
+                }
+                
+                Contract.Assert(b == 2 || b == 8 || b == 10 || b == 16);
                 return Convert.ToString((long)num, b).ToCharArray();
             }
 
@@ -736,6 +758,8 @@ namespace SimpleScheme
         /// <returns>True only if all comparisons are true.</returns>
         private static SchemeBoolean Compare(SchemeObject args, Func<double, double, bool> comp)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(comp != null);
             while (Rest(args) is Pair)
             {
                 if (!comp(Num(First(args)), Num(Second(args))))
@@ -744,6 +768,7 @@ namespace SimpleScheme
                 }
 
                 args = Rest(args);
+                Contract.Assert(args != null);
             }
 
             return true;
@@ -761,6 +786,9 @@ namespace SimpleScheme
         /// <returns>The final result of the operation as a Number.</returns>
         private static Number Compute(SchemeObject args, Func<double, double, double> oper, double initial)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(oper != null);
+
             // If there are no numbers, apply return initial value
             if (args is EmptyList)
             {
@@ -810,6 +838,7 @@ namespace SimpleScheme
         /// <returns>The first modulo the second.</returns>
         private static double Modulo(double first, double second)
         {
+            Contract.Requires(second != 0.0);
             var x = (long)first;
             var y = (long)second;
             long m = x % y;

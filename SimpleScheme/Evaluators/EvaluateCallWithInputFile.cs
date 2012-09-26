@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
     using System.IO;
 
     /// <summary>
@@ -10,6 +11,16 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateCallWithInputFile : Evaluator
     {
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper closeStep = GetStepper("CloseStep");
+
         #region Fields
         /// <summary>
         /// The counter id.
@@ -31,8 +42,13 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="port">The input port.</param>
         private EvaluateCallWithInputFile(SchemeObject args, Environment env, Evaluator caller, InputPort port)
-            : base(InitialStep, args, env, caller, counter)
+            : base(initialStep, args, env, caller, counter)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(port != null);
+            Contract.Requires(counter >= 0);
             this.port = port;
         }
         #endregion
@@ -46,6 +62,8 @@ namespace SimpleScheme
         /// <returns>The created evaluator.</returns>
         internal static Evaluator Call(SchemeObject args, Evaluator caller)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(caller != null);
             InputPort port = OpenInputFile(First(args), caller.Interp);
             return new EvaluateCallWithInputFile(args, caller.Env, caller, port);
         }
@@ -60,9 +78,11 @@ namespace SimpleScheme
         /// <returns>The input port, used for reading.</returns>
         internal static InputPort OpenInputFile(SchemeObject filename, Interpreter interp)
         {
+            Contract.Requires(filename != null);
+            Contract.Requires(interp != null);
             try
             {
-                return InputPort.New(new StreamReader(filename.ToString(false)), interp);
+                return InputPort.New(new StreamReader(filename.ToString()), interp);
             }
             catch (FileNotFoundException)
             {
@@ -79,32 +99,37 @@ namespace SimpleScheme
         /// <summary>
         /// Open the input file and apply the proc.  
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator, or else if the result is available, continue on to the next step.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        protected override Evaluator InitialStep()
         {
-            var step = (EvaluateCallWithInputFile)s;
-            var proc = (Procedure)Second(s.Expr);
-            s.Pc = CloseStep;
-            return proc.Apply(MakeList(step.port), null, s, s);
+            var proc = (Procedure)Second(this.Expr);
+            this.Pc = closeStep;
+            return proc.Apply(MakeList(this.port), this, this);
         }
 
         /// <summary>
         /// Evaluation is complete: close the file and return the result.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>The evaluation result.</returns>
-        private static Evaluator CloseStep(Evaluator s)
+        protected override Evaluator CloseStep()
         {
-            var step = (EvaluateCallWithInputFile)s;
-            if (step.port != null)
-            {
-                step.port.Close();
-            }
+            Contract.Assert(this.port != null);
+            this.port.Close();
 
-            Evaluator caller = step.Caller;
-            caller.ReturnedExpr = s.ReturnedExpr;
+            Evaluator caller = this.Caller;
+            caller.ReturnedExpr = this.ReturnedExpr;
             return caller;
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.port != null);
         }
         #endregion
     }

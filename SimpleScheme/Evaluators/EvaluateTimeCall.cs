@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// Evaluate an expression while timing it..
     /// This can evaluate the expression multiple times.
@@ -11,6 +13,11 @@ namespace SimpleScheme
     internal sealed class EvaluateTimeCall : EvaluateTimeBase
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper doneStep = GetStepper("DoneStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -28,6 +35,10 @@ namespace SimpleScheme
         private EvaluateTimeCall(Procedure proc, int count, Environment env, Evaluator caller)
             : base(proc, count, env, caller, counter)
         {
+            Contract.Requires(proc != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
         }
         #endregion
 
@@ -42,6 +53,10 @@ namespace SimpleScheme
         /// <returns>The timed evaluator.</returns>
         internal static Evaluator Call(Procedure proc, SchemeObject count, Environment env, Evaluator caller)
         {
+            Contract.Requires(proc != null);
+            Contract.Requires(count != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             int n = count is EmptyList ? 1 : Number.AsInt(count);
             return new EvaluateTimeCall(proc, n, env, caller);
         }
@@ -57,8 +72,9 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator EvaluateStep()
         {
-            this.Pc = CompleteStep;
-            return ((Procedure)this.Expr).Apply(EmptyList.Instance, null, this, this);
+            this.Pc = doneStep;
+            Contract.Assume(this.Expr is Procedure);
+            return ((Procedure)this.Expr).Apply(EmptyList.Instance, this, this);
         }
         #endregion
     }

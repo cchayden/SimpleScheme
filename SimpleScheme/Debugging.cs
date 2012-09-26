@@ -6,6 +6,7 @@
 
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Debugging primitives
@@ -19,6 +20,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                     "trace-on", 
@@ -53,7 +55,7 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "list-primitives", 
                     new[] { "(list-primitives)" },
-                    (args, env, caller) => caller.Interp.PrimEnvironment.ListPrimitives(), 
+                    (args, env, caller) => caller.Interp.PrimEnv.ListPrimitives(), 
                     new ArgsInfo(0))
                 .DefinePrimitive(
                     "describe", 
@@ -72,6 +74,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject SetTraceFlag(Evaluator caller, bool flag)
         {
+            Contract.Requires(caller != null);
             caller.Interp.Trace = flag;
             return Undefined.Instance;
         }
@@ -84,6 +87,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject SetCountFlag(Evaluator caller, bool flag)
         {
+            Contract.Requires(caller != null);
             caller.Interp.Count = flag;
             return Undefined.Instance;
         }
@@ -95,6 +99,7 @@ namespace SimpleScheme
         /// <returns>Undefined result.</returns>
         private static SchemeObject Backtrace(Evaluator caller)
         {
+            Contract.Requires(caller != null);
             caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
             return Undefined.Instance;
         }
@@ -106,6 +111,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject Debug(Evaluator caller)
         {
+            Contract.Requires(caller != null);
             caller.Interp.CurrentOutputPort.WriteLine("debug");
             System.Diagnostics.Debugger.Break();
             return Undefined.Instance;
@@ -118,6 +124,7 @@ namespace SimpleScheme
         /// <returns>A description in a SchemeString.</returns>
         private static SchemeObject Describe(SchemeObject obj)
         {
+            Contract.Requires(obj != null);
             string msg = string.Format("Type: {0}\nDescription: {1}", obj.GetType().Name, obj.Describe());
             return SchemeString.New(msg);
         }

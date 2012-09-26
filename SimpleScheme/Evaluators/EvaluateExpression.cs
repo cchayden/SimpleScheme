@@ -5,6 +5,7 @@ namespace SimpleScheme
 {
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.Contracts;
 
     #region Delegtes
     /// <summary>
@@ -26,6 +27,16 @@ namespace SimpleScheme
     internal sealed class EvaluateExpression : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper applyProcStep = GetStepper("ApplyProcStep");
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -89,19 +100,18 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpression(SchemeObject fn, SchemeObject args, Environment env, Evaluator caller)
-            : base(InitialStep, args, env, caller, counter)
+            : base(initialStep, args, env, caller, counter)
         {
+            Contract.Requires(fn != null);
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counter >= 0);
             this.fn = fn;
-            if (fn is Symbol)
+            if (fn is Procedure)
             {
-                // If the fun is a symbol, we can avoid the first step.
-                this.Pc = ApplyProcStep;
-                Call(fn, env, this);
-            }
-            else if (fn is Procedure)
-            {
-                // Or if the fun is already a procedure, skip the first step.
-                this.Pc = ApplyProcStep;
+                // If the fun is already a procedure, skip to apply step
+                this.Pc = applyProcStep;
                 this.ReturnedExpr = fn;
             }
         }
@@ -120,6 +130,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                         "and",
@@ -272,6 +283,11 @@ namespace SimpleScheme
         /// <returns>The evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Ensures(Contract.Result<Evaluator>() != null);
+
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.
             //
@@ -311,13 +327,17 @@ namespace SimpleScheme
                 SpecialAction action = funSymbol.SpecialForm;
                 if (action != null)
                 {
-                    return action(args, env, caller);
+                    var res = action(args, env, caller);
+                    Contract.Assume(res != null);
+                    return res;
                 }
 
                 if (specialActions.TryGetValue(funSymbol.ToString(), out action))
                 {
                     funSymbol.SpecialForm = action;
-                    return action(args, env, caller);
+                    var res = action(args, env, caller);
+                    Contract.Assume(res != null);
+                    return res;
                 }
 
                 // If fn is still a symbol, then it needs its arguments evaluated
@@ -326,6 +346,51 @@ namespace SimpleScheme
 
             // Actually create an evaluator to do the operation.
             return new EvaluateExpression(fn, args, env, caller);
+        }
+        #endregion
+
+        #region Steps
+        /// <summary>
+        /// Start evaluation by testing the various forms.
+        /// The special forms have their own evaluators.
+        /// Otherwise, evaluate the first argument (the proc) in preparation for a call.
+        /// </summary>
+        /// <returns>The next thing to do.</returns>
+        protected override Evaluator InitialStep()
+        {
+            // If we get here, it wasn't one of the special forms.  
+            // So we need to evaluate the first item (the function) in preparation for
+            //    doing a procedure call.
+            //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
+            this.Pc = applyProcStep;
+            return Call(this.fn, this.Env, this);
+        }
+
+        /// <summary>
+        /// Come here after evaluating the first expression, the proc.
+        /// Handle the proc: macro, lambda, or function call.
+        /// </summary>
+        /// <returns>The next thing to do.</returns>
+        protected override Evaluator ApplyProcStep()
+        {
+            // Come here after evaluating fn
+            if (!(this.ReturnedExpr is Procedure))
+            {
+                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", this.ReturnedExpr), null);
+            }
+
+            var proc = (Procedure)this.ReturnedExpr;
+            Contract.Assert(proc != null);
+
+            // detect if proc is a "special" primitive that does not get its args evaluated, and if so apply
+            var res = ApplySpecial(this.Expr, this.Env, this.Caller, proc);
+            if (res != null)
+            {
+                return res;
+            }
+
+            // call normal evaluator 
+            return proc.Evaluate(this.Expr, this.Env, this.Caller);
         }
         #endregion
 
@@ -342,9 +407,14 @@ namespace SimpleScheme
         /// <returns>An evaluator.</returns>
         private static Evaluator ApplySpecial(SchemeObject args, Environment env, Evaluator caller, Procedure fun)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(fun != null);
             if (!fun.EvaluateArgs)
             {
-                return fun.Apply(args, env, caller, caller);                
+                Contract.Assume(fun is Primitive);
+                return ((Primitive)fun).Apply(args, env, caller, caller);                
             }
 
             return null;
@@ -359,6 +429,9 @@ namespace SimpleScheme
         /// <returns>The quoted expression.</returns>
         private static Evaluator EvalQuote(SchemeObject args, Environment env, Evaluator caller)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             caller.ReturnedExpr = First(args);
             return caller;
         }
@@ -374,6 +447,9 @@ namespace SimpleScheme
         /// <returns>The next step to execute.</returns>
         private static Evaluator Increment(SchemeObject expr, Environment env, Evaluator caller)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
             SchemeObject lhs = First(expr);
             if (!(lhs is Symbol))
             {
@@ -385,52 +461,14 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Steps
+        #region Contract Invariant
         /// <summary>
-        /// Start evaluation by testing the various forms.
-        /// The special forms have their own evaluators.
-        /// Otherwise, evaluate the first argument (the proc) in preparation for a call.
+        /// Describes invariants on the member variables.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next thing to do.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        [ContractInvariantMethod]
+        private void ContractInvariant()
         {
-            var step = (EvaluateExpression)s;
-
-            // If we get here, it wasn't one of the special forms.  
-            // So we need to evaluate the first item (the function) in preparation for
-            //    doing a procedure call.
-            //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            s.Pc = ApplyProcStep;
-            return Call(step.fn, s.Env, s);
-        }
-
-        /// <summary>
-        /// Come here after evaluating the first expression, the proc.
-        /// Handle the proc: macro, lambda, or function call.
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next thing to do.</returns>
-        private static Evaluator ApplyProcStep(Evaluator s)
-        {
-            // Come here after evaluating fn
-            var fn = s.ReturnedExpr;
-            if (!(fn is Procedure))
-            {
-                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", fn), null);
-            }
-
-            var proc = (Procedure)fn;
-
-            // detect if fn is a "special" primitive that does not get its args evaluated, and if so apply
-            var res = ApplySpecial(s.Expr, s.Env, s.Caller, proc);
-            if (res != null)
-            {
-                return res;
-            }
-
-            // call normal evaluator 
-            return proc.Evaluate(s.Expr, s.Env, s.Caller);
+            Contract.Invariant(this.fn != null);
         }
         #endregion
     }

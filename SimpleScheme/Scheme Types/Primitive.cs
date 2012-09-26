@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.Text;
 
     #region Enum
@@ -207,6 +208,9 @@ namespace SimpleScheme
         public Primitive(string name, Operation operation, string[] description, ArgsInfo argsInfo) :
             base(name, argsInfo)
         {
+            Contract.Requires(name != null);
+            Contract.Requires(operation != null);
+            Contract.Requires(description != null);
             this.operation = operation;
             this.description = description;
             this.argTypes = argsInfo.ArgTypes;
@@ -238,12 +242,36 @@ namespace SimpleScheme
         ///   in ReturnedResult and returning to the caller.
         /// </summary>
         /// <param name="args">The arguments to the primitive.</param>
-        /// <param name="env">The application environment.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
         /// <param name="caller">The calling Evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
         {
+            return this.Apply(args, Environment.EmptyEnvironment, returnTo, caller);
+        }
+
+        /// <summary>
+        /// Apply the primitive to the arguments, giving a result.
+        /// As a convenience for primitives, they are allowed to return either
+        ///   a result or a Evaluator.  If they return an evaluator, it means the result
+        ///   is not yet ready, and that a new evaluator was created and returned.  When
+        ///   that evaluator has a result, it will put in into ReturnedResult and return to the
+        ///   caller evaluator provided to it.
+        /// If there is a result available immediately, this returns it by storing it
+        ///   in ReturnedResult and returning to the caller.
+        /// </summary>
+        /// <param name="args">The arguments to the primitive.</param>
+        /// <param name="env">The environment in which the application should take place.</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
+        /// <param name="caller">The calling Evaluator.</param>
+        /// <returns>The next evaluator to execute.</returns>
+        internal Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
+        {
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(returnTo != null);
+            Contract.Requires(caller != null);
+
             // First check the number of arguments
 #if Check
             this.CheckArgTypes(args, caller);
@@ -256,17 +284,18 @@ namespace SimpleScheme
             var res = this.operation(args, env, returnTo);
 
             // See if the operation returns a result or another evaluator
-            var evaluator = res as Evaluator;
-            if (evaluator != null)
+            if (res is Evaluator)
             {
-                return evaluator;
+                return (Evaluator)res;
             }
 
             // Operation returned a result -- just return this
             //  to the caller.
+            Contract.Assume(res is SchemeObject);   // it's not an Evaluator; it must be SchemeObject
             returnTo.ReturnedExpr = (SchemeObject)res;
             return returnTo;
         }
+
         #endregion
 
         #region Internal Methods
@@ -290,6 +319,8 @@ namespace SimpleScheme
         /// <param name="caller">The calling evaluator</param>
         private void CheckArgTypes(SchemeObject args, Evaluator caller)
         {
+            Contract.Requires(args != null);
+            Contract.Requires(caller != null);
             int numArgs = ListLength(args);
             this.CheckArgCount(numArgs, args, this.ProcedureName, caller);
             int numTypes = this.argTypes.Length - 1;
@@ -301,6 +332,7 @@ namespace SimpleScheme
                 }
 
                 int t = i < numTypes ? i : numTypes;
+                Contract.Assume(t >= 0);
                 this.CheckArgType(First(args), this.argTypes[t]);
                 args = Rest(args);
             }
@@ -313,6 +345,7 @@ namespace SimpleScheme
         /// <param name="argType">The expected argument type.</param>
         private void CheckArgType(SchemeObject arg, ArgType argType)
         {
+            Contract.Requires(arg != null);
             if (ArgTypeTester.Ok(arg, argType))
             {
                 return;
@@ -325,6 +358,20 @@ namespace SimpleScheme
                 arg.GetType().Name,
                 ArgTypeTester.ValueMessage(argType));
             ErrorHandlers.SemanticError(msg, arg);
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.operation != null);
+            Contract.Invariant(this.description != null);
+            Contract.Invariant(this.argTypes != null);
+            Contract.Invariant(this.argTypes != null);
         }
         #endregion
 
@@ -349,6 +396,8 @@ namespace SimpleScheme
             /// </summary>
             static ArgTypeTester()
             {
+                Contract.Ensures(Contract.ForAll(0, Primitive.ArgTypeTester.valueMessage.Length, idx => Primitive.ArgTypeTester.argPredicates[idx] != null));
+                Contract.Ensures(Contract.ForAll(0, Primitive.ArgTypeTester.valueMessage.Length, idx => Primitive.ArgTypeTester.valueMessage[idx] != null));
                 argPredicates = new Predicate<SchemeObject>[(int)ArgType.Undefined + 1];
                 argPredicates[(int)ArgType.Obj] = arg => true;
                 argPredicates[(int)ArgType.Pair] = arg => arg is Pair;

@@ -3,11 +3,13 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+    using System.Diagnostics.Contracts;
+    using System.Reflection;
     using System.Text;
     using System.Threading;
 
     // ReSharper disable ConvertToAutoProperty
-
     #region Delegates
     /// <summary>
     /// Each step takes an Evaluator and returns another one.
@@ -49,6 +51,11 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
+        /// The evaluation environment.
+        /// </summary>
+        private readonly Environment env;
+
+        /// <summary>
         /// The program counter.
         /// Contains the function to execute next.
         /// This is the type for the evaluator functions.
@@ -77,11 +84,6 @@ namespace SimpleScheme
         private int lineNumber;
 
         /// <summary>
-        /// The evaluation environment.
-        /// </summary>
-        private Environment env;
-
-        /// <summary>
         /// The calling evaluator. 
         /// Control returns here after evaluation is done.
         /// </summary>
@@ -107,6 +109,21 @@ namespace SimpleScheme
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Evaluator class.
+        /// For use by FinalEvaluator only.
+        /// </summary>
+        protected internal Evaluator()
+        {
+#if FALSE
+            this.env = new Environment();
+            this.caller = this;
+            this.expr = Undefined.Instance;
+            this.returnedExpr = this.expr;
+            this.returnedEnv = this.env;
+#endif
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Evaluator class.
         /// This class is not instantiated itself, but only derived classes.
         /// </summary>
         /// <param name="initialPc">The initial pc value.</param>
@@ -114,10 +131,17 @@ namespace SimpleScheme
         /// <param name="env">The evaluator environment.</param>
         /// <param name="caller">The caller evaluator.</param>
         /// <param name="counterId">The counter ID associated with this evaluator.</param>
-        internal protected Evaluator(Stepper initialPc, SchemeObject args, Environment env, Evaluator caller, int counterId)
+        protected internal Evaluator(Stepper initialPc, SchemeObject args, Environment env, Evaluator caller, int counterId)
         {
+            Contract.Requires(initialPc != null);
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counterId >= 0);
             this.expr = args;
+            this.returnedExpr = expr;
             this.env = env;
+            this.returnedEnv = env;
             this.caller = caller;
             this.pc = initialPc;
             this.lineNumber = 0;
@@ -136,8 +160,23 @@ namespace SimpleScheme
         /// </summary>
         internal Stepper Pc
         {
-            get { return this.pc; }
-            set { this.pc = value; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Stepper>() != null);
+#if Check
+                if (this.pc == null)
+                {
+                    ErrorHandlers.InternalError("Pc is null");
+                }
+#endif
+                return this.pc;
+            }
+
+            set
+            {
+                Contract.Requires(value != null);
+                this.pc = value;
+            }
         }
 
         /// <summary>
@@ -158,7 +197,11 @@ namespace SimpleScheme
         /// </summary>
         internal Interpreter Interp
         {
-            get { return this.Env.Interp; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Interpreter>() != null);
+                return this.Env.Interp;
+            }
         }
 
         /// <summary>
@@ -166,8 +209,23 @@ namespace SimpleScheme
         /// </summary>
         internal SchemeObject Expr
         {
-            get { return this.expr; }
-            set { this.expr = value; }
+            get
+            {
+                Contract.Ensures(Contract.Result<SchemeObject>() != null);
+#if Check
+                if (this.expr == null)
+                {
+                    ErrorHandlers.InternalError("Expr is null");
+                }
+#endif
+                return this.expr;
+            }
+
+            set
+            {
+                Contract.Requires(value != null);
+                this.expr = value;
+            }
         }
 
         /// <summary>
@@ -185,7 +243,17 @@ namespace SimpleScheme
         /// </summary>
         internal Environment Env
         {
-            get { return this.env; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Environment>() != null);
+#if Check
+                if (this.env == null)
+                {
+                    ErrorHandlers.InternalError("Env is null");
+                }
+#endif
+                return this.env;
+            }
         }
 
         /// <summary>
@@ -193,7 +261,17 @@ namespace SimpleScheme
         /// </summary>
         internal Evaluator Caller
         {
-            get { return this.caller; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Evaluator>() != null);
+#if Check
+                if (this.caller == null)
+                {
+                    ErrorHandlers.InternalError("Caller is null");
+                }
+#endif
+                return this.caller;
+            }
         }
 
         /// <summary>
@@ -201,8 +279,23 @@ namespace SimpleScheme
         /// </summary>
         internal SchemeObject ReturnedExpr
         {
-            get { return this.returnedExpr; }
-            set { this.returnedExpr = value; }
+            get
+            {
+                Contract.Ensures(Contract.Result<SchemeObject>() != null);
+#if Check
+                if (this.returnedExpr == null)
+                {
+                    ErrorHandlers.InternalError("ReturnedExpr is null");
+                }
+#endif
+                return this.returnedExpr;
+            }
+
+            set
+            {
+                Contract.Requires(value != null);
+                this.returnedExpr = value;
+            }
         }
 
         /// <summary>
@@ -211,8 +304,23 @@ namespace SimpleScheme
         /// </summary>
         internal Environment ReturnedEnv
         {
-            get { return this.returnedEnv; }
-            set { this.returnedEnv = value; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Environment>() != null);
+#if Check
+                if (this.returnedEnv == null)
+                {
+                    ErrorHandlers.InternalError("ReturnedEnv is null");
+                }
+#endif
+                return this.returnedEnv;
+            }
+
+            set
+            {
+                Contract.Requires(value != null);
+                this.returnedEnv = value;
+            }
         }
 
         /// <summary>
@@ -272,7 +380,7 @@ namespace SimpleScheme
         {
             Evaluator ret = this.Clone();
             Evaluator s = ret;
-            while (s.Caller != null)
+            while (!(s.Caller is FinalEvaluator))
             {
                 Evaluator parent = s.Caller.Clone();
                 s.caller = parent;
@@ -288,6 +396,7 @@ namespace SimpleScheme
         /// <returns>A backtrace of the evaluator call stack.</returns>
         internal string StackBacktrace()
         {
+            Contract.Ensures(Contract.Result<string>() != null);
             Evaluator step = this.Caller;    // skip backtrace evaluator itself
             var sb = new StringBuilder();
             while (step != null)
@@ -306,7 +415,7 @@ namespace SimpleScheme
         internal int FindLineNumberInCallStack()
         {
             Evaluator step = this;
-            while (step != null)
+            while (!(step is FinalEvaluator))
             {
                 if (step.LineNumber != 0)
                 {
@@ -325,7 +434,8 @@ namespace SimpleScheme
         /// <param name="counterIdent">The counter id</param>
         internal void IncrementCounter(int counterIdent)
         {
-            if (this.Env != null)
+            Contract.Requires(counterIdent >= 0);
+            if (this.Env != Environment.EmptyEnvironment)
             {
                 this.Env.Interp.IncrementCounter(counterIdent);
             }
@@ -337,6 +447,7 @@ namespace SimpleScheme
         /// <returns>The return value of the evaluation (or halted or suspended).</returns>
         internal SchemeObject EvalStep()
         {
+            Contract.Assert(this.Env.Interp != null);
             return this.Env.Interp.EvalSteps(this);
         }
 
@@ -344,25 +455,13 @@ namespace SimpleScheme
 
         #region Internal Virtual Methods
         /// <summary>
-        /// Give the Evaluator to execute the next step.
-        /// Normally, we just continue on the one we are in by returning this.
-        /// The halt and suspend evaluators override this.
-        /// Return null to stop evaluation, and leave result in ReturnedExpr.
-        /// Return a different step to jump to that step.
-        /// </summary>
-        /// <returns>Null to break out of main loop, a different evaluator to jump to it.</returns>
-        internal virtual Evaluator NextStep()
-        {
-            return this;
-        }
-
-        /// <summary>
         /// Perform a shallow copy of the evaluator.
         /// Subclass overrides this to provide specialized implementation.
         /// </summary>
         /// <returns>A copy of the evaluator.</returns>
         internal virtual Evaluator Clone()
         {
+            Contract.Ensures(Contract.Result<Evaluator>() != null);
             return (Evaluator)this.MemberwiseClone();
         }
 
@@ -388,6 +487,33 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Protected Static
+        /// <summary>
+        /// Gets a stepper function.
+        /// This gets an open instance method, which is bound to an actual
+        /// instance at the point of the call.
+        /// </summary>
+        /// <param name="methodName">
+        /// The name of the method to call.  It must be an instance method of Evaluator.
+        /// In practice it is local to the evaluator subclass, so the method must be virtual.
+        /// </param>
+        /// <returns>A stepper that can be used to call the method.</returns>
+        protected static Stepper GetStepper(string methodName)
+        {
+            Contract.Requires(methodName != null);
+            Contract.Ensures(Contract.Result<Stepper>() != null);
+            MethodInfo mi = typeof(Evaluator).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (mi == null)
+            {
+                ErrorHandlers.InternalError("Could not find step: " + methodName);
+                return null;
+            }
+
+            Contract.Assert(mi != null);
+            return (Stepper)Delegate.CreateDelegate(typeof(Stepper), null, mi);
+        }
+        #endregion
+
         #region Protected Methods
         /// <summary>
         /// Update and environment.
@@ -398,6 +524,8 @@ namespace SimpleScheme
         /// <param name="vals">A corresponding list of values.</param>
         protected void UpdateEnvironment(SchemeObject formals, SchemeObject vals)
         {
+            Contract.Requires(formals != null);
+            Contract.Requires(vals != null);
             while (formals is Pair)
             {
                 this.env.Update(First(formals), First(vals));
@@ -416,6 +544,295 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Step Virtual Methods
+        // These virtual methods are used by subclasses as their internal steps.
+        // The subclass assigns the PC to one of its member functions.
+        // The delegate MUST BE and *open* instance method, not bound to a specific
+        // instance, otherwise call/cc will not work as expected.  The caller, Interpreter:EvalSteps,
+        // supplies the instance explicitly in the call.
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator InitialStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: InitialStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator DoneStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: DoneStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator TestStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: TestStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator IterateStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: IterateStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator LoopStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: LoopStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvaluateStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvaluateStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EndStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: InitialStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalTestStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalTestStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalExprStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalExprStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalAlternativeStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalAlternativeStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalArgsStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalArgsStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalKeyStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalKeyStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator CheckClauseStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: CheckClauseStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalClauseStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalClauseStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalConsequentStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalConsequentStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ApplyRecipientStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: ApplyRecipientStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator StoreDefineStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: StoreDefineStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ExpandStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: ExpandStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator EvalInitStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: EvalInitStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator BindVarToInitStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: BindVarToInitStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ApplyStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: ApplyStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ApplyProcStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: ApplyProcStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ApplyNamedLetStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: ApplyNamedLetStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ApplyFunStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: ApplyFunStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator CollectAndLoopStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: CollectAndLoopStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator SetStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: SetStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator CloseStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: CloseStep");
+            return this;
+        }
+
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator ContinueAfterSuspendedStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: InitialStep");
+            return this;
+        }
+
+        #endregion
+
         #region Private Methods
         /// <summary>
         /// Dump the current evaluator into a string builder.
@@ -423,13 +840,28 @@ namespace SimpleScheme
         /// <param name="buf">The string builder to write to.</param>#
         private void DumpStep(StringBuilder buf)
         {
+            Contract.Requires(buf != null);
+            Contract.Assert(this.Expr != null);
+            Contract.Assert(this.Env != null);
             buf.AppendFormat("Exaluator {0}\n", this.SchemeTypeName());
             string exp = this.Expr is EmptyList ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
-            if (this.Env != null)
+            if (this.Env != Environment.EmptyEnvironment)
             {
                 buf.AppendFormat("  Env:\n{0}", this.Env.Dump(1, 3));
             }
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.pc != null);
+//            Contract.Invariant(this.expr != null);
         }
         #endregion
     }

@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     /// A lambda stores the environment and a program to run.
     /// It can be executed later, through Apply.
@@ -44,6 +46,9 @@ namespace SimpleScheme
         protected Lambda(SchemeObject formalParameters, SchemeObject body, Environment env) :
             base(null, new ArgsInfo(CountFormals(formalParameters)))
         {
+            Contract.Requires(formalParameters != null);
+            Contract.Requires(body != null);
+            Contract.Requires(env != null);
             this.formalParameters = formalParameters;
             this.env = env;
             this.body = body;
@@ -56,7 +61,11 @@ namespace SimpleScheme
         /// </summary>
         internal Environment Env
         {
-            get { return this.env; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Environment>() != null);
+                return this.env;
+            }
         }
         #endregion
 
@@ -71,22 +80,13 @@ namespace SimpleScheme
         /// <returns>A Lambda.New.</returns>
         public static Lambda New(SchemeObject formalParameters, SchemeObject body, Environment env)
         {
+            Contract.Requires(formalParameters != null);
+            Contract.Requires(body != null);
+            Contract.Requires(env != null);
+            Contract.Ensures(Contract.Result<Lambda>() != null);
             return new Lambda(formalParameters, body, env);
         }
         #endregion
-
-        /// <summary>
-        /// Evaluate a lambda expression
-        /// </summary>
-        /// <param name="args">The lambda args.</param>
-        /// <param name="env">The execution environment.</param>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The lambda representing the expression.</returns>
-        internal static Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
-        {
-            caller.ReturnedExpr = New(First(args), Rest(args), env);
-            return caller;
-        }
 
         #region Public Methods
         /// <summary>
@@ -99,40 +99,55 @@ namespace SimpleScheme
             // TODO display formals??
             return this.ToString("lambda");
         }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Evaluate a lambda expression
+        /// </summary>
+        /// <param name="args">The lambda args.</param>
+        /// <param name="env">The execution environment.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>The lambda representing the expression.</returns>
+        internal static Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
+        {
+            Contract.Requires(args != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            caller.ReturnedExpr = New(First(args), Rest(args), env);
+            return caller;
+        }
 
         /// <summary>
         /// Actually executes the saved program
         /// Uses the given environment rather than creating a new one.
         /// The arguments have already been bound to the formal parameters.
-        /// If there is only one expression in the body, just evaluate it, otherwise evaluate the sequence.
         /// </summary>
         /// <param name="givenEnv">The environment to evaluate in.</param>
-        /// <param name="caller">The calling evaluator.</param>
+        /// <param name="returnTo">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
+        internal Evaluator ApplyWithGivenEnv(Environment givenEnv, Evaluator returnTo)
         {
-            return Rest(this.body) is EmptyList ? 
-                EvaluateExpression.Call(First(this.body), givenEnv, caller) : 
-                EvaluateSequence.Call(this.body, givenEnv, caller);
+            Contract.Requires(givenEnv != null);
+            Contract.Requires(returnTo != null);
+            return EvaluateSequence.Call(this.body, givenEnv, returnTo);
         }
 
         /// <summary>
         /// Actually executes the saved program, with the given arguments bound with the 
         ///   formal parameters of the lambda.
-        /// Creates a new environment, linked to the environment of the lambda itself (which should be the lexical parent).
+        /// The outer environment is supplied from the Lambda itself.
         /// </summary>
         /// <param name="args">The values to be matched with the variable names.</param>
-        /// <param name="useEnv">Environment in which to apply.  If null, use the lambda's environment.</param>
-        /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
+        /// <param name="returnTo">The evaluator to return to.  This can be different from returnTo if this is the last step in evaluation</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Environment useEnv, Evaluator returnTo, Evaluator caller)
+        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
         {
 #if Check
             this.CheckArgCount(ListLength(args), args, "Lambda", caller);
 #endif
-            useEnv = useEnv ?? this.Env;
-            return this.ApplyWithtEnv(new Environment(this.formalParameters, args, useEnv), returnTo);
+            return this.ApplyWithGivenEnv(new Environment(this.Env, this.formalParameters, args), returnTo);
         }
         #endregion
 
@@ -144,6 +159,8 @@ namespace SimpleScheme
         /// <returns>String representing the lambda.</returns>
         protected string ToString(string tag)
         {
+            Contract.Requires(tag != null);
+
             // trim enclosing parentheses off body, to match the definition
             string bodyStr = this.body.ToString();
             if (bodyStr.StartsWith("(") && bodyStr.EndsWith(")"))
@@ -161,6 +178,8 @@ namespace SimpleScheme
         /// <returns>The min and max argument counts.</returns>
         private static int[] CountFormals(SchemeObject vars)
         {
+            Contract.Ensures(Contract.Result<int[]>() != null);
+            Contract.Ensures(Contract.Result<int[]>().Length == 2);
             const int MaxInt = int.MaxValue;
             if (vars is Symbol)
             {
@@ -183,6 +202,19 @@ namespace SimpleScheme
 
             // it was a list -- the exact count is required
             return new[] { count, count };
+        }
+        #endregion
+
+        #region Contract Invariant
+        /// <summary>
+        /// Describes invariants on the member variables.
+        /// </summary>
+        [ContractInvariantMethod]
+        private void ContractInvariant()
+        {
+            Contract.Invariant(this.env != null);
+            Contract.Invariant(this.body != null);
+            Contract.Invariant(this.formalParameters != null);
         }
         #endregion
     }

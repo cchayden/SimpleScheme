@@ -5,15 +5,26 @@ namespace SimpleScheme
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Base class for EvaluateTime and EvaluateTimeCall.
     /// Evaluate an expression while timing it.
     /// This may evaluate the expression multiple times.
     /// </summary>
-    internal abstract class EvaluateTimeBase : Evaluator
+    internal class EvaluateTimeBase : Evaluator
     {
         #region Fields
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper initialStep = GetStepper("InitialStep");
+
+        /// <summary>
+        /// Open instance method delegate
+        /// </summary>
+        private static readonly Stepper evaluateStep = GetStepper("EvaluateStep");
+
         /// <summary>
         /// The amount of memory at the start.
         /// </summary>
@@ -45,45 +56,28 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="counterId">The counter id of the evaluator.</param>
         protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
-            : base(InitialStep, expr, env, caller, counterId)
+            : base(initialStep, expr, env, caller, counterId)
         {
+            Contract.Requires(expr != null);
+            Contract.Requires(env != null);
+            Contract.Requires(caller != null);
+            Contract.Requires(counterId >= 0);
             this.counter = count;
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
         }
         #endregion
 
-        #region Protected Methods
-        /// <summary>
-        /// Step1 is defined in the derived classes.
-        /// </summary>
-        /// <returns>The next step to take.</returns>
-        protected abstract Evaluator EvaluateStep();
-        #endregion
-
         #region Steps
         /// <summary>
         /// Start by setting up timers and counter.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Continue to next step.</returns>
-        private static Evaluator InitialStep(Evaluator s)
+        protected override Evaluator InitialStep()
         {
-            var step = (EvaluateTimeBase)s;
-            step.i = 0;
-            s.Pc = EvaluateStep;
-            return s;
-        }
-        /// <summary>
-        /// Subclass must provide an implementation.
-        /// This evaluates the expression, in a way that is appropriate
-        ///   to the function (eval or apply).
-        /// </summary>
-        /// <param name="s">This evaluator.</param>
-        /// <returns>The next step.</returns>
-        protected static Evaluator EvaluateStep(Evaluator s)
-        {
-            return ((EvaluateTimeBase)s).EvaluateStep();
+            this.i = 0;
+            this.Pc = evaluateStep;
+            return this;
         }
 
         /// <summary>
@@ -92,25 +86,23 @@ namespace SimpleScheme
         /// If not done, loop back.
         /// Otherwise, calculate elapsed time and mem use.
         /// </summary>
-        /// <param name="s">This evaluator.</param>
         /// <returns>Continue, or else give the timer results.</returns>
-        protected static Evaluator CompleteStep(Evaluator s)
+        protected override Evaluator DoneStep()
         {
-            var step = (EvaluateTimeBase)s;
-            step.i++;
-            if (step.i < step.counter)
+            this.i++;
+            if (this.i < this.counter)
             {
-                s.Pc = EvaluateStep;
-                return s;
+                this.Pc = evaluateStep;
+                return this;
             }
 
-            step.stopwatch.Stop();
-            long time = step.stopwatch.ElapsedMilliseconds;
-            long mem = GC.GetTotalMemory(false) - step.startMem;
-            Evaluator caller = step.Caller;
+            this.stopwatch.Stop();
+            long time = this.stopwatch.ElapsedMilliseconds;
+            long mem = GC.GetTotalMemory(false) - this.startMem;
+            Evaluator caller = this.Caller;
             caller.ReturnedExpr = 
                 MakeList(
-                    s.ReturnedExpr,
+                    this.ReturnedExpr,
                     MakeList((Number)time,  (Symbol)"msec"),
                     MakeList((Number)mem, (Symbol)"bytes"));
             return caller;

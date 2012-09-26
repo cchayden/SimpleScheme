@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// List utilities used by the primitives and list primitives.
@@ -20,6 +21,7 @@ namespace SimpleScheme
         /// <returns>A list whose first cell is null.</returns>
         public static Pair MakeList()
         {
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return Cons(EmptyList.Instance, EmptyList.Instance);
         }
 
@@ -31,6 +33,8 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(SchemeObject a)
         {
+            Contract.Requires(a != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return Cons(a, EmptyList.Instance);
         }
 
@@ -43,6 +47,9 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(SchemeObject a, SchemeObject b)
         {
+            Contract.Requires(a != null);
+            Contract.Requires(b != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return Cons(a, Pair.New(b));
         }
 
@@ -56,6 +63,10 @@ namespace SimpleScheme
         /// <returns>The Pair making up the head of the list.</returns>
         public static Pair MakeList(SchemeObject a, SchemeObject b, SchemeObject c)
         {
+            Contract.Requires(a != null);
+            Contract.Requires(b != null);
+            Contract.Requires(c != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return Cons(a, Cons(b, Pair.New(c)));
         }
 
@@ -67,6 +78,9 @@ namespace SimpleScheme
         /// <returns>The pair resulting from the construction.</returns>
         public static Pair Cons(SchemeObject a, SchemeObject b)
         {
+            Contract.Requires(a != null);
+            Contract.Requires(b != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return Pair.New(a, b);
         }
 
@@ -79,6 +93,9 @@ namespace SimpleScheme
         /// <returns>The pair resulting from the construction.</returns>
         public static Pair Cons(SchemeObject a, SchemeObject b, int lineNumber)
         {
+            Contract.Requires(a != null);
+            Contract.Requires(b != null);
+            Contract.Ensures(Contract.Result<Pair>() != null);
             return Pair.New(a, b, lineNumber);
         }
 
@@ -89,6 +106,8 @@ namespace SimpleScheme
         /// <returns>The first member of the list, or the empty list if not a list.</returns>
         public static SchemeObject First(SchemeObject list)
         {
+            Contract.Requires(list != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             return list is Pair ? ((Pair)list).FirstCell : EmptyList.Instance;
         }
 
@@ -100,6 +119,8 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static SchemeObject Second(SchemeObject list)
         {
+            Contract.Requires(list != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             return First(Rest(list));
         }
 
@@ -110,6 +131,8 @@ namespace SimpleScheme
         /// <returns>The third member of the list, or the empty list if there is none.</returns>
         public static SchemeObject Third(SchemeObject list)
         {
+            Contract.Requires(list != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             return First(Rest(Rest(list)));
         }
 
@@ -121,6 +144,9 @@ namespace SimpleScheme
         /// <returns>The third member of the list, or the empty list if there is none.</returns>
         public static SchemeObject Nth(SchemeObject list, SchemeObject n)
         {
+            Contract.Requires(list != null);
+            Contract.Requires(n != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             int len = 0;
             int k = Number.AsInt(n);
             while (list is Pair)
@@ -145,6 +171,8 @@ namespace SimpleScheme
         /// or the empty list if there is none.</returns>
         public static SchemeObject Rest(SchemeObject list)
         {
+            Contract.Requires(list != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             return list is Pair ? ((Pair)list).RestCell : EmptyList.Instance;
         }
 
@@ -155,6 +183,8 @@ namespace SimpleScheme
         /// <returns>The list length.</returns>
         public static int ListLength(SchemeObject list)
         {
+            Contract.Requires(list != null);
+            Contract.Ensures(Contract.Result<int>() >= 0);
             int len = 0;
             while (list is Pair)
             {
@@ -175,6 +205,8 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         public static SchemeObject SetFirst(SchemeObject pair, SchemeObject newValue)
         {
+            Contract.Requires(pair != null);
+            Contract.Requires(newValue != null);
             if (pair is Pair)
             {
                 ((Pair)pair).SetFirst(newValue);
@@ -192,6 +224,8 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         public static SchemeObject SetRest(SchemeObject pair, SchemeObject newTail)
         {
+            Contract.Requires(pair != null);
+            Contract.Requires(newTail != null);
             if (pair is Pair)
             {
                 ((Pair)pair).SetRest(newTail);
@@ -211,6 +245,9 @@ namespace SimpleScheme
         /// <returns>The items appended.</returns>
         public static SchemeObject ListStar(SchemeObject args)
         {
+            Contract.Requires(args != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+
             // only one arg -- take it
             if (Rest(args) is EmptyList)
             {
@@ -223,12 +260,14 @@ namespace SimpleScheme
             Pair result = MakeList();
             Pair accum = result;
             SchemeObject expr = args;
+            Contract.Assert(expr != null);
 
             // Iterate down the list, building a list of the results.
             while (!(Rest(expr) is EmptyList))
             {
                 accum = accum.SetRest(MakeList(First(expr)));
                 expr = Rest(expr);
+                Contract.Assert(expr != null);
             }
 
             // Splice on the last arg
@@ -250,6 +289,8 @@ namespace SimpleScheme
         /// <returns>The reversed list.</returns>
         public static SchemeObject ReverseList(SchemeObject x)
         {
+            Contract.Requires(x != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             SchemeObject result = EmptyList.Instance;
             while (x is Pair)
             {
@@ -268,6 +309,9 @@ namespace SimpleScheme
         /// <returns>A list filled with the given element.</returns>
         public static SchemeObject Fill(int n, SchemeObject fill)
         {
+            Contract.Requires(n >= 0);
+            Contract.Requires(fill != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
             SchemeObject res = EmptyList.Instance;
             for (int i = 0; i < n; i++)
             {
@@ -287,13 +331,21 @@ namespace SimpleScheme
         /// <returns>A list made up of the function results of each input element.  Could be the empty list.</returns>
         public static SchemeObject MapFun(Func<SchemeObject, SchemeObject> fun, SchemeObject expr)
         {
+            Contract.Requires(fun != null);
+            Contract.Requires(expr != null);
             Pair result = MakeList();
             Pair accum = result;
 
             // Iterate down the list, taking the function and building a list of the results.
             while (expr is Pair)
             {
-                accum = accum.SetRest(Cons(fun(First(expr)), EmptyList.Instance));
+                SchemeObject res = fun(First(expr));
+                if (res == null)
+                {
+                    ErrorHandlers.InternalError("Map function result is null");
+                }
+
+                accum = accum.SetRest(Cons(res, EmptyList.Instance));
                 expr = Rest(expr);
             }
 
@@ -310,7 +362,7 @@ namespace SimpleScheme
         /// <returns>A copy of the list.</returns>
         public static SchemeObject Copy(SchemeObject expr)
         {
-            // TODO is this needed?
+            // expr may be null
             if (!(expr is Pair))
             {
                 return expr;
@@ -337,122 +389,142 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
+            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
-                    "append", new[] { "6.3", "(append <list> ...)" },
+                    "append", 
+                    new[] { "6.3", "(append <list> ...)" },
                     (args, env, caller) => Append(args), 
                     new ArgsInfo(0, MaxInt, ArgType.Obj))
                 .DefinePrimitive(
-                    "assoc", new[] { "6.3", "(assoc <obj> <alist>)" }, 
+                    "assoc", 
+                    new[] { "6.3", "(assoc <obj> <alist>)" }, 
                     (args, env, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Equal(x, y).Value), 
                     new ArgsInfo(2, ArgType.Obj, ArgType.PairOrEmpty))
                 .DefinePrimitive(
-                    "assq", new[] { "(assq <obj> <alist>)" }, 
+                    "assq", 
+                    new[] { "(assq <obj> <alist>)" }, 
                     (args, env, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     new ArgsInfo(2, ArgType.Obj, ArgType.PairOrEmpty))
                 .DefinePrimitive(
-                    "assv", new[] { "6.3", "(assv <obj> <alist>)" }, 
+                    "assv", 
+                    new[] { "6.3", "(assv <obj> <alist>)" }, 
                     (args, env, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     new ArgsInfo(2, ArgType.Obj, ArgType.PairOrEmpty))
                 .DefinePrimitive(
-                     "car", new[] { "6.3", "(car <pair>)" }, 
+                     "car", 
+                     new[] { "6.3", "(car <pair>)" }, 
                      (args, env, caller) => First(First(args)), 
                      new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
-                    "first", new[] { "(first <pair>)" }, 
+                    "first", 
+                    new[] { "(first <pair>)" }, 
                     (args, env, caller) => First(First(args)), 
                     new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
-                    "second", new[] { "(second <pair>)" }, 
+                    "second", 
+                    new[] { "(second <pair>)" }, 
                     (args, env, caller) => Second(First(args)), 
                     new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
-                    "third", new[] { "(third <pair>)" }, 
+                    "third", 
+                    new[] { "(third <pair>)" }, 
                     (args, env, caller) => Third(First(args)), 
                     new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
-                    "nth", new[] { "(nth <pair> <n>)" }, 
+                    "nth", 
+                    new[] { "(nth <pair> <n>)" }, 
                     (args, env, caller) => Nth(First(args), Second(args)), 
                     new ArgsInfo(2, ArgType.Pair, ArgType.Number))
                 .DefinePrimitive(
-                    "cdr", new[] { "6.3", "(cdr <pair>)" }, 
+                    "cdr", 
+                    new[] { "6.3", "(cdr <pair>)" }, 
                     (args, env, caller) => Rest(First(args)),
                     new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
-                    "rest", new[] { "(rest <pair>)" }, 
+                    "rest", 
+                    new[] { "(rest <pair>)" }, 
                     (args, env, caller) => Rest(First(args)), 
                     new ArgsInfo(1, ArgType.Pair))
                 .DefinePrimitive(
-                    "cons", new[] { "6.3", "(cons <obj1> <obj2>)" }, 
+                    "cons", 
+                    new[] { "6.3", "(cons <obj1> <obj2>)" }, 
                     (args, env, caller) => Cons(First(args), Second(args)), 
                     new ArgsInfo(2, ArgType.Obj))
                 .DefinePrimitive(
-                    "length", new[] { "6.3", "(length <list> ...)" }, 
+                    "length", 
+                    new[] { "6.3", "(length <list> ...)" }, 
                     (args, env, caller) => (Number)ListLength(First(args)),
                     new ArgsInfo(1, ArgType.PairOrEmpty))
                 .DefinePrimitive(
-                    "list", new[] { "6.3", "(list <obj> ...)" }, 
+                    "list", 
+                    new[] { "6.3", "(list <obj> ...)" }, 
                     (args, env, caller) => args, 
                     new ArgsInfo(0, MaxInt, ArgType.Obj))
                 .DefinePrimitive(
-                    "list-ref", new[] { "6.3", "(list-ref <list> <k>)" }, 
+                    "list-ref", 
+                    new[] { "6.3", "(list-ref <list> <k>)" }, 
                     (args, env, caller) => ListRef(First(args), Second(args)), 
-                    new ArgsInfo(2, ArgType.Pair, 
-                    ArgType.Number))
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Number))
                 .DefinePrimitive(
-                    "list-tail", new[] { "6.3", "(list-tail <list> <k>)" }, 
+                    "list-tail", 
+                    new[] { "6.3", "(list-tail <list> <k>)" }, 
                     (args, env, caller) => ListTail(First(args), Second(args)), 
-                    new ArgsInfo(2, ArgType.Pair, 
-                    ArgType.Number))
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Number))
                 .DefinePrimitive(
-                    "list*", new[] { "(list* <obj> ...)" },
+                    "list*", 
+                    new[] { "(list* <obj> ...)" },
                     (args, env, caller) => ListStar(args), 
                     new ArgsInfo(2, MaxInt, ArgType.Obj))
                 .DefinePrimitive(
-                    "list?", new[] { "6.3", "(list? <obj>)" }, 
+                    "list?", 
+                    new[] { "6.3", "(list? <obj>)" }, 
                     (args, env, caller) => SchemeBoolean.Truth(IsList(First(args))), 
                     new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
-                    "member", new[] { "6.3", "(member <obj> <list>)" }, 
+                    "member", 
+                    new[] { "6.3", "(member <obj> <list>)" }, 
                     (args, env, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y).Value), 
-                    new ArgsInfo(2, ArgType.Obj, 
-                    ArgType.Pair))
+                    new ArgsInfo(2, ArgType.Obj, ArgType.Pair))
                 .DefinePrimitive(
-                    "memq", new[] { "6.3", "(memq <obj> <list>)" }, 
+                    "memq", 
+                    new[] { "6.3", "(memq <obj> <list>)" }, 
                     (args, env, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
-                    new ArgsInfo(2, ArgType.Obj, 
-                    ArgType.Pair))
+                    new ArgsInfo(2, ArgType.Obj, ArgType.Pair))
                 .DefinePrimitive(
-                    "memv", new[] { "6.3", "(memv <obj> <list>)" }, 
+                    "memv", 
+                    new[] { "6.3", "(memv <obj> <list>)" }, 
                     (args, env, caller) => MemberAssoc(First(args), Second(args), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
-                    new ArgsInfo(2, ArgType.Obj, 
-                    ArgType.Pair))
+                    new ArgsInfo(2, ArgType.Obj, ArgType.Pair))
                 .DefinePrimitive(
-                    "pair?", new[] { "6.3", "(pair? <obj>)" }, 
+                    "pair?", 
+                    new[] { "6.3", "(pair? <obj>)" }, 
                     (args, env, caller) => SchemeBoolean.Truth(First(args) is Pair), 
                     new ArgsInfo(1, ArgType.Obj))
                 .DefinePrimitive(
-                    "reverse", new[] { "6.3", "(reverse <list>)" }, 
+                    "reverse", 
+                    new[] { "6.3", "(reverse <list>)" }, 
                     (args, env, caller) => ReverseList(First(args)), 
                     new ArgsInfo(1, ArgType.PairOrEmpty))
                 .DefinePrimitive(
-                    "set-car!", new[] { "6.3", "(set-car! <pair> <obj>)" }, 
+                    "set-car!", 
+                    new[] { "6.3", "(set-car! <pair> <obj>)" }, 
                     (args, env, caller) => SetFirst(First(args), Second(args)), 
-                    new ArgsInfo(2, ArgType.Pair, 
-                    ArgType.Obj))
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Obj))
                 .DefinePrimitive(
-                    "set-first!", new[] { "(set-first! <pair> <obj>)" }, 
+                    "set-first!", 
+                    new[] { "(set-first! <pair> <obj>)" }, 
                     (args, env, caller) => SetFirst(First(args), Second(args)), 
-                    new ArgsInfo(2, ArgType.Pair, 
-                    ArgType.Obj))
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Obj))
                 .DefinePrimitive(
-                    "set-cdr!", new[] { "6.3", "(set-cdr! <pair> <obj>)" }, 
+                    "set-cdr!", 
+                    new[] { "6.3", "(set-cdr! <pair> <obj>)" }, 
                     (args, env, caller) => SetRest(First(args), Second(args)), 
-                    new ArgsInfo(2, ArgType.Pair, 
-                    ArgType.Obj))
+                    new ArgsInfo(2, ArgType.Pair, ArgType.Obj))
                 .DefinePrimitive(
-                    "set-rest!", new[] { "(set-rest! <pair> <obj>)" }, 
+                    "set-rest!", 
+                    new[] { "(set-rest! <pair> <obj>)" }, 
                     (args, env, caller) => SetRest(First(args), Second(args)), 
                     new ArgsInfo(2, ArgType.Pair, ArgType.Obj));
 
@@ -472,6 +544,8 @@ namespace SimpleScheme
         /// <returns>The result of the operation.</returns>
         private static SchemeObject Cxr(string name, SchemeObject args)
         {
+            Contract.Requires(name != null);
+            Contract.Requires(args != null);
             SchemeObject first = First(args);
             for (int i = name.Length - 2; i >= 1; i--)
             {
@@ -488,7 +562,11 @@ namespace SimpleScheme
         /// <param name="access">The access string so far.</param>
         private static void DefineAccessPrimitives(PrimitiveEnvironment primEnv, string access)
         {
+            Contract.Requires(primEnv != null);
+            Contract.Requires(access != null);
+            Contract.Ensures(access.Length >= 0);
             string prim = "c" + access + "r";
+            Contract.Assert(prim != null);  // constracts should be able to figure this out
             primEnv.DefinePrimitive(
                 prim, 
                 new[]
@@ -496,8 +574,7 @@ namespace SimpleScheme
                         "6.3", "(" + prim + "<pair>)"
                     }, 
                 (args, env, caller) => Cxr(prim, args), 
-                new ArgsInfo(1, 
-                ArgType.Pair));
+                new ArgsInfo(1, ArgType.Pair));
             if (access.Length >= 4)
             {
                 return;
@@ -516,6 +593,7 @@ namespace SimpleScheme
         /// <returns>A list of the given list elements.</returns>
         private static SchemeObject Append(SchemeObject args)
         {
+            Contract.Requires(args != null);
             if (args is EmptyList)
             {
                 return EmptyList.Instance;
@@ -545,6 +623,8 @@ namespace SimpleScheme
         /// <returns>The end of the second list, suitable for another call to this function. </returns>
         private static Pair Append(Pair tail, SchemeObject toCopy)
         {
+            Contract.Requires(tail != null);
+            Contract.Requires(toCopy != null);
             while (!(toCopy is EmptyList))
             {
                 tail.SetRest(MakeList(First(toCopy)));
@@ -570,6 +650,7 @@ namespace SimpleScheme
         /// <returns>True if the obj is a list.</returns>
         private static bool IsList(SchemeObject x)
         {
+            Contract.Requires(x != null);
             while (true)
             {
                 if (x is EmptyList)
@@ -600,9 +681,12 @@ namespace SimpleScheme
         /// <returns>The element after stepping down k steps.</returns>
         private static SchemeObject ListRef(SchemeObject list, SchemeObject k)
         {
+            Contract.Requires(list != null);
+            Contract.Requires(k != null);
             for (int i = Number.AsInt(k); i > 0; i--)
             {
                 list = Rest(list);
+                Contract.Assert(list != null);
             }
 
             return First(list);
@@ -616,9 +700,12 @@ namespace SimpleScheme
         /// <returns>The list after stepping down k steps.</returns>
         private static SchemeObject ListTail(SchemeObject list, SchemeObject k)
         {
+            Contract.Requires(list != null);
+            Contract.Requires(k != null);
             for (int i = Number.AsInt(k); i > 0; i--)
             {
                 list = Rest(list);
+                Contract.Assert(list != null);
             }
 
             return list;
@@ -635,6 +722,10 @@ namespace SimpleScheme
         /// <returns>The results that were found.</returns>
         private static SchemeObject MemberAssoc(SchemeObject obj, SchemeObject list, Func<SchemeObject, SchemeObject> sel, Func<SchemeObject, SchemeObject, bool> eq)
         {
+            Contract.Requires(obj != null);
+            Contract.Requires(list != null);
+            Contract.Requires(sel != null);
+            Contract.Requires(eq != null);
             while (list is Pair)
             {
                 if (eq(sel(First(list)), obj))
