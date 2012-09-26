@@ -16,25 +16,6 @@ namespace SimpleScheme
     internal sealed class EvaluateDo : Evaluator
     {
         #region Fields
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper testStep = GetStepper("TestStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper iterateStep = GetStepper("IterateStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper loopStep = GetStepper("LoopStep");
 
         /// <summary>
         /// The counter id.
@@ -86,7 +67,7 @@ namespace SimpleScheme
         /// <param name="commands">The commands.</param>
         /// <param name="testProc">The test proc to execute each interation.</param>
         private EvaluateDo(SchemeObject expr, Environment env, Evaluator caller, SchemeObject vars, SchemeObject inits, SchemeObject steps, SchemeObject exprs, SchemeObject commands, Lambda testProc)
-            : base(initialStep, expr, new Environment(env), caller, counter)
+            : base(OpCode.Initial, expr, new Environment(env), caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -163,7 +144,7 @@ namespace SimpleScheme
         /// <returns>Continues by evaluating the inits.</returns>
         protected override Evaluator InitialStep()
         {
-            this.Pc = testStep;
+            this.Pc = OpCode.Test;
             return EvaluateList.Call(this.inits, this.Env, this);
         }
 
@@ -175,7 +156,7 @@ namespace SimpleScheme
         protected override Evaluator TestStep()
         {
             this.UpdateEnvironment(this.vars, this.ReturnedExpr);
-            this.Pc = iterateStep;
+            this.Pc = OpCode.Iterate;
             return this.testProc.ApplyWithGivenEnv(this.Env, this);
         }
 
@@ -205,7 +186,7 @@ namespace SimpleScheme
             // test is false
             // evaluate the steps in the environment of the vars
             // bind to fresh copies of the vars
-            this.Pc = loopStep;
+            this.Pc = OpCode.Loop;
             return EvaluateList.Call(this.commands, this.Env, this);
         }
 
@@ -215,7 +196,7 @@ namespace SimpleScheme
         /// <returns>The next step.</returns>
         protected override Evaluator LoopStep()
         {
-            this.Pc = testStep;
+            this.Pc =OpCode.Test;
             return EvaluateList.Call(this.steps, this.Env, this);
         }
         #endregion

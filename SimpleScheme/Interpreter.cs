@@ -617,7 +617,29 @@ namespace SimpleScheme
                 return string.Empty;
             }
         }
+        #endregion
 
+        #region Main Interpreter Loop
+        /// <summary>
+        /// Perform steps until evaluation is complete or suspended.
+        /// Calling a "subroutine" does not recursively call RunSteps.
+        /// A "call" is handled by creating a new evaluator and passing a step within it as the nextStep.
+        /// A "return" is handled by return a step in the "caller" as the next step.
+        /// </summary>
+        /// <param name="evaluator">The evaluator to execute first.</param>
+        /// <returns>The evaluation result, or suspended evaluator.</returns>
+        internal SchemeObject RunSteps(Evaluator evaluator)
+        {
+            Contract.Requires(evaluator != null);
+            while (true)
+            {
+                // Invoke the next step in the current evaluator.
+                if ((evaluator = evaluator.Step()) is FinalEvaluator)
+                {
+                    return evaluator.ReturnedExpr;
+                }
+            }
+        }
         #endregion
 
         #region Internal Methods
@@ -645,32 +667,7 @@ namespace SimpleScheme
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
-            return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
-        }
-
-        /// <summary>
-        /// Perform steps until evaluation is complete or suspended.
-        /// Calling "a subroutine" does not recursively call EvalSteps.
-        /// A "call" is handled by creating a new evaluator and passing a step within it as the nextStep.
-        /// A "return" is handled by return a step in the "caller" as the next step.
-        /// </summary>
-        /// <param name="evaluator">The evaluator to execute first.</param>
-        /// <returns>The evaluation result, or suspended evaluator.</returns>
-        internal SchemeObject EvalSteps(Evaluator evaluator)
-        {
-            Contract.Requires(evaluator != null);
-            while (true)
-            {
-                // Get the PC from the evaluator and call the action it points to
-                // The delegate is to an open instance, so we are actually calling an instance method.
-                Contract.Assume(evaluator != null);
-                evaluator = evaluator.Pc(evaluator);
-
-                if (evaluator is FinalEvaluator)
-                {
-                    return evaluator.ReturnedExpr;
-                }
-            }
+            return this.RunSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
 
         /// <summary>

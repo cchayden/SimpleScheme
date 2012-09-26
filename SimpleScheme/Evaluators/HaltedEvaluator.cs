@@ -13,11 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper endStep = GetStepper("EndStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("halted");
@@ -29,21 +24,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="env">The evaluator environment.</param>
         internal HaltedEvaluator(Environment env) : 
-            base(endStep, Undefined.Instance, env, new FinalEvaluator(Undefined.Instance), counter)
+            base(OpCode.End, Undefined.Instance, env, new FinalEvaluator(Undefined.Instance), counter)
         {
             Contract.Requires(env != null);
-        }
-        #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <returns>The string representing the obj.</returns>
-        internal override string ToString(bool quoted)
-        {
-            return "<halted-evaluator>";
         }
         #endregion
 

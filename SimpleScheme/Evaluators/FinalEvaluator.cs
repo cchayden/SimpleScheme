@@ -10,13 +10,6 @@ namespace SimpleScheme
     /// </summary>
     internal class FinalEvaluator : Evaluator
     {
-        #region Fields
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper endStep = GetStepper("EndStep");
-        #endregion
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="FinalEvaluator"/> class. 
@@ -26,7 +19,7 @@ namespace SimpleScheme
         {
             Contract.Requires(expr != null);
             this.ReturnedExpr = expr;
-            this.Pc = endStep;
+            this.Pc = OpCode.End;
         }
         #endregion
 

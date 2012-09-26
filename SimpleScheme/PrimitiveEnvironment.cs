@@ -19,7 +19,6 @@ namespace SimpleScheme
     public class PrimitiveEnvironment : Environment, IPrimitiveEnvironment
     {
         #region Fields
-
         /// <summary>
         /// These classes define DefinePrimitives that needs to be called to install primitives.
         /// </summary>
@@ -69,7 +68,7 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the PrimitiveEnvironment class.
         /// </summary>
-        internal PrimitiveEnvironment()
+        internal PrimitiveEnvironment() : base(true)
         {
             // call DefinePrimitives in all classes that define primitives
             foreach (var mi in primitiveInitializers)
@@ -82,6 +81,9 @@ namespace SimpleScheme
         #region New
         /// <summary>
         /// Creates a new primitive environment.
+        /// A primitive environment does not have an associated Interpreter.
+        /// This is because the primitive environment is meant to be immutable and
+        /// can be shared between different interpreters.
         /// </summary>
         /// <returns>A new primitive environment.</returns>
         public static IPrimitiveEnvironment New()

@@ -13,16 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalExprStep = GetStepper("EvalExprStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper loopStep = GetStepper("LoopStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-sequence");
@@ -36,7 +26,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateSequence(SchemeObject expr, Environment env, Evaluator caller)
-            : base(evalExprStep, expr, env, caller, counter)
+            : base(OpCode.EvalExpr, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -82,7 +72,7 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(this.Expr), this.Env, this.Caller);
             }
 
-            this.Pc = loopStep;
+            this.Pc = OpCode.Loop;
             return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 
@@ -93,7 +83,7 @@ namespace SimpleScheme
         protected override Evaluator LoopStep()
         {
             this.Expr = Rest(this.Expr);
-            this.Pc = evalExprStep;
+            this.Pc = OpCode.EvalExpr;
             return this;
         }
         #endregion

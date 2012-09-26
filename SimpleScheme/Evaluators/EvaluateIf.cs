@@ -16,16 +16,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalTestStep = GetStepper("EvalTestStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalAlternativeStep = GetStepper("EvalAlternativeStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-if");
@@ -39,7 +29,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateIf(SchemeObject expr, Environment env, Evaluator caller)
-            : base(evalTestStep, expr, env, caller, counter)
+            : base(OpCode.EvalTest, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -72,7 +62,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         protected override Evaluator EvalTestStep()
         {
-            this.Pc = evalAlternativeStep;
+            this.Pc = OpCode.EvalAlternative;
             return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 

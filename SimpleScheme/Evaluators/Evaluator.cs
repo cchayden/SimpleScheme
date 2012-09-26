@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Contracts;
     using System.Reflection;
     using System.Text;
@@ -49,23 +50,36 @@ namespace SimpleScheme
     /// </summary>
     public abstract class Evaluator : EvaluatorOrObject
     {
+        /// <summary>
+        /// This maps OpCode values to the corresponding virtual methods.
+        /// These are open delegates (instance methods not bound to a specific instance) so the
+        /// caller can supply the correct Evaluator instance.
+        /// </summary>
+        private static readonly Stepper[] Instructions;
+
         #region Fields
         /// <summary>
-        /// The evaluation environment.
+        /// The current interpreter.
+        /// Copied to every evaluator for ease of access.
         /// </summary>
-        private readonly Environment env;
+        private readonly Interpreter interp;
+
+        /// <summary>
+        /// Flag indicates a degenerate evaluator.
+        /// The only degenerate evaluator is the FinalEvaluator.
+        /// </summary>
+        private readonly bool degenerate;
 
         /// <summary>
         /// The program counter.
-        /// Contains the function to execute next.
-        /// This is the type for the evaluator functions.
-        /// It takes an Evaluator and returns another Evaluator.
-        /// These values are assigned to the pc.
-        /// Evaluators must be a <b>static</b> functions only.  This is because if an evaluator
-        ///  *instance* is bound to the evaluator, then it would not clone properly, so continuations
-        ///   would not work.
+        /// Contains an enum value specifying the the virtual method to execute next.
         /// </summary>
-        private Stepper pc;
+        private OpCode pc;
+
+        /// <summary>
+        /// The evaluation environment.
+        /// </summary>
+        private Environment env;
 
         /// <summary>
         /// The number of asynchronous evaluations that are waiting to complete.
@@ -86,19 +100,16 @@ namespace SimpleScheme
         /// <summary>
         /// The calling evaluator. 
         /// Control returns here after evaluation is done.
+        /// This would be readonly, except for the clone operation.
         /// </summary>
         private Evaluator caller;
 
         /// <summary>
         /// The evaluation result.
+        /// This is filled when the evaluator is finished.
+        /// The caller can retrieve the returned expr as long is it retains the reference.
         /// </summary>
         private SchemeObject returnedExpr;
-
-        /// <summary>
-        /// The returned environment.  Some evaluators change the
-        ///   environment, but this is not common.
-        /// </summary>
-        private Environment returnedEnv;
 
         /// <summary>
         /// The type of return (synchronous or asynchronous).
@@ -108,18 +119,50 @@ namespace SimpleScheme
 
         #region Constructor
         /// <summary>
+        /// Initializes static members of the <see cref="Evaluator"/> class. 
+        /// This sets up the map of OpCode to Stepper.
+        /// </summary>
+        static Evaluator()
+        {
+            Instructions = new Stepper[(int)OpCode.Illegal + 1];
+            Instructions[(int)OpCode.Initial] = GetStepper("InitialStep");
+            Instructions[(int)OpCode.Done] = GetStepper("DoneStep");
+            Instructions[(int)OpCode.Test] = GetStepper("TestStep");
+            Instructions[(int)OpCode.Iterate] = GetStepper("IterateStep");
+            Instructions[(int)OpCode.Loop] = GetStepper("LoopStep");
+            Instructions[(int)OpCode.Evaluate] = GetStepper("EvaluateStep");
+            Instructions[(int)OpCode.End] = GetStepper("EndStep");
+            Instructions[(int)OpCode.EvalTest] = GetStepper("EvalTestStep");
+            Instructions[(int)OpCode.EvalExpr] = GetStepper("EvalExprStep");
+            Instructions[(int)OpCode.EvalAlternative] = GetStepper("EvalAlternativeStep");
+            Instructions[(int)OpCode.EvalKey] = GetStepper("EvalKeyStep");
+            Instructions[(int)OpCode.CheckClause] = GetStepper("CheckClauseStep");
+            Instructions[(int)OpCode.EvalClause] = GetStepper("EvalClauseStep");
+            Instructions[(int)OpCode.EvalConsequent] = GetStepper("EvalConsequentStep");
+            Instructions[(int)OpCode.ApplyRecipient] = GetStepper("ApplyRecipientStep");
+            Instructions[(int)OpCode.StoreDefine] = GetStepper("StoreDefineStep");
+            Instructions[(int)OpCode.Expand] = GetStepper("ExpandStep");
+            Instructions[(int)OpCode.EvalInit] = GetStepper("EvalInitStep");
+            Instructions[(int)OpCode.BindVarToInit] = GetStepper("BindVarToInitStep");
+            Instructions[(int)OpCode.Apply] = GetStepper("ApplyStep");
+            Instructions[(int)OpCode.ApplyProc] = GetStepper("ApplyProcStep");
+            Instructions[(int)OpCode.ApplyNamedLet] = GetStepper("ApplyNamedLetStep");
+            Instructions[(int)OpCode.ApplyFun] = GetStepper("ApplyFunStep");
+            Instructions[(int)OpCode.CollectAndLoop] = GetStepper("CollectAndLoopStep");
+            Instructions[(int)OpCode.Set] = GetStepper("SetStep");
+            Instructions[(int)OpCode.Close] = GetStepper("CloseStep");
+            Instructions[(int)OpCode.ContinueAfterSuspended] = GetStepper("ContinueAfterSuspendedStep");
+            Instructions[(int)OpCode.Illegal] = GetStepper("IllegalStep");
+        }
+
+        /// <summary>
         /// Initializes a new instance of the Evaluator class.
         /// For use by FinalEvaluator only.
         /// </summary>
         protected internal Evaluator()
         {
-#if FALSE
-            this.env = new Environment();
-            this.caller = this;
-            this.expr = Undefined.Instance;
-            this.returnedExpr = this.expr;
-            this.returnedEnv = this.env;
-#endif
+            this.pc = OpCode.Illegal;
+            this.degenerate = true;
         }
 
         /// <summary>
@@ -131,52 +174,61 @@ namespace SimpleScheme
         /// <param name="env">The evaluator environment.</param>
         /// <param name="caller">The caller evaluator.</param>
         /// <param name="counterId">The counter ID associated with this evaluator.</param>
-        protected internal Evaluator(Stepper initialPc, SchemeObject args, Environment env, Evaluator caller, int counterId)
+        protected internal Evaluator(OpCode initialPc, SchemeObject args, Environment env, Evaluator caller, int counterId)
         {
-            Contract.Requires(initialPc != null);
             Contract.Requires(args != null);
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             Contract.Requires(counterId >= 0);
             this.expr = args;
-            this.returnedExpr = expr;
             this.env = env;
-            this.returnedEnv = env;
+            this.interp = env.InterpOrNull;
             this.caller = caller;
             this.pc = initialPc;
             this.lineNumber = 0;
             this.returnedExpr = Undefined.Instance;
             this.returnFlag = ReturnType.SynchronousReturn;
             this.caught = 0;
+            this.degenerate = false;
 #if Diagnostics
             this.IncrementCounter(counterId);
 #endif
         }
         #endregion
 
+        #region Enums
+        /// <summary>
+        /// Every Evaluator consists of a set of steps.
+        /// The step is implemented as a virtual method.  Each of the OpCode 
+        /// values correspoind to one of these virtual methods.
+        /// The basic interpreter loop (Interpreter.RunSteps) consists of getting the
+        /// Evaluator's Pc, using that to select the corresponding virtual method, and calling
+        /// that method.  
+        /// Each step (1) updates it own Pc to point to the next step it should execute, and
+        /// (2) returns the next Evaluator to run.
+        /// A "call" is accomplished by instantiating a new evaluator and returning it.
+        /// A "return" is accomplished by returning a saved evaluator.
+        /// </summary>
+        [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:EnumerationItemsMustBeDocumented", Justification = "No value here.")]
+        #pragma warning disable 1591
+        public enum OpCode
+        {
+            Initial, Done, Test, Iterate, Loop, Evaluate, End, EvalTest, EvalExpr,
+            EvalAlternative, EvalKey, CheckClause, EvalClause, EvalConsequent, ApplyRecipient, 
+            StoreDefine, Expand, EvalInit, BindVarToInit, Apply, ApplyProc, ApplyNamedLet,
+            ApplyFun, CollectAndLoop, Set, Close, ContinueAfterSuspended,
+            Illegal
+        }
+        #pragma warning restore 1591
+        #endregion
+
         #region Accessors
         /// <summary>
-        /// Gets or sets the current program counter.
+        /// Sets the current program counter.
         /// </summary>
-        internal Stepper Pc
+        internal OpCode Pc
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<Stepper>() != null);
-#if Check
-                if (this.pc == null)
-                {
-                    ErrorHandlers.InternalError("Pc is null");
-                }
-#endif
-                return this.pc;
-            }
-
-            set
-            {
-                Contract.Requires(value != null);
-                this.pc = value;
-            }
+            set { this.pc = value; }
         }
 
         /// <summary>
@@ -191,16 +243,23 @@ namespace SimpleScheme
         /// Gets the interpreter.
         /// This contains the global interpretation state, such as the current ports, trace flags,
         ///   and counters.
-        /// Every evaluator has a copy of the interpreter, so we don't have to search down the
+        /// Every evaluator has a reference to the interpreter, so we don't have to search down the
         ///   chain for it.
-        /// This never changes, even if Env does get updated.
+        /// This never changes, even if Env gets updated.
         /// </summary>
         internal Interpreter Interp
         {
             get
             {
                 Contract.Ensures(Contract.Result<Interpreter>() != null);
-                return this.Env.Interp;
+#if Check
+                if (this.interp == null)
+                {
+                    ErrorHandlers.InternalError("Attempt to access null interpreter");
+                }
+#endif
+
+                return this.interp;
             }
         }
 
@@ -213,9 +272,9 @@ namespace SimpleScheme
             {
                 Contract.Ensures(Contract.Result<SchemeObject>() != null);
 #if Check
-                if (this.expr == null)
+                if (this.degenerate)
                 {
-                    ErrorHandlers.InternalError("Expr is null");
+                    ErrorHandlers.InternalError("Bad evaluator: expr");
                 }
 #endif
                 return this.expr;
@@ -238,7 +297,9 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the evaluation environment.  
+        /// Gets or sets the evaluation environment.  
+        /// The only place that this is set is in Continuation, which is the only
+        /// case where environment is replaced by something completely different.
         /// After execution concludes, this is the new environment.
         /// </summary>
         internal Environment Env
@@ -247,12 +308,18 @@ namespace SimpleScheme
             {
                 Contract.Ensures(Contract.Result<Environment>() != null);
 #if Check
-                if (this.env == null)
+                if (this.degenerate)
                 {
-                    ErrorHandlers.InternalError("Env is null");
+                    ErrorHandlers.InternalError("Bad evaluator: env");
                 }
 #endif
                 return this.env;
+            }
+
+            set
+            {
+                Contract.Requires(value != null);
+                this.env = value;
             }
         }
 
@@ -265,9 +332,9 @@ namespace SimpleScheme
             {
                 Contract.Ensures(Contract.Result<Evaluator>() != null);
 #if Check
-                if (this.caller == null)
+                if (this.degenerate)
                 {
-                    ErrorHandlers.InternalError("Caller is null");
+                    ErrorHandlers.InternalError("Bad evaluator: caller");
                 }
 #endif
                 return this.caller;
@@ -285,7 +352,7 @@ namespace SimpleScheme
 #if Check
                 if (this.returnedExpr == null)
                 {
-                    ErrorHandlers.InternalError("ReturnedExpr is null");
+                    ErrorHandlers.InternalError("Bad evaluator: returnedExpr");
                 }
 #endif
                 return this.returnedExpr;
@@ -295,31 +362,6 @@ namespace SimpleScheme
             {
                 Contract.Requires(value != null);
                 this.returnedExpr = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the returned environment from the last call.
-        /// Most primitives do not change the environment, but some do.
-        /// </summary>
-        internal Environment ReturnedEnv
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Environment>() != null);
-#if Check
-                if (this.returnedEnv == null)
-                {
-                    ErrorHandlers.InternalError("ReturnedEnv is null");
-                }
-#endif
-                return this.returnedEnv;
-            }
-
-            set
-            {
-                Contract.Requires(value != null);
-                this.returnedEnv = value;
             }
         }
 
@@ -343,9 +385,24 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Main Evaluator Dispatch Method
+        /// <summary>
+        /// Gets the instruction at the current program counter, looks up the
+        /// stepper method, and calls it.  The method is an open delegate to a virtual
+        /// method, so even though it is called with one argument, it actually
+        /// invokes a member method with no arguments.
+        /// </summary>
+        internal Evaluator Step()
+        {
+            Contract.Ensures(Contract.Result<Evaluator>() != null);
+            return Instructions[(int)this.pc](this);
+        }
+        #endregion
+
         #region Internal Methods
         /// <summary>
         /// Convert an obj into a string representation.
+        /// This is normally used only on SchemeObject
         /// </summary>
         /// <param name="quoted">If true, quote strings and chars.</param>
         /// <returns>The string representing the obj.</returns>
@@ -435,22 +492,11 @@ namespace SimpleScheme
         internal void IncrementCounter(int counterIdent)
         {
             Contract.Requires(counterIdent >= 0);
-            if (this.Env != Environment.EmptyEnvironment)
+            if (this.env != null)
             {
-                this.Env.Interp.IncrementCounter(counterIdent);
+                this.Env.IncrementCounter(counterIdent);
             }
         }
-
-        /// <summary>
-        /// Call the interpreter in the environment to start evaluating steps.
-        /// </summary>
-        /// <returns>The return value of the evaluation (or halted or suspended).</returns>
-        internal SchemeObject EvalStep()
-        {
-            Contract.Assert(this.Env.Interp != null);
-            return this.Env.Interp.EvalSteps(this);
-        }
-
         #endregion
 
         #region Internal Virtual Methods
@@ -484,33 +530,6 @@ namespace SimpleScheme
         internal virtual void UpdateReturnFlag(ReturnType flag)
         {
             this.returnFlag = flag;
-        }
-        #endregion
-
-        #region Protected Static
-        /// <summary>
-        /// Gets a stepper function.
-        /// This gets an open instance method, which is bound to an actual
-        /// instance at the point of the call.
-        /// </summary>
-        /// <param name="methodName">
-        /// The name of the method to call.  It must be an instance method of Evaluator.
-        /// In practice it is local to the evaluator subclass, so the method must be virtual.
-        /// </param>
-        /// <returns>A stepper that can be used to call the method.</returns>
-        protected static Stepper GetStepper(string methodName)
-        {
-            Contract.Requires(methodName != null);
-            Contract.Ensures(Contract.Result<Stepper>() != null);
-            MethodInfo mi = typeof(Evaluator).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-            if (mi == null)
-            {
-                ErrorHandlers.InternalError("Could not find step: " + methodName);
-                return null;
-            }
-
-            Contract.Assert(mi != null);
-            return (Stepper)Delegate.CreateDelegate(typeof(Stepper), null, mi);
         }
         #endregion
 
@@ -548,7 +567,7 @@ namespace SimpleScheme
         // These virtual methods are used by subclasses as their internal steps.
         // The subclass assigns the PC to one of its member functions.
         // The delegate MUST BE and *open* instance method, not bound to a specific
-        // instance, otherwise call/cc will not work as expected.  The caller, Interpreter:EvalSteps,
+        // instance, otherwise call/cc will not work as expected.  The caller, Interpreter:RunSteps,
         // supplies the instance explicitly in the call.
 
         /// <summary>
@@ -648,16 +667,6 @@ namespace SimpleScheme
         protected virtual Evaluator EvalAlternativeStep()
         {
             ErrorHandlers.InternalError("Bad step in evaluator: EvalAlternativeStep");
-            return this;
-        }
-
-        /// <summary>
-        /// Base declaration for step.  Should never be called.
-        /// </summary>
-        /// <returns>Next evaluator.</returns>
-        protected virtual Evaluator EvalArgsStep()
-        {
-            ErrorHandlers.InternalError("Bad step in evaluator: EvalArgsStep");
             return this;
         }
 
@@ -827,10 +836,47 @@ namespace SimpleScheme
         /// <returns>Next evaluator.</returns>
         protected virtual Evaluator ContinueAfterSuspendedStep()
         {
-            ErrorHandlers.InternalError("Bad step in evaluator: InitialStep");
+            ErrorHandlers.InternalError("Bad step in evaluator: ContinueAfterSuspendedStep");
             return this;
         }
 
+        /// <summary>
+        /// Base declaration for step.  Should never be called.
+        /// </summary>
+        /// <returns>Next evaluator.</returns>
+        protected virtual Evaluator IllegalStep()
+        {
+            ErrorHandlers.InternalError("Bad step in evaluator: IllegalStep");
+            return this;
+        }
+
+        #endregion
+
+        #region Private Static
+        /// <summary>
+        /// Gets a stepper function.
+        /// This gets an open instance method, which is bound to an actual
+        /// instance at the point of the call.
+        /// </summary>
+        /// <param name="methodName">
+        /// The name of the method to call.  It must be an instance method of Evaluator.
+        /// In practice it is local to the evaluator subclass, so the method must be virtual.
+        /// </param>
+        /// <returns>A stepper that can be used to call the method.</returns>
+        private static Stepper GetStepper(string methodName)
+        {
+            Contract.Requires(methodName != null);
+            Contract.Ensures(Contract.Result<Stepper>() != null);
+            MethodInfo mi = typeof(Evaluator).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (mi == null)
+            {
+                ErrorHandlers.InternalError("Could not find step: " + methodName);
+                return null;
+            }
+
+            Contract.Assert(mi != null);
+            return (Stepper)Delegate.CreateDelegate(typeof(Stepper), null, mi);
+        }
         #endregion
 
         #region Private Methods
@@ -846,7 +892,7 @@ namespace SimpleScheme
             buf.AppendFormat("Exaluator {0}\n", this.SchemeTypeName());
             string exp = this.Expr is EmptyList ? "()" : this.Expr.ToString();
             buf.AppendFormat("  Expr: {0}\n", exp);
-            if (this.Env != Environment.EmptyEnvironment)
+            if (this.env != null)
             {
                 buf.AppendFormat("  Env:\n{0}", this.Env.Dump(1, 3));
             }
@@ -860,8 +906,10 @@ namespace SimpleScheme
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.pc != null);
-//            Contract.Invariant(this.expr != null);
+            Contract.Invariant(this.degenerate || this.expr != null);
+            Contract.Invariant(this.degenerate || this.env != null);
+            Contract.Invariant(this.degenerate || this.caller != null);
+            Contract.Invariant(this.degenerate || this.returnedExpr != null);
         }
         #endregion
     }

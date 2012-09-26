@@ -247,7 +247,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         internal override Evaluator Apply(SchemeObject args, Evaluator returnTo, Evaluator caller)
         {
-            return this.Apply(args, Environment.EmptyEnvironment, returnTo, caller);
+            return this.Apply(args, null, returnTo, caller);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace SimpleScheme
         internal Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
             Contract.Requires(args != null);
-            Contract.Requires(env != null);
+            //// env may be null (mostly it is, meaning the primitive usually does not depend on the environment)
             Contract.Requires(returnTo != null);
             Contract.Requires(caller != null);
 

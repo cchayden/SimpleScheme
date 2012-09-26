@@ -19,16 +19,6 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
     internal sealed class EvaluateCase : Evaluator
     {
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalKeyStep = GetStepper("EvalKeyStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper checkClauseStep = GetStepper("CheckClauseStep");
-
         #region Fields
         /// <summary>
         /// The counter id.
@@ -60,7 +50,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="clauses">The case clauses.</param>
         private EvaluateCase(SchemeObject expr, Environment env, Evaluator caller, SchemeObject clauses)
-            : base(evalKeyStep, expr, env, caller, counter)
+            : base(OpCode.EvalKey, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -95,7 +85,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         protected override Evaluator EvalKeyStep()
         {
-            this.Pc = checkClauseStep;
+            this.Pc = OpCode.CheckClause;
             return EvaluateExpression.Call(First(this.Expr), this.Env, this);
         }
 

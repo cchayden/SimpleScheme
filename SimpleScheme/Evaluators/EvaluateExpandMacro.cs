@@ -10,16 +10,6 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateExpandMacro : Evaluator
     {
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper expandStep = GetStepper("ExpandStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evaluateStep = GetStepper("EvaluateStep");
-
         #region Fields
         /// <summary>
         /// The counter id.
@@ -42,7 +32,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
         private EvaluateExpandMacro(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
-            : base(expandStep, expr, env, caller, counter)
+            : base(OpCode.Expand, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -83,7 +73,7 @@ namespace SimpleScheme
         /// <returns>The step to evaluate the expanded macro.</returns>
         protected override Evaluator ExpandStep()
         {
-            this.Pc = evaluateStep;
+            this.Pc = OpCode.Evaluate;
             return this.fn.Apply(this.Expr, this, this);
         }
 

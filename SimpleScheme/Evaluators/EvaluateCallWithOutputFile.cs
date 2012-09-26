@@ -11,16 +11,6 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateCallWithOutputFile : Evaluator
     {
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper closeStep = GetStepper("CloseStep");
-
         #region Fields
         /// <summary>
         /// The counter id.
@@ -42,7 +32,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="port">The output port.</param>
         private EvaluateCallWithOutputFile(SchemeObject args, Environment env, Evaluator caller, OutputPort port)
-            : base(initialStep, args, env, caller, counter)
+            : base(OpCode.Initial, args, env, caller, counter)
         {
             Contract.Requires(args != null);
             Contract.Requires(env != null);
@@ -106,7 +96,7 @@ namespace SimpleScheme
         protected override Evaluator InitialStep()
         {
             var proc = Second(this.Expr);
-            this.Pc = closeStep;
+            this.Pc = OpCode.Close;
             return ((Procedure)proc).Apply(MakeList(this.port), this, this);
         }
 

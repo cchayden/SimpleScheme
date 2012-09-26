@@ -111,7 +111,7 @@ namespace SimpleScheme
             }
 
             var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
-            var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(actualTarget, returnTo), caller);
+            var argArray = this.ToArgListBegin(args, new InterpreterState(actualTarget, returnTo), caller);
             var res = this.MethodInfo.Invoke(actualTarget, argArray) as IAsyncResult;
             if (res == null)
             {
@@ -120,7 +120,7 @@ namespace SimpleScheme
             }
 
             // res is not converted because it is IAsyncResult -- convert in completion method
-            return new SuspendedEvaluator(ClrObject.New(res), returnTo);
+            return new SuspendedEvaluator(ClrObject.New(res), new Environment(false), returnTo);
         }
 
         #endregion
@@ -173,17 +173,47 @@ namespace SimpleScheme
             Contract.Requires(result.AsyncState != null);
             Contract.Requires(this.endMethodInfo != null);
             object[] args = { result };
-            var state = (Tuple<object, Evaluator>)result.AsyncState;
-            Evaluator caller = state.Item2;
-            Contract.Assert(caller != null);
-            object res = this.endMethodInfo.Invoke(state.Item1, args);
+            var state = (InterpreterState)result.AsyncState;
+            object res = this.endMethodInfo.Invoke(state.Target, args);
             res = res ?? Undefined.Instance;
+            Evaluator caller = state.Caller;
+            Contract.Assert(caller != null);
             caller.ReturnedExpr = ClrObject.FromClrObject(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
-            caller.EvalStep();
+            Contract.Assert(caller.Env != null);
+            Contract.Assert(caller.Env.Interp != null);
+            caller.Env.Interp.RunSteps(caller);
         }
         #endregion
+
+        /// <summary>
+        /// Stores the state across the async call.
+        /// Consists of the invocation target and the evaluator to return to.
+        /// </summary>
+        private struct InterpreterState
+        {
+            /// <summary>
+            /// The invocation target.
+            /// </summary>
+            public readonly object Target;
+
+            /// <summary>
+            /// The caller, also the Evaluator to return to.
+            /// </summary>
+            public readonly Evaluator Caller;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="InterpreterState"/> struct.
+            /// </summary>
+            /// <param name="target">The async target.</param>
+            /// <param name="caller">The calling Evaluator.</param>
+            public InterpreterState(object target, Evaluator caller)
+            {
+                this.Target = target;
+                this.Caller = caller;
+            }
+        }
     }
 }

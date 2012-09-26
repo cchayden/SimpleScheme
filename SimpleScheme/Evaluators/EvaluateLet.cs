@@ -17,16 +17,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper applyNamedLetStep = GetStepper("ApplyNamedLetStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-let");
@@ -64,7 +54,7 @@ namespace SimpleScheme
         /// <param name="vars">The variables to bind.</param>
         /// <param name="inits">The initial values of the variables.</param>
         private EvaluateLet(SchemeObject expr, Environment env, Evaluator caller, Symbol name, SchemeObject body, SchemeObject vars, SchemeObject inits)
-            : base(initialStep, expr, env, caller, counter)
+            : base(OpCode.Initial, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -155,7 +145,7 @@ namespace SimpleScheme
             }
 
             // named let -- eval the inits in the outer environment
-            this.Pc = applyNamedLetStep;
+            this.Pc = OpCode.ApplyNamedLet;
             return EvaluateList.Call(this.inits, this.Env, this);
         }
 

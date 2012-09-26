@@ -16,21 +16,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalInitStep = GetStepper("EvalInitStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper bindVarToInitStep = GetStepper("BindVarToInitStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper applyProcStep = GetStepper("ApplyProcStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-letrec");
@@ -73,7 +58,7 @@ namespace SimpleScheme
         /// <param name="vars">The variables to be bound.</param>
         /// <param name="inits">The initialization expressions.</param>
         private EvaluateLetRec(SchemeObject expr, Environment env, Evaluator caller, SchemeObject body, SchemeObject vars, SchemeObject inits)
-            : base(evalInitStep, expr, env, caller, counter)
+            : base(OpCode.EvalInit, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -141,12 +126,12 @@ namespace SimpleScheme
         {
             if (this.inits is EmptyList)
             {
-                this.Pc = applyProcStep;
+                this.Pc = OpCode.ApplyProc;
                 return this;
             }
 
             Lambda fun = Lambda.New(this.formals, MakeList(First(this.inits)), this.Env);
-            this.Pc = bindVarToInitStep;
+            this.Pc = OpCode.BindVarToInit;
             return fun.ApplyWithGivenEnv(this.Env, this);
         }
 
@@ -161,7 +146,7 @@ namespace SimpleScheme
             this.vals = Cons(this.ReturnedExpr, this.vals);
             this.vars = Rest(this.vars);
             this.inits = Rest(this.inits);
-            this.Pc = evalInitStep;
+            this.Pc = OpCode.EvalInit;
             return this;
         }
 

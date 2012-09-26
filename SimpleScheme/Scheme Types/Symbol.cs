@@ -87,7 +87,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets or sets the position in the environment the symbol appears.
+        /// Gets the position in the environment the symbol appears.
         /// </summary>
         internal int Pos
         {
@@ -95,26 +95,16 @@ namespace SimpleScheme
             {
                 return this.pos;
             }
-            set
-            {
-                Contract.Requires(value >= 0);
-                this.pos = value;
-            }
         }
 
         /// <summary>
-        /// Gets or sets the number of lexical levels out that the symbol apears in an environment.
+        /// Gets the number of lexical levels out that the symbol apears in an environment.
         /// </summary>
         internal int Level
         {
             get
             {
                 return this.level;
-            }
-            set
-            {
-                Contract.Requires(value >= 0);
-                this.level = value;
             }
         }
 

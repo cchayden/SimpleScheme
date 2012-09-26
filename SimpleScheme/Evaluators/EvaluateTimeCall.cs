@@ -14,11 +14,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper doneStep = GetStepper("DoneStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-time-call");
@@ -72,7 +67,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator EvaluateStep()
         {
-            this.Pc = doneStep;
+            this.Pc = OpCode.Done;
             Contract.Assume(this.Expr is Procedure);
             return ((Procedure)this.Expr).Apply(EmptyList.Instance, this, this);
         }

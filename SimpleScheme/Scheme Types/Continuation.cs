@@ -81,7 +81,7 @@ namespace SimpleScheme
 #endif
             Evaluator nextStep = this.savedEvaluator.CloneChain();
             nextStep.ReturnedExpr = First(args);
-            nextStep.ReturnedEnv = this.savedEvaluator.Env;
+            nextStep.Env = this.savedEvaluator.Env;
             return nextStep;
         }
         #endregion

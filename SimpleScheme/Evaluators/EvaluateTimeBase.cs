@@ -16,16 +16,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evaluateStep = GetStepper("EvaluateStep");
-
-        /// <summary>
         /// The amount of memory at the start.
         /// </summary>
         private readonly long startMem;
@@ -56,7 +46,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="counterId">The counter id of the evaluator.</param>
         protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
-            : base(initialStep, expr, env, caller, counterId)
+            : base(OpCode.Initial, expr, env, caller, counterId)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -76,7 +66,7 @@ namespace SimpleScheme
         protected override Evaluator InitialStep()
         {
             this.i = 0;
-            this.Pc = evaluateStep;
+            this.Pc = OpCode.Evaluate;
             return this;
         }
 
@@ -92,7 +82,7 @@ namespace SimpleScheme
             this.i++;
             if (this.i < this.counter)
             {
-                this.Pc = evaluateStep;
+                this.Pc = OpCode.Evaluate;
                 return this;
             }
 

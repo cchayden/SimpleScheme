@@ -28,16 +28,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper applyProcStep = GetStepper("ApplyProcStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-expression");
@@ -100,7 +90,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpression(SchemeObject fn, SchemeObject args, Environment env, Evaluator caller)
-            : base(initialStep, args, env, caller, counter)
+            : base(OpCode.Initial, args, env, caller, counter)
         {
             Contract.Requires(fn != null);
             Contract.Requires(args != null);
@@ -111,7 +101,7 @@ namespace SimpleScheme
             if (fn is Procedure)
             {
                 // If the fun is already a procedure, skip to apply step
-                this.Pc = applyProcStep;
+                this.Pc = OpCode.ApplyProc;
                 this.ReturnedExpr = fn;
             }
         }
@@ -362,7 +352,7 @@ namespace SimpleScheme
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
             //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            this.Pc = applyProcStep;
+            this.Pc = OpCode.ApplyProc;
             return Call(this.fn, this.Env, this);
         }
 
@@ -374,12 +364,13 @@ namespace SimpleScheme
         protected override Evaluator ApplyProcStep()
         {
             // Come here after evaluating fn
-            if (!(this.ReturnedExpr is Procedure))
+            var ret = this.ReturnedExpr;
+            if (!(ret is Procedure))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", this.ReturnedExpr), null);
+                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", ret), null);
             }
 
-            var proc = (Procedure)this.ReturnedExpr;
+            var proc = (Procedure)ret;
             Contract.Assert(proc != null);
 
             // detect if proc is a "special" primitive that does not get its args evaluated, and if so apply

@@ -12,16 +12,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalArgsStep = GetStepper("EvalArgsStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper applyStep = GetStepper("ApplyStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-proc");
@@ -42,7 +32,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateProc(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
-            : base(evalArgsStep, args, env, caller, counter)
+            : base(OpCode.Apply, args, env, caller, counter)
         {
             Contract.Requires(fn != null);
             Contract.Requires(args != null);
@@ -69,25 +59,8 @@ namespace SimpleScheme
             Contract.Requires(env != null);
             Contract.Requires(caller != null);
             Contract.Ensures(Contract.Result<Evaluator>() != null);
-            return new EvaluateProc(fn, args, env, caller);
-        }
-
-        /// <summary>
-        /// Call apply proc evaluator, but do not evaluate arguments.
-        /// In this case, we can avoid having to instantiate an instance.
-        /// </summary>
-        /// <param name="fn">The function to apply.</param>
-        /// <param name="args">The arguments to pass to fn.</param>
-        /// <param name="env">The environment to evaluate the expression in.</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>The proc evaluator.</returns>
-        internal static Evaluator CallQuoted(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
-        {
-            Contract.Requires(fn != null);
-            Contract.Requires(args != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return fn.Apply(args, caller, caller);
+            var evalProc = new EvaluateProc(fn, args, env, caller);
+            return EvaluateList.Call(evalProc.Expr, evalProc.Env, evalProc);
         }
         #endregion
 
@@ -105,35 +78,23 @@ namespace SimpleScheme
 
         #region Steps
         /// <summary>
-        /// Begin by evaluating all the arguments.
-        /// </summary>
-        /// <returns>Next action to evaluate the args.</returns>
-        protected override Evaluator EvalArgsStep()
-        {
-            this.Pc = applyStep;
-            //// TODO fold EvaluateList steps into here
-            return EvaluateList.Call(this.Expr, this.Env, this);
-        }
-
-        /// <summary>
         /// Back here after args have been evaluated.  
         /// Apply the proc to the evaluated args.  
         /// </summary>
         /// <returns>The result, or the next step to obtain it.</returns>
         protected override Evaluator ApplyStep()
         {
-            Procedure proc = this.fn;
 #if Diagnostics
             if (this.Interp.Trace)
             {
                 this.Caller.Interp.CurrentOutputPort.WriteLine(
-                    string.Format("evaluate-proc: {0} applied to {1}", proc.ProcedureName, this.ReturnedExpr));
+                    string.Format("evaluate-proc: {0} applied to {1}", this.fn.ProcedureName, this.ReturnedExpr));
             }
 #endif
 
             // Pass this.Caller to return to the caller rather than to here, since there is
             //  nothing left to do.
-            return proc.Apply(this.ReturnedExpr, this.Caller, this);
+            return this.fn.Apply(this.ReturnedExpr, this.Caller, this);
         }
         #endregion
 

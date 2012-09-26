@@ -13,16 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper setStep = GetStepper("SetStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-set");
@@ -48,7 +38,7 @@ namespace SimpleScheme
         /// <param name="lhs">The left hand side -- the variable to set.</param>
         /// <param name="rhs">The right hand side -- the new value.</param>
         private EvaluateSet(SchemeObject expr, Environment env, Evaluator caller, SchemeObject lhs, SchemeObject rhs)
-            : base(initialStep, expr, env, caller, counter)
+            : base(OpCode.Initial, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -92,7 +82,7 @@ namespace SimpleScheme
         /// <returns>Code to evaluate the second expression.</returns>
         protected override Evaluator InitialStep()
         {
-            this.Pc = setStep;
+            this.Pc = OpCode.Set;
             return EvaluateExpression.Call(this.rhs, this.Env, this);
         }
 

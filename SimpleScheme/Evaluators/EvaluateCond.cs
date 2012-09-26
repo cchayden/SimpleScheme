@@ -14,26 +14,6 @@ namespace SimpleScheme
     //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
     internal sealed class EvaluateCond : Evaluator
     {
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalClauseStep = GetStepper("EvalClauseStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper checkClauseStep = GetStepper("CheckClauseStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper evalConsequentStep = GetStepper("EvalConsequentStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper applyRecipientStep = GetStepper("ApplyRecipientStep");
-
         #region Fields
         /// <summary>
         /// The counter id.
@@ -64,7 +44,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateCond(SchemeObject expr, Environment env, Evaluator caller)
-            : base(evalClauseStep, expr, env, caller, counter)
+            : base(OpCode.EvalClause, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -114,11 +94,11 @@ namespace SimpleScheme
             var clause1 = First(this.clause);
             if (clause1 is Symbol && clause1.ToString() == "else")
             {
-                this.Pc = evalConsequentStep;
+                this.Pc = OpCode.EvalConsequent;
                 return this;
             }
 
-            this.Pc = checkClauseStep;
+            this.Pc = OpCode.CheckClause;
             return EvaluateExpression.Call(First(this.clause), this.Env, this);
         }
 
@@ -134,7 +114,7 @@ namespace SimpleScheme
             this.test = this.ReturnedExpr;
             if (SchemeBoolean.Truth(this.test).Value)
             {
-                this.Pc = evalConsequentStep;
+                this.Pc = OpCode.EvalConsequent;
                 return this;
             }
 
@@ -146,7 +126,7 @@ namespace SimpleScheme
                 return caller;
             }
 
-            this.Pc = evalClauseStep;
+            this.Pc = OpCode.EvalClause;
             return this;
         }
 
@@ -170,7 +150,7 @@ namespace SimpleScheme
             if (clause2 is Symbol && clause2.ToString() == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                this.Pc = applyRecipientStep;
+                this.Pc = OpCode.ApplyRecipient;
                 return EvaluateExpression.Call(Third(this.clause), this.Env, this);
             }
 
@@ -186,7 +166,7 @@ namespace SimpleScheme
         protected override Evaluator ApplyRecipientStep()
         {
             var proc = Procedure.EnsureProcedure(this.ReturnedExpr);
-            return EvaluateProc.CallQuoted(proc, MakeList(this.test), this.Env, this.Caller);
+            return proc.Apply(MakeList(this.test), this.Caller, this.Caller);
         }
         #endregion
 

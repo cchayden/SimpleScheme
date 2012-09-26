@@ -1,10 +1,10 @@
-﻿// <copyright file="Environment.cs" company="Charles Hayden">
+﻿#define OLD
+// <copyright file="Environment.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.Contracts;
     using System.Text;
 
@@ -17,15 +17,7 @@ namespace SimpleScheme
     /// </summary>
     public class Environment : IEnvironment
     {
-        #region Constants
-        /// <summary>
-        /// Represents the end of the environment chain.
-        /// </summary>
-        private static readonly Environment emptyEnvironment = new Environment();
-        #endregion
-
         #region Fields
-
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -46,6 +38,16 @@ namespace SimpleScheme
         /// </summary>
         private readonly List<NameValuePair> symbolTable;
 
+        /// <summary>
+        /// Flags the primitive environment.
+        /// </summary>
+        private readonly bool primitive;
+
+        /// <summary>
+        /// Flags the empty environment.
+        /// </summary>
+        private readonly bool empty;
+
         #endregion
 
         #region Constructors
@@ -63,12 +65,12 @@ namespace SimpleScheme
             this.interp = interp;
             this.lexicalParent = lexicalParent;
             this.symbolTable = new List<NameValuePair>();
+            this.primitive = this.empty = false;
             interp.IncrementCounter(counter);
         }
 
         /// <summary>
         /// Initializes a new instance of the Environment class.
-        /// Creates a new empty environment.
         /// </summary>
         /// <param name="lexicalParent">The lexically enclosing environment.</param>
         /// <returns>The new environment.</returns>
@@ -94,36 +96,28 @@ namespace SimpleScheme
             this.interp = lexicalParent.Interp;
             this.lexicalParent = lexicalParent;
             this.symbolTable = new List<NameValuePair>(List.ListLength(formals));
+            this.primitive = this.empty = false;
             this.AddSymbolList(formals, inits);
         }
 
         /// <summary>
         /// Initializes a new instance of the Environment class.
-        /// This is used to create the base of the environment chain.
+        /// This is used to create the primitive environment.
         /// </summary>
-        public Environment()
+        /// <param name="primitive">If true, this creates a primitive environment.
+        /// Otherwise, creates an empty environment.</param>
+        public Environment(bool primitive)
         {
-            // this.interp and this.lexicalParent is null
+            this.lexicalParent = null;
+            this.interp = null;
             this.symbolTable = new List<NameValuePair>();
+            this.primitive = primitive;
+            this.empty = !primitive;
         }
 
         #endregion
 
         #region Accessors
-        /// <summary>
-        /// Gets the empty environment.
-        /// The empty environment is at the bottom of the environment chain.
-        /// </summary>
-        public static Environment EmptyEnvironment
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Environment>() != null);
-                Contract.Ensures(Contract.Result<Environment>() == Environment.emptyEnvironment);
-                return emptyEnvironment;
-            }
-        }
-
         /// <summary>
         /// Gets the interpreter used to hold the global context.
         /// The bottom environment holds the interpreter, but each one copies from its
@@ -141,6 +135,17 @@ namespace SimpleScheme
                     ErrorHandlers.InternalError("Interp is null");
                 }
 #endif
+                return this.interp;
+            }
+        }
+
+        /// <summary>
+        /// Gets the interpreter, which may be null.
+        /// </summary>
+        internal Interpreter InterpOrNull
+        {
+            get
+            {
                 return this.interp;
             }
         }
@@ -230,7 +235,6 @@ namespace SimpleScheme
         #endregion
 
         #region Internal Methods
-
         /// <summary>
         /// Add a new definition into the environment.
         /// If a procedure is being added, set its name.
@@ -266,18 +270,18 @@ namespace SimpleScheme
             int level = 0;
             if (var.Located)
             {
+                // located -- just step out to the right level and get the value
                 while (level < var.Level)
                 {
                     env = env.LexicalParent;
                     level++;
                 }
 
-                var val = env.LookupSymbol(var, level);
-                Contract.Assume(val != null);  // if Located, it cannot be null
-                return val;
+                return env.LookupLocatedSymbol(var);
             }
 
-            while (env != emptyEnvironment)
+            // not located -- search for it
+            while (env != null)
             {
                 SchemeObject val = env.LookupSymbol(var, level);
                 if (val != null)
@@ -330,17 +334,19 @@ namespace SimpleScheme
             int level = 0;
             if (symbol.Located)
             {
+                // located -- step to environment and update
                 while (level < symbol.Level)
                 {
                     env = env.LexicalParent;
                     level++;
                 }
 
-                env.UpdateSymbol(symbol, val, level);
+                env.UpdateLocatedSymbol(symbol, val);
                 return;
             }
 
-            while (env != emptyEnvironment)
+            // not located -- search
+            while (env != null)
             {
                 if (env.UpdateSymbol(symbol, val, level) != null)
                 {
@@ -374,7 +380,7 @@ namespace SimpleScheme
             Environment env = this;
 
             // search down the chain of environments for a definition
-            while (env != emptyEnvironment)
+            while (env != null)
             {
                 SchemeObject val = env.IncrementSymbolValue(symbol);
                 if (val != null)
@@ -391,7 +397,7 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Dump the stack of environments.
+        /// Dump the  of environments.
         /// At each level, show the symbol table.
         /// </summary>
         /// <param name="levels">The number of levels to show.</param>
@@ -402,7 +408,7 @@ namespace SimpleScheme
             Contract.Ensures(Contract.Result<string>() != null);
             var sb = new StringBuilder();
             Environment env = this;
-            while (env != emptyEnvironment && levels > 0)
+            while (env != null && levels > 0)
             {
                 env.DumpSymbolTable(indent, sb);
                 levels--;
@@ -437,9 +443,36 @@ namespace SimpleScheme
             return this.Dump(1, 0);
         }
 
+        /// <summary>
+        /// Increment the given counter.
+        /// </summary>
+        /// <param name="counterId">The counter id</param>
+        internal void IncrementCounter(int counterId)
+        {
+            if (this.interp != null)
+            {
+                this.interp.IncrementCounter(counterId);
+            }
+        }
         #endregion
 
         #region Symbol Table
+        /// <summary>
+        /// Look up a symbol given its name.
+        /// The symbol must already be located.
+        /// </summary>
+        /// <param name="symbol">The symbol to look up.</param>
+        /// <returns>The value of the object looked up, null if not found.</returns>
+        internal SchemeObject LookupLocatedSymbol(Symbol symbol)
+        {
+            Contract.Requires(symbol != null);
+            Contract.Ensures(Contract.Result<SchemeObject>() != null);
+            lock (this.symbolTable)
+            {
+                Contract.Assume(symbol.Pos >= 0);
+                return this.symbolTable[symbol.Pos].Value;
+            }
+        }
 
         /// <summary>
         /// Look up a symbol given its name.
@@ -447,8 +480,7 @@ namespace SimpleScheme
         /// through the parent environment chain.
         /// </summary>
         /// <param name="symbol">The symbol to look up.</param>
-        /// <param name="level">The number of levels to travel to find the definition.  Cached in the symbol the
-        ///   first time it is looked up.</param>
+        /// <param name="level">The level to set into the symbol</param>
         /// <returns>The value of the object looked up, null if not found.</returns>
         internal SchemeObject LookupSymbol(Symbol symbol, int level)
         {
@@ -456,14 +488,6 @@ namespace SimpleScheme
             //// return value of null is used to indicate that symbol was not found
             lock (this.symbolTable)
             {
-                if (symbol.Located)
-                {
-                    Contract.Assume(level == symbol.Level);
-                    Debug.Assert(level == symbol.Level, "LookupSymbol: level mismatch: " + symbol);
-                    Contract.Assume(symbol.Pos >= 0);
-                    return this.symbolTable[symbol.Pos].Value;
-                }
-
                 var index = this.FindSymbol(symbol);
                 if (index < 0)
                 {
@@ -494,8 +518,25 @@ namespace SimpleScheme
 
         /// <summary>
         /// Update a value in the symbol table.
+        /// The symbol must have been located previously.
+        /// </summary>
+        /// <param name="symbol">The symbol to update.</param>
+        /// <param name="val">The new value.</param>
+        /// <returns>The new value, null if not found.</returns>
+        internal SchemeObject UpdateLocatedSymbol(Symbol symbol, SchemeObject val)
+        {
+            lock (this.symbolTable)
+            {
+                Contract.Assume(symbol.Pos >= 0);
+                this.symbolTable[symbol.Pos].Value = val;
+                return val;
+            }
+        }
+
+        /// <summary>
+        /// Update a value in the symbol table.
         /// If the symbol is not defined, return false.
-        /// Cache the symbol location if not already done.
+        /// Cache the symbol location.
         /// </summary>
         /// <param name="symbol">The symbol to update.</param>
         /// <param name="val">The new value.</param>
@@ -505,28 +546,15 @@ namespace SimpleScheme
         {
             Contract.Requires(symbol != null);
             Contract.Requires(val != null);
-            var entry = new NameValuePair(symbol.SymbolName, val);
             lock (this.symbolTable)
             {
-                if (symbol.Located)
-                {
-                    if (level != symbol.Level)
-                    {
-                        return null;
-                    }
-
-                    Contract.Assume(symbol.Pos >= 0);
-                    this.symbolTable[symbol.Pos] = entry;
-                    return val;
-                }
-
                 var index = this.FindSymbol(symbol);
                 if (index < 0)
                 {
                     return null;
                 }
 
-                this.symbolTable[index] = entry;
+                this.symbolTable[index].Value = val;
                 symbol.SetLocation(index, level);
                 return val;
             }
@@ -557,7 +585,7 @@ namespace SimpleScheme
                     return null;
                 }
 
-                this.symbolTable[index] = new NameValuePair(symbol.SymbolName, (Number)(((Number)val).N + 1));
+                this.symbolTable[index].Value = (Number)(((Number)val).N + 1);
                 return val;
             }
         }
@@ -661,7 +689,7 @@ namespace SimpleScheme
             else
             {
                 Contract.Assert(index >= 0);
-                this.symbolTable[index] = new NameValuePair(symbol.SymbolName, val);
+                this.symbolTable[index].Value = val;
             }
 
             symbol.SetLocation(index, 0);
@@ -695,11 +723,15 @@ namespace SimpleScheme
         #region Contract Invariant
         /// <summary>
         /// Describes invariants on the member variables.
+        /// The environment is either primitive, in which case it has a symbol table only, or
+        /// else it has a symbol table, lexical parent, and an associated interpreter.
         /// </summary>
         [ContractInvariantMethod]
         private void ContractInvariant()
         {
-            Contract.Invariant(this.symbolTable != null);
+            Contract.Invariant(this.empty || this.primitive || this.interp != null);
+            Contract.Invariant(this.empty || this.primitive || this.lexicalParent != null);
+            Contract.Invariant(this.empty || this.symbolTable != null);
         }
         #endregion
 
@@ -708,7 +740,7 @@ namespace SimpleScheme
         /// <summary>
         /// These make up symbol table entries.
         /// </summary>
-        private struct NameValuePair
+        private class NameValuePair
         {
             /// <summary>
             /// The symbol name.
@@ -718,7 +750,7 @@ namespace SimpleScheme
             /// <summary>
             /// The symbol value.
             /// </summary>
-            internal readonly SchemeObject Value;
+            internal SchemeObject Value;
 
             /// <summary>
             /// Initializes a new instance of the NameValuePair struct.

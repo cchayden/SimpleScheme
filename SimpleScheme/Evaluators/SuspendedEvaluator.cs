@@ -13,11 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper continueAfterSuspendedStep = GetStepper("ContinueAfterSuspendedStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("suspended");
@@ -34,28 +29,16 @@ namespace SimpleScheme
         /// AsyncResult is stored in Expr.
         /// </summary>
         /// <param name="res">The IAsyncResult associated with the suspension.</param>
+        /// <param name="env">The environment to use when returning from suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
-        internal SuspendedEvaluator(SchemeObject res, Evaluator caller) : 
-            base(continueAfterSuspendedStep, res, Environment.EmptyEnvironment, caller, counter)
+        internal SuspendedEvaluator(SchemeObject res, Environment env, Evaluator caller) : 
+            base(OpCode.ContinueAfterSuspended, res, env, caller, counter)
         {
             Contract.Requires(res != null);
             Contract.Requires(caller != null);
             this.ReturnedExpr = ClrObject.New(this);
         }
         #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <returns>The string representing the obj.</returns>
-        internal override string ToString(bool quoted)
-        {
-            return "<suspended-evaluator>";
-        }
-        #endregion
-
 
         #region Steps
         /// <summary>

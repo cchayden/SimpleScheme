@@ -19,16 +19,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper doneStep = GetStepper("DoneStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-expression-with-catch");
@@ -48,7 +38,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpressionWithCatch(SchemeObject expr, Environment env, Evaluator caller)
-            : base(initialStep, expr, env, caller, counter)
+            : base(OpCode.Initial, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -94,7 +84,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         protected override Evaluator InitialStep()
         {
-            this.Pc = doneStep;
+            this.Pc = OpCode.Done;
             return EvaluateExpression.Call(this.Expr, this.Env, this);
         }
 
@@ -112,7 +102,6 @@ namespace SimpleScheme
             // the return value and set an appropriate flag value.
             Evaluator caller = this.Caller;
             Contract.Assert(caller != null);
-            caller.ReturnedExpr = this.ReturnedExpr;
             ReturnType returnType;
             if (this.FetchAndResetCaught() > 0)
             {
@@ -124,6 +113,7 @@ namespace SimpleScheme
                 returnType = this.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn;
             }
 
+            caller.ReturnedExpr = this.ReturnedExpr;
             caller.UpdateReturnFlag(returnType);
             return caller;
         }

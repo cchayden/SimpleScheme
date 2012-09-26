@@ -15,16 +15,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper applyFunStep = GetStepper("ApplyFunStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper collectAndLoopStep = GetStepper("CollectAndLoopStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-map");
@@ -56,7 +46,7 @@ namespace SimpleScheme
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
         private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-            : base(applyFunStep, expr, env, caller, counter)
+            : base(OpCode.ApplyFun, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -130,7 +120,7 @@ namespace SimpleScheme
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                this.Pc = collectAndLoopStep;
+                this.Pc = OpCode.CollectAndLoop;
                 return this.proc.Apply(MapFun(First, this.Expr), this, this);
             }
 
@@ -157,7 +147,7 @@ namespace SimpleScheme
 
             // Move down each of the lists
             this.Expr = MapFun(Rest, this.Expr);
-            this.Pc = applyFunStep;
+            this.Pc = OpCode.ApplyFun;
             return this;
         }
         #endregion

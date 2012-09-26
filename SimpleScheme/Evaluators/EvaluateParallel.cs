@@ -15,16 +15,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper loopStep = GetStepper("LoopStep");
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-parallel");
@@ -74,7 +64,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateParallel(SchemeObject expr, Environment env, Evaluator caller)
-            : base(initialStep, expr, env, caller, counter)
+            : base(OpCode.Initial, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -154,7 +144,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         protected override Evaluator InitialStep()
         {
-            this.Pc = loopStep;
+            this.Pc = OpCode.Loop;
             return EvaluateExpressionWithCatch.Call(First(this.Expr), this.Env, this);
         }
 
@@ -207,8 +197,8 @@ namespace SimpleScheme
                     //   return from the whole thing
                     if (this.joined < this.forked)
                     {
-                        this.Pc = loopStep;
-                        return new SuspendedEvaluator(this.ReturnedExpr, this);
+                        this.Pc = OpCode.Loop;
+                        return new SuspendedEvaluator(this.ReturnedExpr, this.Env, this);
                     }
 
                     Evaluator caller = this.Caller;
@@ -217,7 +207,7 @@ namespace SimpleScheme
                     return caller;
                 }
 
-                this.Pc = loopStep;
+                this.Pc = OpCode.Loop;
                 return EvaluateExpressionWithCatch.Call(First(this.Expr), this.Env, this);
             }
         }

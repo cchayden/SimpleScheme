@@ -14,16 +14,6 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateDefine : Evaluator
     {
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper initialStep = GetStepper("InitialStep");
-
-        /// <summary>
-        /// Open instance method delegate
-        /// </summary>
-        private static readonly Stepper storeDefineStep = GetStepper("StoreDefineStep");
-
         #region Fields
         /// <summary>
         /// The counter id.
@@ -39,7 +29,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateDefine(SchemeObject expr, Environment env, Evaluator caller)
-            : base(initialStep, expr, env, caller, counter)
+            : base(OpCode.Initial, expr, env, caller, counter)
         {
             Contract.Requires(expr != null);
             Contract.Requires(env != null);
@@ -90,7 +80,7 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the expression.</returns>
         protected override Evaluator InitialStep()
         {
-            this.Pc = storeDefineStep;
+            this.Pc = OpCode.StoreDefine;
             return EvaluateExpression.Call(Second(this.Expr), this.Env, this);
         }
 
