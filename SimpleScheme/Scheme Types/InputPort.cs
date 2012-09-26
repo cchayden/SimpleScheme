@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Represents an input port, a mechanism for reading input.
     /// It is immutable.
     /// </summary>
-    public sealed class InputPort : IPrintable, ISchemeObject
+    public sealed class InputPort : SchemeObject
     {
         #region Constants
 
@@ -52,9 +52,9 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Port); }
+            get { return ValueTypeName(ValueType.InputPort); }
         }
         #endregion
 
@@ -87,7 +87,7 @@ namespace SimpleScheme
         /// Define the input primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
+        public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
@@ -98,22 +98,22 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.2">(eof-object? <obj>)</r4rs>
                 .DefinePrimitive(
                         "eof-object?",
-                        (args, caller) => SchemeBoolean.Truth(List.First(args) is Eof), 
+                        (args, caller) => SchemeBoolean.Truth(First(args) is Eof), 
                         1, 
-                        TypePrimitives.ValueType.Obj)
+                        ValueType.Obj)
                 ////// <r4rs section="6.10.1">(call-with-input-file <string> <proc>)</r4rs>
                 .DefinePrimitive(
                        "call-with-input-file",
                        EvaluateCallWithInputFile.Call, 
                        2, 
-                       TypePrimitives.ValueType.String, 
-                       TypePrimitives.ValueType.Proc)
+                       ValueType.String, 
+                       ValueType.Proc)
                 //// <r4rs section="6.10.1">(close-input-port <port>)</r4rs>
                 .DefinePrimitive(
                         "close-input-port",
-                        (args, caller) => Port(List.First(args), caller.Interp.CurrentInputPort).CloseInputPort(), 
+                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).CloseInputPort(), 
                         1, 
-                        TypePrimitives.ValueType.Port)
+                        ValueType.InputPort)
                 //// <r4rs section="6.10.1">(current-input-port)</r4rs>
                 .DefinePrimitive(
                         "current-input-port",
@@ -122,51 +122,51 @@ namespace SimpleScheme
                 //// <r4rs section="6.10.1">(input-port? <obj>)</r4rs>
                 .DefinePrimitive(
                         "input-port?",
-                        (args, caller) => SchemeBoolean.Truth(List.First(args) is InputPort), 
+                        (args, caller) => SchemeBoolean.Truth(First(args) is InputPort), 
                         1, 
-                        TypePrimitives.ValueType.Obj)
+                        ValueType.Obj)
                 //// <r4rs section="6.10.4">(load <filename>)</r4rs>
                 .DefinePrimitive(
                         "load",
-                        (args, caller) => LoadFile(List.First(args), caller.Interp), 
+                        (args, caller) => LoadFile(First(args), caller.Interp), 
                         1, 
-                        TypePrimitives.ValueType.String)
+                        ValueType.String)
                 //// <r4rs section="6.10.1">(open-input-file <filename>)</r4rs>
                 .DefinePrimitive(
                         "open-input-file",
-                        (args, caller) => EvaluateCallWithInputFile.OpenInputFile(List.First(args), caller.Interp), 
+                        (args, caller) => EvaluateCallWithInputFile.OpenInputFile(First(args), caller.Interp), 
                         1,
-                        TypePrimitives.ValueType.String)
+                        ValueType.String)
                 //// <r4rs section="6.10.2">(peek-char)</r4rs>
                 //// <r4rs section="6.10.2">(peek-char <port>)</r4rs>
                 .DefinePrimitive(
                         "peek-char",
-                        (args, caller) => Port(List.First(args), caller.Interp.CurrentInputPort).PeekChar(), 
+                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).PeekChar(), 
                         0, 
                         1, 
-                        TypePrimitives.ValueType.Port)
+                        ValueType.InputPort)
                 //// <r4rs section="6.10.2">(read)</r4rs>
                 //// <r4rs section="6.10.2">(read <port>)</r4rs>
                 .DefinePrimitive(
                         "read",
-                        (args, caller) => Port(List.First(args), caller.Interp.CurrentInputPort).Read(), 
+                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).Read(), 
                         0, 
                         1, 
-                        TypePrimitives.ValueType.Port)
+                        ValueType.InputPort)
                 //// <r4rs section="6.10.2">(read-char)</r4rs>
                 //// <r4rs section="6.10.2">(read-char <port>)</r4rs>
                 .DefinePrimitive(
                         "read-char",
-                        (args, caller) => Port(List.First(args), caller.Interp.CurrentInputPort).ReadChar(), 
+                        (args, caller) => Port(First(args), caller.Interp.CurrentInputPort).ReadChar(), 
                         0, 
                         1, 
-                        TypePrimitives.ValueType.Port)
+                        ValueType.InputPort)
                 //// <r4rs section="6.10.4">(transcript-on <filename>)</r4rs>
                 .DefinePrimitive(
                         "transcript-on",
-                        (args, caller) => TranscriptOn(List.First(args), caller.Interp.Transcript), 
+                        (args, caller) => TranscriptOn(First(args), caller.Interp.Transcript), 
                         1, 
-                        TypePrimitives.ValueType.String)
+                        ValueType.String)
                 //// <r4rs section="6.10.4">(transcript-off)</r4rs>
                 .DefinePrimitive(
                         "transcript-off",
@@ -181,7 +181,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void PrintString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -191,10 +191,10 @@ namespace SimpleScheme
         /// If none given, uses the default input port.
         /// </summary>
         /// <returns>The expression read.</returns>
-        public ISchemeObject Read()
+        public SchemeObject Read()
         {
             var sb = new StringBuilder();
-            ISchemeObject expr = this.parser.ReadExpr(sb);
+            SchemeObject expr = this.parser.ReadExpr(sb);
             this.transcript.LogInputLine(sb.ToString().Trim(), this);
             return expr;
         }
@@ -219,6 +219,23 @@ namespace SimpleScheme
         }
         #endregion
 
+        /// <summary>
+        /// Convert to text writer.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The text reader.</returns>
+        public static TextReader AsTextReader(SchemeObject obj)
+        {
+            if (obj is InputPort)
+            {
+                return ((InputPort)obj).Parser.Reader;
+            }
+
+            ErrorHandlers.TypeError(typeof(InputPort), obj);
+            return null;
+        }
+        
+
         #region Private Static Methods
         /// <summary>
         /// Determine the port object to use with the InputPort primitives.
@@ -228,9 +245,9 @@ namespace SimpleScheme
         /// <param name="port">The port to use, if supplied.</param>
         /// <param name="curr">The current input port.</param>
         /// <returns>The port to use.</returns>
-        private static InputPort Port(ISchemeObject port, InputPort curr)
+        private static InputPort Port(SchemeObject port, InputPort curr)
         {
-            return port is EmptyList ? curr : port.AsInputPort();
+            return port is EmptyList ? curr : (InputPort)port;
         }
 
         /// <summary>
@@ -239,7 +256,7 @@ namespace SimpleScheme
         /// <param name="filename">The file to load from.</param>
         /// <param name="interp">The interpreter.</param>
         /// <returns>Undefined object.</returns>
-        private static ISchemeObject LoadFile(ISchemeObject filename, Interpreter interp)
+        private static SchemeObject LoadFile(SchemeObject filename, Interpreter interp)
         {
             interp.LoadFile(filename);
             return Undefined.Instance;
@@ -251,7 +268,7 @@ namespace SimpleScheme
         /// <param name="filename">The file to write to.</param>
         /// <param name="transcript">The transcript logger.</param>
         /// <returns>Undefined object.</returns>
-        private static ISchemeObject TranscriptOn(ISchemeObject filename, TranscriptLogger transcript)
+        private static SchemeObject TranscriptOn(SchemeObject filename, TranscriptLogger transcript)
         {
             transcript.TranscriptOn(filename);
             return Undefined.Instance;
@@ -262,7 +279,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="transcript">The transcript logger.</param>
         /// <returns>Undefined object.</returns>
-        private static ISchemeObject TranscriptOff(TranscriptLogger transcript)
+        private static SchemeObject TranscriptOff(TranscriptLogger transcript)
         {
             transcript.TranscriptOff();
             return Undefined.Instance;
@@ -274,7 +291,7 @@ namespace SimpleScheme
         /// Close the input port.
         /// </summary>
         /// <returns>Undefined obect.</returns>
-        private ISchemeObject CloseInputPort()
+        private SchemeObject CloseInputPort()
         {
             this.Close();
             return Undefined.Instance;
@@ -284,7 +301,7 @@ namespace SimpleScheme
         /// Peek for a character on the input port.
         /// </summary>
         /// <returns>The character in the input.</returns>
-        private ISchemeObject PeekChar()
+        private SchemeObject PeekChar()
         {
             return this.parser.PeekChar();
         }
@@ -293,53 +310,13 @@ namespace SimpleScheme
         /// Read a character on the input port.
         /// </summary>
         /// <returns>The character read.</returns>
-        private ISchemeObject ReadChar()
+        private SchemeObject ReadChar()
         {
             var sb = new StringBuilder();
-            ISchemeObject expr = this.parser.ReadChar(sb);
+            SchemeObject expr = this.parser.ReadChar(sb);
             this.transcript.LogInputLine(sb.ToString().Trim(), this);
             return expr;
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extensions for InputPort
-    /// </summary>
-    public static class InputPortExtension
-    {
-        /// <summary>
-        /// Convert to input port.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>An input port.</returns>
-        public static InputPort AsInputPort(this ISchemeObject obj)
-        {
-            if (obj is InputPort)
-            {
-                return (InputPort)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(InputPort), obj);
-            return null;
-        }
-
-        /// <summary>
-        /// Convert to text writer.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The text reader.</returns>
-        public static TextReader AsTextReader(this ISchemeObject obj)
-        {
-            if (obj is InputPort)
-            {
-                return ((InputPort)obj).Parser.Reader;
-            }
-
-            ErrorHandlers.TypeError(typeof(InputPort), obj);
-            return null;
-        }
-    }
-    #endregion
 }

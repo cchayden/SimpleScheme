@@ -19,20 +19,19 @@ namespace SimpleScheme
         /// <summary>
         /// Represents the end of the environment chain.
         /// </summary>
-        private static readonly Environment EmptyEnvironment = null;
+        private static readonly Environment emptyEnvironment = null;
 
         /// <summary>
         /// Used for an interpreter with no environment (the primitive environment).
         /// </summary>
-        private static readonly Interpreter NullInterp = null;
+        private static readonly Interpreter nullInterp = null;
         #endregion
 
         #region Fields
-
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int Counter = SimpleScheme.Counter.Create("environment");
+        private static readonly int counter = Counter.Create("environment");
 
         /// <summary>
         /// The symbol table for this enviornment.
@@ -63,9 +62,9 @@ namespace SimpleScheme
             this.interp = interp;
             this.lexicalParent = lexicalParent;
             this.symbolTable = new SymbolTable(0);
-            if (interp != NullInterp)
+            if (interp != nullInterp)
             {
-                interp.IncrementCounter(Counter);
+                interp.IncrementCounter(counter);
             }
         }
 
@@ -88,7 +87,7 @@ namespace SimpleScheme
         /// <param name="formals">A list of variable names.</param>
         /// <param name="vals">The values for these variables.</param>
         /// <param name="lexicalParent">The lexical parent environment.</param>
-        public Environment(ISchemeObject formals, ISchemeObject vals, Environment lexicalParent)
+        public Environment(SchemeObject formals, SchemeObject vals, Environment lexicalParent)
         {
             this.interp = lexicalParent.Interp;
             this.lexicalParent = lexicalParent;
@@ -99,7 +98,7 @@ namespace SimpleScheme
         /// Initializes a new instance of the Environment class.
         /// This is used to create the base of the environment chain.
         /// </summary>
-        public Environment() : this(NullInterp, EmptyEnvironment)
+        public Environment() : this(nullInterp, emptyEnvironment)
         {
         }
         #endregion
@@ -133,7 +132,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        public void Define(string var, ISchemeObject val)
+        public void Define(string var, SchemeObject val)
         {
             try
             {
@@ -150,7 +149,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        public ISchemeObject Lookup(string var)
+        public SchemeObject Lookup(string var)
         {
             try
             {
@@ -177,13 +176,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This is a variable to add to the environment.</param>
         /// <param name="val">This is the value of that variable.</param>
-        public void Define(Symbol var, ISchemeObject val)
+        public void Define(Symbol var, SchemeObject val)
         {
             this.symbolTable.Add(var, val);
 
             if (val is Procedure)
             {
-                val.AsProcedure().SetName(var.SymbolName);
+                ((Procedure)val).SetName(var.SymbolName);
             }
         }
 
@@ -194,7 +193,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The name of the variable to look up.  Must be a symbol.</param>
         /// <returns>The value bound to the variable.</returns>
-        public ISchemeObject Lookup(Symbol var)
+        public SchemeObject Lookup(Symbol var)
         {
             Environment env = this;
 
@@ -211,9 +210,9 @@ namespace SimpleScheme
                 return env.symbolTable.Lookup(var, level);
             }
 
-            while (env != EmptyEnvironment)
+            while (env != emptyEnvironment)
             {
-                ISchemeObject val = env.symbolTable.Lookup(var, level);
+                SchemeObject val = env.symbolTable.Lookup(var, level);
                 if (val != null)
                 {
                     return val;
@@ -237,14 +236,14 @@ namespace SimpleScheme
         /// <param name="var">The variable name.</param>
         /// <param name="val">The new value for the variable.</param>
         /// <returns>The value that the variable was set to.</returns>
-        public ISchemeObject Set(ISchemeObject var, ISchemeObject val)
+        public SchemeObject Set(SchemeObject var, SchemeObject val)
         {
             if (!(var is Symbol))
             {
-                return ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", Printer.AsString(var)));
+                return ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", var.ToString(true)));
             }
 
-            var symbol = var.AsSymbol();
+            var symbol = (Symbol)var;
             Environment env = this;
 
             // search down the chain of environments for a definition
@@ -261,7 +260,7 @@ namespace SimpleScheme
                 return val;
             }
 
-            while (env != EmptyEnvironment)
+            while (env != emptyEnvironment)
             {
                 if (env.symbolTable.Update(symbol, val, level) != null)
                 {
@@ -281,21 +280,21 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">The symbol naming the variable to increment.</param>
         /// <returns>The incremented value.</returns>
-        public ISchemeObject Increment(ISchemeObject var)
+        public SchemeObject Increment(SchemeObject var)
         {
             if (!(var is Symbol))
             {
-                return ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-symbol: ""{0}""", Printer.AsString(var)));
+                return ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-symbol: ""{0}""", var.ToString(true)));
             }
 
-            var symbol = var.AsSymbol();
+            var symbol = (Symbol)var;
             Environment env = this;
 
             // search down the chain of environments for a definition
             int level = 0;
-            while (env != EmptyEnvironment)
+            while (env != emptyEnvironment)
             {
-                ISchemeObject val = env.symbolTable.Increment(symbol, level);
+                SchemeObject val = env.symbolTable.Increment(symbol, level);
                 if (val != null)
                 {
                     return val;
@@ -320,7 +319,7 @@ namespace SimpleScheme
         {
             var sb = new StringBuilder();
             Environment env = this;
-            while (env != EmptyEnvironment && levels > 0)
+            while (env != emptyEnvironment && levels > 0)
             {
                 env.symbolTable.Dump(indent, sb);
                 levels--;
@@ -368,7 +367,7 @@ namespace SimpleScheme
             /// <summary>
             /// The values.
             /// </summary>
-            private readonly List<ISchemeObject> values;
+            private readonly List<SchemeObject> values;
 
             /// <summary>
             /// Lock the symbol table before using -- may be concurrent.
@@ -381,7 +380,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            public SymbolTable(ISchemeObject symbols, ISchemeObject vals) : this(List.ListLength(symbols))
+            public SymbolTable(SchemeObject symbols, SchemeObject vals) : this(List.ListLength(symbols))
             {
                 this.AddList(symbols, vals);
             }
@@ -393,7 +392,7 @@ namespace SimpleScheme
             public SymbolTable(int count)
             {
                 this.names = new List<string>(count);
-                this.values = new List<ISchemeObject>(count);
+                this.values = new List<SchemeObject>(count);
                 this.lockObj = new object();
             }
 
@@ -405,7 +404,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol to look up.</param>
             /// <param name="level"></param>
             /// <returns>The value of the object looked up, null if not found.</returns>
-            public ISchemeObject Lookup(Symbol symbol, int level)
+            public SchemeObject Lookup(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
@@ -436,7 +435,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbol">The symbol name.</param>
             /// <param name="val">The value.</param>
-            public void Add(Symbol symbol, ISchemeObject val)
+            public void Add(Symbol symbol, SchemeObject val)
             {
                 lock (this.lockObj)
                 {
@@ -461,7 +460,7 @@ namespace SimpleScheme
             /// <param name="val">The new value.</param>
             /// <param name="level"></param>
             /// <returns>The new value, null if not found.</returns>
-            public ISchemeObject Update(Symbol symbol, ISchemeObject val, int level)
+            public SchemeObject Update(Symbol symbol, SchemeObject val, int level)
             {
                 lock (this.lockObj)
                 {
@@ -494,7 +493,7 @@ namespace SimpleScheme
             /// <param name="symbol">The symbol whose value should be incremented.  The existing value must be a number.</param>
             /// <param name="level"></param>
             /// <returns>TThe new value, null if not found.</returns>
-            public ISchemeObject Increment(Symbol symbol, int level)
+            public SchemeObject Increment(Symbol symbol, int level)
             {
                 lock (this.lockObj)
                 {
@@ -504,15 +503,15 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    ISchemeObject val = this.values[index];
+                    SchemeObject val = this.values[index];
                     if (!(val is Number))
                     {
                         // If it is found but is not a number, then that is an error.
-                        ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-number: ""{0}""", Printer.AsString(val)));
+                        ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-number: ""{0}""", val.ToString(true)));
                         return null;
                     }
 
-                    this.values[index] = (Number)(val.AsNumber().N + 1);
+                    this.values[index] = (Number)(((Number)val).N + 1);
                     return val;
                 }
             }
@@ -560,23 +559,23 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="symbols">The list of symbols.</param>
             /// <param name="vals">The list of values.</param>
-            private void AddList(ISchemeObject symbols, ISchemeObject vals)
+            private void AddList(SchemeObject symbols, SchemeObject vals)
             {
                 while (!(symbols is EmptyList))
                 {
                     if (symbols is Symbol)
                     {
-                        this.Add(symbols.AsSymbol(), vals);
+                        this.Add((Symbol)symbols, vals);
                     }
                     else
                     {
-                        ISchemeObject symbol = List.First(symbols);
+                        SchemeObject symbol = List.First(symbols);
                         if (!(symbol is Symbol))
                         {
                             ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""",  symbol));
                         }
 
-                        this.Add(symbol.AsSymbol(), List.First(vals));
+                        this.Add((Symbol)symbol, List.First(vals));
                     }
 
                     symbols = List.Rest(symbols);

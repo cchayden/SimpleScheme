@@ -20,8 +20,8 @@ namespace Clr
         public static void Main()
         {
             IInterpreter interp = Interpreter.New(new[] { "clr.ss" });
-            interp.EvalStr(@"(define test (new ""ClrTest.TestClass,Clr""))");
-            interp.EvalStr("(SetAttr test 'attribute)");
+            interp.Eval(@"(define test (new ""ClrTest.TestClass,Clr""))");
+            interp.Eval("(SetAttr test 'attribute)");
             Console.WriteLine(interp.ReadEvalPrint("(GetAttr test)"));     // --> attribute
             Console.WriteLine(interp.ReadEvalPrint("(GetIndex test 7)"));  // --> 0
             interp.ReadEvalPrint("(SetIndex test 4 8)");

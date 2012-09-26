@@ -16,9 +16,9 @@ public class MultipleInterpreters
     public static void Main()
     {
         IInterpreter interp1 = Interpreter.New();
-        interp1.EvalStr("(define x 2)");
+        interp1.Eval("(define x 2)");
         IInterpreter interp2 = Interpreter.New();
-        interp2.EvalStr("(define x 5)");
+        interp2.Eval("(define x 5)");
         Console.WriteLine(
             "Interp1: {0} Interp2: {1}", 
             interp1.ReadEvalPrint("x"), 

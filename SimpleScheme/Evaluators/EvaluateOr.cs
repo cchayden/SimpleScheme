@@ -12,14 +12,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-or";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-or");
         #endregion
 
         #region Constructor
@@ -29,7 +24,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateOr(ISchemeObject expr, Environment env, Evaluator caller)
+        private EvaluateOr(SchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(EvalTestStep);
@@ -45,7 +40,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The or evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             // If no expr, avoid creating an evaluator.
             if (expr is EmptyList)
@@ -65,14 +60,14 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            if (List.Rest(s.Expr) is EmptyList)
+            if (Rest(s.Expr) is EmptyList)
             {
                 // On the last test, return directly to the caller, but use
                 //  the current env.  This is to achieve tail recursion.
-                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>

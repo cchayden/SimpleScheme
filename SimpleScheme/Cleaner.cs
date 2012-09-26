@@ -18,7 +18,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object to clean.</param>
         /// <returns>The cleaned object.</returns>
-        public static ISchemeObject Clean(ISchemeObject x)
+        public static SchemeObject Clean(SchemeObject x)
         {
             if (x == null)
             {
@@ -27,8 +27,8 @@ namespace SimpleScheme
 
             switch (x.GetType().FullName)
             {
-                case "System.Object[]":
-                    x.AsVector().Clean();
+                case "SimpleScheme.Vector":
+                    ((Vector)x).Clean();
                     return x;
                 case "SimpleScheme.Symbol":
                 case "SimpleScheme.Pair":

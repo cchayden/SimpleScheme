@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    public class EmptyList : IPrintable, ISchemeObject
+    public class EmptyList : SchemeObject
     {
         /// <summary>
         /// The empty list is represented by a distinguished obj.
@@ -43,9 +43,9 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Empty); }
+            get { return ValueTypeName(ValueType.EmptyList); }
         }
         #endregion
 
@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void PrintString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -70,28 +70,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extension class for EmptyList
-    /// </summary>
-    public static class EmptyListExtension
-    {
-        /// <summary>
-        /// Convert object to EmptyList.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an empty list.</returns>
-        public static EmptyList AsEmptyList(this ISchemeObject obj)
-        {
-            if (obj is EmptyList)
-            {
-                return (EmptyList)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(EmptyList), obj);
-            return null;
-        }
-    }
-    #endregion
 }

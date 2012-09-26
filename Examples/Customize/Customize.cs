@@ -25,13 +25,13 @@ public class Customize
         interp.GlobalEnv.Define("y", (Number)20);
 
         // define a primitive in the global environment
-        primEnvironment.DefinePrimitive("plus-one", (args, caller) => (Number)(List.First(args).AsNumber().N + 1), 1, TypePrimitives.ValueType.Number);
+        primEnvironment.DefinePrimitive("plus-one", (args, caller) => (Number)(((Number)List.First(args)).N + 1), 1, SchemeObject.ValueType.Number);
 
         // evaluate a program stored in a string for its side effects
-        interp.EvalStr("(p (plus-one x))");    // -> 11
+        interp.Eval("(p (plus-one x))");    // -> 11
 
         // evaluate a program stored in a string and get its result
-        object res = interp.EvalStr("(plus-one y)");  // -> 21
+        object res = interp.Eval("(plus-one y)");  // -> 21
         Console.WriteLine(res);
         Console.ReadLine();
     }

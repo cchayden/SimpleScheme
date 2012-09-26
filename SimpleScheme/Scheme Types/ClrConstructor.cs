@@ -27,23 +27,23 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        private ClrConstructor(ISchemeObject targetClassName, ISchemeObject argClassNames)
-            : base(targetClassName, (Symbol)".ctor")
+        private ClrConstructor(string targetClassName, SchemeObject argClassNames)
+            : base(targetClassName, ".ctor")
         {
             try
             {
-                this.classType = TypePrimitives.ToClass(targetClassName);
+                this.classType = targetClassName.ToClass();
                 this.SetArgClasses(this.ClassList(argClassNames));
                 this.SetMinMax(this.ArgClasses.Count);
             }
             catch (TypeLoadException)
             {
-                ErrorHandlers.ClrError("Bad class, can't load: " + Printer.AsString(targetClassName, false));
+                ErrorHandlers.ClrError("Bad class, can't load: " + targetClassName);
             }
 
             if (this.classType == null)
             {
-                ErrorHandlers.ClrError("ValueType cannot be found: " + Printer.AsString(targetClassName, false));
+                ErrorHandlers.ClrError("ValueType cannot be found: " + targetClassName);
             }
         }
         #endregion
@@ -54,7 +54,7 @@ namespace SimpleScheme
         /// </summary>
         public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.ClrConstructor); }
+            get { return ValueTypeName(ValueType.ClrConstructor); }
         }
         #endregion
 
@@ -70,10 +70,10 @@ namespace SimpleScheme
                 //// (constructor <class-name> <arg-class-name> ...)
                 .DefinePrimitive(
                     "constructor",
-                    (args, caller) => new ClrConstructor((Symbol)Printer.AsString(List.First(args), false), List.Rest(args)),
+                    (args, caller) => new ClrConstructor(First(args).ToString(), Rest(args)),
                     1,
                     MaxInt, 
-                    TypePrimitives.ValueType.String);
+                    ValueType.StringOrSymbol);
         }
         #endregion
 
@@ -104,7 +104,7 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the constructor.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
+        public override Evaluator Apply(SchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(ClrConstructor));
             Assembly assembly = this.classType.Assembly;
@@ -115,28 +115,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extensions for ClrConstructor
-    /// </summary>
-    public static class ClrConstructorExtension
-    {
-        /// <summary>
-        /// Convert object to clr constructor.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a clr constructor.</returns>
-        public static ClrConstructor AsClrConstructor(this ISchemeObject obj)
-        {
-            if (obj is ClrConstructor)
-            {
-                return (ClrConstructor)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(ClrConstructor), obj);
-            return null;
-        }
-    }
-    #endregion
 }

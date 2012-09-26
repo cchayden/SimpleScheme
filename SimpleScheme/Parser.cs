@@ -74,7 +74,7 @@ namespace SimpleScheme
         /// <summary>
         /// The token buffer to read from.
         /// </summary>
-        private Tuple<bool, ISchemeObject> tokBuffer = new Tuple<bool, ISchemeObject>(false, null);
+        private Tuple<bool, SchemeObject> tokBuffer = new Tuple<bool, SchemeObject>(false, null);
 
         /// <summary>
         /// Used to make a transcript of the input.
@@ -109,7 +109,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The expression that was read.</returns>
-        public ISchemeObject ReadExpr(StringBuilder sb)
+        public SchemeObject ReadExpr(StringBuilder sb)
         {
             this.logger = sb;
             return this.Read();
@@ -119,7 +119,7 @@ namespace SimpleScheme
         /// Take a peek at the next character, without consuming it.
         /// </summary>
         /// <returns>The next character (as a scheme character).</returns>
-        public ISchemeObject PeekChar()
+        public SchemeObject PeekChar()
         {
             int p = this.Peek();
             if (p == -1)
@@ -136,7 +136,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="sb">The characters read are recorded in this StringBuilder.</param>
         /// <returns>The character read, or EOF.</returns>
-        public ISchemeObject ReadChar(StringBuilder sb)
+        public SchemeObject ReadChar(StringBuilder sb)
         {
             this.logger = sb;
             try
@@ -202,10 +202,10 @@ namespace SimpleScheme
         /// Gets a pushed token if there is one, otherwise reads from the input.
         /// </summary>
         /// <returns>The next token.</returns>
-        public ISchemeObject NextToken()
+        public SchemeObject NextToken()
         {
             // See if we should re-use a pushed token or character
-            ISchemeObject token = this.GetTokenFromBuffer();
+            SchemeObject token = this.GetTokenFromBuffer();
             if (token != null)
             {
                 return token;
@@ -224,27 +224,27 @@ namespace SimpleScheme
             {
                 case -1:
                     // end of file
-                    return Token.Eof;
+                    return Token.New("#EOF!");
 
                 case '(':
-                    return Token.Lparen;
+                    return Token.New("(");
                 case ')':
-                    return Token.Rparen;
+                    return Token.New(")");
                 case '`':
-                    return Token.BackQuote;
+                    return Token.New("`");
                 case '\'':
-                    return Token.SingleQuote;
+                    return Token.New("'");
 
                 case ',':
                     // read comma or unquote splicing
                     ch = this.ReadNextChar();
                     if (ch == '@')
                     {
-                        return Token.Splice;
+                        return Token.New(",@");
                     }
 
                     this.PushCharBuffer(ch);
-                    return Token.Comma;
+                    return Token.New(",");
 
                 case ';':
                     // skip comment
@@ -346,7 +346,7 @@ namespace SimpleScheme
 
                         if (buf == ".")
                         {
-                            return Token.Dot;
+                            return Token.New(".");
                         }
 
                         // read a symbol
@@ -455,9 +455,9 @@ namespace SimpleScheme
         /// Get a token from the token buffer.
         /// </summary>
         /// <returns>The buffered token.  If no token is buffered, return null.</returns>
-        private ISchemeObject GetTokenFromBuffer()
+        private SchemeObject GetTokenFromBuffer()
         {
-            ISchemeObject token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
+            SchemeObject token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
             this.ClearTokenBuffer();
             return token;
         }
@@ -467,16 +467,16 @@ namespace SimpleScheme
         /// </summary>
         private void ClearTokenBuffer()
         {
-            this.tokBuffer = new Tuple<bool, ISchemeObject>(false, null);
+            this.tokBuffer = new Tuple<bool, SchemeObject>(false, null);
         }
 
         /// <summary>
         /// Push the character into the buffer.
         /// </summary>
         /// <param name="token">The token to push.</param>
-        private void PushTokenBuffer(ISchemeObject token)
+        private void PushTokenBuffer(SchemeObject token)
         {
-            this.tokBuffer = new Tuple<bool, ISchemeObject>(true, token);
+            this.tokBuffer = new Tuple<bool, SchemeObject>(true, token);
         }
         #endregion
 
@@ -487,11 +487,11 @@ namespace SimpleScheme
         /// Warns about extra right parentheses and dots.
         /// </summary>
         /// <returns>The expression as a list.</returns>
-        private ISchemeObject Read()
+        private SchemeObject Read()
         {
             try
             {
-                ISchemeObject token = this.NextToken();
+                SchemeObject token = this.NextToken();
 
                 if (token is Token)
                 {
@@ -614,9 +614,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="dotOk">True if a dot is OK at this point.</param>
         /// <returns>A list of the tokens read.</returns>
-        private ISchemeObject ReadTail(bool dotOk)
+        private SchemeObject ReadTail(bool dotOk)
         {
-            ISchemeObject token = this.NextToken();
+            SchemeObject token = this.NextToken();
             if (token is Token)
             {
                 string tok = token.ToString();
@@ -638,7 +638,7 @@ namespace SimpleScheme
                         return this.ReadTail(false);
                     }
 
-                    ISchemeObject result = this.Read();
+                    SchemeObject result = this.Read();
                     token = this.NextToken();
                     if (!(token is Token) || token.ToString() != ")")
                     {

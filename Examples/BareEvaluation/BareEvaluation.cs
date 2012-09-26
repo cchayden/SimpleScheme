@@ -15,7 +15,7 @@ public class BareEvaluation
     public static void Main()
     {
         IInterpreter interp = Interpreter.New();
-        Console.WriteLine(interp.Print(interp.EvalStr("(let ((x 2)) (+ x 3))")));
+        Console.WriteLine(interp.Print(interp.Eval("(let ((x 2)) (+ x 3))")));
 
         // ==> 5
         Console.ReadLine();

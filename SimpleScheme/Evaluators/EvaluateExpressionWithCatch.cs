@@ -17,14 +17,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-expression-with-catch";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-expression-with-catch");
 
         /// <summary>
         /// Indicates whether to catch suspensions.
@@ -40,7 +35,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateExpressionWithCatch(ISchemeObject expr, Environment env, Evaluator caller)
+        private EvaluateExpressionWithCatch(SchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             this.catchSuspended = true;
@@ -69,7 +64,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expression evaluator.</returns>
-        public static EvaluateExpressionWithCatch Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static EvaluateExpressionWithCatch Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateExpressionWithCatch(expr, env, caller);
         }

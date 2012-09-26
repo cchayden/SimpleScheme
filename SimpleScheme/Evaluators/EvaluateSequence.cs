@@ -11,14 +11,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-sequence";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-sequence");
         #endregion
 
         #region Constructor
@@ -28,7 +23,7 @@ namespace SimpleScheme
         /// <param name="expr">The expressions to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateSequence(ISchemeObject expr, Environment env, Evaluator caller)
+        private EvaluateSequence(SchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(EvalExprStep);
@@ -44,7 +39,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The sequence evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateSequence(expr, env, caller);
         }
@@ -60,16 +55,16 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator EvalExprStep(Evaluator s)
         {
-            if (List.Rest(s.Expr) is EmptyList)
+            if (Rest(s.Expr) is EmptyList)
             {
                 // On the last expr in the sequence, return directly to the caller.
                 // This is *crucial* for tail recursion.
                 // If this instead continues to a "DoneStep" here that calls ReturnFromStep(ReturnedExpr) then each
                 //   EvaluateSequence and each environment will be stacked up.  
-                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.Caller);
+                return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>

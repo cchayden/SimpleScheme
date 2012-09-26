@@ -12,11 +12,6 @@ namespace SimpleScheme
     public sealed class SuspendedEvaluator : Evaluator
     {
         /// <summary>
-        /// The printable name of the evaluator type.
-        /// </summary>
-        public const string EvaluatorName = "suspended-evaluator";
-
-        /// <summary>
         /// Initializes a new instance of the SuspendedEvaluator class.
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
         /// The caller is needed so that we can search for a catcher.
@@ -27,7 +22,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="res">The IAsyncResult associated with the suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
-        public SuspendedEvaluator(ISchemeObject res, Evaluator caller) : 
+        public SuspendedEvaluator(SchemeObject res, Evaluator caller) : 
             base(res, null, caller)
         {
             this.UpdateReturnValue(this);
@@ -62,7 +57,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<" + EvaluatorName + ">");
+                buf.Append("<suspended-evaluator>");
             }
         }
     }

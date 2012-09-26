@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// Represents an undefined scheme value.
     /// This type is immutable.
     /// </summary>
-    public class Undefined : IPrintable, ISchemeObject
+    public class Undefined : SchemeObject
     {
         /// <summary>
         /// The undefined object instance.
@@ -41,9 +41,9 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Undefined); }
+            get { return ValueTypeName(ValueType.Undefined); }
         }
         #endregion
 
@@ -55,7 +55,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void PrintString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
@@ -75,26 +75,4 @@ namespace SimpleScheme
 
         #endregion
     }
-
-    /// <summary>
-    /// Extensions for Undefined
-    /// </summary>
-    public static class UndefinedExtension
-    {
-        /// <summary>
-        /// Convert object to undefined object.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an undefined object.</returns>
-        public static Undefined AsUndefined(this ISchemeObject obj)
-        {
-            if (obj is Undefined)
-            {
-                return (Undefined)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(Undefined), obj);
-            return null;
-        }
-    }    
 }

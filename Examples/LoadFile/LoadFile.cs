@@ -16,7 +16,7 @@ public class LoadFile
     public static void Main()
     {
         IInterpreter interp = Interpreter.New(new[] { "double.ss" });
-        Console.WriteLine(interp.EvalStr("(double 5)"));
+        Console.WriteLine(interp.Eval("(double 5)"));
         Console.ReadLine();
     }
 }

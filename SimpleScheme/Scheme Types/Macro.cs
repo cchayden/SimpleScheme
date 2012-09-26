@@ -19,7 +19,7 @@ namespace SimpleScheme
         /// <param name="parms">The macro params.</param>
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
-        public Macro(ISchemeObject parms, ISchemeObject body, Environment env)
+        public Macro(SchemeObject parms, SchemeObject body, Environment env)
             : base(parms, body, env)
         {
         }
@@ -31,7 +31,7 @@ namespace SimpleScheme
         /// </summary>
         public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Macro); }
+            get { return ValueTypeName(ValueType.Macro); }
         }
         #endregion
 
@@ -43,7 +43,7 @@ namespace SimpleScheme
         /// <param name="body">The macro body.</param>
         /// <param name="env">The environment that the macro is defined in.</param>
         /// <returns>A new Macro.</returns>
-        public static new Macro New(ISchemeObject parms, ISchemeObject body, Environment env)
+        public static new Macro New(SchemeObject parms, SchemeObject body, Environment env)
         {
             return new Macro(parms, body, env);
         }
@@ -69,7 +69,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Evaluate(ISchemeObject args, Environment env, Evaluator caller)
+        public override Evaluator Evaluate(SchemeObject args, Environment env, Evaluator caller)
         {
             return EvaluateExpandMacro.Call(this, args, env, caller);
         }
@@ -85,28 +85,4 @@ namespace SimpleScheme
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extensions for Macro
-    /// </summary>
-    public static class MacroExtension
-    {
-        /// <summary>
-        /// Convert object to macro.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a macro.</returns>
-        public static Macro AsMacro(ISchemeObject obj)
-        {
-            if (obj is Macro)
-            {
-                return (Macro)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(Macro), obj);
-            return null;
-        }
-    }
-    #endregion
 }

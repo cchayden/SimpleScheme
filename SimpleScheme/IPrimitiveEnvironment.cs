@@ -24,10 +24,10 @@ namespace SimpleScheme
         /// <returns>The environment.</returns>
         IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
+            Func<SchemeObject, Evaluator, SchemeObject> operation, 
             int minArgs, 
             int maxArgs, 
-            params TypePrimitives.ValueType[] argTypes);
+            params SchemeObject.ValueType[] argTypes);
 
         /// <summary>
         /// Define a primitive in the environment.
@@ -39,8 +39,8 @@ namespace SimpleScheme
         /// <returns>The environment.</returns>
         IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
+            Func<SchemeObject, Evaluator, SchemeObject> operation, 
             int numberOfArgs, 
-            params TypePrimitives.ValueType[] argTypes);
+            params SchemeObject.ValueType[] argTypes);
     }
 }

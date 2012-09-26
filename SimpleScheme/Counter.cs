@@ -71,7 +71,7 @@ namespace SimpleScheme
                     "get-counter",
                     (args, caller) => caller.Interp.CurrentCounters.GetCounter(List.First(args)), 
                     1, 
-                    TypePrimitives.ValueType.String)
+                    SchemeObject.ValueType.String)
                 //// (reset-counters)
                 .DefinePrimitive(
                     "reset-counters",
@@ -124,7 +124,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="port">The port to dump to.</param>
         /// <returns>The result is unspecified.</returns>
-        private ISchemeObject DumpCounters(OutputPort port)
+        private SchemeObject DumpCounters(OutputPort port)
         {
             var sb = new StringBuilder();
             this.Dump(sb);
@@ -136,9 +136,9 @@ namespace SimpleScheme
         /// Get the counters, as a list of name/count pairs.
         /// </summary>
         /// <returns>The list of counterName/count pairs.</returns>
-        private ISchemeObject GetCounters()
+        private SchemeObject GetCounters()
         {
-            ISchemeObject res = EmptyList.Instance;
+            SchemeObject res = EmptyList.Instance;
             foreach (var kvp in counterNames)
             {
                 int count = this.counters[kvp.Value];
@@ -156,7 +156,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The counter name.</param>
         /// <returns>The counter value.</returns>
-        private ISchemeObject GetCounter(ISchemeObject name)
+        private SchemeObject GetCounter(SchemeObject name)
         {
             string counterName = name.ToString();
             if (counterNames.ContainsKey(counterName))
@@ -189,7 +189,7 @@ namespace SimpleScheme
         /// Do not delete counter names.
         /// </summary>
         /// <returns>The result is unspecified.</returns>
-        private ISchemeObject ResetCounters()
+        private SchemeObject ResetCounters()
         {
             for (int i = 0; i < this.counters.Length; i++)
             {

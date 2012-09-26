@@ -179,14 +179,14 @@ namespace Tests
 
             this.Run("False", "sync string equals", @"
               (begin
-                (define str-equals (method ""System.String"" ""Equals"" ""string"" ""string""))
+                (define str-equals (method ""string"" ""Equals"" ""string"" ""string""))
                 (str-equals 'xxx 'yyy))
             ");
 
             // member method -- no arg
             this.Run("xxx", "sync trim", @"
               (begin
-                (define trim (method ""System.String"" ""Trim""))
+                (define trim (method ""string"" ""Trim""))
                 (trim (string->symbol ""   xxx   "")))
             ");
 
@@ -200,14 +200,14 @@ namespace Tests
             // member method with symbol arg
             this.Run("3", "sync indexOf symbol", @"
               (begin
-                (define index-of (method ""System.String"" ""IndexOf"" ""string""))
+                (define index-of (method ""string"" ""IndexOf"" ""string""))
                 (index-of 'yyyxxxyyy (string->symbol ""x"")))
             ");
 
             // property get
             this.Run("3", "sync length", @"
               (begin
-                (define str-length (property-get ""System.String"" ""Length""))
+                (define str-length (property-get ""string"" ""Length""))
                 (str-length 'xxx))
             ");
 
@@ -258,6 +258,21 @@ namespace Tests
                 (item-set! array-list 0 3)
                 (item array-list 0))
             ");
+
+            // Try a few using symbols instead. Smybols do not preserve case.
+            // static method
+            this.Run("True", "sync string equals with smybol", @"
+              (begin
+                (define str-equals (method 'string ""Equals"" 'string 'string))
+                (str-equals 'xxx 'xxx))
+            ");
+
+            // member method with arg
+            this.Run("xxx", "sync trim chars with symbol", @"
+              (begin
+                (define trim-chars (method 'string ""Trim"" 'char[]))
+                (trim-chars 'yyyxxxyyy ""y""))
+            ");
         }
 
         /// <summary>
@@ -277,6 +292,20 @@ namespace Tests
             this.Run("xxx", "construct string", @"
                 (begin
                   (define str-ctor (constructor ""string"" ""char[]""))
+                  (str-ctor ""xxx""))
+            ");
+
+            // define constructor with symbols
+            this.Run("<clr-constructor>", "define string constructor with symbol", @"
+                (begin
+                  (define str-ctor (constructor 'string 'char[]))
+                  str-ctor)
+            ");
+
+            // use constructor with symbols
+            this.Run("xxx", "construct string with symbol", @"
+                (begin
+                  (define str-ctor (constructor 'string 'char[]))
                   (str-ctor ""xxx""))
             ");
         }
@@ -310,6 +339,18 @@ namespace Tests
             Assert.AreEqual(0, sleepCounter, "async before");
             Thread.Sleep(20);
             Assert.AreEqual(1, sleepCounter, "async after");
+
+            // async sleep using symbol
+            sleepCounter = 0;
+            this.Run("SimpleScheme.SuspendedEvaluator", "async sleep with symbol",
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
+                  (async-sleep (create-async) 10))
+            ");
+            Assert.AreEqual(0, sleepCounter, "async before");
+            Thread.Sleep(20);
+            Assert.AreEqual(1, sleepCounter, "async after");
         }
 
         /// <summary>
@@ -324,6 +365,16 @@ namespace Tests
                @"(begin
                   (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                   (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (async-sleep (create-async) 10))
+            ");
+            Assert.AreEqual(1, sleepCounter, "begin/end async after");
+
+            // async sleep
+            sleepCounter = 0;
+            this.RunAsync("10", "begin/end async sleep with symbol",
+               @"(begin
+                  (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
                   (async-sleep (create-async) 10))
             ");
             Assert.AreEqual(1, sleepCounter, "begin/end async after");
@@ -355,7 +406,7 @@ namespace Tests
                @"(begin
                   (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                   (define sleep-caller (create-async))
-                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
                   (define (sleep duration) (async-sleep sleep-caller duration))
                   (define count 0)
                   (parallel (begin (sleep 100) (increment! count))
@@ -380,7 +431,7 @@ namespace Tests
                @"(begin
                   (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                   (define sleep-caller (create-async))
-                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
                   (define (sleep duration) (async-sleep sleep-caller duration))
                   (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
                   (define here #f)
@@ -398,7 +449,7 @@ namespace Tests
                @"(begin
                   (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                   (define sleep-caller (create-async))
-                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
                   (define (sleep duration) (async-sleep sleep-caller duration))
                   (define delay (method ""Tests.BasicTests,Tests"" ""TestSleep"" ""int""))
 
@@ -470,18 +521,19 @@ namespace Tests
         {
             // verify large parallel
             sleepCounter = 0;
-            this.RunAsync("500", "large parallel",
+            // to make this run longer, change 50 --> 500 in both places
+            this.RunAsync("50", "large parallel",
                @"(begin
                    (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                    (define sleep-caller (create-async))
-                   (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                   (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
                    (define (sleep duration) (async-sleep sleep-caller duration))
                    (define res 0)
                    (define (build-par n par) 
                      (if (= n 0) par
                        (cons (list 'begin '(sleep 100) n)
                            (build-par (- n 1) par))))
-                   (define exp (cons 'parallel (build-par 500 '())))
+                   (define exp (cons 'parallel (build-par 50 '())))
                    (length (eval exp)))
             ");
         }
@@ -500,7 +552,7 @@ namespace Tests
                @"(begin
                   (define create-async (method ""Tests.BasicTests,Tests"" ""CreateAsync""))
                   (define sleep-caller (create-async))
-                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" ""int""))
+                  (define async-sleep (method-async ""Tests.BasicTests+TestSleepCaller,Tests"" ""Invoke"" 'int))
                   (define (sleep duration) (async-sleep sleep-caller duration))
                   (define count1 0)
                   (define count2 0)
@@ -546,9 +598,9 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private ISchemeObject ReadAndEvaluate(string str) 
+        private SchemeObject ReadAndEvaluate(string str) 
         {
-            return this.interpreter.EvalStr(str);
+            return this.interpreter.Eval(str);
         }
 
         /// <summary>
@@ -559,7 +611,7 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void RunAsync(string expected, string label, string expr)
         {
-            ISchemeObject res = this.ReadAndEvaluateAsync(expr);
+            SchemeObject res = this.ReadAndEvaluateAsync(expr);
             string actual = res != EmptyList.Instance ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
@@ -570,9 +622,9 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private ISchemeObject ReadAndEvaluateAsync(string str)
+        private SchemeObject ReadAndEvaluateAsync(string str)
         {
-            ISchemeObject expr = this.interpreter.Read(str);
+            SchemeObject expr = this.interpreter.Read(str);
             IAsyncResult res = this.interpreter.BeginEval(expr, null, null);
             res.AsyncWaitHandle.WaitOne();
             return this.interpreter.EndEval(res);

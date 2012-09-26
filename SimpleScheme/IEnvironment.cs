@@ -14,13 +14,13 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="var">This must be a symbol.</param>
         /// <param name="val">The value of the variable.</param>
-        void Define(string var, ISchemeObject val);
+        void Define(string var, SchemeObject val);
 
         /// <summary>
         /// Look up a variable in the environment.
         /// </summary>
         /// <param name="var">This must be a symbol.</param>
         /// <returns>The value of the symbol</returns>
-        ISchemeObject Lookup(string var);
+        SchemeObject Lookup(string var);
     }
 }

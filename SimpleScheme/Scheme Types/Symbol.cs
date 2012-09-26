@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : IPrintable, ICleanable, ISchemeObject
+    public class Symbol : SchemeObject, ICleanable
     {
         #region Fields
         /// <summary>
@@ -47,9 +47,9 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Symbol); }
+            get { return ValueTypeName(ValueType.Symbol); }
         }
         #endregion
 
@@ -118,9 +118,9 @@ namespace SimpleScheme
         /// <param name="obj1">The first symbol.</param>
         /// <param name="obj2">The second symbol.</param>
         /// <returns>True if they are both symbols and represent the same symbol.</returns>
-        public static SchemeBoolean Equal(ISchemeObject obj1, ISchemeObject obj2)
+        public static SchemeBoolean Equal(Symbol obj1, SchemeObject obj2)
         {
-            if (!(obj1 is Symbol) || !(obj2 is Symbol))
+            if (!(obj2 is Symbol))
             {
                 return false;
             }
@@ -134,21 +134,21 @@ namespace SimpleScheme
         /// Define the symbol primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
+        public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             env
                 //// <r4rs section="6.4">(string->symbol <string>)</r4rs>
                 .DefinePrimitive(
                     new Symbol("string->symbol"), 
-                    (args, caller) => new Symbol(SchemeString.AsString(List.First(args))), 
+                    (args, caller) => new Symbol(SchemeString.AsString(First(args))), 
                     1, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.String)
                 //// <r4rs section="6.4">(symbol? <obj>)</r4rs>
                 .DefinePrimitive(
                     new Symbol("symbol?"), 
-                    (args, caller) => SchemeBoolean.Truth(List.First(args) is Symbol), 
+                    (args, caller) => SchemeBoolean.Truth(First(args) is Symbol), 
                     1, 
-                    TypePrimitives.ValueType.Obj);
+                    ValueType.Obj);
         }
         #endregion
 
@@ -170,7 +170,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void PrintString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.name);
         }
@@ -194,28 +194,5 @@ namespace SimpleScheme
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Extension class for Symbol
-    /// </summary>
-    public static class SymbolExtension
-    {
-        /// <summary>
-        /// Check that the object is a symbol.
-        /// The actual symbol name is contained in the Symbol.
-        /// </summary>
-        /// <param name="x">The object.</param>
-        /// <returns>The corresponding symbol.</returns>
-        public static Symbol AsSymbol(this ISchemeObject x)
-        {
-            if (x is Symbol)
-            {
-                return (Symbol)x;
-            }
-
-            ErrorHandlers.TypeError(typeof(Symbol), x);
-            return null;
-        }
     }
 }

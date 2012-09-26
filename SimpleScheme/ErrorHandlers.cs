@@ -38,10 +38,10 @@ namespace SimpleScheme
                 //// (error <message> ...)
                 .DefinePrimitive(
                     "error", 
-                    (args, caller) => Error(Printer.AsString(args)), 
+                    (args, caller) => Error(args.ToString(true)), 
                     0, 
                     MaxInt, 
-                    TypePrimitives.ValueType.String);
+                    SchemeObject.ValueType.String);
         }
         #endregion
 
@@ -53,7 +53,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject Error(string message)
+        public static SchemeObject Error(string message)
         {
             Console.Error.WriteLine("**** ERROR: " + message);
             throw new SchemeException(message);
@@ -68,13 +68,13 @@ namespace SimpleScheme
         /// <param name="expected">The expected type.</param>
         /// <param name="got">The actual value.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject TypeError(Type expected, ISchemeObject got)
+        public static SchemeObject TypeError(Type expected, SchemeObject got)
         {
             string message = string.Format(
                 "Invalid type: expected {0}, got {1}: {2}", 
-                TypePrimitives.SchemeTypeName(expected), 
-                TypePrimitives.SchemeTypeName(got), 
-                Printer.AsString(got));
+                expected.SchemeTypeName(), 
+                got.SchemeTypeName(), 
+                got.ToString(true));
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }
@@ -83,15 +83,15 @@ namespace SimpleScheme
         /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
         /// These errors are caused by a failed attempt to print a given value.
-        /// Printable values implement IPrintable.
+        /// All SchemeObject objects implement PrintString.
         /// </summary>
         /// <param name="got">The actual value.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject PrintError(ISchemeObject got)
+        public static SchemeObject PrintError(SchemeObject got)
         {
             string message = string.Format(
-                "Invalid type whem printing: expected IPrintable, got {0}: {1}", 
-                TypePrimitives.SchemeTypeName(got), 
+                "Invalid type whem printing: expected SchemeObject, got {0}: {1}", 
+                got.SchemeTypeName(), 
                 got);
             Console.Error.WriteLine("**** PRINT ERROR: {0}", message);
             throw new SchemeTypeException(message);
@@ -105,7 +105,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject IoError(string message)
+        public static SchemeObject IoError(string message)
         {
             Console.Error.WriteLine("**** I/O ERROR: {0}", message);
             throw new SchemeIoException(message);
@@ -119,7 +119,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject InternalError(string message)
+        public static SchemeObject InternalError(string message)
         {
             Console.Error.WriteLine("**** INTERNAL ERROR: {0}", message);
             throw new SchemeInternalException(message);
@@ -133,7 +133,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject ClrError(string message)
+        public static SchemeObject ClrError(string message)
         {
             Console.Error.WriteLine("**** CLR ERROR: {0}", message);
             throw new SchemeClrException(message);
@@ -147,10 +147,26 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject SemanticError(string message)
+        public static SchemeObject SemanticError(string message)
         {
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
+        }
+
+        /// <summary>
+        /// Handle an error by printing a message on the console 
+        ///    and throwing an exception.
+        /// This is a semantic error, caused by trying to Apply a value that is not a procedure.
+        /// </summary>
+        /// <param name="message">The message to display and to put 
+        ///    into the exception.</param>
+        /// <param name="got">The object we got instead of he proc.</param>
+        /// <returns>Actually, does not return.</returns>
+        public static SchemeObject ProcError(string message, SchemeObject got)
+        {
+            string msg = string.Format("{0}, got {1}: {2}", message, got.SchemeTypeName(), got.ToString(true));
+            Console.Error.WriteLine("**** PROCEDURE ERROR: {0}", msg);
+            throw new SchemeProcException(message);
         }
 
         /// <summary>
@@ -161,7 +177,7 @@ namespace SimpleScheme
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
         /// <returns>Actually, does not return.</returns>
-        public static ISchemeObject InvalidOperationError(string message)
+        public static SchemeObject InvalidOperationError(string message)
         {
             Console.Error.WriteLine("**** INVALID OPERATION ERROR: {0}", message);
             throw new InvalidOperationException(message);
@@ -260,6 +276,22 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="message">The message describing the exception.</param>
             public SchemeSemanticException(string message) 
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// All exceptions thrown by the interpreter are of this class.
+        /// </summary>
+        [Serializable]
+        public class SchemeProcException : SchemeException
+        {
+            /// <summary>
+            /// Initializes a new instance of the ErrorHandlers.SchemeProcException class.
+            /// </summary>
+            /// <param name="message">The message describing the exception.</param>
+            public SchemeProcException(string message) 
                 : base(message)
             {
             }

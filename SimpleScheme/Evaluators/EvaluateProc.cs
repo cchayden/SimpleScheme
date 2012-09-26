@@ -13,11 +13,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-proc";
-
-        /// <summary>
         /// The proc or primitive to apply.
         /// </summary>
         private readonly Procedure fn;
@@ -25,7 +20,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-proc");
         #endregion
 
         #region Constructor
@@ -38,7 +33,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
-        private EvaluateProc(ISchemeObject args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
+        private EvaluateProc(SchemeObject args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
             : base(args, env, caller)
         {
             this.fn = fn;
@@ -65,7 +60,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Evaluator Call(Procedure fn, ISchemeObject args, Environment env, Evaluator caller)
+        public static Evaluator Call(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
         {
             return new EvaluateProc(args, env, caller, fn, true);
         }
@@ -78,7 +73,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The proc evaluator.</returns>
-        public static Evaluator CallQuoted(Procedure fn, ISchemeObject args, Environment env, Evaluator caller)
+        public static Evaluator CallQuoted(Procedure fn, SchemeObject args, Environment env, Evaluator caller)
         {
             return new EvaluateProc(args, env, caller, fn, false);
         }
@@ -119,7 +114,7 @@ namespace SimpleScheme
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("{0}: ({1} {2})", EvaluatorName, fn.ProcedureName, List.First(s.ReturnedExpr)));
+                    String.Format("evaluate-proc: ({0} {1})", fn.ProcedureName, First(s.ReturnedExpr)));
             }
 
             // Pass s.Caller to return to the caller rather than to here, since there is

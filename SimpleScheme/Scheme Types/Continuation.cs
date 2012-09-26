@@ -40,7 +40,7 @@ namespace SimpleScheme
         /// </summary>
         public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Continuation); }
+            get { return ValueTypeName(ValueType.Continuation); }
         }
         #endregion
 
@@ -91,35 +91,11 @@ namespace SimpleScheme
         /// <param name="args">The value to return.</param>
         /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
+        public override Evaluator Apply(SchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(Continuation));
-            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), List.First(args), this.savedEvaluator.Env);
+            return Evaluator.TransferToStep(this.savedEvaluator.CloneChain(), First(args), this.savedEvaluator.Env);
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extensions for Continuation
-    /// </summary>
-    public static class ContinuationExtension
-    {
-        /// <summary>
-        /// Convert an object to a continuation.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The continuation.</returns>
-        public static Continuation AsContinuation(ISchemeObject obj)
-        {
-            if (obj is Continuation)
-            {
-                return (Continuation)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(Continuation), obj);
-            return null;
-        }
-    }
-    #endregion
 }

@@ -10,11 +10,6 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-expand-macro";
-
-        /// <summary>
         /// The macro to expand.
         /// </summary>
         private readonly Macro fn;
@@ -22,7 +17,7 @@ namespace SimpleScheme
         /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-expand-macro");
         #endregion
 
         #region Constructor
@@ -34,7 +29,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
-        private EvaluateExpandMacro(ISchemeObject expr, Environment env, Evaluator caller, Macro fn)
+        private EvaluateExpandMacro(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
             : base(expr, env, caller)
         {
             this.fn = fn;
@@ -56,7 +51,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The expand evaluator.</returns>
-        public static Evaluator Call(Macro fn, ISchemeObject args, Environment env, Evaluator caller)
+        public static Evaluator Call(Macro fn, SchemeObject args, Environment env, Evaluator caller)
         {
             return new EvaluateExpandMacro(args, env, caller, fn);
         }

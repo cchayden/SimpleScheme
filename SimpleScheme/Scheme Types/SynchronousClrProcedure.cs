@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
 
     /// <summary>
@@ -19,11 +18,11 @@ namespace SimpleScheme
         /// <param name="targetClassName">The class of the object to invoke.</param>
         /// <param name="methodName">The method to invoke.</param>
         /// <param name="argClassNames">The types of each argument.</param>
-        public SynchronousClrProcedure(ISchemeObject targetClassName, ISchemeObject methodName, ISchemeObject argClassNames)
+        public SynchronousClrProcedure(string targetClassName, string methodName, SchemeObject argClassNames)
             : base(targetClassName, methodName)
         {
             this.SetArgClasses(this.ClassList(argClassNames));
-            this.SetMethodInfo(this.MethodName.ToString(), this.ArgClasses);
+            this.SetMethodInfo(this.MethodName, this.ArgClasses);
             this.SetMinMax(this.ArgClasses.Count + (this.MethodInfo.IsStatic ? 0 : 1));
         }
         #endregion
@@ -34,7 +33,7 @@ namespace SimpleScheme
         /// </summary>
         public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Char); }
+            get { return ValueTypeName(ValueType.Char); }
         }
         #endregion
 
@@ -51,48 +50,48 @@ namespace SimpleScheme
                 .DefinePrimitive(
                    "method",
                    (args, caller) => new SynchronousClrProcedure(
-                       (Symbol)Printer.AsString(List.First(args), false),
-                       (Symbol)Printer.AsString(List.Second(args), false),
-                       List.Rest(List.Rest(args))),
+                       First(args).ToString(),
+                       Second(args).ToString(),
+                       Rest(Rest(args))),
                     2,
                     MaxInt, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.StringOrSymbol)
                 //// (property-get <target-class-name> <property-name>)
                 .DefinePrimitive(
                    "property-get",
                    (args, caller) => new SynchronousClrProcedure(
-                       (Symbol)Printer.AsString(List.First(args), false),
-                       (Symbol)("get_" + Printer.AsString(List.Second(args), false)), 
-                       List.Rest(List.Rest(args))),
+                       First(args).ToString(),
+                       "get_" + Second(args).ToString(), 
+                       Rest(Rest(args))),
                     2, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.String)
                 //// (property-set <target-class-name> <property-name> <arg-class-name>)
                 .DefinePrimitive(
                    "property-set",
                    (args, caller) => new SynchronousClrProcedure(
-                       (Symbol)Printer.AsString(List.First(args), false), 
-                       (Symbol)("set_" + Printer.AsString(List.Second(args), false)), 
-                       List.Rest(List.Rest(args))),
+                       First(args).ToString(), 
+                       "set_" + Second(args).ToString(), 
+                       Rest(Rest(args))),
                     3, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.String)
                 //// (index-get <target-class-name> <arg-class-name> <index-type>)
                 .DefinePrimitive(
                    "index-get",
                    (args, caller) => new SynchronousClrProcedure(
-                       (Symbol)Printer.AsString(List.First(args), false), 
-                       (Symbol)"get_Item", 
-                       List.Rest(args)),
+                       First(args).ToString(), 
+                       "get_Item", 
+                       Rest(args)),
                     2, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.String)
                 //// (index-set <target-class-name> <arg-class-name> <index-type> <arg-class-name>)
                 .DefinePrimitive(
                    "index-set",
                    (args, caller) => new SynchronousClrProcedure(
-                       (Symbol)Printer.AsString(List.First(args), false), 
-                       (Symbol)"set_Item",
-                       List.Rest(args)),
+                       First(args).ToString(), 
+                       "set_Item",
+                       Rest(args)),
                     3, 
-                    TypePrimitives.ValueType.String);
+                    ValueType.String);
         }
         #endregion
 
@@ -125,14 +124,14 @@ namespace SimpleScheme
         /// <param name="args">Arguments to pass to the method.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
+        public override Evaluator Apply(SchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(SynchronousClrProcedure));
             object target = null;
             if (!this.MethodInfo.IsStatic)
             {
-                target = List.First(args);
-                args = List.Rest(args);
+                target = First(args);
+                args = Rest(args);
             }
 
             if (target is ClrObject)
@@ -140,39 +139,18 @@ namespace SimpleScheme
                 target = ((ClrObject)target).Value;
             }
 
-            // TODO cch what is this for ?
+            // If the target is a Symbol or SchemeString, then get the string
+            // TODO cch do the same for Number, SchemeBoolean, etc.  Need a map like for arguments.
             if (target is Symbol || target is SchemeString)
             {
                 target = target.ToString();
             }
 
             var argList = this.ToArgList(args, null);
-            Object res = this.MethodInfo.Invoke(target, argList);
+            object res = this.MethodInfo.Invoke(target, argList);
             res = res ?? Undefined.Instance;
             return caller.UpdateReturnValue(ClrObject.New(res));
         }
         #endregion
-    }
-
-    /// <summary>
-    /// Extension class for SynchronousClrProcedure
-    /// </summary>
-    public static class SynchronousClrProcedureExtension
-    {
-        /// <summary>
-        /// Convert object to synchronous clr procedure.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a synchronous clr procedure.</returns>
-        public static SynchronousClrProcedure AsSynchronousClrProcedure(this ISchemeObject obj)
-        {
-            if (obj is SynchronousClrProcedure)
-            {
-                return (SynchronousClrProcedure)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(SynchronousClrProcedure), obj);
-            return null;
-        }
     }
 }

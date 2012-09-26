@@ -40,11 +40,13 @@ namespace SimpleScheme
         /// Initializes a new instance of the EvaluateTimeBase class.
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="count">The number of times to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluateTimeBase(ISchemeObject expr, Environment env, Evaluator caller)
+        protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
+            this.counter = count;
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
             this.ContinueHere(InitialStep);
@@ -85,10 +87,10 @@ namespace SimpleScheme
             long time = step.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - step.startMem;
             return s.ReturnFromStep(
-                List.MakeList(
+                MakeList(
                     s.ReturnedExpr,
-                    List.MakeList((Number)time,  (Symbol)"msec"),
-                    List.MakeList((Number)mem, (Symbol)"bytes")));
+                    MakeList((Number)time,  (Symbol)"msec"),
+                    MakeList((Number)mem, (Symbol)"bytes")));
         }
         #endregion
 
@@ -109,8 +111,6 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateTimeBase)s;
-            ISchemeObject y = List.Second(s.Expr);
-            step.counter = y is EmptyList ? 1 : y.AsInt();
             step.i = 0;
             return s.ContinueHere(Step1);
         }

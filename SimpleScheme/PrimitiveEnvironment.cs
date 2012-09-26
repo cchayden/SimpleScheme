@@ -25,7 +25,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Factory Methods
+        #region New
         /// <summary>
         /// Creates a new primitive environment.
         /// </summary>
@@ -50,10 +50,10 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
+            Func<SchemeObject, Evaluator, SchemeObject> operation, 
             int minArgs, 
             int maxArgs, 
-            params TypePrimitives.ValueType[] argTypes)
+            params SchemeObject.ValueType[] argTypes)
         {
             this.Define(name, new Primitive(operation, minArgs, maxArgs, argTypes));
             return this;
@@ -71,9 +71,9 @@ namespace SimpleScheme
         /// <returns>A refernce to the environment.</returns>
         public IPrimitiveEnvironment DefinePrimitive(
             Symbol name, 
-            Func<ISchemeObject, Evaluator, ISchemeObject> operation, 
+            Func<SchemeObject, Evaluator, SchemeObject> operation, 
             int numberOfArgs, 
-            params TypePrimitives.ValueType[] argTypes)
+            params SchemeObject.ValueType[] argTypes)
         {
             this.Define(name, new Primitive(operation, numberOfArgs, numberOfArgs, argTypes));
             return this;
@@ -109,19 +109,19 @@ namespace SimpleScheme
                     "exit",
                     (args, caller) =>
                     {
-                        System.Environment.Exit(List.First(args) is EmptyList ? 0 : List.First(args).AsInt());
+                        System.Environment.Exit(List.First(args) is EmptyList ? 0 : Number.AsInt(List.First(args)));
                         return Undefined.Instance;
                     },
                     0,
                     1, 
-                    TypePrimitives.ValueType.Number)
+                    SchemeObject.ValueType.Number)
                 .DefinePrimitive(
                     "time-call",
-                    (args, caller) => EvaluateTimeCall.Call(args, caller.Env, caller), 
+                    (args, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller), 
                     1, 
                     2, 
-                    TypePrimitives.ValueType.Proc,
-                    TypePrimitives.ValueType.Number);
+                    SchemeObject.ValueType.Proc,
+                    SchemeObject.ValueType.Number);
         }
         #endregion
     }

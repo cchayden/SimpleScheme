@@ -40,13 +40,13 @@ namespace SimpleScheme
         /// (1) a value, the operation result, or
         /// (2) a Evaluator, The next evaluator to execute. 
         /// </summary>
-        private readonly Func<ISchemeObject, Evaluator, ISchemeObject> operation;
+        private readonly Func<SchemeObject, Evaluator, SchemeObject> operation;
 
         /// <summary>
         /// The argument types.
         /// Arguments are checked against these types, if they are supplied.
         /// </summary>
-        private readonly TypePrimitives.ValueType[] argTypes;
+        private readonly ValueType[] argTypes;
         #endregion
 
         #region Constructor
@@ -57,7 +57,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
-        public Primitive(Func<ISchemeObject, Evaluator, ISchemeObject> operation, int minArgs, int maxArgs, TypePrimitives.ValueType[] argTypes) :
+        public Primitive(Func<SchemeObject, Evaluator, SchemeObject> operation, int minArgs, int maxArgs, ValueType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
@@ -102,7 +102,7 @@ namespace SimpleScheme
         /// <param name="args">The arguments to the primitive.</param>
         /// <param name="caller">The calling Evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
+        public override Evaluator Apply(SchemeObject args, Evaluator caller)
         {
             // First check the number of arguments
             int numArgs = this.CheckArgs(args, typeof(Primitive));
@@ -131,7 +131,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="numArgs">The number of arguments passed to the procedure.</param>
         /// <param name="args">The arguments passed to the primitive.</param>
-        private void CheckArgTypes(int numArgs, ISchemeObject args)
+        private void CheckArgTypes(int numArgs, SchemeObject args)
         {
             int numTypes = this.argTypes.Length - 1;
             for (int i = 0; i < numArgs; i++)
@@ -142,8 +142,8 @@ namespace SimpleScheme
                 }
 
                 int t = i < numTypes ? i : numTypes;
-                this.CheckArgType(List.First(args), this.argTypes[t]);
-                args = List.Rest(args);
+                this.CheckArgType(First(args), this.argTypes[t]);
+                args = Rest(args);
             }
         }
 
@@ -152,7 +152,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="arg">An argument passed to the primitive.</param>
         /// <param name="argType">The expected argument type.</param>
-        private void CheckArgType(ISchemeObject arg, TypePrimitives.ValueType argType)
+        private void CheckArgType(SchemeObject arg, ValueType argType)
         {
             if (tester.Ok(arg, argType))
             {
@@ -162,8 +162,8 @@ namespace SimpleScheme
             var msg = string.Format(
                 @"Primitive ""{0}"" invalid argument ""{1}"" type: {2} expected: {3}", 
                 this.ProcedureName, 
-                Printer.AsString(arg),
-                Printer.TypeName(arg), 
+                arg.ToString(true),
+                arg.TypeName,
                 argType);
             ErrorHandlers.SemanticError(msg);
         }
@@ -178,26 +178,29 @@ namespace SimpleScheme
             /// <summary>
             /// Contains argument type predicates, indexed by argument type specifier.
             /// </summary>
-            private readonly Predicate<ISchemeObject>[] argPredicates;
+            private readonly Predicate<SchemeObject>[] argPredicates;
 
             /// <summary>
             /// Initializes a new instance of the ArgTypeTester class.
             /// </summary>
             public ArgTypeTester()
             {
-                this.argPredicates = new Predicate<ISchemeObject>[(int)TypePrimitives.ValueType.Undefined];
-                this.Set(TypePrimitives.ValueType.Obj, arg => true);
-                this.Set(TypePrimitives.ValueType.Pair, arg => arg is Pair);
-                this.Set(TypePrimitives.ValueType.PairOrEmpty, arg => arg is Pair || arg is EmptyList);
-                this.Set(TypePrimitives.ValueType.PairOrSymbol, arg => arg is Pair || arg is Symbol);
-                this.Set(TypePrimitives.ValueType.Number, arg => arg is Number);
-                this.Set(TypePrimitives.ValueType.Char, arg => arg is Character);
-                this.Set(TypePrimitives.ValueType.String, arg => arg is SchemeString);
-                this.Set(TypePrimitives.ValueType.Proc, arg => arg is Procedure);
-                this.Set(TypePrimitives.ValueType.Vector, arg => arg is Vector);
-                this.Set(TypePrimitives.ValueType.Boolean, arg => arg is SchemeBoolean);
-                this.Set(TypePrimitives.ValueType.Symbol, arg => arg is Symbol);
-                this.Set(TypePrimitives.ValueType.Port, arg => arg is InputPort || arg is OutputPort);
+                this.argPredicates = new Predicate<SchemeObject>[(int)ValueType.Undefined];
+                this.Set(ValueType.Obj, arg => true);
+                this.Set(ValueType.Pair, arg => arg is Pair);
+                this.Set(ValueType.PairOrEmpty, arg => arg is Pair || arg is EmptyList);
+                this.Set(ValueType.PairOrSymbol, arg => arg is Pair || arg is Symbol);
+                this.Set(ValueType.Number, arg => arg is Number);
+                this.Set(ValueType.Char, arg => arg is Character);
+                this.Set(ValueType.CharOrEmpty, arg => arg is Character || arg is EmptyList);
+                this.Set(ValueType.String, arg => arg is SchemeString);
+                this.Set(ValueType.StringOrSymbol, arg => arg is SchemeString || arg is Symbol);
+                this.Set(ValueType.Proc, arg => arg is Procedure);
+                this.Set(ValueType.Vector, arg => arg is Vector);
+                this.Set(ValueType.Boolean, arg => arg is SchemeBoolean);
+                this.Set(ValueType.Symbol, arg => arg is Symbol);
+                this.Set(ValueType.InputPort, arg => arg is InputPort);
+                this.Set(ValueType.OutputPort, arg => arg is OutputPort);
             }
 
             /// <summary>
@@ -206,9 +209,9 @@ namespace SimpleScheme
             /// <param name="arg">The actual argument.</param>
             /// <param name="argType">The expected argument type.</param>
             /// <returns>True if OK.</returns>
-            public bool Ok(ISchemeObject arg, TypePrimitives.ValueType argType)
+            public bool Ok(SchemeObject arg, ValueType argType)
             {
-                return argType <= TypePrimitives.ValueType.Undefined && this.argPredicates[(int)argType](arg);
+                return argType <= ValueType.Undefined && this.argPredicates[(int)argType](arg);
             }
 
             /// <summary>
@@ -216,7 +219,7 @@ namespace SimpleScheme
             /// </summary>
             /// <param name="t">The value type.</param>
             /// <param name="pred">The predicate.</param>
-            private void Set(ValueType t, Predicate<ISchemeObject> pred)
+            private void Set(ValueType t, Predicate<SchemeObject> pred)
             {
                 this.argPredicates[(int)t] = pred;
             }

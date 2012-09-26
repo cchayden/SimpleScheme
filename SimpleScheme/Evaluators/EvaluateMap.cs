@@ -13,14 +13,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-map";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-map");
 
         /// <summary>
         /// The proc to apply to each element of the list.
@@ -32,7 +27,7 @@ namespace SimpleScheme
         /// The list is constructed in reverse order.
         /// This happens only if returnResult is true;
         /// </summary>
-        private ISchemeObject result;
+        private SchemeObject result;
         #endregion
 
         #region Constructor
@@ -48,14 +43,14 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
-        private EvaluateMap(ISchemeObject expr, Environment env, Evaluator caller, Procedure proc, ISchemeObject result)
+        private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
             : base(expr, env, caller)
         {
             this.proc = proc;
             this.result = result;
 
-            ContinueHere(ApplyFunStep);
-            IncrementCounter(counter);
+            this.ContinueHere(ApplyFunStep);
+            this.IncrementCounter(counter);
         }
         #endregion
 
@@ -69,7 +64,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller -- return to this when done.</param>
         /// <returns>The evaluator to execute.</returns>
-        public static Evaluator Call(Procedure proc, ISchemeObject expr, bool returnResult, Environment env, Evaluator caller)
+        public static Evaluator Call(Procedure proc, SchemeObject expr, bool returnResult, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
             if (expr is EmptyList)
@@ -83,7 +78,7 @@ namespace SimpleScheme
                 return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
-            ISchemeObject result = returnResult ? EmptyList.Instance : null;
+            SchemeObject result = returnResult ? EmptyList.Instance : null;
             return new EvaluateMap(expr, env, caller, proc, result);
         }
         #endregion
@@ -98,15 +93,15 @@ namespace SimpleScheme
         private static Evaluator ApplyFunStep(Evaluator s)
         {
             var step = (EvaluateMap)s;
-            if (List.First(s.Expr) is Pair)
+            if (First(s.Expr) is Pair)
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return step.proc.Apply(List.MapFun(List.First, List.MakeList(s.Expr)), s.ContinueHere(CollectAndLoopStep));
+                return step.proc.Apply(MapFun(First, MakeList(s.Expr)), s.ContinueHere(CollectAndLoopStep));
             }
 
             // if we are done, return the reversed result list
-            return s.ReturnFromStep(step.result != null ? List.ReverseList(step.result) : Undefined.Instance);
+            return s.ReturnFromStep(step.result != null ? ReverseList(step.result) : Undefined.Instance);
         }
 
         /// <summary>
@@ -122,11 +117,11 @@ namespace SimpleScheme
             if (step.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                step.result = List.Cons(s.ReturnedExpr, step.result);
+                step.result = Cons(s.ReturnedExpr, step.result);
             }
 
             // Move down each of the lists
-            step.UpdateExpr(List.MapFun(List.Rest, List.MakeList(s.Expr)));
+            step.UpdateExpr(MapFun(Rest, MakeList(s.Expr)));
             return s.ContinueHere(ApplyFunStep);
         }
         #endregion

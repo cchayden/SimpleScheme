@@ -17,8 +17,8 @@ public class InterpreterState
     public static void Main()
     {
         IInterpreter interp = Interpreter.New();
-        interp.EvalStr("(define (double x) (* 2 x))");
-        var res = interp.EvalStr("(double 5)");
+        interp.Eval("(define (double x) (* 2 x))");
+        var res = interp.Eval("(double 5)");
         Console.WriteLine(interp.Print(res));   // ==> 10
         Console.ReadLine();
     }

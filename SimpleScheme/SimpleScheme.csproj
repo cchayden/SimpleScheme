@@ -69,9 +69,7 @@
     <Compile Include="IPrimitiveEnvironment.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="PrimitiveEnvironment.cs" />
-    <Compile Include="Printer.cs" />
-    <Compile Include="Scheme Types\ISchemeObject.cs" />
-    <Compile Include="Scheme Types\IPrintable.cs" />
+    <Compile Include="Scheme Types\SchemeObject.cs" />
     <Compile Include="Scheme Types\SchemeBoolean.cs" />
     <Compile Include="Scheme Types\Lambda.cs" />
     <Compile Include="Scheme Types\ClrProcedure.cs" />
@@ -111,7 +109,6 @@
     <Compile Include="Scheme Types\SynchronousClrProcedure.cs" />
     <Compile Include="Scheme Types\Token.cs" />
     <Compile Include="TranscriptLogger.cs" />
-    <Compile Include="TypePrimitives.cs" />
     <Compile Include="Scheme Types\Undefined.cs" />
     <Compile Include="Scheme Types\Vector.cs" />
   </ItemGroup>

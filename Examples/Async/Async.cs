@@ -47,7 +47,7 @@ public class Async
     /// <param name="ar">The async result.</param>
     private static void ShowResult(IAsyncResult ar)
     {
-        ISchemeObject res = interp.EndEval(ar);
+        SchemeObject res = interp.EndEval(ar);
         Console.WriteLine("Result: {0}", interp.Print(res));
         isComplete = true;
     }

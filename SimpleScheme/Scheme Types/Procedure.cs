@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Lambdas, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : IPrintable, ISchemeObject
+    public abstract class Procedure : SchemeObject
     {
         #region Constants
         /// <summary>
@@ -53,9 +53,9 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public virtual string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Proc); }
+            get { return ValueTypeName(ValueType.Proc); }
         }
         #endregion
 
@@ -73,7 +73,7 @@ namespace SimpleScheme
         /// Define the procedure primitives.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
+        public static new void DefinePrimitives(PrimitiveEnvironment env)
         {
             const int MaxInt = int.MaxValue;
             env
@@ -81,51 +81,53 @@ namespace SimpleScheme
                 //// <r4rs section="6.9">(apply <proc> <arg1> ... <args>)</r4rs>
                 .DefinePrimitive(
                         "apply",
-                        (args, caller) => List.First(args).AsProcedure().Apply(List.ListStar(List.Rest(args)), caller), 
+                        (args, caller) => ((Procedure)First(args)).Apply(ListStar(Rest(args)), caller), 
                         2, 
                         MaxInt, 
-                        TypePrimitives.ValueType.Proc, 
-                        TypePrimitives.ValueType.Obj)
+                        ValueType.Proc, 
+                        ValueType.Obj)
                 //// <r4rs section="6.9"> (call-with-current-continuation <proc>)</r4rs>
                 .DefinePrimitive(
                         "call-with-current-continuation",
-                        (args, caller) => List.First(args).AsProcedure().CallCc(caller), 
+                        (args, caller) => ((Procedure)First(args)).CallCc(caller), 
                         1, 
-                        TypePrimitives.ValueType.Proc)
+                        ValueType.Proc)
                 .DefinePrimitive(
                         "call/cc",
-                        (args, caller) => List.First(args).AsProcedure().CallCc(caller), 
+                        (args, caller) => ((Procedure)First(args)).CallCc(caller), 
                         1, 
-                        TypePrimitives.ValueType.Proc)
+                        ValueType.Proc)
 
                 //// <r4rs section="6.9">(force <promise>)</r4rs>
                 .DefinePrimitive(
                         "force",
-                        (args, caller) => Force(List.First(args), caller), 
+                        (args, caller) => Force((Procedure)First(args), caller), 
                         1, 
-                        TypePrimitives.ValueType.Proc)
+                        ValueType.Proc)
                 //// <r4rs section="6.9">(for-each <proc> <list1> <list2> ...)</r4rs>
+                ////  Note: list(s) are optional and may be empty lists.
                 .DefinePrimitive(
                         "for-each",
-                        (args, caller) => EvaluateMap.Call(List.First(args).AsProcedure(), List.Rest(args), false, caller.Env, caller), 
+                        (args, caller) => EvaluateMap.Call((Procedure)First(args), Rest(args), false, caller.Env, caller), 
                          1, 
                         MaxInt,
-                        TypePrimitives.ValueType.Proc, 
-                        TypePrimitives.ValueType.Pair)
+                        ValueType.Proc, 
+                        ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(map <proc> <list1> <list2> ...)</r4rs>
+                ////  Note: list(s) are optional and may be empty lists.
                 .DefinePrimitive(
                         "map",
-                        (args, caller) => EvaluateMap.Call(List.First(args).AsProcedure(), List.Rest(args), true, caller.Env, caller), 
+                        (args, caller) => EvaluateMap.Call((Procedure)First(args), Rest(args), true, caller.Env, caller), 
                         1, 
                         MaxInt, 
-                        TypePrimitives.ValueType.Proc, 
-                        TypePrimitives.ValueType.PairOrEmpty)
+                        ValueType.Proc, 
+                        ValueType.PairOrEmpty)
                 //// <r4rs section="6.9">(procedure? <obj>)</r4rs>
                 .DefinePrimitive(
                         "procedure?",
-                        (args, caller) => SchemeBoolean.Truth(List.First(args) is Procedure), 
+                        (args, caller) => SchemeBoolean.Truth(First(args) is Procedure), 
                         1, 
-                        TypePrimitives.ValueType.Obj);
+                        ValueType.Obj);
         }
         #endregion
 
@@ -135,7 +137,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void PrintString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             buf.Append(this.ToString());
         }
@@ -158,7 +160,7 @@ namespace SimpleScheme
         ///   been evaluated.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to run after the application.</returns>
-        public abstract Evaluator Apply(ISchemeObject args, Evaluator caller);
+        public abstract Evaluator Apply(SchemeObject args, Evaluator caller);
 
         /// <summary>
         /// Evaluate the procedure.
@@ -172,7 +174,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to use for the application.</param>
         /// <param name="caller">Return here when done.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public virtual Evaluator Evaluate(ISchemeObject args, Environment env, Evaluator caller)
+        public virtual Evaluator Evaluate(SchemeObject args, Environment env, Evaluator caller)
         {
             return EvaluateProc.Call(this, args, env, caller);
         }
@@ -222,12 +224,12 @@ namespace SimpleScheme
         /// <param name="args">The arguments passed to the procedure.</param>
         /// <param name="tagType">Name, for the error message.</param>
         /// <returns>The number of arguments passed to the procedure.</returns>
-        protected int CheckArgs(ISchemeObject args, Type tagType)
+        protected int CheckArgs(SchemeObject args, Type tagType)
         {
-            int numArgs = List.ListLength(args);
+            int numArgs = ListLength(args);
             if (numArgs < this.minArgs || numArgs > this.maxArgs)
             {
-                string tag = TypePrimitives.SchemeTypeName(tagType);
+                string tag = tagType.SchemeTypeName();
                 string msg = numArgs < this.minArgs ? "few" : "many";
                 ErrorHandlers.SemanticError(
                     string.Format(
@@ -250,9 +252,9 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        private static ISchemeObject Force(ISchemeObject promise, Evaluator caller)
+        private static SchemeObject Force(Procedure promise, Evaluator caller)
         {
-            return promise is Procedure ? promise.AsProcedure().Apply(null, caller) : promise;
+            return promise.Apply(null, caller);
         }
         #endregion
 
@@ -265,31 +267,24 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private ISchemeObject CallCc(Evaluator caller)
+        private SchemeObject CallCc(Evaluator caller)
         {
-            return this.Apply(List.MakeList(Continuation.New(caller)), caller);
+            return this.Apply(MakeList(Continuation.New(caller)), caller);
         }
         #endregion
-    }
 
-    #region Extension Class
-    static class ProcedureExtension
-    {
         /// <summary>
-        /// Cast the given object to a procedure.
+        /// Ensure that the given object is a procedure.
+        /// Used for checking before attempting to Apply a computed value.
         /// </summary>
-        /// <param name="x">The obj to test.</param>
-        /// <returns>The procedure.</returns>
-        public static Procedure AsProcedure(this ISchemeObject x)
+        /// <param name="obj">The object to check</param>
+        public static void EnsureProcedure(SchemeObject obj)
         {
-            if (x is Procedure)
+            if (!(obj is Procedure))
             {
-                return (Procedure)x;
+                ErrorHandlers.ProcError("Attempt to Apply non-proc", obj);
             }
 
-            ErrorHandlers.TypeError(typeof(Procedure), x);
-            return null;
         }
     }
-    #endregion
 }

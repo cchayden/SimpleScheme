@@ -13,19 +13,14 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-list";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-list");
 
         /// <summary>
         /// The result that will be returned.
         /// </summary>
-        private ISchemeObject result;
+        private SchemeObject result;
         #endregion
 
         #region Constructor
@@ -39,7 +34,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateList(ISchemeObject expr, Environment env, Evaluator caller)
+        private EvaluateList(SchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             // Start with an empty list.  As exprs are evaluated, they will be consed on the
@@ -60,7 +55,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>A list evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             // first check for degenerate cases
             if (expr is EmptyList)
@@ -87,7 +82,7 @@ namespace SimpleScheme
         private static Evaluator EvalExprStep(Evaluator s)
         {
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
         }
 
         /// <summary>
@@ -101,22 +96,22 @@ namespace SimpleScheme
             var step = (EvaluateList)s;
 
             // back from the evaluation -- save the result and keep going with the rest
-            step.result = List.Cons(s.ReturnedExpr, step.result);
+            step.result = Cons(s.ReturnedExpr, step.result);
             step.StepDownExpr();
 
             if (s.Expr is Pair)
             {
                 // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(List.First(s.Expr), s.Env, s);
+                return EvaluateExpression.Call(First(s.Expr), s.Env, s);
             }
 
             // We are done.  Reverse the list and return it.
-            if (step.result is EmptyList || List.Rest(step.result) is EmptyList)
+            if (step.result is EmptyList || Rest(step.result) is EmptyList)
             {
                 return s.ReturnFromStep(step.result);
             }
 
-            return s.ReturnFromStep(List.ReverseList(step.result));
+            return s.ReturnFromStep(ReverseList(step.result));
         }
         #endregion
     }

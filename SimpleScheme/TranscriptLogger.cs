@@ -34,14 +34,14 @@ namespace SimpleScheme
         /// Turn on transcripts, writing to the given file.
         /// </summary>
         /// <param name="fileName">The file to write to.</param>
-        public void TranscriptOn(ISchemeObject fileName)
+        public void TranscriptOn(SchemeObject fileName)
         {
             if (this.transcriptWriter != null)
             {
                 this.transcriptWriter.Close();
             }
 
-            string name = Printer.AsString(fileName, false);
+            string name = fileName.ToString(false);
             this.transcriptWriter = new StreamWriter(new FileStream(name, FileMode.Create, FileAccess.Write));
         }
 

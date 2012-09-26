@@ -11,24 +11,19 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-set";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-set");
 
         /// <summary>
         /// The variable of the assignment.
         /// </summary>
-        private readonly ISchemeObject lhs;
+        private readonly SchemeObject lhs;
 
         /// <summary>
         /// The expression of the assignment.
         /// </summary>
-        private readonly ISchemeObject rhs;
+        private readonly SchemeObject rhs;
         #endregion
 
         #region Constructors
@@ -40,7 +35,7 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="lhs">The left hand side -- the variable to set.</param>
         /// <param name="rhs">The right hand side -- the new value.</param>
-        private EvaluateSet(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject lhs, ISchemeObject rhs)
+        private EvaluateSet(SchemeObject expr, Environment env, Evaluator caller, SchemeObject lhs, SchemeObject rhs)
             : base(expr, env, caller)
         {
             this.lhs = lhs;
@@ -58,10 +53,10 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The set evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            ISchemeObject lhs = List.First(expr);
-            ISchemeObject rhs = List.Second(expr);
+            SchemeObject lhs = First(expr);
+            SchemeObject rhs = Second(expr);
             if (!(lhs is Symbol))
             {
                 ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs));

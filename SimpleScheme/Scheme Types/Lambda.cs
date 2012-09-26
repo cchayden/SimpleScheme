@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
     using System.Text;
 
     /// <summary>
@@ -23,12 +22,12 @@ namespace SimpleScheme
         /// <summary>
         /// A list of variable names, to be matched with values later.
         /// </summary>
-        private readonly ISchemeObject formalParameters;
+        private readonly SchemeObject formalParameters;
 
         /// <summary>
         /// The program to execute.
         /// </summary>
-        private readonly ISchemeObject body;
+        private readonly SchemeObject body;
 
         /// <summary>
         /// The environment in which to execute.
@@ -44,7 +43,7 @@ namespace SimpleScheme
         ///    values given later.</param>
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
-        protected Lambda(ISchemeObject formalParameters, ISchemeObject body, Environment env) :
+        protected Lambda(SchemeObject formalParameters, SchemeObject body, Environment env) :
             base(0, 0)
         {
             this.formalParameters = formalParameters;
@@ -60,7 +59,7 @@ namespace SimpleScheme
         /// </summary>
         public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Lambda); }
+            get { return ValueTypeName(ValueType.Lambda); }
         }
         #endregion
 
@@ -83,7 +82,7 @@ namespace SimpleScheme
         /// <param name="body">The program to execute.</param>
         /// <param name="env">The environment in which to execute it.</param>
         /// <returns>A Lambda.New.</returns>
-        public static Lambda New(ISchemeObject formalParameters, ISchemeObject body, Environment env)
+        public static Lambda New(SchemeObject formalParameters, SchemeObject body, Environment env)
         {
             return new Lambda(formalParameters, body, env);
         }
@@ -122,8 +121,8 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         public Evaluator ApplyWithtEnv(Environment givenEnv, Evaluator caller)
         {
-            return List.Rest(this.body) is EmptyList ? 
-                EvaluateExpression.Call(List.First(this.body), givenEnv, caller) : 
+            return Rest(this.body) is EmptyList ? 
+                EvaluateExpression.Call(First(this.body), givenEnv, caller) : 
                 EvaluateSequence.Call(this.body, givenEnv, caller);
         }
 
@@ -135,7 +134,7 @@ namespace SimpleScheme
         /// <param name="args">The values to be matched with the variable names.</param>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        public override Evaluator Apply(ISchemeObject args, Evaluator caller)
+        public override Evaluator Apply(SchemeObject args, Evaluator caller)
         {
             this.CheckArgs(args, typeof(Lambda));
             return this.ApplyWithtEnv(new Environment(this.formalParameters, args, this.Env), caller);
@@ -165,7 +164,7 @@ namespace SimpleScheme
         {
             const int MaxInt = int.MaxValue;
             int count = 0;
-            ISchemeObject vars = this.formalParameters;
+            SchemeObject vars = this.formalParameters;
             while (true)
             {
                 if (vars is EmptyList)
@@ -180,33 +179,9 @@ namespace SimpleScheme
                     return;
                 }
 
-                vars = List.Rest(vars);
+                vars = Rest(vars);
                 count++;
             }
         }
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extensions for Lambda
-    /// </summary>
-    public static class LambdaExtension
-    {
-        /// <summary>
-        /// Convert object to lambda.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a lambda.</returns>
-        public static Lambda AsLambda(this ISchemeObject obj)
-        {
-            if (obj is Lambda)
-            {
-                return (Lambda)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(Lambda), obj);
-            return null;
-        }
-    }
-    #endregion
 }

@@ -1,8 +1,12 @@
 // <copyright file="Token.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
+
 namespace SimpleScheme
 {
+    using System.Collections.Generic;
+    using System.Text;
+
     /// <summary>
     /// Tokens are returned from NextToken.
     /// They are not scheme objects, but are handled internally by the parser
@@ -10,31 +14,29 @@ namespace SimpleScheme
     /// Tokens are generally scheme punctuation such as ( ) . , ' and `.
     /// They also include multi-char tokens such as ,@ and Eof.
     /// </summary>
-    public class Token : ISchemeObject
+    public class Token : SchemeObject
     {
-        internal static readonly Token Lparen = new Token("(");
-
-        internal static readonly Token Rparen = new Token(")");
-
-        internal static readonly Token Dot = new Token(".");
-
-        internal static readonly Token Comma = new Token(",");
-
-        internal static readonly Token SingleQuote = new Token("'");
-
-        internal static readonly Token BackQuote = new Token("`");
-
-        internal static readonly Token Splice = new Token(",@");
-
         /// <summary>
-        /// Represents the end of file token.
+        /// Cache of predefined tokens, used when possible.
         /// </summary>
-        public static readonly Token Eof = new Token("#EOF!");
+        private static readonly Dictionary<string, Token> tokens;
 
         /// <summary>
         /// Identifies the particular token.
         /// </summary>
         private readonly string value;
+
+        /// <summary>
+        /// Initializes static members of the <see cref="Token"/> class.
+        /// </summary>
+        static Token()
+        {
+            tokens = new Dictionary<string, Token>(8);
+            foreach (var s in new[] { "(", ")", ".", ",", "'", "`", ",@", "#EOF!" })
+            {
+               tokens.Add(s, new Token(s)); 
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Token"/> class.
@@ -48,9 +50,38 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return "Token"; }
+            get
+            {
+                return "Token";
+            }
+        }
+
+        /// <summary>
+        /// Gets a token.  Either retrieves an existing token instance,
+        ///   or creates a new one.
+        /// </summary>
+        /// <param name="tok">The token (as a string).</param>
+        /// <returns>The Token.</returns>
+        public static Token New(string tok)
+        {
+            Token t;
+            if (tokens.TryGetValue(tok, out t))
+            {
+                return t;
+            }
+
+            return new Token(tok);
+        }
+
+        /// <summary>
+        /// Print the token.
+        /// </summary>
+        /// <param name="quoted">True to print quoted.</param>
+        /// <param name="buf">Buffer to print to.</param>
+        public override void PrintString(bool quoted, StringBuilder buf)
+        {
         }
 
         /// <summary>

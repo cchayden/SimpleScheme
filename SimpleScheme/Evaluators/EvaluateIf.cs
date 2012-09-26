@@ -14,14 +14,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-if";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-if");
         #endregion
 
         #region Constructor
@@ -31,7 +26,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateIf(ISchemeObject expr, Environment env, Evaluator caller)
+        private EvaluateIf(SchemeObject expr, Environment env, Evaluator caller)
             : base(expr, env, caller)
         {
             ContinueHere(EvalTestStep);
@@ -47,7 +42,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The if evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateIf(expr, env, caller);
         }
@@ -61,7 +56,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            return EvaluateExpression.Call(List.First(s.Expr), s.Env, s.ContinueHere(EvalAlternativeStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(EvalAlternativeStep));
         }
 
         /// <summary>
@@ -73,7 +68,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            ISchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? List.Second(s.Expr) : List.Third(s.Expr);
+            SchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? Second(s.Expr) : Third(s.Expr);
             return EvaluateExpression.Call(
                 toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }

@@ -12,11 +12,6 @@ namespace SimpleScheme
     public class EndedEvaluator : Evaluator
     {
         /// <summary>
-        /// The printable name of the evaluator type.
-        /// </summary>
-        public const string EvaluatorName = "ended-evaluator";
-
-        /// <summary>
         /// Initializes a new instance of the EndedEvaluator class.
         /// </summary>
         /// <param name="env">The evaluator environment.</param>
@@ -43,7 +38,7 @@ namespace SimpleScheme
         {
             if (quoted)
             {
-                buf.Append("<" + EvaluatorName + ">");
+                buf.Append("<ended-evaluator>");
             }
         }
     }

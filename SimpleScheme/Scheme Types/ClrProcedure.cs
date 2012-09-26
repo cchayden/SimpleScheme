@@ -26,11 +26,11 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The name of the class containing the method.</param>
         /// <param name="methodName">The name of the CLR method.</param>
-        protected ClrProcedure(ISchemeObject className, ISchemeObject methodName) :
+        protected ClrProcedure(string className, string methodName) :
             base(0, 0)
         {
-            this.ClassName = (Symbol)Printer.AsString(className, false);
-            this.MethodName = (Symbol)Printer.AsString(methodName, false);
+            this.ClassName = className;
+            this.MethodName = methodName;
             this.SetName(className + "." + methodName);
         }
         #endregion
@@ -41,7 +41,7 @@ namespace SimpleScheme
         /// </summary>
         public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.SynchronousClrProcedure); }
+            get { return ValueTypeName(ValueType.SynchronousClrProcedure); }
         }
         #endregion
 
@@ -50,12 +50,12 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the class containing the method to invoke.
         /// </summary>
-        protected ISchemeObject ClassName { get; private set; }
+        protected string ClassName { get; private set; }
 
         /// <summary>
         /// Gets the name of the method.
         /// </summary>
-        protected ISchemeObject MethodName { get; private set; }
+        protected string MethodName { get; private set; }
 
         /// <summary>
         /// Gets information about the CLR method to be called.
@@ -80,22 +80,22 @@ namespace SimpleScheme
                 //// (class <class-name>)
                 .DefinePrimitive(
                     "class",
-                    (args, caller) => ClrObject.New(Class(List.First(args))), 
+                    (args, caller) => ClrObject.New(Class(First(args).ToString())), 
                     1, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.String)
                 //// (new <class-name>)
                 .DefinePrimitive(
                     "new",
-                    (args, caller) => ClrObject.New(New(List.First(args))), 
+                    (args, caller) => ClrObject.New(New(First(args).ToString())), 
                     1, 
-                    TypePrimitives.ValueType.String)
+                    ValueType.String)
                 //// (new-array <class-name> <length>)
                 .DefinePrimitive(
                     "new-array",
-                    (args, caller) => ClrObject.New(NewArray(List.First(args), List.Second(args))), 
+                    (args, caller) => ClrObject.New(NewArray(First(args).ToString(), (Number)Second(args))), 
                     2, 
-                    TypePrimitives.ValueType.String, 
-                    TypePrimitives.ValueType.Number);
+                    ValueType.String, 
+                    ValueType.Number);
         }
         #endregion
 
@@ -131,7 +131,7 @@ namespace SimpleScheme
         {
             try
             {
-                Type cls = TypePrimitives.ToClass(this.ClassName);
+                Type cls = this.ClassName.ToClass();
                 if (cls == null)
                 {
                     ErrorHandlers.ClrError("Can't find class: " + this.ClassName);
@@ -181,15 +181,15 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of ValueType or type name elements.  There may be more than this.</param>
         /// <returns>An array of Types corresponding to the list.</returns>
-        protected List<Type> ClassList(ISchemeObject args)
+        protected List<Type> ClassList(SchemeObject args)
         {
-            int n = List.ListLength(args);
+            int n = ListLength(args);
             var array = new List<Type>(n);
 
             while (args is Pair)
             {
-                array.Add(TypePrimitives.ToClass(List.First(args)));
-                args = List.Rest(args);
+                array.Add((First(args)).ToClass());
+                args = Rest(args);
             }
 
             return array;
@@ -205,9 +205,9 @@ namespace SimpleScheme
         /// <param name="additionalArgs">A list of the additional args, not supplied by the caller. 
         /// These are part of the asynchronous calling pattern.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        protected object[] ToArgList(ISchemeObject args, object[] additionalArgs)
+        protected object[] ToArgList(SchemeObject args, object[] additionalArgs)
         {
-            int n = List.ListLength(args);
+            int n = ListLength(args);
             int additionalN = additionalArgs != null ? additionalArgs.Length : 0;
             int diff = n + additionalN - this.ArgClasses.Count;
             if (diff != 0)
@@ -222,9 +222,9 @@ namespace SimpleScheme
             int a = 0;
             while (args is Pair)
             {
-                array[a] = ClrObject.ToClrObject(List.First(args), this.ArgClasses[a]);
+                array[a] = ClrObject.ToClrObject(First(args), this.ArgClasses[a]);
                 a++;
-                args = List.Rest(args);
+                args = Rest(args);
             }
 
             if (additionalArgs != null)    
@@ -246,9 +246,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The class name.  May have to be assembly-qualified.</param>
         /// <returns>The type object.</returns>
-        private static Type Class(ISchemeObject className)
+        private static Type Class(string className)
         {
-            return TypePrimitives.ToClass(className);
+            return className.ToClass();
         }
 
         /// <summary>
@@ -260,12 +260,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="className">The class name.</param>
         /// <returns>A new instance of the class.</returns>
-        private static object New(ISchemeObject className)
+        private static object New(string className)
         {
-            Type type = TypePrimitives.ToClass(className);
+            Type type = className.ToClass();
             if (type == null)
             {
-                ErrorHandlers.ClrError("ValueType cannot be found: " + Printer.AsString(className, false));
+                ErrorHandlers.ClrError("ValueType cannot be found: " + className);
                 return null;
             }
 
@@ -281,46 +281,11 @@ namespace SimpleScheme
         /// <param name="className">The class name of the array elements.</param>
         /// <param name="length">The array length.</param>
         /// <returns>An array of the given length.</returns>
-        private static object NewArray(ISchemeObject className, ISchemeObject length)
+        private static object NewArray(string className, SchemeObject length)
         {
-            Type type = TypePrimitives.ToClass(className);
-            return Array.CreateInstance(type, length.AsInt());
+            Type type = className.ToClass();
+            return Array.CreateInstance(type, Number.AsInt(length));
         }
         #endregion
     }
-
-    #region Extension Class
-    /// <summary>
-    /// Extensions for ClrProcedure
-    /// </summary>
-    public static class ClrProcedureExtensions
-    {
-        /// <summary>
-        /// Tests whether to given object is a CLR procedure.
-        /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a CLR procedure.</returns>
-        public static bool IsClrProcedure(this ISchemeObject obj)
-        {
-            return obj is ClrProcedure;
-        }
-
-        /// <summary>
-        /// Convert object to clr procedure.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as a clr procedure.</returns>
-        public static ClrProcedure AsClrProcedure(this ISchemeObject obj)
-        {
-            var asClrProcedure = obj as ClrProcedure;
-            if (asClrProcedure != null)
-            {
-                return asClrProcedure;
-            }
-
-            ErrorHandlers.TypeError(typeof(ClrProcedure), obj);
-            return null;
-        }
-    }
-    #endregion
 }

@@ -7,19 +7,23 @@ namespace SimpleScheme
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Text;
 
     /// <summary>
     /// Wraps a CLR object returned by invoking a constructor or CLR method.
     /// Provides a means of converting to/from Scheme objects.
     /// </summary>
-    public class ClrObject : ISchemeObject
+    public class ClrObject : SchemeObject
     {
         /// <summary>
         /// Maps a type to a function that converts an instance of that type to a corresponding clr type.
         /// </summary>
-        private static readonly Dictionary<Type, Func<ISchemeObject, object>> toClrMap;
+        private static readonly Dictionary<Type, Func<SchemeObject, object>> toClrMap;
 
-        private static readonly Dictionary<Type, Func<object, ISchemeObject>> fromClrMap;
+        /// <summary>
+        /// Map a type to a function that converts to an instance os that type.
+        /// </summary>
+        private static readonly Dictionary<Type, Func<object, SchemeObject>> fromClrMap;
 
         /// <summary>
         /// The wrapped clrObject.
@@ -31,30 +35,30 @@ namespace SimpleScheme
         /// </summary>
         static ClrObject()
         {
-            toClrMap = new Dictionary<Type, Func<ISchemeObject, object>>
+            toClrMap = new Dictionary<Type, Func<SchemeObject, object>>
                 {
-                    { typeof(int), elem => elem.AsInt() },
-                    { typeof(string), elem => Printer.AsString(elem, false) },
-                    { typeof(bool), elem => elem.AsBoolean() },
-                    { typeof(double), elem => elem.AsDouble() },
-                    { typeof(float), elem => elem.AsFloat() },
-                    { typeof(short), elem => elem.AsShort() },
-                    { typeof(byte), elem => elem.AsByte() },
-                    { typeof(char), elem => elem.AsChar() },
-                    { typeof(TextReader), elem => elem.AsTextReader() },
-                    { typeof(TextWriter), elem => elem.AsTextWriter() },
-                    { typeof(char[]), elem => Printer.AsString(elem, false).ToCharArray() },
-                    { typeof(object[]), elem => elem.AsVector().AsObjectArray() },
-                    { typeof(bool[]), elem => elem.AsVector().AsBoolArray() },
-                    { typeof(int[]), elem => elem.AsVector().AsIntArray() },
-                    { typeof(byte[]), elem => elem.AsVector().AsByteArray() },
-                    { typeof(short[]), elem => elem.AsVector().AsShortArray() },
-                    { typeof(long[]), elem => elem.AsVector().AsLongArray() },
-                    { typeof(float[]), elem => elem.AsVector().AsFloatArray() },
-                    { typeof(double[]), elem => elem.AsVector().AsDoubleArray() }
+                    { typeof(int), elem => Number.AsInt(elem) },
+                    { typeof(string), elem => elem.ToString() },
+                    { typeof(bool), elem => SchemeBoolean.AsBool(elem) },
+                    { typeof(double), elem => Number.AsDouble(elem) },
+                    { typeof(float), elem => Number.AsFloat(elem) },
+                    { typeof(short), elem => Number.AsShort(elem) },
+                    { typeof(byte), elem => Number.AsByte(elem) },
+                    { typeof(char), elem => Character.AsChar(elem) },
+                    { typeof(TextReader), elem => InputPort.AsTextReader(elem) },
+                    { typeof(TextWriter), elem => OutputPort.AsTextWriter(elem) },
+                    { typeof(char[]), elem => elem.ToString().ToCharArray() },
+                    { typeof(object[]), elem => Vector.AsObjectArray(elem) },
+                    { typeof(bool[]), elem => Vector.AsBoolArray(elem) },
+                    { typeof(int[]), elem => Vector.AsIntArray(elem) },
+                    { typeof(byte[]), elem => Vector.AsByteArray(elem) },
+                    { typeof(short[]), elem => Vector.AsShortArray(elem) },
+                    { typeof(long[]), elem => Vector.AsLongArray(elem) },
+                    { typeof(float[]), elem => Vector.AsFloatArray(elem) },
+                    { typeof(double[]), elem => Vector.AsDoubleArray(elem) }
                 };
 
-            fromClrMap = new Dictionary<Type, Func<object, ISchemeObject>>
+            fromClrMap = new Dictionary<Type, Func<object, SchemeObject>>
                 {
                     { typeof(int), elem => (Number)(int)elem },
                     { typeof(string), elem => SchemeString.New((string)elem) },
@@ -91,11 +95,11 @@ namespace SimpleScheme
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.ClrObject); }
+            get { return ValueTypeName(ValueType.ClrObject); }
         }
-        #endregion
+
         /// <summary>
         /// Gets the clr object itself.
         /// </summary>
@@ -104,6 +108,9 @@ namespace SimpleScheme
             get { return this.clrObject; }
         }
 
+        #endregion
+
+        #region New
         /// <summary>
         /// Creates a new instance of the CrlObject.
         /// </summary>
@@ -113,14 +120,16 @@ namespace SimpleScheme
         {
             return new ClrObject(clrObject);
         }
+        #endregion
 
+        #region Static Methods
         /// <summary>
         /// Convert an scheme object to the given type of clr object.
         /// </summary>
         /// <param name="elem">The object to convert.</param>
         /// <param name="clrClass">The desired clr class to convert it to.</param>
         /// <returns>The converted object.</returns>
-        public static object ToClrObject(ISchemeObject elem, Type clrClass)
+        public static object ToClrObject(SchemeObject elem, Type clrClass)
         {
             if (toClrMap.ContainsKey(clrClass))
             {
@@ -135,7 +144,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="elem">The CLR object.</param>
         /// <returns>Corresponding scheme object.</returns>
-        public static ISchemeObject FromClrObject(object elem)
+        public static SchemeObject FromClrObject(object elem)
         {
             Type elemType = elem.GetType();
             if (fromClrMap.ContainsKey(elemType))
@@ -144,6 +153,18 @@ namespace SimpleScheme
             }
 
             return new ClrObject(elem);
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Print the CLR object.
+        /// </summary>
+        /// <param name="quoted">True to print quoted.</param>
+        /// <param name="buf">Buffer to print to.</param>
+        public override void PrintString(bool quoted, StringBuilder buf)
+        {
+            buf.Append(this.ToString());
         }
 
         /// <summary>
@@ -154,5 +175,6 @@ namespace SimpleScheme
         {
             return this.Value.ToString();
         }
+        #endregion
     }
 }

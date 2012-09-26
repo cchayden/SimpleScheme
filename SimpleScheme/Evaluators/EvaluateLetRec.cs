@@ -14,40 +14,35 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-letrec";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-letrec");
 
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly ISchemeObject body;
+        private readonly SchemeObject body;
 
         /// <summary>
         /// The list of formal parameters to pass to the final lambda.
         /// This is variable1, variable2, ...
         /// </summary>
-        private readonly ISchemeObject formals;
+        private readonly SchemeObject formals;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private ISchemeObject vars;
+        private SchemeObject vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private ISchemeObject inits;
+        private SchemeObject inits;
 
         /// <summary>
         /// Accumulate the list of init vals here for later assignment.
         /// </summary>
-        private ISchemeObject vals;
+        private SchemeObject vals;
         #endregion
 
         #region Constructor
@@ -60,7 +55,7 @@ namespace SimpleScheme
         /// <param name="body">The let body.</param>
         /// <param name="vars">The variables to be bound.</param>
         /// <param name="inits">The initialization expressions.</param>
-        private EvaluateLetRec(ISchemeObject expr, Environment env, Evaluator caller, ISchemeObject body, ISchemeObject vars, ISchemeObject inits)
+        private EvaluateLetRec(SchemeObject expr, Environment env, Evaluator caller, SchemeObject body, SchemeObject vars, SchemeObject inits)
             : base(expr, env, caller)
         {
             this.body = body;
@@ -81,7 +76,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             if (expr is EmptyList)
             {
@@ -95,16 +90,16 @@ namespace SimpleScheme
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            ISchemeObject body = List.Rest(expr);
+            SchemeObject body = Rest(expr);
             if (body is EmptyList)
             {
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            ISchemeObject bindings = List.First(expr);
-            ISchemeObject formals = List.MapFun(List.First, List.MakeList(bindings));
-            ISchemeObject inits = List.MapFun(List.Second, List.MakeList(bindings));
-            ISchemeObject initVals = List.Fill(List.ListLength(formals), Undefined.Instance);
+            SchemeObject bindings = First(expr);
+            SchemeObject formals = MapFun(First, MakeList(bindings));
+            SchemeObject inits = MapFun(Second, MakeList(bindings));
+            SchemeObject initVals = Fill(ListLength(formals), Undefined.Instance);
 
             return new EvaluateLetRec(expr, new Environment(formals, initVals, env), caller, body, formals, inits);
         }
@@ -124,7 +119,7 @@ namespace SimpleScheme
                 return s.ContinueHere(ApplyProcStep);
             }
 
-            Lambda fun = Lambda.New(step.formals, List.MakeList(List.First(step.inits)), s.Env);  
+            Lambda fun = Lambda.New(step.formals, MakeList(First(step.inits)), s.Env);  
             return fun.ApplyWithtEnv(s.Env, s.ContinueHere(BindVarToInitStep));
         }
 
@@ -138,9 +133,9 @@ namespace SimpleScheme
         private static Evaluator BindVarToInitStep(Evaluator s)
         {
             var step = (EvaluateLetRec)s;
-            step.vals = List.Cons(s.ReturnedExpr, step.vals);
-            step.vars = List.Rest(step.vars);
-            step.inits = List.Rest(step.inits);
+            step.vals = Cons(s.ReturnedExpr, step.vals);
+            step.vars = Rest(step.vars);
+            step.inits = Rest(step.inits);
             return s.ContinueHere(EvalInitStep);
         }
 
@@ -154,14 +149,14 @@ namespace SimpleScheme
             var step = (EvaluateLetRec)s;
 
             // assign the inits into the env
-            ISchemeObject var = step.formals;
-            ISchemeObject vals = List.ReverseList(step.vals);
-            int n = List.ListLength(step.formals);
+            SchemeObject var = step.formals;
+            SchemeObject vals = ReverseList(step.vals);
+            int n = ListLength(step.formals);
             for (int i = 0; i < n; i++)
             {
-                s.Env.Set(List.First(var), List.First(vals));
-                var = List.Rest(var);
-                vals = List.Rest(vals);
+                s.Env.Set(First(var), First(vals));
+                var = Rest(var);
+                vals = Rest(vals);
             }
 
             // apply the fun to the vals and return

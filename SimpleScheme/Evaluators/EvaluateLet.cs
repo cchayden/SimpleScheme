@@ -15,14 +15,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-let";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-let");
 
         /// <summary>
         /// Name, for named let.
@@ -32,17 +27,17 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private readonly ISchemeObject body;
+        private readonly SchemeObject body;
 
         /// <summary>
         /// The list of variables to bind.
         /// </summary>
-        private readonly ISchemeObject vars;
+        private readonly SchemeObject vars;
 
         /// <summary>
         /// This list of initial expressions.
         /// </summary>
-        private readonly ISchemeObject inits;
+        private readonly SchemeObject inits;
         #endregion
 
         #region Constructor
@@ -56,7 +51,7 @@ namespace SimpleScheme
         /// <param name="body">The let body.</param>
         /// <param name="vars">The variables to bind.</param>
         /// <param name="inits">The initial values of the variables.</param>
-        private EvaluateLet(ISchemeObject expr, Environment env, Evaluator caller, Symbol name, ISchemeObject body, ISchemeObject vars, ISchemeObject inits)
+        private EvaluateLet(SchemeObject expr, Environment env, Evaluator caller, Symbol name, SchemeObject body, SchemeObject vars, SchemeObject inits)
             : base(expr, env, caller)
         {
             this.name = name;
@@ -79,7 +74,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The let evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             if (expr is EmptyList)
             {
@@ -94,19 +89,19 @@ namespace SimpleScheme
             }
 
             Symbol name = null;
-            ISchemeObject bindings;
-            ISchemeObject body;
-            if (List.First(expr) is Symbol)
+            SchemeObject bindings;
+            SchemeObject body;
+            if (First(expr) is Symbol)
             {
                 // named let
-                name = List.First(expr).AsSymbol();   
-                bindings = List.Second(expr);
-                body = List.Rest(List.Rest(expr));
+                name = (Symbol)First(expr);   
+                bindings = Second(expr);
+                body = Rest(Rest(expr));
             }
             else
             {
-                bindings = List.First(expr);
-                body = List.Rest(expr);
+                bindings = First(expr);
+                body = Rest(expr);
             }
 
             if (body is EmptyList)
@@ -114,8 +109,8 @@ namespace SimpleScheme
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
-            ISchemeObject vars = List.MapFun(List.First, List.MakeList(bindings));
-            ISchemeObject inits = List.MapFun(List.Second, List.MakeList(bindings));
+            SchemeObject vars = MapFun(First, MakeList(bindings));
+            SchemeObject inits = MapFun(Second, MakeList(bindings));
             return new EvaluateLet(expr, env, caller, name, body, vars, inits);
         }
         #endregion

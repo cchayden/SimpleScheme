@@ -1,6 +1,7 @@
 ﻿// <copyright file="Eof.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
+
 namespace SimpleScheme
 {
     using System.Text;
@@ -9,7 +10,7 @@ namespace SimpleScheme
     /// Represents the Eof object
     /// This type is immutable.
     /// </summary>
-    public class Eof : IPrintable, ISchemeObject
+    public class Eof : SchemeObject
     {
         #region Constructors
 
@@ -24,37 +25,49 @@ namespace SimpleScheme
         private Eof()
         {
         }
+
         #endregion
 
         #region Instance
+
         /// <summary>
         /// Gets the Eof object.
         /// </summary>
         /// <returns>A new Eof object.</returns>
         public static Eof Instance
         {
-            get { return eof; }
+            get
+            {
+                return eof;
+            }
         }
+
         #endregion
 
         #region SchemeType Accessors
+
         /// <summary>
         /// Gets the name of the type.
         /// </summary>
-        public string TypeName
+        public override string TypeName
         {
-            get { return TypePrimitives.ValueTypeName(TypePrimitives.ValueType.Eof); }
+            get
+            {
+                return ValueTypeName(ValueType.Eof);
+            }
         }
+
         #endregion
 
         #region Public Methods
+
         /// <summary>
         /// Write the Eof object to the string builder.
         /// If not quoted, write nothing.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
         /// <param name="buf">The string builder to write to.</param>
-        public void PrintString(bool quoted, StringBuilder buf)
+        public override void PrintString(bool quoted, StringBuilder buf)
         {
             if (quoted)
             {
@@ -74,26 +87,4 @@ namespace SimpleScheme
 
         #endregion
     }
-
-    /// <summary>
-    /// Extensions for Eof
-    /// </summary>
-    public static class EofExtension
-    {
-        /// <summary>
-        /// Convert object to eof object.
-        /// </summary>
-        /// <param name="obj">The object to convert.</param>
-        /// <returns>The object as an eof object.</returns>
-        public static Eof AsEof(this ISchemeObject obj)
-        {
-            if (obj is Eof)
-            {
-                return (Eof)obj;
-            }
-
-            ErrorHandlers.TypeError(typeof(Eof), obj);
-            return null;
-        }
-    }    
 }

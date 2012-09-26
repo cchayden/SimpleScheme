@@ -11,14 +11,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "evaluate-time";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("evaluate-time");
         #endregion
 
         #region Constructor
@@ -28,8 +23,8 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateTime(ISchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+        private EvaluateTime(SchemeObject expr, Environment env, Evaluator caller)
+            : base(expr, 1, env, caller)
         {
             IncrementCounter(counter);
         }
@@ -43,7 +38,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to make the expression in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The timed evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             return new EvaluateTime(expr, env, caller);
         }
@@ -58,7 +53,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator Step1()
         {
-            return EvaluateExpression.Call(List.First(this.Expr), this.Env, ContinueHere(Step2));
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this.ContinueHere(Step2));
         }
         #endregion
     }

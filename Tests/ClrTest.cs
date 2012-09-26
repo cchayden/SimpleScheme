@@ -401,7 +401,7 @@ namespace Tests
         /// <returns>The result of evaluating the expression.</returns>
         private object Run(string expr)
         {
-            return this.interpreter.EvalStr(expr);
+            return this.interpreter.Eval(expr);
         }
 
         /// <summary>

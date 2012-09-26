@@ -48,7 +48,7 @@ namespace Tests
         {
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
-            ISchemeObject res = this.ReadAndEvaluate(Test);
+            SchemeObject res = this.ReadAndEvaluate(Test);
             Assert.AreEqual(17, List.ListLength(res), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
@@ -73,9 +73,9 @@ namespace Tests
                     for (int j = 0; j < examples1.Length; j++)
                     {
                         string test = string.Format("({0} {1})", predicates[i], ex[j]);
-                        ISchemeObject res = this.ReadAndEvaluate(test);
+                        SchemeObject res = this.ReadAndEvaluate(test);
                         Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
-                        Assert.AreEqual(i == j, res.AsSchemeBoolean().Value, "Failed " + this.section + " " + test);
+                        Assert.AreEqual(i == j, ((SchemeBoolean)res).Value, "Failed " + this.section + " " + test);
                     }
                 }
             }
@@ -99,7 +99,7 @@ namespace Tests
         public void IfTest()
         {
             this.section = "4.1.3";
-            Assert.AreEqual(12.0, this.ReadAndEvaluate("((if #f + *) 3 4)").AsNumber().N, "Failed " + this.section);
+            Assert.AreEqual(12.0, ((Number)this.ReadAndEvaluate("((if #f + *) 3 4)")).N, "Failed " + this.section);
         }
 
         /// <summary>
@@ -109,15 +109,15 @@ namespace Tests
         public void LambdaTest()
         {
             this.section = "4.1.4";
-            Assert.AreEqual(8.0, this.ReadAndEvaluate("((lambda (x) (+ x x)) 4)").AsNumber().N, "Failed " + this.section);
+            Assert.AreEqual(8.0, ((Number)this.ReadAndEvaluate("((lambda (x) (+ x x)) 4)")).N, "Failed " + this.section);
             this.ReadAndEvaluate("(define reverse-subtract (lambda (x y) (- y x)))");
-            Assert.AreEqual(3.0, this.ReadAndEvaluate("(reverse-subtract 7 10)").AsNumber().N, "Failed " + this.section);
+            Assert.AreEqual(3.0, ((Number)this.ReadAndEvaluate("(reverse-subtract 7 10)")).N, "Failed " + this.section);
             this.ReadAndEvaluate(
                 @"(define add4
                     (let ((x 4))
                          (lambda (y) (+ x y))))");
 
-            Assert.AreEqual(10.0, this.ReadAndEvaluate("(add4 6)").AsNumber().N, "Failed 4.1.4");
+            Assert.AreEqual(10.0, ((Number)this.ReadAndEvaluate("(add4 6)")).N, "Failed 4.1.4");
             Assert.AreEqual("(3 4 5 6)", this.ReadAndEvaluate("((lambda x x) 3 4 5 6)").ToString(), "Failed " + this.section);
             Assert.AreEqual("(5 6)", this.ReadAndEvaluate("((lambda (x y . z) z) 3 4 5 6))").ToString(), "Failed " + this.section);
         }
@@ -1311,9 +1311,9 @@ namespace Tests
         /// <param name="test">The test program.</param>
         private void RunTest(string test)
         {
-            ISchemeObject res = this.ReadAndEvaluate(test);
+            SchemeObject res = this.ReadAndEvaluate(test);
             Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
-            Assert.IsTrue(res.AsSchemeBoolean().Value, "Failed " + this.section);
+            Assert.IsTrue(((SchemeBoolean)res).Value, "Failed " + this.section);
         }
 
         /// <summary>
@@ -1324,8 +1324,8 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void Run(string expected, string label, string expr)
         {
-            ISchemeObject res = this.ReadAndEvaluate(expr);
-            string actual = Printer.AsString(res, true);
+            SchemeObject res = this.ReadAndEvaluate(expr);
+            string actual = res.ToString(true);
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
         }
@@ -1335,15 +1335,15 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private ISchemeObject ReadAndEvaluate(string str) 
+        private SchemeObject ReadAndEvaluate(string str) 
         {
             using (StringReader reader = new StringReader(str))
             {
                 InputPort inp = InputPort.New(reader, (Interpreter)this.interpreter);
-                ISchemeObject last = EmptyList.Instance;
+                SchemeObject last = EmptyList.Instance;
                 while (true)
                 {
-                    ISchemeObject x;
+                    SchemeObject x;
                     if ((x = inp.Read()) is Eof)
                     {
                         return last;

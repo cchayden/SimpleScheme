@@ -12,14 +12,9 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The name of the evaluator, used for counters and tracing.
-        /// </summary>
-        public const string EvaluatorName = "call-with-input-file";
-
-        /// <summary>
         /// The counter id.
         /// </summary>
-        private static readonly int counter = Counter.Create(EvaluatorName);
+        private static readonly int counter = Counter.Create("call-with-input-file");
 
         /// <summary>
         /// The input port to be used during the evaluation.
@@ -35,7 +30,7 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="port">The input port.</param>
-        private EvaluateCallWithInputFile(ISchemeObject expr, Environment env, Evaluator caller, InputPort port)
+        private EvaluateCallWithInputFile(SchemeObject expr, Environment env, Evaluator caller, InputPort port)
             : base(expr, env, caller)
         {
             this.port = port;
@@ -51,9 +46,9 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Evaluator Call(ISchemeObject expr, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Evaluator caller)
         {
-            InputPort port = OpenInputFile(List.First(expr), caller.Interp);
+            InputPort port = OpenInputFile(First(expr), caller.Interp);
             return new EvaluateCallWithInputFile(expr, caller.Env, caller, port);
         }
 
@@ -63,15 +58,15 @@ namespace SimpleScheme
         /// <param name="filename">The filename of the file to open.</param>
         /// <param name="interp">The interpreter.</param>
         /// <returns>The input port, used for reading.</returns>
-        public static InputPort OpenInputFile(ISchemeObject filename, Interpreter interp)
+        public static InputPort OpenInputFile(SchemeObject filename, Interpreter interp)
         {
             try
             {
-                return InputPort.New(new StreamReader(Printer.AsString(filename, false)), interp);
+                return InputPort.New(new StreamReader(filename.ToString(false)), interp);
             }
             catch (FileNotFoundException)
             {
-                return (InputPort)ErrorHandlers.IoError("No such file: " + Printer.AsString(filename));
+                return (InputPort)ErrorHandlers.IoError("No such file: " + filename.ToString(true));
             }
             catch (IOException ex)
             {
@@ -89,7 +84,9 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateCallWithInputFile)s;
-            return List.Second(s.Expr).AsProcedure().Apply(List.MakeList(step.port), s.ContinueHere(CloseStep));
+            var proc = Second(s.Expr);
+            Procedure.EnsureProcedure(proc);
+            return ((Procedure)proc).Apply(MakeList(step.port), s.ContinueHere(CloseStep));
         }
 
         /// <summary>

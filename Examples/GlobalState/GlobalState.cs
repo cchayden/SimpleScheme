@@ -19,9 +19,9 @@ public class GlobalState
         IInterpreter interp = Interpreter.New();
         interp.Eval(interp.Read("(define x 5)"));
         interp.GlobalEnv.Define("y", (Number)10);
-        Console.WriteLine(interp.Print(interp.EvalStr("x")));            // ==> 5
+        Console.WriteLine(interp.Print(interp.Eval("x")));            // ==> 5
         Console.WriteLine(interp.Print(interp.GlobalEnv.Lookup("x")));   // ==> 5
-        Console.WriteLine(interp.Print(interp.EvalStr("y")));            // ==> 10
+        Console.WriteLine(interp.Print(interp.Eval("y")));            // ==> 10
         Console.WriteLine(interp.Print(interp.GlobalEnv.Lookup("y")));   // ==> 10
         Console.ReadLine();
     }
