@@ -146,10 +146,13 @@ namespace Tests
         public void EqvTest()
         {
             Assert.IsTrue(SchemeBoolean.Eqv(null, null).Value);
-            Assert.IsFalse(SchemeBoolean.Eqv(null, 1).Value);
-            Assert.IsTrue(SchemeBoolean.Eqv("abc", "abc").Value);
-            Assert.IsFalse(SchemeBoolean.Eqv("abc", "ab").Value);
-            Assert.IsFalse(SchemeBoolean.Eqv("abc", 1).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(null, Number.New(1)).Value);
+            var abc = SchemeString.New("abc");
+            var ab = SchemeString.New("ab");
+            var n1 = Number.New(1);
+            Assert.IsTrue(SchemeBoolean.Eqv(abc, abc).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(abc, ab).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(abc, n1).Value);
             Obj[] vec1 = { 1, 2, 3 };
             Obj[] vec2 = { 1, 2, 3 };
             Obj[] vec3 = { 1, 2 };
@@ -158,14 +161,14 @@ namespace Tests
             Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec2).Value);
             Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec3).Value);
             Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec4).Value);
-            Assert.IsTrue(SchemeBoolean.Eqv(1, 1).Value);
-            Assert.IsFalse(SchemeBoolean.Eqv(1, 2).Value);
-            Assert.IsTrue(SchemeBoolean.Eqv(1.0, 1.0).Value);
-            Assert.IsFalse(SchemeBoolean.Eqv(1.0, 2.0).Value);
-            Assert.IsTrue(SchemeBoolean.Eqv(true, true).Value);
-            Assert.IsFalse(SchemeBoolean.Eqv(true, false).Value);
-            Assert.IsTrue(SchemeBoolean.Eqv('a', 'a').Value);
-            Assert.IsFalse(SchemeBoolean.Eqv('a', 'b').Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(Number.New(1), Number.New(1)).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(Number.New(1), Number.New(2)).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(Number.New(1.0), Number.New(1.0)).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(Number.New(1.0), Number.New(2.0)).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(SchemeBoolean.True, SchemeBoolean.True).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(SchemeBoolean.True, SchemeBoolean.False).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(Character.New('a'), Character.New('a')).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(Character.New('a'), Character.New('b')).Value);
         }
 
         /// <summary>
@@ -298,11 +301,11 @@ namespace Tests
         [TestMethod]
         public void NumTest()
         {
-            Assert.AreEqual(0.0, 0.0.AsNumber());
-            Assert.AreEqual(0.0, 0.AsNumber());
+            Assert.AreEqual(0.0, Number.New(0.0).AsNumber().N);
+            Assert.AreEqual(0.0, Number.New(0).AsNumber().N);
             AssertEx.Throws(() => "0".AsNumber());
-            Assert.AreEqual(1.0, 1.0.AsNumber());
-            Assert.AreEqual(1.0, 1.AsNumber());
+            Assert.AreEqual(1.0, Number.New(1.0).AsNumber().N);
+            Assert.AreEqual(1.0, Number.New(1).AsNumber().N);
             AssertEx.Throws(() => "1".AsNumber());
             AssertEx.Throws(() => false.AsNumber());
             AssertEx.Throws(() => 'a'.AsNumber());
@@ -342,8 +345,8 @@ namespace Tests
         public void AsStringTest()
         {
             Assert.AreEqual("()", Printer.AsString(EmptyList.New()));
-            Assert.AreEqual("1", Printer.AsString(1.0));
-            Assert.AreEqual("1.5", Printer.AsString(1.5));
+            Assert.AreEqual("1", Printer.AsString(Number.New(1.0)));
+            Assert.AreEqual("1.5", Printer.AsString(Number.New(1.5)));
             Assert.AreEqual("#\\a", Printer.AsString(Character.New('a')));
             Assert.AreEqual("(1 . 2)", Printer.AsString(new Pair(1, 2)));
             Assert.AreEqual("(1 2)", Printer.AsString(1.MakeList(2)));
@@ -478,13 +481,13 @@ namespace Tests
         [TestMethod]
         public void TypeNameTest()
         {
-            Assert.AreEqual("boolean", TypePrimitives.TypeName(true));
+            Assert.AreEqual("boolean", TypePrimitives.TypeName(SchemeBoolean.True));
             Assert.AreEqual("symbol", TypePrimitives.TypeName(Symbol.New("sym")));
-            Assert.AreEqual("character", TypePrimitives.TypeName('c'));
-            Assert.AreEqual("vector", TypePrimitives.TypeName(new Obj[] { 1, 2, 3 }));
+            Assert.AreEqual("character", TypePrimitives.TypeName(Character.New('c')));
+            Assert.AreEqual("vector", TypePrimitives.TypeName(Vector.New(Number.New(3), Number.New(0))));
             Assert.AreEqual("pair", TypePrimitives.TypeName(new Pair(null, null)));
-            Assert.AreEqual("number", TypePrimitives.TypeName(1.0d));
-            Assert.AreEqual("string", TypePrimitives.TypeName(new[] { 'a', 'b', 'c' }));
+            Assert.AreEqual("number", TypePrimitives.TypeName(Number.New(1.0d)));
+            Assert.AreEqual("string", TypePrimitives.TypeName(SchemeString.New("abc")));
             Assert.AreEqual("primitive", TypePrimitives.TypeName(Primitive.New((args, caller) => null, 0, 0, new Primitive.ValueType[0])));
             Assert.AreEqual("input-port", TypePrimitives.TypeName(InputPort.New(new StringReader(string.Empty), (Interpreter)this.interpreter)));
             Assert.AreEqual("output-port", TypePrimitives.TypeName(OutputPort.New(new StringWriter(), (Interpreter)this.interpreter)));

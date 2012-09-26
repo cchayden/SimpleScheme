@@ -28,6 +28,13 @@ namespace SimpleScheme
         private static readonly int counter = Counter.Create(Name);
         #endregion
 
+        #region Static fields
+        /// <summary>
+        /// Tests arguments to see if they have the expected type.
+        /// </summary>
+        private static readonly ArgTypeTester tester = new ArgTypeTester();
+        #endregion
+
         #region Fields
         /// <summary>
         /// The code to perform the operation.
@@ -68,6 +75,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Static Methods
         /// <summary>
         /// Initializes a new instance of the Primitive class.
         /// </summary>
@@ -80,6 +88,7 @@ namespace SimpleScheme
         {
             return new Primitive(operation, minArgs, maxArgs, argTypes);
         }
+        #endregion
 
         #region Enums
         /// <summary>
@@ -250,6 +259,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Private Methods
         /// <summary>
         /// Check the argument types
         /// </summary>
@@ -278,87 +288,9 @@ namespace SimpleScheme
         /// <param name="argType">The expected argument type.</param>
         private void CheckArgType(Obj arg, ValueType argType)
         {
-            switch (argType)
+            if (tester.Ok(arg, argType))
             {
-                case ValueType.Obj:
-                    return;
-                case ValueType.Pair:
-                    if (arg.IsPair())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.PairOrEmpty:
-                    if (arg.IsPair() || arg.IsEmptyList())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.PairOrSymbol:
-                    if (arg.IsPair() || arg.IsSymbol())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Number:
-                    if (arg.IsNumber())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Char:
-                    if (arg.IsCharacter())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.String:
-                    if (arg.IsSchemeString()) 
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Proc:
-                    if (arg.IsProcedure())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Vector:
-                    if (arg.IsVector())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Boolean:
-                    if (arg.IsSchemeBoolean())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Symbol:
-                    if (arg.IsSymbol())
-                    {
-                        return;
-                    }
-
-                    break;
-                case ValueType.Port:
-                    if (arg.IsInputPort() || arg.IsOutputPort())
-                    {
-                        return;
-                    }
-
-                    break;
+                return;
             }
 
             var msg = string.Format(
@@ -369,5 +301,60 @@ namespace SimpleScheme
                 argType);
             ErrorHandlers.SemanticError(msg);
         }
+        #endregion
+
+        #region Private Class
+        /// <summary>
+        /// Tests arguments to see if they have the expected type.
+        /// </summary>
+        private class ArgTypeTester
+        {
+            /// <summary>
+            /// Contains argument type predicates, indexed by argument type specifier.
+            /// </summary>
+            private Predicate<object>[] argPredicates;
+
+            /// <summary>
+            /// Initializes the argument type list.
+            /// </summary>
+            public ArgTypeTester()
+            {
+                argPredicates = new Predicate<object>[(int)ValueType.Undefined];
+                this.Set(ValueType.Obj, arg => true);
+                this.Set(ValueType.Pair, Pair.Is);
+                this.Set(ValueType.PairOrEmpty, arg => Pair.Is(arg) || EmptyList.Is(arg));
+                this.Set(ValueType.PairOrSymbol, arg => Pair.Is(arg) || Symbol.Is(arg));
+                this.Set(ValueType.Number, Number.Is);
+                this.Set(ValueType.Char, Character.Is);
+                this.Set(ValueType.String, SchemeString.Is);
+                this.Set(ValueType.Proc, Procedure.Is);
+                this.Set(ValueType.Vector, Vector.Is);
+                this.Set(ValueType.Boolean, SchemeBoolean.Is);
+                this.Set(ValueType.Symbol, Symbol.Is);
+                this.Set(ValueType.Port, (arg) => InputPort.Is(arg) || OutputPort.Is(arg));
+            }
+
+            /// <summary>
+            /// Tests the argument against the expected argument type.
+            /// </summary>
+            /// <param name="arg">The actual argument.</param>
+            /// <param name="argType">The expected argument type.</param>
+            /// <returns>True if OK.</returns>
+            public bool Ok(object arg, ValueType argType)
+            {
+                return argType <= ValueType.Undefined && this.argPredicates[(int)argType](arg);
+            }
+
+            /// <summary>
+            /// Add a predicate to the arg predicates.
+            /// </summary>
+            /// <param name="t">The value type.</param>
+            /// <param name="pred">The predicate.</param>
+            private void Set(ValueType t, Predicate<object> pred)
+            {
+                this.argPredicates[(int)t] = pred;
+            }
+        }
+        #endregion
     }
 }

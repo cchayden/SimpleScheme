@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Strings are represented as a character array.
     /// Strings are mutable, butonly through the set! and fill! primitives.
     /// </summary>
-    public class SchemeString : Printable
+    public class SchemeString : IPrintable
     {
         #region Constants
         /// <summary>
@@ -21,12 +21,30 @@ namespace SimpleScheme
         public const string Name = "string";
         #endregion
 
+        #region Fields
         /// <summary>
         /// The scheme string is stored as a character array so that we can
         ///   modify it.
         /// </summary>
         private readonly char[] str;
+        #endregion
 
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.String.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is SchemeString;
+        }
+
+        #region Constructors
         /// <summary>
         /// Initializes a new instance of the <see cref="SchemeString"/> class.
         /// </summary>
@@ -44,7 +62,9 @@ namespace SimpleScheme
         {
             this.str = new char[length];
         }
+        #endregion
 
+        #region Accessors
         /// <summary>
         /// Gets the character array from the SchemeString.
         /// </summary>
@@ -52,6 +72,7 @@ namespace SimpleScheme
         {
             get { return this.str; }
         }
+        #endregion
 
         #region Public Static Methods
         /// <summary>
@@ -182,7 +203,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.7">(string-ref <string> <k>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("string-ref"),
-                    (args, caller) => Character.New(args.First().AsSchemeString().str[Number.AsInt(args.Second())]),
+                    (args, caller) => Character.New(args.First().AsSchemeString().str[args.Second().AsInt()]),
                     2,
                     Primitive.ValueType.String,
                     Primitive.ValueType.Number)
@@ -280,6 +301,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Make a scheme string from the given CLR string.
+        /// </summary>
+        /// <param name="str">The CLR string.</param>
+        /// <returns>The scheme string.</returns>
+        public static SchemeString New(string str)
+        {
+            return new SchemeString(str.ToCharArray());
+        }
+
+        /// <summary>
         /// Make a new copy of the given scheme string.
         /// </summary>
         /// <param name="str">The existing scheme string.</param>
@@ -324,6 +355,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Methods
         /// <summary>
         /// Write the string to the string builder.
         /// </summary>
@@ -354,6 +386,7 @@ namespace SimpleScheme
 
             buf.Append('"');
         }
+        #endregion
 
         #region Internal Static Methods
         /// <summary>
@@ -384,7 +417,7 @@ namespace SimpleScheme
         private static SchemeString New(Obj length, Obj fill)
         {
             char c = fill.IsEmptyList() ? (char)0 : fill.AsCharacter().C;
-            int len = Number.AsInt(length);
+            int len = length.AsInt();
             var res = new SchemeString(len);
             return res.Fill(c);
         }
@@ -408,8 +441,8 @@ namespace SimpleScheme
         /// <returns>The substring starting with the starting position and ending with the ending position.</returns>
         private static SchemeString Substr(Obj str, Obj start, Obj end)
         {
-            var startPos = Number.AsInt(start);
-            var endPos = Number.AsInt(end);
+            var startPos = start.AsInt();
+            var endPos = end.AsInt();
             var len = endPos - startPos;
             var newStr = new char[len];
             for (int i = 0; i < len; i++)
@@ -446,7 +479,7 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         private static Obj Set(Obj str, Obj index, Obj chr)
         {
-            str.AsSchemeString().str[Number.AsInt(index)] = chr.AsCharacter().C;
+            str.AsSchemeString().str[index.AsInt()] = chr.AsCharacter().C;
             return Undefined.New();
         }
 
@@ -560,12 +593,14 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         private static Obj ToNumber(Obj val, Obj bas)
         {
-            int numberBase = bas.IsNumber() ? Number.AsInt(bas) : 10;
+            int numberBase = bas.IsNumber() ? bas.AsInt() : 10;
             try
             {
-                return numberBase == 10
-                           ? double.Parse(Printer.AsString(val, false))
-                           : Convert.ToInt64(Printer.AsString(val, false), numberBase).AsNumber();
+                if (numberBase == 10)
+                {
+                    return Number.New(double.Parse(Printer.AsString(val, false)));
+                }
+                return Number.New(Convert.ToInt64(Printer.AsString(val, false), numberBase));
             }
             catch (FormatException)
             {
@@ -578,6 +613,7 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Private Methods
         /// <summary>
         /// Fill the string up with the given char.
         /// </summary>
@@ -592,12 +628,14 @@ namespace SimpleScheme
 
             return this;
         }
+        #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extension class for SchemeString
     /// </summary>
-    public static class SchemeStringExtensions
+    public static class SchemeStringExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme string.
@@ -606,23 +644,40 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme string.</returns>
         public static bool IsSchemeString(this Obj obj)
         {
-            return obj is SchemeString;
+            return SchemeString.Is(obj);
         }
 
         /// <summary>
-        /// Check that the object is a scheme string.
+        /// Convert to scheme string
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding scheme string.</returns>
         public static SchemeString AsSchemeString(this Obj x)
         {
-            if (x.IsSchemeString())
+            if (SchemeString.Is(x))
             {
                 return (SchemeString)x;
             }
 
-            ErrorHandlers.TypeError(Vector.Name, x);
+            ErrorHandlers.TypeError(SchemeString.Name, x);
             return null;
         }
-    }    
+
+        /// <summary>
+        /// Convert to string
+        /// </summary>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding string.</returns>
+        public static string AsString(this Obj x)
+        {
+            if (SchemeString.Is(x))
+            {
+                return SchemeString.AsString(((SchemeString)x));
+            }
+
+            ErrorHandlers.TypeError(SchemeString.Name, x);
+            return null;
+        }
+    } 
+    #endregion
 }

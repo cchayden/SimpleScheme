@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Handles a scheme character.
     /// Scheme characters are represented as .NET char objects.
     /// </summary>
-    public class Character : Printable
+    public class Character : IPrintable
     {
         #region Constants
         /// <summary>
@@ -18,6 +18,21 @@ namespace SimpleScheme
         /// </summary>
         public const string Name = "character";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Char.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Character;
+        }
 
         #region Fields
         /// <summary>
@@ -95,7 +110,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.6">(char->integer <char>)</r4rs>
                 .DefinePrimitive(
                         Symbol.New("char->integer"), 
-                        (args, caller) => (int)args.First().AsCharacter().C, 
+                        (args, caller) => Number.New((int)args.First().AsCharacter().C), 
                         1, 
                         Primitive.ValueType.Char)
                 //// <r4rs section="6.6">(char-alphabetic? <char>)</r4rs>
@@ -251,10 +266,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extension class for Character
     /// </summary>
-    public static class CharacterExtensions
+    public static class CharacterExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme character.
@@ -263,17 +279,17 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme character.</returns>
         public static bool IsCharacter(this Obj obj)
         {
-            return obj is Character;
+            return Character.Is(obj);
         }
 
         /// <summary>
-        /// Check that the object is a character.
+        /// Convert to a character.
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding character.</returns>
         public static Character AsCharacter(this Obj x)
         {
-            if (x.IsCharacter())
+            if (Character.Is(x))
             {
                 return (Character)x;
             }
@@ -281,5 +297,22 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(Character.Name, x);
             return null;
         }
-    }    
+
+        /// <summary>
+        /// Conver to a char.
+        /// </summary>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding char.</returns>
+        public static char AsChar(this Obj x)
+        {
+            if (Character.Is(x))
+            {
+                return ((Character)x).C;
+            }
+
+            ErrorHandlers.TypeError(Character.Name, x);
+            return '\0';
+        }
+    } 
+    #endregion   
 }

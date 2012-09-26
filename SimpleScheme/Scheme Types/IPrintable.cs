@@ -1,4 +1,4 @@
-﻿// <copyright file="Printable.cs" company="Charles Hayden">
+﻿// <copyright file="IPrintable.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -9,7 +9,7 @@ namespace SimpleScheme
     /// A printable class is one that has an PrintString method, 
     ///   which appends a printable representation to a string builder.
     /// </summary>
-    public interface Printable
+    public interface IPrintable
     {
         /// <summary>
         /// Print the value into the given buffer.

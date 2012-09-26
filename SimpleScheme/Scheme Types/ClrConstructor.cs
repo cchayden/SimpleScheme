@@ -23,9 +23,26 @@ namespace SimpleScheme
         #endregion
 
         /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public new static string TypeName = Primitive.ValueType.ClrConstructor.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public new static bool Is(Obj obj)
+        {
+            return obj is ClrConstructor;
+        }
+
+        #region Fields
+        /// <summary>
         /// The type of the class to construct.
         /// </summary>
         private readonly Type classType;
+        #endregion
 
         #region Constructor
         /// <summary>
@@ -127,10 +144,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extensions for ClrConstructor
     /// </summary>
-    public static class ClrConstructorExtensions
+    public static class ClrConstructorExtension
     {
         /// <summary>
         /// Tests whether to given object is a CLR constructor.
@@ -139,7 +157,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a CLR constructor.</returns>
         public static bool IsClrConstructor(this Obj obj)
         {
-            return obj is ClrConstructor;
+            return ClrConstructor.Is(obj);
         }
 
         /// <summary>
@@ -149,7 +167,7 @@ namespace SimpleScheme
         /// <returns>The object as a clr constructor.</returns>
         public static ClrConstructor AsClrConstructor(this Obj obj)
         {
-            if (obj.IsClrConstructor())
+            if (ClrConstructor.Is(obj))
             {
                 return (ClrConstructor)obj;
             }
@@ -158,4 +176,5 @@ namespace SimpleScheme
             return null;
         }
     }
+    #endregion
 }

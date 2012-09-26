@@ -19,6 +19,21 @@ namespace SimpleScheme
         public new const string Name = "continuation";
         #endregion
 
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public new static string TypeName = Primitive.ValueType.Continuation.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public new static bool Is(Obj obj)
+        {
+            return obj is Continuation;
+        }
+
         #region Fields
         /// <summary>
         /// The evaluator to execute when the continuation is applied.
@@ -97,10 +112,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extensions for Continuation
     /// </summary>
-    public static class ContinuationExtensions
+    public static class ContinuationExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme continuation.
@@ -109,7 +125,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme continuation.</returns>
         public static bool IsContinuation(this Obj obj)
         {
-            return obj is Continuation;
+            return Continuation.Is(obj);
         }
 
         /// <summary>
@@ -119,7 +135,14 @@ namespace SimpleScheme
         /// <returns>The continuation.</returns>
         public static Continuation AsContinuation(Obj obj)
         {
-            return (Continuation)obj;
+            if (Continuation.Is(obj))
+            {
+                return (Continuation)obj;
+            }
+
+            ErrorHandlers.TypeError(Continuation.Name, obj);
+            return null;
         }
     }
+    #endregion
 }

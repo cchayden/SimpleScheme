@@ -11,7 +11,7 @@ namespace SimpleScheme
     /// It supports an Apply method.
     /// Lambdas, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    public abstract class Procedure : Printable
+    public abstract class Procedure : IPrintable
     {
         #region Constants
         /// <summary>
@@ -24,6 +24,21 @@ namespace SimpleScheme
         /// </summary>
         private const string AnonymousProc = "anonymous procedure";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Proc.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Procedure;
+        }
 
         #region Fields
 
@@ -260,18 +275,13 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private Obj CallCc(Evaluator caller)
         {
-#if OLD
-            if (this.IsLambda())
-            {
-                this.AsLambda().Clean();
-            }
-#endif
             return this.Apply(Continuation.New(caller).MakeList(), caller);
         }
         #endregion
     }
 
-    static class ProcedureExtensions
+    #region Extension Class
+    static class ProcedureExtension
     {
         /// <summary>
         /// Tests whether to given object is a procedure.
@@ -280,7 +290,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme procedure.</returns>
         public static bool IsProcedure(this Obj obj)
         {
-            return obj is Procedure;
+            return Procedure.Is(obj);
         }
 
         /// <summary>
@@ -290,7 +300,7 @@ namespace SimpleScheme
         /// <returns>The procedure.</returns>
         public static Procedure AsProcedure(this Obj x)
         {
-            if (x.IsProcedure())
+            if (Procedure.Is(x))
             {
                 return (Procedure)x;
             }
@@ -299,4 +309,5 @@ namespace SimpleScheme
             return null;
         }
     }
+    #endregion
 }

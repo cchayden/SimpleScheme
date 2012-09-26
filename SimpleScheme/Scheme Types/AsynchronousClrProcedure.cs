@@ -24,6 +24,21 @@ namespace SimpleScheme
         public new const string Name = "asynchronous-clr-procedure";
         #endregion
 
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public new static string TypeName = Primitive.ValueType.AsynchronousClrProcedure.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public new static bool Is(Obj obj)
+        {
+            return obj is AsynchronousClrProcedure;
+        }
+
         #region Fields
         /// <summary>
         /// The method info for the EndXXX method.
@@ -191,10 +206,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Static class for async extensions.
     /// </summary>
-    public static class AsynchronousClrProcedureExtensions
+    public static class AsynchronousClrProcedureExtension
     {
         /// <summary>
         /// Tests whether to given object is an asynchronous CLR procedure.
@@ -203,7 +219,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a synchronous CLR procedure.</returns>
         public static bool IsAsynchronousClrProcedure(this Obj obj)
         {
-            return obj is AsynchronousClrProcedure;
+            return AsynchronousClrProcedure.Is(obj);
         }
 
         /// <summary>
@@ -213,7 +229,7 @@ namespace SimpleScheme
         /// <returns>The object as a asynchronous clr procedure.</returns>
         public static AsynchronousClrProcedure AsAsynchronousClrProcedure(Obj obj)
         {
-            if (obj.IsAsynchronousClrProcedure())
+            if (AsynchronousClrProcedure.Is(obj))
             {
                 return (AsynchronousClrProcedure)obj;
             }
@@ -222,4 +238,5 @@ namespace SimpleScheme
             return null;
         }
     }
+    #endregion
 }

@@ -19,6 +19,21 @@ namespace SimpleScheme
         public new const string Name = "synchronous-clr-procedure";
         #endregion
 
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static new string TypeName = Primitive.ValueType.SynchronousClrProcedure.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public new static bool Is(Obj obj)
+        {
+            return obj is SynchronousClrProcedure;
+        }
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the SynchronousClrProcedure class.
@@ -163,7 +178,7 @@ namespace SimpleScheme
     /// <summary>
     /// Extension class for SynchronousClrProcedure
     /// </summary>
-    public static class SynchronousClrCprcedureExtensions
+    public static class SynchronousClrProcedureExtension
     {
         /// <summary>
         /// Tests whether to given object is a synchronous CLR procedure.
@@ -172,7 +187,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a synchronous CLR procedure.</returns>
         public static bool IsSynchronousClrProcedure(this Obj obj)
         {
-            return obj is SynchronousClrProcedure;
+            return SynchronousClrProcedure.Is(obj);
         }
 
         /// <summary>
@@ -182,7 +197,7 @@ namespace SimpleScheme
         /// <returns>The object as a synchronous clr procedure.</returns>
         public static SynchronousClrProcedure AsSynchronousClrProcedure(this Obj obj)
         {
-            if (obj.IsSynchronousClrProcedure())
+            if (SynchronousClrProcedure.Is(obj))
             {
                 return (SynchronousClrProcedure)obj;
             }

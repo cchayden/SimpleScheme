@@ -4,19 +4,103 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
+
     using Obj = System.Object;
 
     /// <summary>
     /// Generic operations on Obj, for tracing, debugging, and interfacing with the CLR.
     /// Includes a method that returns "friendly" names for objects of given types.
     /// Also includes a methat that turns a "friendly" name into a full .NET name.
-    /// <br/>
-    /// We could have done this with a couple of Dictionaries, initialized by the various classes, but then
-    ///   it would have been necessary to find an environment to store them.
-    /// If it becomes important to make these extensible, that would be the right way to do it.
     /// </summary>
     public class TypePrimitives
     {
+        /// <summary>
+        /// Used to translate from full qualified type names into the friendly name.
+        /// </summary>
+        private readonly static Dictionary<string, string> typeTranslator;
+
+        /// <summary>
+        /// Used to translate the internal type name into the CLR type name.
+        /// </summary>
+        private readonly static Dictionary<string, string> clrTranslator;
+
+
+        static TypePrimitives()
+        {
+            typeTranslator = new Dictionary<string, string>
+                {
+                    { "SimpleScheme.AsynchronousClrProcedure", AsynchronousClrProcedure.Name },
+                    { "SimpleScheme.Character", Character.Name },
+                    { "SimpleScheme.ClrConstructor", ClrConstructor.Name },
+                    { "SimpleScheme.ClrProcedure", ClrProcedure.Name },
+                    { "SimpleScheme.Continuation", Continuation.Name },
+                    { "SimpleScheme.EmptyList", EmptyList.Name },
+                    { "SimpleScheme.InputPort", InputPort.Name },
+                    { "SimpleScheme.Lambda", Lambda.Name },
+                    { "SimpleScheme.Macro", Macro.Name },
+                    { "SimpleScheme.Number", Number.Name },
+                    { "SimpleScheme.OutputPort", OutputPort.Name },
+                    { "SimpleScheme.Pair", Pair.Name },
+                    { "SimpleScheme.Primitive", Primitive.Name },
+                    { "SimpleScheme.Procedure", Procedure.Name },
+                    { "SimpleScheme.SchemeBoolean", SchemeBoolean.Name },
+                    { "SimpleScheme.SchemeString", SchemeString.Name },
+                    { "SimpleScheme.Symbol", Symbol.Name },
+                    { "SimpleScheme.SynchronousClrProcedure", SynchronousClrProcedure.Name },
+                    { "SimpleScheme.Undefined", Undefined.Name },
+                    { "SimpleScheme.Vector", Vector.Name },
+                    { "SimpleScheme.EndedEvaluator", EndedEvaluator.EvaluatorName },
+                    { "SimpleScheme.EvaluateAnd", EvaluateAnd.EvaluatorName },
+                    { "SimpleScheme.EvaluateCallWithInputFile", EvaluateCallWithInputFile.EvaluatorName },
+                    { "SimpleScheme.EvaluateCallWithOutputFile", EvaluateCallWithOutputFile.EvaluatorName },
+                    { "SimpleScheme.EvaluateCase", EvaluateCase.EvaluatorName },
+                    { "SimpleScheme.EvaluateCond", EvaluateCond.EvaluatorName },
+                    { "SimpleScheme.EvaluateDefine", EvaluateDefine.EvaluatorName },
+                    { "SimpleScheme.EvaluateDo", EvaluateDo.EvaluatorName },
+                    { "SimpleScheme.EvaluateExpandMacro", EvaluateExpandMacro.EvaluatorName },
+                    { "SimpleScheme.EvaluateExpression", EvaluateExpression.EvaluatorName },
+                    { "SimpleScheme.EvaluateIf", EvaluateIf.EvaluatorName },
+                    { "SimpleScheme.EvaluateLet", EvaluateLet.EvaluatorName },
+                    { "SimpleScheme.EvaluateLetRec", EvaluateLetRec.EvaluatorName },
+                    { "SimpleScheme.EvaluateLetStar", EvaluateLetStar.EvaluatorName },
+                    { "SimpleScheme.EvaluateList", EvaluateList.EvaluatorName },
+                    { "SimpleScheme.EvaluateMap", EvaluateMap.EvaluatorName },
+                    { "SimpleScheme.EvaluateOr", EvaluateOr.EvaluatorName },
+                    { "SimpleScheme.EvaluateParallel", EvaluateParallel.EvaluatorName },
+                    { "SimpleScheme.EvaluateProc", EvaluateProc.EvaluatorName },
+                    { "SimpleScheme.EvaluateSequence", EvaluateSequence.EvaluatorName },
+                    { "SimpleScheme.EvaluateSet", EvaluateSet.EvaluatorName },
+                    { "SimpleScheme.EvaluateTime", EvaluateTime.EvaluatorName },
+                    { "SimpleScheme.HaltedEvaluator", HaltedEvaluator.EvaluatorName },
+                    { "SimpleScheme.SuspendedEvaluator", SuspendedEvaluator.EvaluatorName }
+                };
+
+            clrTranslator = new Dictionary<string, string>()
+                {
+                    {"bool", "System.Boolean"},                   
+                    {"char", "System.Char"},                    
+                    {"string", "System.String"},                    
+                    {"byte", "System.Byte"},                   
+                    {"short", "System.Int16"},                   
+                    {"int", "System.Int32"},                   
+                    {"long", "System.Int64"},                   
+                    {"float", "System.Single"},                   
+                    {"double", "System.Double"},                   
+                    {"object", "System.Object"},                   
+                    {"boolean[]", "System.Boolean[]"},                   
+                    {"char[]", "System.Char[]"},                   
+                    {"string[]", "System.String[]"},                    
+                    {"byte[]", "System.Byte[]"},                   
+                    {"short[]", "System.Int16[]"},                   
+                    {"int[]", "System.Int32[]"},                   
+                    {"long[]", "System.Int64[]"},                   
+                    {"float[]", "System.Single[]"},                   
+                    {"double[]", "System.Doubl[]e"},                   
+                    {"object[]", "System.Object[]"},                   
+                };
+        }
+
         #region Public Static Methods
         /// <summary>
         /// Find the scheme type name or the evaluator name for a given object.
@@ -31,117 +115,22 @@ namespace SimpleScheme
             }
 
             string fullName = obj.GetType().FullName;
-            switch (fullName)
+            if (fullName == null)
             {
-                // Names for types implementing Scheme values, used for error messages.
-                case "SimpleScheme.AsynchronousClrProcedure":
-                    return AsynchronousClrProcedure.Name;
-                case "System.Char":
-                    return Character.Name;
-                case "SimpleScheme.ClrConstructor":
-                    return ClrConstructor.Name;
-                case "SimpleScheme.ClrProcedure":
-                    return ClrProcedure.Name;
-                case "SimpleScheme.Continuation":
-                    return Continuation.Name;
-                case "SimpleScheme.EmptyList":
-                    return EmptyList.Name;
-                case "SimpleScheme.InputPort":
-                    return InputPort.Name;
-                case "SimpleScheme.Lambda":
-                    return Lambda.Name;
-                case "SimpleScheme.Macro":
-                    return Macro.Name;
-                case "System.Byte":
-                case "System.Int32":
-                case "System.Int16":
-                case "System.Int64":
-                case "System.Single": 
-                case "System.Double":
-                    return Number.Name;
-                case "SimpleScheme.OutputPort":
-                    return OutputPort.Name;
-                case "SimpleScheme.Pair":
-                    return Pair.Name;
-                case "SimpleScheme.Primitive":
-                    return Primitive.Name;
-                case "SimpleScheme.Procedure":
-                    return Procedure.Name;
-                case "System.Boolean":
-                    return SchemeBoolean.Name;
-                case "System.Char[]":
-                    return SchemeString.Name;
-                case "SimpleScheme.Symbol":
-                    return Symbol.Name;
-                case "SimpleScheme.SynchronousClrProcedure":
-                    return SynchronousClrProcedure.Name;
-                case "SimpleScheme.Undefined":
-                    return Undefined.Name;
-                case "System.Object[]":
-                    return Vector.Name;
-
-                // Evaluator names, used for tracing.
-                case "SimpleScheme.EndedEvaluator":
-                    return EndedEvaluator.EvaluatorName;
-                case "SimpleScheme.EvaluateAnd":
-                    return EvaluateAnd.EvaluatorName;
-                case "SimpleScheme.EvaluateCallWithInputFile":
-                    return EvaluateCallWithInputFile.EvaluatorName;
-                case "SimpleScheme.EvaluateCallWithOutputFile":
-                    return EvaluateCallWithOutputFile.EvaluatorName;
-                case "SimpleScheme.EvaluateCase":
-                    return EvaluateCase.EvaluatorName;
-                case "SimpleScheme.EvaluateCond":
-                    return EvaluateCond.EvaluatorName;
-                case "SimpleScheme.EvaluateDefine":
-                    return EvaluateDefine.EvaluatorName;
-                case "SimpleScheme.EvaluateDo":
-                    return EvaluateDo.EvaluatorName;
-                case "SimpleScheme.EvaluateExpandMacro":
-                    return EvaluateExpandMacro.EvaluatorName;
-                case "SimpleScheme.EvaluateExpression":
-                    return EvaluateExpression.EvaluatorName;
-                case "SimpleScheme.EvaluateIf":
-                    return EvaluateIf.EvaluatorName;
-                case "SimpleScheme.EvaluateLet":
-                    return EvaluateLet.EvaluatorName;
-                case "SimpleScheme.EvaluateLetRec":
-                    return EvaluateLetRec.EvaluatorName;
-                case "SimpleScheme.EvaluateLetStar":
-                    return EvaluateLetStar.EvaluatorName;
-                case "SimpleScheme.EvaluateList":
-                    return EvaluateList.EvaluatorName;
-                case "SimpleScheme.EvaluateMap":
-                    return EvaluateMap.EvaluatorName;
-                case "SimpleScheme.EvaluateOr":
-                    return EvaluateOr.EvaluatorName;
-                case "SimpleScheme.EvaluateParallel":
-                    return EvaluateParallel.EvaluatorName;
-                case "SimpleScheme.EvaluateProc":
-                    return EvaluateProc.EvaluatorName;
-                case "SimpleScheme.EvaluateSequence":
-                    return EvaluateSequence.EvaluatorName;
-                case "SimpleScheme.EvaluateSet":
-                    return EvaluateSet.EvaluatorName;
-                case "SimpleScheme.EvaluateTime":
-                    return EvaluateTime.EvaluatorName;
-                case "SimpleScheme.HaltedEvaluator":
-                    return HaltedEvaluator.EvaluatorName;
-                case "SimpleScheme.SuspendedEvaluator":
-                    return SuspendedEvaluator.EvaluatorName;
-
-                // anything else
-                default:
-                    return fullName;
+                return "unknown";
             }
+
+            string name;
+            return typeTranslator.TryGetValue(fullName, out name) ? name : fullName;
         }
+
 
         /// <summary>
         /// Gets a CLR type from the given arg.
         /// Either it already holds a type, or else it holds a type name.
         /// If it is a name, then create the type from the name.
         /// </summary>
-        /// <param name="arg">A ValueType or a type name.</param>
+        /// <param name="arg">A value type or a type name.</param>
         /// <returns>The type corresponding to the name.</returns>
         public static Type ToClass(Obj arg)
         {
@@ -152,76 +141,12 @@ namespace SimpleScheme
 
             string abbrev = Printer.AsString(arg, false);
             string typeName;
-            switch (abbrev)
+            if (clrTranslator.TryGetValue(abbrev, out typeName))
             {
-                case "boolean":
-                    typeName = "System.Boolean";
-                    break;
-                case "char":
-                    typeName = "System.Char";
-                    break;
-                case "string":
-                    typeName = "System.String";
-                    break;
-                case "byte":
-                    typeName = "System.Byte";
-                    break;
-                case "short":
-                    typeName = "System.Int16";
-                    break;
-                case "int":
-                    typeName = "System.Int32";
-                    break;
-                case "long":
-                    typeName = "System.Int64";
-                    break;
-                case "float":
-                    typeName = "System.Single";
-                    break;
-                case "double":
-                    typeName = "System.Double";
-                    break;
-                case "object":
-                    typeName = "System.Object";
-                    break;
-               case "boolean[]":
-                    typeName = "System.Boolean[]";
-                    break;
-                case "char[]":
-                    typeName = "System.Char[]";
-                    break;
-                case "string[]":
-                    typeName = "System.String[]";
-                    break;
-                case "byte[]":
-                    typeName = "System.Byte[]";
-                    break;
-                case "short[]":
-                    typeName = "System.Int16[]";
-                    break;
-                case "int[]":
-                    typeName = "System.Int32[]";
-                    break;
-                case "long[]":
-                    typeName = "System.Int64[]";
-                    break;
-                case "float[]":
-                    typeName = "System.Single[]";
-                    break;
-                case "double[]":
-                    typeName = "System.Double[]";
-                    break;
-                case "object[]":
-                    typeName = "System.Object[]";
-                    break;
-                case "void":
-                    return typeof(void);
-                default:
-                    typeName = abbrev;
-                    break;
+                return Type.GetType(typeName);
             }
 
-            return Type.GetType(typeName);
+            return typeName == "void" ? typeof(void) : Type.GetType(abbrev);
         }
         #endregion
     }

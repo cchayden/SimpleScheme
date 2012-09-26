@@ -11,23 +11,38 @@ namespace SimpleScheme
     /// Represents an undefined scheme value.
     /// This type is immutable.
     /// </summary>
-    public class Undefined : Printable
+    public class Undefined : IPrintable
     {
         #region Constants
-
         /// <summary>
         /// The printable name of the undefined type.
         /// </summary>
         public const string Name = "undefined";
-
         #endregion
 
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Undefined.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Undefined;
+        }
+
+        #region Constructors
         /// <summary>
         /// Prevents a default instance of the <see cref="Undefined"/> class from being created. 
         /// </summary>
         private Undefined()
         {
         }
+        #endregion
 
         #region Public Static Methods
         /// <summary>
@@ -74,7 +89,7 @@ namespace SimpleScheme
     /// <summary>
     /// Extensions for Undefined
     /// </summary>
-    public static class UndefinedExtensions
+    public static class UndefinedExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme undefined object.
@@ -83,7 +98,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme undefined object.</returns>
         public static bool IsUndefined(this Obj obj)
         {
-            return obj is Undefined;
+            return Undefined.Is(obj);
         }
 
         /// <summary>
@@ -93,7 +108,13 @@ namespace SimpleScheme
         /// <returns>The object as an undefined object.</returns>
         public static Undefined AsUndefined(this Obj obj)
         {
-            return (Undefined)obj;
+            if (Undefined.Is(obj))
+            {
+                return (Undefined)obj;
+            }
+
+            ErrorHandlers.TypeError(Undefined.Name, obj);
+            return null;
         }
     }    
 }

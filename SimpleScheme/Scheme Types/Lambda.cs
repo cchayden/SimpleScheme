@@ -24,7 +24,7 @@ namespace SimpleScheme
         /// <summary>
         /// The printable name of the lambda type.
         /// </summary>
-        public new const string Name = "lambda";
+        //public new const string Name = "lambda";
         #endregion
 
         #region Fields
@@ -43,6 +43,21 @@ namespace SimpleScheme
         /// </summary>
         private readonly Environment env;
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public new static string TypeName = Primitive.ValueType.Lambda.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public new static bool Is(Obj obj)
+        {
+            return obj is Lambda;
+        }
 
         #region Constructor
         /// <summary>
@@ -184,10 +199,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extensions for Lambda
     /// </summary>
-    public static class LambdaExtensions
+    public static class LambdaExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme lambda.
@@ -196,7 +212,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme lambda.</returns>
         public static bool IsLambda(this Obj obj)
         {
-            return obj is Lambda;
+            return Lambda.Is(obj);
         }
 
         /// <summary>
@@ -206,7 +222,14 @@ namespace SimpleScheme
         /// <returns>The object as a lambda.</returns>
         public static Lambda AsLambda(this Obj obj)
         {
-            return (Lambda)obj;
+            if (Lambda.Is(obj))
+            {
+                return (Lambda)obj;
+            }
+
+            ErrorHandlers.TypeError(Lambda.Name, obj);
+            return null;
         }
     }
+    #endregion
 }

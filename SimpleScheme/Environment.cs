@@ -513,7 +513,7 @@ namespace SimpleScheme
                         return null;
                     }
 
-                    this.values[index] = val.AsNumber() + 1;
+                    this.values[index] = Number.New(val.AsNumber().N + 1);
                     return val;
                 }
             }

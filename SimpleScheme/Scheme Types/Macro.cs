@@ -20,6 +20,21 @@ namespace SimpleScheme
         public new const string Name = "macro";
         #endregion
 
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public new static string TypeName = Primitive.ValueType.Macro.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public new static bool Is(Obj obj)
+        {
+            return obj is Macro;
+        }
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the Macro class.
@@ -84,10 +99,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extensions for Macro
     /// </summary>
-    public static class MacroExtensions
+    public static class MacroExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme macro.
@@ -96,7 +112,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme macro.</returns>
         public static bool IsMacro(this Obj obj)
         {
-            return obj is Macro;
+            return Macro.Is(obj);
         }
 
         /// <summary>
@@ -106,7 +122,7 @@ namespace SimpleScheme
         /// <returns>The object as a macro.</returns>
         public static Macro AsMacro(Obj obj)
         {
-            if (obj.IsMacro())
+            if (Macro.Is(obj))
             {
                 return (Macro)obj;
             }
@@ -115,4 +131,5 @@ namespace SimpleScheme
             return null;
         }
     }
+    #endregion
 }

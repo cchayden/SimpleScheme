@@ -13,6 +13,14 @@ namespace SimpleScheme
     /// </summary>
     public static class Cleaner
     {
+        /// <summary>
+        /// Clean the given object.
+        /// Removes cached access information from symbols.
+        /// The cached information makes access faster, but can lead to errors
+        ///   if the location of the symbol, relative to the caller, has changed.
+        /// </summary>
+        /// <param name="x">The object to clean.</param>
+        /// <returns>The cleaned object.</returns>
         public static Obj Clean(Obj x)
         {
             if (x == null)
@@ -27,7 +35,7 @@ namespace SimpleScheme
                     return x;
                 case "SimpleScheme.Symbol":
                 case "SimpleScheme.Pair":
-                    ((Cleanable)x).Clean();
+                    ((ICleanable)x).Clean();
                     return x;
                 default:
                     return x;

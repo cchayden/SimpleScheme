@@ -1,15 +1,13 @@
-﻿// <copyright file="Printable.cs" company="Charles Hayden">
+﻿// <copyright file="ICleanable.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
-
     /// <summary>
-    /// A Cleanable class is one that has an Clean method.
+    /// An ICleanable class is one that has an Clean method.
     /// This command cleans out any symbol access information.
     /// </summary>
-    public interface Cleanable
+    public interface ICleanable
     {
         /// <summary>
         /// Clean the boject.

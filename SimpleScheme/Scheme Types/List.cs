@@ -12,7 +12,6 @@ namespace SimpleScheme
     public static class List
     {
         #region Public Methods
-
         /// <summary>
         /// Create an empty list.
         /// This is actually a Pair whose First is null.
@@ -364,7 +363,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(length <list> ...)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("length"), 
-                    (args, caller) => args.First().ListLength(), 
+                    (args, caller) => Number.New(args.First().ListLength()), 
                     1, 
                     Primitive.ValueType.PairOrEmpty)
                 //// <r4rs section="6.3">(list <obj> ...)</r4rs>
@@ -587,7 +586,7 @@ namespace SimpleScheme
         /// <returns>The element after stepping down k steps.</returns>
         private static Obj ListRef(Obj list, Obj k)
         {
-            for (int i = Number.AsInt(k); i > 0; i--)
+            for (int i = k.AsInt(); i > 0; i--)
             {
                 list = list.Rest();
             }
@@ -603,7 +602,7 @@ namespace SimpleScheme
         /// <returns>The list after stepping down k steps.</returns>
         private static Obj ListTail(Obj list, Obj k)
         {
-            for (int i = Number.AsInt(k); i > 0; i--)
+            for (int i = k.AsInt(); i > 0; i--)
             {
                 list = list.Rest();
             }

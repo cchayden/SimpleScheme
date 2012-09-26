@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public class Vector : Printable
+    public class Vector : IPrintable
     {
         #region Constants
         /// <summary>
@@ -18,6 +18,21 @@ namespace SimpleScheme
         /// </summary>
         public const string Name = "vector";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Vector.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Vector;
+        }
 
         #region Fields
         /// <summary>
@@ -95,7 +110,7 @@ namespace SimpleScheme
                 fill = Undefined.New();
             }
 
-            return new Vector(Number.AsInt(length), fill);
+            return new Vector(length.AsInt(), fill);
         }
 
         #endregion
@@ -215,7 +230,7 @@ namespace SimpleScheme
         /// <returns>The vector element.</returns>
         public static Obj Get(Obj vector, Obj k)
         {
-            return vector.AsVector()[Number.AsInt(k)];
+            return vector.AsVector()[k.AsInt()];
         }
 
         /// <summary>
@@ -227,7 +242,7 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         public static Obj Set(Obj vector, Obj index, Obj obj)
         {
-            vector.AsVector()[Number.AsInt(index)] = obj;
+            vector.AsVector()[index.AsInt()] = obj;
             return Undefined.New();
         }
 
@@ -334,7 +349,7 @@ namespace SimpleScheme
     /// <summary>
     /// Extension class for Vector
     /// </summary>
-    public static class VectorExtensions
+    public static class VectorExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme vector.
@@ -343,7 +358,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme vector.</returns>
         public static bool IsVector(this Obj obj)
         {
-            return obj is Vector;
+            return Vector.Is(obj);
         }
 
         /// <summary>
@@ -353,7 +368,7 @@ namespace SimpleScheme
         /// <returns>The corresponding vector.</returns>
         public static Vector AsVector(this Obj x)
         {
-            if (x.IsVector())
+            if (Vector.Is(x))
             {
                 return (Vector)x;
             }

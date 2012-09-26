@@ -24,10 +24,6 @@ namespace SimpleScheme
         public new const string Name = "clr-procedure";
         #endregion
 
-        #region Fields
-
-        #endregion
-
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the ClrProcedure class.
@@ -128,7 +124,6 @@ namespace SimpleScheme
         #endregion
 
         #region Protected Methods
-
         /// <summary>
         /// Look up the method info.
         /// </summary>
@@ -233,11 +228,43 @@ namespace SimpleScheme
                 Obj elem = args.First();
                 if (this.ArgClasses[i] == typeof(int))
                 {
-                    array[a++] = Number.AsInt(elem);
+                    array[a++] = elem.AsInt();
                 }
                 else if (this.ArgClasses[i] == typeof(string))
                 {
                     array[a++] = Printer.AsString(elem, false);
+                }
+                else if (this.ArgClasses[i] == typeof(bool))
+                {
+                    array[a++] = elem.AsBoolean();
+                }
+                else if (this.ArgClasses[i] == typeof(double))
+                {
+                    array[a++] = elem.AsDouble();
+                }
+                else if (this.ArgClasses[i] == typeof(float))
+                {
+                    array[a++] = elem.AsFloat();
+                }
+                else if (this.ArgClasses[i] == typeof(short))
+                {
+                    array[a++] = elem.AsShort();
+                }
+                else if (this.ArgClasses[i] == typeof(byte))
+                {
+                    array[a++] = elem.AsByte();
+                }
+                else if (this.ArgClasses[i] == typeof(char))
+                {
+                    array[a++] = elem.AsChar();
+                }
+                else if (this.ArgClasses[i] == typeof(System.IO.TextReader))
+                {
+                    array[a++] = elem.AsTextReader();
+                }
+                else if (this.ArgClasses[i] == typeof(System.IO.TextWriter))
+                {
+                    array[a++] = elem.AsTextWriter();
                 }
                 else if (this.ArgClasses[i] == typeof(char[]))
                 {
@@ -310,11 +337,12 @@ namespace SimpleScheme
         private static Obj NewArray(Obj className, Obj length)
         {
             Type type = TypePrimitives.ToClass(className);
-            return Array.CreateInstance(type, Number.AsInt(length));
+            return Array.CreateInstance(type, length.AsInt());
         }
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extensions for ClrProcedure
     /// </summary>
@@ -337,7 +365,7 @@ namespace SimpleScheme
         /// <returns>The object as a clr procedure.</returns>
         public static ClrProcedure AsClrProcedure(this Obj obj)
         {
-            if (obj.IsClrProcedure())
+            if (obj is ClrProcedure)
             {
                 return (ClrProcedure)obj;
             }
@@ -346,4 +374,5 @@ namespace SimpleScheme
             return null;
         }
     }
+    #endregion
 }

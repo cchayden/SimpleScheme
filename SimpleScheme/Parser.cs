@@ -94,6 +94,16 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Properties
+        /// <summary>
+        /// Gets the internal TextReader object.
+        /// </summary>
+        public TextReader Reader
+        { 
+            get { return this.inp;}
+        }
+        #endregion
+
         #region Public Methods
         /// <summary>
         /// Read a complete expression.
@@ -219,6 +229,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Test for decimal digit.
+        /// </summary>
+        /// <param name="ch">The character</param>
+        /// <returns>True if the character is a binary digit.</returns>
+        private static bool IsDecimalDigit(char ch)
+        {
+            return ch >= '0' && ch <= '9';
+        }
+
+        /// <summary>
         /// Test for symbol characters.  These characters make up symbols -- they are all the characters
         ///   that are not otherwise special.
         /// </summary>
@@ -310,7 +330,7 @@ namespace SimpleScheme
                     }
 
                 case '#':
-                    // read a boolean, vector, or character
+                    // read a boolean, vector, number, or character
                     switch (ch = this.ReadNextChar())
                     {
                         case 't':
@@ -352,16 +372,16 @@ namespace SimpleScheme
                         case 'e':
                         case 'i':
                         case 'd':
-                            return this.NextToken();
+                            return Number.New(Convert.ToInt32(this.NextWord(IsDecimalDigit), 10));
 
                         case 'b':
-                            return Convert.ToInt32(this.NextWord(IsBinaryDigit), 2);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsBinaryDigit), 2));
 
                         case 'o':
-                            return Convert.ToInt32(this.NextWord(IsOctalDigit), 8);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsOctalDigit), 8));
 
                         case 'x':
-                            return Convert.ToInt32(this.NextWord(IsHexDigit), 16);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsHexDigit), 16));
 
                         default:
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
@@ -381,7 +401,7 @@ namespace SimpleScheme
                             double value;
                             if (double.TryParse(buf, out value))
                             {
-                                return value;
+                                return Number.New(value);
                             }
                         }
 

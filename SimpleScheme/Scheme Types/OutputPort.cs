@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// <summary>
     /// Writes to the output port.
     /// </summary>
-    public class OutputPort : Printable
+    public class OutputPort : IPrintable
     {
         #region Constants
         /// <summary>
@@ -19,6 +19,21 @@ namespace SimpleScheme
         /// </summary>
         public const string Name = "output-port";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Port.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is OutputPort;
+        }
 
         #region Fields
         /// <summary>
@@ -42,6 +57,16 @@ namespace SimpleScheme
         {
             this.outp = outp;
             this.transcript = interp.Transcript;
+        }
+        #endregion
+
+        #region Properties
+        /// <summary>
+        /// Gets the internal TextWriter object.
+        /// </summary>
+        public TextWriter Writer
+        { 
+            get { return this.outp;}
         }
         #endregion
 
@@ -302,10 +327,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extension class for OutputPort.
     /// </summary>
-    public static class OutputPortExtensions
+    public static class OutputPortExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme output port.
@@ -314,17 +340,17 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme output port.</returns>
         public static bool IsOutputPort(this Obj obj)
         {
-            return obj is OutputPort;
+            return OutputPort.Is(obj);
         }
 
         /// <summary>
-        /// Check that the given object is an output port.
+        /// Convert to output port
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>The output port.</returns>
         public static OutputPort AsOutputPort(this Obj obj)
         {
-            if (obj.IsOutputPort())
+            if (OutputPort.Is(obj))
             {
                 return (OutputPort)obj;
             }
@@ -332,5 +358,22 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(OutputPort.Name, obj);
             return null;
         }
+
+        /// <summary>
+        /// Convert to text writer
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The text writer.</returns>
+        public static TextWriter AsTextWriter(this Obj obj)
+        {
+            if (OutputPort.Is(obj))
+            {
+                return ((OutputPort)obj).Writer;
+            }
+
+            ErrorHandlers.TypeError(OutputPort.Name, obj);
+            return null;
+        }
     }
+    #endregion
 }

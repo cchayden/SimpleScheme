@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// The empty list could just as well be represented by null, but that loses some type
     ///   safety, since it is compatible with any type.
     /// </summary>
-    public class EmptyList : Printable
+    public class EmptyList : IPrintable
     {
         #region Constants
         /// <summary>
@@ -26,6 +26,21 @@ namespace SimpleScheme
         /// </summary>
         private static readonly EmptyList Instance = new EmptyList();
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Empty.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is EmptyList;
+        }
 
         #region Constructor
         /// <summary>
@@ -70,10 +85,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extension class for EmptyList
     /// </summary>
-    public static class ExptyListExtension
+    public static class EmptyListExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme empty list.
@@ -82,7 +98,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme empty list.</returns>
         public static bool IsEmptyList(this Obj obj)
         {
-            return obj is EmptyList;
+            return EmptyList.Is(obj);
         }
 
         /// <summary>
@@ -92,7 +108,14 @@ namespace SimpleScheme
         /// <returns>The object as an empty list.</returns>
         public static EmptyList AsEmptyList(this Obj obj)
         {
-            return (EmptyList)obj;
+            if (EmptyList.Is(obj))
+            {
+                return (EmptyList)obj;
+            }
+
+            ErrorHandlers.TypeError(EmptyList.Name, obj);
+            return null;
         }
     }
+    #endregion
 }

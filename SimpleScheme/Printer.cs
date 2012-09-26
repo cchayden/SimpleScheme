@@ -3,7 +3,9 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Text;
+    using System.Collections.Generic;
     using Obj = System.Object;
 
     /// <summary>
@@ -15,6 +17,35 @@ namespace SimpleScheme
     /// </summary>
     public static class Printer
     {
+        #region Static Fields
+        private static TypeTable types = new TypeTable();
+        #endregion
+
+        #region Static Initializer
+        static Printer()
+        {
+            types
+               .Add(Pair.Is, Pair.TypeName)
+               .Add(EmptyList.Is, EmptyList.TypeName)
+               .Add(Number.Is, Number.TypeName)
+               .Add(Character.Is, Character.TypeName)
+               .Add(SchemeString.Is, SchemeString.TypeName)
+               .Add(Procedure.Is, Procedure.TypeName)
+               .Add(Vector.Is, Vector.TypeName)
+               .Add(Symbol.Is, Symbol.TypeName)
+               .Add(SchemeBoolean.Is, SchemeBoolean.TypeName)
+               .Add(InputPort.Is, InputPort.TypeName)
+               .Add(OutputPort.Is, OutputPort.TypeName)
+               .Add(AsynchronousClrProcedure.Is, AsynchronousClrProcedure.TypeName)
+               .Add(SynchronousClrProcedure.Is, SynchronousClrProcedure.TypeName)
+               .Add(ClrConstructor.Is, ClrConstructor.TypeName)
+               .Add(Continuation.Is, Continuation.TypeName)
+               .Add(Lambda.Is, Lambda.TypeName)
+               .Add(Macro.Is, Macro.TypeName)
+               .Add(Undefined.Is, Undefined.TypeName);
+        }
+        #endregion
+
         #region Public Static Methods
         /// <summary>
         /// Convert an obj into a string representation.
@@ -54,39 +85,14 @@ namespace SimpleScheme
                 return;
             }
 
-            switch (x.GetType().FullName)
+            if (x is IPrintable)
             {
-                // Names for types implementing Scheme values, used for error messages.
-                case "System.Byte":
-                case "System.Int32":
-                case "System.Int16":
-                case "System.Int64":
-                case "System.Single": 
-                case "System.Double":
-                    x.AsNumber().PrintString(quoted, buf);
-                    return;
-                case "SimpleScheme.Symbol":
-                case "SimpleScheme.SchemeBoolean":
-                case "SimpleScheme.SchemeString":
-                case "SimpleScheme.Character":
-                case "SimpleScheme.Vector":
-                case "SimpleScheme.Pair":
-                case "SimpleScheme.Procedure":
-                case "SimpleScheme.Primitive":
-                case "SimpleScheme.Continuation":
-                case "SimpleScheme.Lambda":
-                case "SimpleScheme.Macro":
-                case "SimpleScheme.InputPort":
-                case "SimpleScheme.OutputPort":
-                case "SimpleScheme.EmptyList":
-                case "SimpleScheme.Evaluator":
-                case "SimpleScheme.Undefined":
-                    ((Printable)x).PrintString(quoted, buf);
-                    return;
-                default:
-                    // use the built-in ToString
-                    buf.Append(x);   
-                    return;
+                ((IPrintable)x).PrintString(quoted, buf);
+            }
+            else
+            {
+                // use the built-in ToString
+                buf.Append(x);   
             }
         }
 
@@ -97,92 +103,71 @@ namespace SimpleScheme
         /// <returns>The type name.</returns>
         public static string TypeName(Obj obj)
         {
-            if (obj.IsPair())
+            var ent = types.Find(obj);
+            return ent != null ? ent.TypeName : "Unknown";
+        }
+        #endregion
+
+        #region TypeTable
+        /// <summary>
+        /// Type table entry
+        /// </summary>
+        private class TypeEntry
+        {
+            /// <summary>
+            /// Tests an object to see if it of a given type.
+            /// </summary>
+            public Predicate<object> TypePredicate;
+
+            /// <summary>
+            /// Gives the scheme type name.
+            /// </summary>
+            public string TypeName;
+
+            /// <summary>
+            /// Initializes a new instance of the TypeEntry class.
+            /// </summary>
+            /// <param name="typePredicate">The type predicate.</param>
+            /// <param name="typeName">The scheme type name.</param>
+            public TypeEntry(Predicate<object> typePredicate, string typeName)
             {
-                return Primitive.ValueType.Pair.ToString();
+                this.TypePredicate = typePredicate;
+                this.TypeName = typeName;
+            }
+        }
+
+        /// <summary>
+        /// The type table.
+        /// Contains a predicate for testing the type of an object, and the corresponding type name.
+        /// </summary>
+        private class TypeTable
+        {
+            /// <summary>
+            /// The list of scheme types supported by the interpreter.
+            /// </summary>
+            private List<TypeEntry> typeList = new List<TypeEntry>();
+
+            /// <summary>
+            /// Add an element to the type table.
+            /// </summary>
+            /// <param name="typePredicate">The type predicate.</param>
+            /// <param name="typeName">The corresponding type name.</param>
+            /// <returns></returns>
+            public TypeTable Add(Predicate<object> typePredicate, string typeName)
+            {
+                this.typeList.Add(new TypeEntry(typePredicate, typeName));
+                return this;
             }
 
-            if (obj.IsEmptyList())
+            /// <summary>
+            /// Find an entry in the type list.
+            /// </summary>
+            /// <param name="obj">The object whose type is to be found.</param>
+            /// <returns>The entry that is found, or null.</returns>
+            public TypeEntry Find(Obj obj)
             {
-                return Primitive.ValueType.Empty.ToString();
+                return this.typeList.Find(entry => entry.TypePredicate(obj));
             }
-
-            if (obj.IsNumber())
-            {
-                return Primitive.ValueType.Number.ToString();
-            }
-
-            if (obj.IsCharacter())
-            {
-                return Primitive.ValueType.Char.ToString();
-            }
-
-            if (obj.IsSchemeString())
-            {
-                return Primitive.ValueType.String.ToString();
-            }
-
-            if (obj.IsProcedure())
-            {
-                return Primitive.ValueType.Proc.ToString();
-            }
-
-            if (obj.IsVector())
-            {
-                return Primitive.ValueType.Vector.ToString();
-            }
-
-            if (obj.IsSymbol())
-            {
-                return Primitive.ValueType.Symbol.ToString();
-            }
-
-            if (obj.IsSchemeBoolean())
-            {
-                return Primitive.ValueType.Boolean.ToString();
-            }
-
-            if (obj.IsInputPort() || obj.IsOutputPort())
-            {
-                return Primitive.ValueType.Port.ToString();
-            }
-
-            if (obj.IsAsynchronousClrProcedure())
-            {
-                return Primitive.ValueType.AsynchronousClrProcedure.ToString();
-            }
-
-            if (obj.IsSynchronousClrProcedure())
-            {
-                return Primitive.ValueType.SynchronousClrProcedure.ToString();
-            }
-
-            if (obj.IsClrConstructor())
-            {
-                return Primitive.ValueType.ClrConstructor.ToString();
-            }
-
-            if (obj.IsContinuation())
-            {
-                return Primitive.ValueType.Continuation.ToString();
-            }
-
-            if (obj.IsLambda())
-            {
-                return Primitive.ValueType.Lambda.ToString();
-            }
-
-            if (obj.IsMacro())
-            {
-                return Primitive.ValueType.Macro.ToString();
-            }
-
-            if (obj.IsUndefined())
-            {
-                return Primitive.ValueType.Undefined.ToString();
-            }
-
-            return "Unknown";
         }
         #endregion
     }

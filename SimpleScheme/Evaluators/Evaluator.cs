@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Evaluates expressions step by step.
     /// Base class for all other evaluators.
     /// </summary>
-    public class Evaluator : Printable
+    public class Evaluator : IPrintable
     {
         #region Constants
         /// <summary>

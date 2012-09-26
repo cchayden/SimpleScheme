@@ -100,7 +100,7 @@ namespace Tests
         public void IfTest()
         {
             this.section = "4.1.3";
-            Assert.AreEqual(12.0, this.ReadAndEvaluate("((if #f + *) 3 4)"), "Failed " + this.section);
+            Assert.AreEqual(12.0, this.ReadAndEvaluate("((if #f + *) 3 4)").AsNumber().N, "Failed " + this.section);
         }
 
         /// <summary>
@@ -110,15 +110,15 @@ namespace Tests
         public void LambdaTest()
         {
             this.section = "4.1.4";
-            Assert.AreEqual(8.0, this.ReadAndEvaluate("((lambda (x) (+ x x)) 4)"), "Failed " + this.section);
+            Assert.AreEqual(8.0, this.ReadAndEvaluate("((lambda (x) (+ x x)) 4)").AsNumber().N, "Failed " + this.section);
             this.ReadAndEvaluate("(define reverse-subtract (lambda (x y) (- y x)))");
-            Assert.AreEqual(3.0, this.ReadAndEvaluate("(reverse-subtract 7 10)"), "Failed " + this.section);
+            Assert.AreEqual(3.0, this.ReadAndEvaluate("(reverse-subtract 7 10)").AsNumber().N, "Failed " + this.section);
             this.ReadAndEvaluate(
                 @"(define add4
                     (let ((x 4))
                          (lambda (y) (+ x y))))");
 
-            Assert.AreEqual(10.0, this.ReadAndEvaluate("(add4 6)"), "Failed 4.1.4");
+            Assert.AreEqual(10.0, this.ReadAndEvaluate("(add4 6)").AsNumber().N, "Failed 4.1.4");
             Assert.AreEqual("(3 4 5 6)", this.ReadAndEvaluate("((lambda x x) 3 4 5 6)").ToString(), "Failed " + this.section);
             Assert.AreEqual("(5 6)", this.ReadAndEvaluate("((lambda (x y . z) z) 3 4 5 6))").ToString(), "Failed " + this.section);
         }

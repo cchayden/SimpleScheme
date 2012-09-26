@@ -111,7 +111,7 @@ namespace SimpleScheme
                     Symbol.New("exit"),
                     (args, caller) =>
                     {
-                        System.Environment.Exit(args.First().IsEmptyList() ? 0 : Number.AsInt(args.First()));
+                        System.Environment.Exit(args.First().IsEmptyList() ? 0 : args.First().AsInt());
                         return Undefined.New();
                     },
                     0,

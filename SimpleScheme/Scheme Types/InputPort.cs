@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// Represents an input port, a mechanism for reading input.
     /// It is immutable.
     /// </summary>
-    public sealed class InputPort : Printable
+    public sealed class InputPort : IPrintable
     {
         #region Constants
         /// <summary>
@@ -25,6 +25,21 @@ namespace SimpleScheme
         /// </summary>
         public const string Name = "input-port";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Port.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is InputPort;
+        }
 
         #region Fields
         /// <summary>
@@ -311,10 +326,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extensions for InputPort
     /// </summary>
-    public static class InputPortExtensions
+    public static class InputPortExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme input port.
@@ -323,17 +339,17 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme input port.</returns>
         public static bool IsInputPort(this Obj obj)
         {
-            return obj is InputPort;
+            return InputPort.Is(obj);
         }
 
         /// <summary>
-        /// Check that an object is an input port.
+        /// Convert to input port.
         /// </summary>
         /// <param name="obj">The object.</param>
         /// <returns>An input port.</returns>
         public static InputPort AsInputPort(this Obj obj)
         {
-            if (obj.IsInputPort())
+            if (InputPort.Is(obj))
             {
                 return (InputPort)obj;
             }
@@ -341,5 +357,23 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(InputPort.Name, obj);
             return null;
         }
+
+
+        /// <summary>
+        /// Convert to text writer.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The text reader.</returns>
+        public static TextReader AsTextReader(this Obj obj)
+        {
+            if (InputPort.Is(obj))
+            {
+                return ((InputPort)obj).Parser.Reader;
+            }
+
+            ErrorHandlers.TypeError(InputPort.Name, obj);
+            return null;
+        }
     }
+    #endregion
 }

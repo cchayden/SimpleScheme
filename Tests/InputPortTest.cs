@@ -134,7 +134,6 @@ namespace Tests
             this.TestNextToken("#e10", 10.0);
             this.TestNextToken("#i10", 10.0);
             this.TestNextToken("#d10", 10.0);
-            this.TestNextToken("#d 10", 10.0);
             this.TestNextToken("#b10", 2);
             this.TestNextToken("#o10", 8);
             this.TestNextToken("#x10", 16);
@@ -204,9 +203,9 @@ namespace Tests
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
                 var actual = port.Read();
-                Assert.AreEqual(1.0, actual.First());
-                Assert.AreEqual(2.0, actual.Second());
-                Assert.AreEqual(3.0, actual.Third());
+                Assert.AreEqual(1.0, actual.First().AsNumber().N);
+                Assert.AreEqual(2.0, actual.Second().AsNumber().N);
+                Assert.AreEqual(3.0, actual.Third().AsNumber().N);
             }
 
             using (var reader = new StringReader("('a 'b 'c)"))
@@ -315,7 +314,7 @@ namespace Tests
             using (var reader = new StringReader(input))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual(expected, port.Parser.NextToken());
+                Assert.AreEqual(expected, port.Parser.NextToken().AsNumber().N);
             }
         }
 
@@ -329,7 +328,7 @@ namespace Tests
             using (var reader = new StringReader(input))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual(expected, port.Parser.NextToken());
+                Assert.AreEqual(expected, port.Parser.NextToken().AsInt());
             }
         }
 

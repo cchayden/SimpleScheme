@@ -48,7 +48,7 @@
     <Compile Include="Scheme Types\Character.cs" />
     <Compile Include="CompletedAsyncResult.cs" />
     <Compile Include="Counter.cs" />
-    <Compile Include="Scheme Types\Cleanable.cs" />
+    <Compile Include="Scheme Types\ICleanable.cs" />
     <Compile Include="Scheme Types\ClrConstructor.cs" />
     <Compile Include="Scheme Types\EmptyList.cs" />
     <Compile Include="Evaluators\EvaluateAnd.cs">
@@ -68,7 +68,7 @@
     <Compile Include="Parser.cs" />
     <Compile Include="PrimitiveEnvironment.cs" />
     <Compile Include="Printer.cs" />
-    <Compile Include="Scheme Types\Printable.cs" />
+    <Compile Include="Scheme Types\IPrintable.cs" />
     <Compile Include="Scheme Types\SchemeBoolean.cs" />
     <Compile Include="Scheme Types\Lambda.cs" />
     <Compile Include="Scheme Types\ClrProcedure.cs" />

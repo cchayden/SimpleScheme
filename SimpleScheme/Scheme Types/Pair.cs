@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// A pair consists of two cells, named First and Rest.
     /// These are used to build the linked-list structures.
     /// </summary>
-    public sealed class Pair : Printable, Cleanable
+    public sealed class Pair : IPrintable, ICleanable
     {
         #region Constants
         /// <summary>
@@ -18,6 +18,21 @@ namespace SimpleScheme
         /// </summary>
         public const string Name = "pair";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Pair.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Pair;
+        }
 
         #region Fields
 
@@ -219,6 +234,9 @@ namespace SimpleScheme
             buf.Append(')');
         }
 
+        /// <summary>
+        /// Cleam the whole list, by cleaning each element.
+        /// </summary>
         public void Clean()
         {
             Cleaner.Clean(this.First());
@@ -242,10 +260,11 @@ namespace SimpleScheme
         #endregion
     }
 
+    #region Extension Class
     /// <summary>
     /// Extension for Pair
     /// </summary>
-    public static class PairExtensions
+    public static class PairExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme pair.
@@ -254,7 +273,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme pair.</returns>
         public static bool IsPair(this Obj obj)
         {
-            return obj is Pair;
+            return Pair.Is(obj);
         }
 
         /// <summary>
@@ -264,7 +283,7 @@ namespace SimpleScheme
         /// <returns>The object as a pair.</returns>
         public static Pair AsPair(this Obj obj)
         {
-            if (obj.IsPair())
+            if (Pair.Is(obj))
             {
                 return (Pair)obj;
             }
@@ -273,4 +292,5 @@ namespace SimpleScheme
             return null;
         }
     }
+    #endregion
 }

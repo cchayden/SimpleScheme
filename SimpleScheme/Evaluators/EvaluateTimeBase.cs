@@ -86,7 +86,7 @@ namespace SimpleScheme
             long time = step.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - step.startMem;
             return s.ReturnFromStep(
-                s.ReturnedExpr.Cons(time.AsNumber().MakeList("msec", mem.AsNumber(), "bytes")));
+                s.ReturnedExpr.Cons(Number.New(time).MakeList("msec", Number.New(mem), "bytes")));
         }
         #endregion
 
@@ -108,7 +108,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateTimeBase)s;
             Obj y = s.Expr.Second();
-            step.counter = y.IsEmptyList() ? 1 : Number.AsInt(y);
+            step.counter = y.IsEmptyList() ? 1 : y.AsInt();
             step.i = 0;
             return s.ContinueHere(Step1);
         }

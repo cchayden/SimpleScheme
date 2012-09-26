@@ -12,7 +12,7 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : Printable, Cleanable
+    public class Symbol : IPrintable, ICleanable
     {
         #region Constants
         /// <summary>
@@ -20,6 +20,21 @@ namespace SimpleScheme
         /// </summary>
         public const string Name = "symbol";
         #endregion
+
+        /// <summary>
+        /// The printable name of this scheme type.
+        /// </summary>
+        public static string TypeName = Primitive.ValueType.Symbol.ToString();
+
+        /// <summary>
+        /// Identifies objects of this scheme type.
+        /// </summary>
+        /// <param name="obj">The object to test.</param>
+        /// <returns>True if the object is this scheme type.</returns>
+        public static bool Is(Obj obj)
+        {
+            return obj is Symbol;
+        }
 
         #region Fields
         /// <summary>
@@ -48,16 +63,6 @@ namespace SimpleScheme
             this.name = name;
             this.pos = -1;
             this.level = -1;
-        }
-        #endregion
-
-        #region Public Static Properties
-        /// <summary>
-        /// Gets the scheme type name.
-        /// </summary>
-        public static string TypeName
-        {
-            get { return "Symbol"; }
         }
         #endregion
 
@@ -195,7 +200,7 @@ namespace SimpleScheme
     /// <summary>
     /// Extension class for Symbol
     /// </summary>
-    public static class SymbolExtensions
+    public static class SymbolExtension
     {
         /// <summary>
         /// Tests whether to given object is a scheme symbol.
@@ -204,7 +209,7 @@ namespace SimpleScheme
         /// <returns>True if the object is a scheme symbol.</returns>
         public static bool IsSymbol(this Obj obj)
         {
-            return obj is Symbol;
+            return Symbol.Is(obj);
         }
 
         /// <summary>
@@ -215,7 +220,7 @@ namespace SimpleScheme
         /// <returns>The corresponding symbol.</returns>
         public static Symbol AsSymbol(this Obj x)
         {
-            if (x.IsSymbol())
+            if (Symbol.Is(x))
             {
                 return (Symbol)x;
             }
