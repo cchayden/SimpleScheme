@@ -494,12 +494,26 @@ namespace SimpleScheme
             this.returnedExpr = exp;
             return this;
         }
+        
+        /// <summary>
+        /// Stores the return value and the returned environment.
+        /// </summary>
+        /// <param name="exp">The return value</param>
+        /// <param name="envir">The returned environment.</param>
+        /// <returns>The next evaluator.</returns>
         public virtual Evaluator UpdateReturnValue(Obj exp, Environment envir)
         {
             this.returnedExpr = exp;
             this.returnedEnv = envir;
             return this;
         }
+
+        /// <summary>
+        /// Stores the return value and the return type.
+        /// </summary>
+        /// <param name="exp">The return value.</param>
+        /// <param name="flag">The return type.</param>
+        /// <returns>The next evaluator.</returns>
         public virtual Evaluator UpdateReturnValue(Obj exp, ReturnType flag)
         {
             this.returnedExpr = exp;

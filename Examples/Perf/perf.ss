@@ -2,9 +2,12 @@
 ;; performance measurements
 
 (define count 1000000)
+(define total 0)
 (define (test f)
-  (display (first (second (time-call f count))))
-  (display #\tab) (p f) 
+  (let ((t (first (second (time-call f count)))))
+    (set! total (+ total t))
+    (display t)
+    (display #\tab) (p f))
   )
 
 (define (double x) (* 2 x))
@@ -176,5 +179,7 @@
 (test (lambda () (and 1 2)))
 (test (lambda () (and 1 2 3)))
 (test (lambda () (and 1 2 3 4)))
+
+(display total) (display #\tab) (p 'total)
 
 

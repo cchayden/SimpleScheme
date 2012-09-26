@@ -150,6 +150,9 @@ namespace SimpleScheme
             }
         }
 
+        /// <summary>
+        /// Gets the async result.
+        /// </summary>
         public TResult Result
         {
             get

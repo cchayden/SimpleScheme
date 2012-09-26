@@ -60,10 +60,6 @@
     <Compile Include="TestClass.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Couch\CouchLib\CouchLib.csproj">
-      <Project>{D4199E94-C919-4360-8E27-1CFD5CA04895}</Project>
-      <Name>CouchLib</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SimpleScheme\SimpleScheme.csproj">
       <Project>{0BE1BA31-6648-4A16-834C-C29AF39239F5}</Project>
       <Name>SimpleScheme</Name>
