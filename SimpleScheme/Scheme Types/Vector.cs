@@ -4,6 +4,7 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
@@ -64,7 +65,6 @@ namespace SimpleScheme
         private Vector(SchemeObject length, SchemeObject fill) : this(Number.AsInt(length), fill)
         {
         }
-
         #endregion
 
         #region SchemeType Accessors
@@ -151,6 +151,30 @@ namespace SimpleScheme
         {
             return new Vector(length, fill);
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class from an object.
+        /// This object must be an array of CLR objects.
+        /// Each element is converted to a Scheme object.
+        /// </summary>
+        /// <param name="array">The vector elements.</param>
+        public static Vector New(object array)
+        {
+            Type objType = array.GetType();
+            if (!objType.IsArray)
+            {
+                // TODO cch improve this error message.
+                ErrorHandlers.ClrError("Type conversion failed");
+            }
+            Array ar = (Array)array;
+            Vector v = new Vector(ar.Length);
+            for (int i = 0; i < ar.Length; i++)
+            {
+                v[i] = ClrObject.FromClrObject(ar.GetValue(i));
+            }
+            return v;
+        }
+
         #endregion
 
         #region Define Primitives
@@ -177,7 +201,7 @@ namespace SimpleScheme
                         2, 
                         ValueType.Number, 
                         ValueType.Obj)
-                //// <r4rs section="6.8">(vector <obj>)</r4rs>
+                //// <r4rs section="6.8">(vector <obj> ...)</r4rs>
                 .DefinePrimitive(
                         "vector",
                         (args, caller) => FromList(args), 

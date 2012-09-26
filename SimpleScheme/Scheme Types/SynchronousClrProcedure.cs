@@ -148,8 +148,9 @@ namespace SimpleScheme
 
             var argList = this.ToArgList(args, null);
             object res = this.MethodInfo.Invoke(target, argList);
+            // TODO cch convert from CLR to Scheme
             res = res ?? Undefined.Instance;
-            return caller.UpdateReturnValue(ClrObject.New(res));
+            return caller.UpdateReturnValue(ClrObject.FromClrObject(res));
         }
         #endregion
     }

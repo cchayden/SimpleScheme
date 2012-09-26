@@ -613,19 +613,21 @@ namespace SimpleScheme
         {
             while (true)
             {
+#if Check
                 if (step == null)
                 {
                     return ErrorHandlers.InternalError("PC bad value");
                 }
+#endif
 
-                SchemeObject toReturn = step.ReturnedExpr;
-                if ((step = step.Divert()) == null)
+                Evaluator nextStep = step.NextStep();
+                if (nextStep == null)
                 {
-                    return toReturn;
+                    return step.ReturnedExpr;
                 }
 
                 // run the step and capture the next step
-                step = step.RunStep();
+                step = nextStep.RunStep();
             }
         }
 
@@ -733,6 +735,7 @@ namespace SimpleScheme
         private static SchemeObject UnsafeEndEval(IAsyncResult ar)
         {
             var res = ((AsyncResult<SchemeObject>)ar).EndInvoke();
+            // TODO cch should this be converted?
             return res;
         }
 

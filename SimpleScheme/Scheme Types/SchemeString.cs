@@ -401,6 +401,56 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal character arrays.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is SchemeString))
+            {
+                return false;
+            }
+
+            return this.Equals((SchemeString)other);
+        }
+
+        /// <summary>
+        /// Compares two Number values by comparing their underlying character arrays.
+        /// </summary>
+        /// <param name="other">The other SchemeString.</param>
+        /// <returns>True if they have the same characters.</returns>
+        public bool Equals(SchemeString other)
+        {
+            for (int i = 0; i < this.str.Length; i++)
+            {
+                if (this.str[i] != other.str[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// The hash code is the SchemeString's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            int hash = 0;
+            for (int i = 0; i < this.str.Length; i++)
+            {
+                hash += this.str[i];
+            }
+
+            return hash;
+        }
+        #endregion
+
         #region Public Methods
 
         /// <summary>
@@ -508,10 +558,7 @@ namespace SimpleScheme
             var endPos = Number.AsInt(end);
             var len = endPos - startPos;
             var newStr = new char[len];
-            for (int i = 0; i < len; i++)
-            {
-                newStr[i] = str.str[startPos + i];
-            }
+            Array.Copy(str.str, startPos, newStr, 0, len);
 
             return new SchemeString(newStr);
         }
@@ -564,11 +611,7 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static SchemeObject Fill(SchemeString str, Character fill)
         {
-            char[] ss = str.str;
-            for (int i = 0; i < ss.Length; i++)
-            {
-                ss[i] = fill.C;
-            }
+            str.Fill(fill.C);
 
             return Undefined.Instance;
         }

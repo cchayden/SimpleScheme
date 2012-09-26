@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Text;
 
     /// <summary>
@@ -11,7 +12,7 @@ namespace SimpleScheme
     /// as a string.
     /// Symbols are immutable.
     /// </summary>
-    public class Symbol : SchemeObject, ICleanable
+    public class Symbol : SchemeObject, ICleanable, IEquatable<Symbol>
     {
         #region Fields
         /// <summary>
@@ -127,6 +128,59 @@ namespace SimpleScheme
 
             return obj1.ToString() == obj2.ToString();
         }
+
+        /// <summary>
+        /// Provide the symbol as a string.
+        /// Used to avoid the overhead of virtual dispatch when we know we have a Symbol.
+        /// </summary>
+        /// <param name="sym">The symbol.</param>
+        /// <returns>The string contained in the Symbol.</returns>
+        public static string ToString(Symbol sym)
+        {
+            return sym.name;
+        }
+        #endregion
+
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// Two symbols are equal if they have the same underlying name.
+        /// This ignores the differences in pos/level.
+        /// These can be thought of as hints used when the symbol is looked up, but do not
+        ///   make it a different symbol.
+        /// The pos/level properties do make it dangerous to cache and share symbols between different
+        ///   occurrances in the program text.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they have the same symbol name.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is Symbol))
+            {
+                return false;
+            }
+
+            return this.Equals((Symbol)other);
+        }
+
+        /// <summary>
+        /// Compares two Symbol values by comparing their underlying name.
+        /// </summary>
+        /// <param name="other">The other Symbol.</param>
+        /// <returns>True if they have the same name.</returns>
+        public bool Equals(Symbol other)
+        {
+            return this.name == other.name;
+        }
+
+        /// <summary>
+        /// The hash code is the name's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.name.GetHashCode();
+        }
         #endregion
 
         #region Define Primitives
@@ -192,7 +246,6 @@ namespace SimpleScheme
         {
             return this.name;
         }
-
         #endregion
     }
 }

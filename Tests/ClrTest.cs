@@ -40,7 +40,7 @@ namespace Tests
                 (define new-test-class (new ""Tests.ClrTest+ClrTestClass,Tests""))
                 new-test-class)
             ");
-            this.CheckClrType(typeof(ClrTestClass), "new clr test class", res);
+            CheckClrType(typeof(ClrTestClass), "new clr test class", res);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Tests
                 (define no-arg(method ""Tests.ClrTest+ClrTestClass,Tests"" ""StaticNoArg""))
                 (no-arg))
             ");
-            this.CheckClr("ok", "static no arg", res);
+            Check((SchemeString)"ok", "static no arg", res);
 
             // no arg
             res = this.Run(@"
@@ -64,7 +64,7 @@ namespace Tests
                 (define no-arg(method ""Tests.ClrTest+ClrTestClass,Tests"" ""MemberNoArg""))
                 (no-arg test-class))
             ");
-            this.CheckClr("ok", "member no arg", res);
+            Check((SchemeString)"ok", "member no arg", res);
 
             // static string to string
             res = this.Run(@"
@@ -72,7 +72,7 @@ namespace Tests
                 (define str-to-str (method ""Tests.ClrTest+ClrTestClass,Tests"" ""StaticStringToString"" ""string""))
                 (str-to-str ""test""))
             ");
-            this.CheckClr("test*", "static string to string", res);
+            Check((SchemeString)"test*", "static string to string", res);
 
             // static symbol to string
             res = this.Run(@"
@@ -80,7 +80,7 @@ namespace Tests
                 (define str-to-str (method ""Tests.ClrTest+ClrTestClass,Tests"" ""StaticStringToString"" ""string""))
                 (str-to-str (string->symbol ""test"")))
             ");
-            this.CheckClr("test*", "static symbol to string", res);
+            Check((SchemeString)"test*", "static symbol to string", res);
 
             // string to string
             res = this.Run(@"
@@ -89,7 +89,7 @@ namespace Tests
                 (define str-to-str (method ""Tests.ClrTest+ClrTestClass,Tests"" ""MemberStringToString"" ""string""))
                 (str-to-str test-class 'test))
             ");
-            this.CheckClr("test*", "string to string", res);
+            Check((SchemeString)"test*", "string to string", res);
 
             // symbol to string
             res = this.Run(@"
@@ -98,7 +98,7 @@ namespace Tests
                 (define str-to-str (method ""Tests.ClrTest+ClrTestClass,Tests"" ""MemberStringToString"" ""string""))
                 (str-to-str test-class 'test))
             ");
-            this.CheckClr("test*", "symbol to string", res);
+            Check((SchemeString)"test*", "symbol to string", res);
 
             // string property set/get
             res = this.Run(@"
@@ -109,7 +109,7 @@ namespace Tests
                 (attr-set test-class 'ok)
                 (attr-get test-class))
             ");
-            this.CheckClr("ok", "string set/get", res);
+            Check((SchemeString)"ok", "string set/get", res);
 
             // index set/get
             res = this.Run(@"
@@ -120,7 +120,7 @@ namespace Tests
                 (item-set! test-class 0 'xxx)
                 (item test-class 0))
             ");
-            this.CheckClr("xxx", "item array-list", res);
+            Check((SchemeString)"xxx", "item array-list", res);
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Tests
                 (define int-to-int (method ""Tests.ClrTest+ClrTestClass,Tests"" ""StaticIntToInt"" ""int""))
                 (int-to-int 1))
             ");
-            this.CheckClr(2, "static int to int", res);
+            Check((Number)2, "static int to int", res);
 
             // int to int
             res = this.Run(@"
@@ -144,7 +144,7 @@ namespace Tests
                 (define int-to-int (method ""Tests.ClrTest+ClrTestClass,Tests"" ""MemberIntToInt"" ""int""))
                 (int-to-int test-class 1))
             ");
-            this.CheckClr(2, "int to int", res);
+            Check((Number)2, "int to int", res);
 
             // int property set/get
             res = this.Run(@"
@@ -155,7 +155,7 @@ namespace Tests
                 (attr-set test-class 5)
                 (attr-get test-class))
             ");
-            this.CheckClr(5, "int set/get", res);
+            Check((Number)5, "int set/get", res);
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace Tests
                 (define double-to-double (method ""Tests.ClrTest+ClrTestClass,Tests"" ""DoubleToDouble"" ""double""))
                 (double-to-double 2.25))
             ");
-            this.CheckClr(4.5, "double to double",  res);
+            Check((Number)4.5, "double to double",  res);
 
             // float to float
             res = this.Run(@"
@@ -178,7 +178,7 @@ namespace Tests
                 (define float-to-float (method ""Tests.ClrTest+ClrTestClass,Tests"" ""FloatToFloat"" ""float""))
                 (float-to-float 2.25))
             ");
-            this.CheckClr(4.5f, "float to float", res);
+            Check((Number)4.5, "float to float", res);
 
             // short to short
             res = this.Run(@"
@@ -186,7 +186,7 @@ namespace Tests
                 (define short-to-short (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ShortToShort"" ""short""))
                 (short-to-short 10000))
             ");
-            this.CheckClr((short)10001, "short to short", res);
+            Check((Number)10001, "short to short", res);
 
             // byte to byte
             res = this.Run(@"
@@ -194,7 +194,7 @@ namespace Tests
                 (define byte-to-byte (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ByteToByte"" ""byte""))
                 (byte-to-byte 41))
             ");
-            this.CheckClr((byte)42, "byte to byte", res);
+            Check((Number)42, "byte to byte", res);
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ namespace Tests
                 (define bool-to-bool (method ""Tests.ClrTest+ClrTestClass,Tests"" ""BoolToBool"" ""bool""))
                 (bool-to-bool #f))
             ");
-            this.CheckClr(true, "bool to bool", res);
+            Check(SchemeBoolean.True, "bool to bool", res);
 
             // bool to bool
             res = this.Run(@"
@@ -217,7 +217,7 @@ namespace Tests
                 (define bool-to-bool (method ""Tests.ClrTest+ClrTestClass,Tests"" ""BoolToBool"" ""bool""))
                 (bool-to-bool #t))
             ");
-            this.CheckClr(false, "static bool to bool", res);
+            Check(SchemeBoolean.False, "static bool to bool", res);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace Tests
                 (define char-to-char (method ""Tests.ClrTest+ClrTestClass,Tests"" ""CharToChar"" ""char""))
                 (char-to-char #\a))
             ");
-            this.CheckClr('A', "char to char", res);
+            Check((Character)'A', "char to char", res);
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace Tests
                 (define reader-to-reader (method ""Tests.ClrTest+ClrTestClass,Tests"" ""TextReaderToTextReader"" ""System.IO.TextReader""))
                 (reader-to-reader (current-input-port)))
             ");
-            this.CheckClrType(typeof(StreamReader), "text reader to text reader", res);
+            CheckClrType(typeof(StreamReader), "text reader to text reader", res);
 
             // text reader to text writer
             res = this.Run(@"              
@@ -255,7 +255,7 @@ namespace Tests
                 (define writer-to-writer (method ""Tests.ClrTest+ClrTestClass,Tests"" ""TextWriterToTextWriter"" ""System.IO.TextWriter""))
                 (writer-to-writer (current-output-port)))
             ");
-            this.CheckClrType(typeof(StreamWriter), "text writer to text writer", res);
+            CheckClrType(typeof(StreamWriter), "text writer to text writer", res);
         }
 
         /// <summary>
@@ -264,15 +264,20 @@ namespace Tests
         [TestMethod]
         public void ObjectArrayClrTest()
         {
-            var exp = new object[] { (Character)'a' };
+            var exp = new SchemeObject[] { (Character)'a', (Number)1, (SchemeString)"abc", (SchemeString)"def", SchemeBoolean.True, EmptyList.Instance };
             var res = this.Run(@"              
               (begin
                 (define objarray-to-objarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ObjectArrayToObjectArray"" ""object[]""))
-                (define array (vector 1))
+                (define array (make-vector 6))
                 (vector-set! array 0 #\a)
+                (vector-set! array 1 1)
+                (vector-set! array 2 ""abc"")
+                (vector-set! array 3 'def)
+                (vector-set! array 4 #t)
+                (vector-set! array 5 '())
                 (objarray-to-objarray array))
             ");
-            this.CheckClrObjectArray(exp, "objarray to objarray", res);
+            CheckVector<SchemeObject>(exp, "objarray to objarray", res);
         }
 
         /// <summary>
@@ -281,15 +286,15 @@ namespace Tests
         [TestMethod]
         public void IntArrayClrTest()
         {
-            var exp = new[] { 0 };
+            var exp = new[] { (Number)0 };
             var res = this.Run(@"              
               (begin
                 (define intarray-to-intarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""IntArrayToIntArray"" ""int[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 0)
                 (intarray-to-intarray array))
             ");
-            this.CheckClrArray<int>(exp, "intarray to intarray", res);
+            CheckVector<Number>(exp, "intarray to intarray", res);
         }
 
         /// <summary>
@@ -298,15 +303,15 @@ namespace Tests
         [TestMethod]
         public void BoolArrayClrTest()
         {
-            var exp = new[] { true };
+            var exp = new[] { SchemeBoolean.True };
             var res = this.Run(@"              
               (begin
                 (define boolarray-to-boolarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""BoolArrayToBoolArray"" ""bool[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 #t)
                 (boolarray-to-boolarray array))
             ");
-            this.CheckClrArray<bool>(exp, "boolarray to boolarray", res);
+            CheckVector<SchemeBoolean>(exp, "boolarray to boolarray", res);
         }
 
         /// <summary>
@@ -315,15 +320,15 @@ namespace Tests
         [TestMethod]
         public void ByteArrayClrTest()
         {
-            var exp = new byte[] { 0 };
+            var exp = new[] { (Number)0 };
             var res = this.Run(@"              
               (begin
                 (define bytearray-to-bytearray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ByteArrayToByteArray"" ""byte[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 0)
                 (bytearray-to-bytearray array))
             ");
-            this.CheckClrArray<byte>(exp, "bytearray to bytearray", res);
+            CheckVector<Number>(exp, "bytearray to bytearray", res);
         }
 
         /// <summary>
@@ -332,15 +337,15 @@ namespace Tests
         [TestMethod]
         public void ShortArrayClrTest()
         {
-            var exp = new short[] { 0 };
+            var exp = new[] { (Number)0 };
             var res = this.Run(@"              
               (begin
                 (define shortarray-to-shortarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""ShortArrayToShortArray"" ""short[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 0)
                 (shortarray-to-shortarray array))
             ");
-            this.CheckClrArray<short>(exp, "shortarray to shortarray", res);
+            CheckVector<Number>(exp, "shortarray to shortarray", res);
         }
 
         /// <summary>
@@ -349,15 +354,15 @@ namespace Tests
         [TestMethod]
         public void LongArrayClrTest()
         {
-            var exp = new[] { 0L };
+            var exp = new[] { (Number)0L };
             var res = this.Run(@"              
               (begin
                 (define longarray-to-longarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""LongArrayToLongArray"" ""long[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 0)
                 (longarray-to-longarray array))
             ");
-            this.CheckClrArray<long>(exp, "longarray to longarray", res);
+            CheckVector<Number>(exp, "longarray to longarray", res);
         }
 
         /// <summary>
@@ -366,15 +371,15 @@ namespace Tests
         [TestMethod]
         public void FloatArrayClrTest()
         {
-            var exp = new[] { 0.0f };
+            var exp = new[] { (Number)0.0f };
             var res = this.Run(@"              
               (begin
                 (define floatarray-to-floatarray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""FloatArrayToFloatArray"" ""float[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 0.0)
                 (floatarray-to-floatarray array))
             ");
-            this.CheckClrArray<float>(exp, "floatarray to floatarray", res);
+            CheckVector<Number>(exp, "floatarray to floatarray", res);
         }
 
         /// <summary>
@@ -383,15 +388,15 @@ namespace Tests
         [TestMethod]
         public void DoubleArrayClrTest()
         {
-            var exp = new[] { 0.0d };
+            var exp = new[] { (Number)0.0d };
             var res = this.Run(@"              
               (begin
                 (define doublearray-to-doublearray (method ""Tests.ClrTest+ClrTestClass,Tests"" ""DoubleArrayToDoubleArray"" ""double[]""))
-                (define array (vector 1))
+                (define array (make-vector 1))
                 (vector-set! array 0 0.0)
                 (doublearray-to-doublearray array))
             ");
-            this.CheckClrArray<double>(exp, "doublearray to doublearray", res);
+            CheckVector<Number>(exp, "doublearray to doublearray", res);
         }
 
         /// <summary>
@@ -404,18 +409,25 @@ namespace Tests
             return this.interpreter.Eval(expr);
         }
 
-        /// <summary>
-        /// Check the result (scalar types).
-        /// </summary>
-        /// <param name="expected">The expected result</param>
-        /// <param name="label">Message label</param>
-        /// <param name="res">Actual result</param>
-        private void CheckClr(object expected, string label, object res)
+        private static void Check(object expected, string label, object res)
         {
             string actual = res != EmptyList.Instance ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
-            Assert.IsInstanceOfType(res, typeof(ClrObject));
-            Assert.AreEqual(expected, ((ClrObject)res).Value, "Failed");
+            Assert.AreEqual(expected, res, "Failed");
+        }
+
+        private static void CheckVector<T>(object expected, string label, object res)
+        {
+            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
+            Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
+            var expectedArray = expected as T[];
+            Assert.IsNotNull(expectedArray);
+            Assert.IsInstanceOfType(res, typeof(Vector));
+            var vec = (Vector)res;
+            for (var i = 0; i < expectedArray.Length; i++)
+            {
+                Assert.AreEqual(expectedArray[i], vec[i], "Failed " + i);
+            }
         }
 
         /// <summary>
@@ -424,55 +436,12 @@ namespace Tests
         /// <param name="expected">The expected result</param>
         /// <param name="label">Message label</param>
         /// <param name="res">Actual result</param>
-        private void CheckClrType(object expected, string label, object res)
+        private static void CheckClrType(object expected, string label, object res)
         {
             string actual = res != EmptyList.Instance ? res.ToString() : "'()";
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.IsInstanceOfType(res, typeof(ClrObject));
             Assert.AreEqual(expected, ((ClrObject)res).Value.GetType(), "Failed");
-        }
-
-        /// <summary>
-        /// Check the result (array types).
-        /// </summary>
-        /// <typeparam name="T">The array element type.</typeparam>
-        /// <param name="expected">The expected result</param>
-        /// <param name="label">Message label</param>
-        /// <param name="res">Actual result</param>
-        private void CheckClrArray<T>(object expected, string label, object res)
-        {
-            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
-            Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
-            var expectedArray = expected as T[];
-            Assert.IsNotNull(expectedArray);
-            Assert.IsInstanceOfType(res, typeof(ClrObject));
-            var resArray = ((ClrObject)res).Value as T[];
-            Assert.IsNotNull(resArray);
-            for (var i = 0; i < expectedArray.Length; i++)
-            {
-                Assert.AreEqual(expectedArray[i], resArray[i], "Failed " + i);
-            }
-        }
-
-        /// <summary>
-        /// Check the result (object array types).
-        /// </summary>
-        /// <param name="expected">The expected result</param>
-        /// <param name="label">Message label</param>
-        /// <param name="res">Actual result</param>
-        private void CheckClrObjectArray(object expected, string label, object res)
-        {
-            string actual = res != EmptyList.Instance ? res.ToString() : "'()";
-            Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
-            var expectedArray = expected as object[];
-            Assert.IsNotNull(expectedArray);
-            Assert.IsInstanceOfType(res, typeof(ClrObject));
-            var resArray = ((ClrObject)res).Value as object[];
-            Assert.IsNotNull(resArray);
-            for (var i = 0; i < expectedArray.Length; i++)
-            {
-                Assert.AreEqual(expectedArray[i].ToString(), resArray[i].ToString(), "Failed " + i);
-            }
         }
 
         // ReSharper disable UnusedMember.Local

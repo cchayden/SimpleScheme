@@ -89,13 +89,19 @@ namespace SimpleScheme
                     (args, caller) => ClrObject.New(New(First(args).ToString())), 
                     1, 
                     ValueType.String)
-                //// (new-array <class-name> <length>)
+                //// (new-clr-array <class-name> <length>)
                 .DefinePrimitive(
-                    "new-array",
+                    "new-clr-array",
                     (args, caller) => ClrObject.New(NewArray(First(args).ToString(), (Number)Second(args))), 
                     2, 
                     ValueType.String, 
-                    ValueType.Number);
+                    ValueType.Number)
+                //// (clr->native <obj>)
+                .DefinePrimitive(
+                    "clr->native",
+                    (args, caller) => ClrObject.FromClrObject(First(args)), 
+                    1, 
+                    ValueType.Obj);
         }
         #endregion
 

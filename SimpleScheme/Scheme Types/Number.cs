@@ -585,6 +585,42 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal numbers.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is Number))
+            {
+                return false;
+            }
+
+            return this.Equals((Number)other);
+        }
+
+        /// <summary>
+        /// Compares two Number values by comparing their underlying numerical value.
+        /// </summary>
+        /// <param name="other">The other Number.</param>
+        /// <returns>True if they have the same number value.</returns>
+        public bool Equals(Number other)
+        {
+            return this.n == other.n;
+        }
+
+        /// <summary>
+        /// The hash code is the number's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.n.GetHashCode();
+        }
+        #endregion
+
         #region Public Methods
         /// <summary>
         /// Create a string representation of the number for printing.

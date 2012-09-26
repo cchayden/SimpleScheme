@@ -245,14 +245,14 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Give the evaluator a chance to divert execution.
+        /// Give the Evaluator to execute the next step.
         /// The halt, suspend, and end evaluators do this.
-        /// Return null to break out of evaluation main loop.
+        /// Return null to stop evaluation.
         /// Return a different step to jump to that step.
         /// Return this to just proceed as normal.
         /// </summary>
         /// <returns>Null to break out of main loop, a different evaluator to jump to it.</returns>
-        public virtual Evaluator Divert()
+        public virtual Evaluator NextStep()
         {
             return this;
         }
@@ -305,8 +305,8 @@ namespace SimpleScheme
         /// <returns>The next step to run.</returns>
         public Evaluator RunStep()
         {
+#if Diagnostics
             this.TraceStep();
-#if DEBUG
             this.IncrementCounter(counter);
             if (this.pc.Target != null)
             {

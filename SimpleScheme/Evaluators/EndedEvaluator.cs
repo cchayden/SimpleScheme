@@ -24,7 +24,7 @@ namespace SimpleScheme
         /// Always breaks out of the interpreter loop.
         /// </summary>
         /// <returns>Null return causes stepper to return.</returns>
-        public override Evaluator Divert()
+        public override Evaluator NextStep()
         {
             return null;
         }

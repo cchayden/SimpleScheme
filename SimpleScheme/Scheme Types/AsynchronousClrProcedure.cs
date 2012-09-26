@@ -118,6 +118,7 @@ namespace SimpleScheme
                 target = ((ClrObject)target).Value;
             }
 
+            // TODO cch call ToClr
             if (target is Symbol || target is SchemeString)
             {
                 target = target.ToString();
@@ -125,6 +126,7 @@ namespace SimpleScheme
             
             var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(target, caller));
             var res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
+            // res is not converted because it is IAsyncResult -- convert in completion method
             return new SuspendedEvaluator(ClrObject.New(res), caller);
         }
         #endregion
@@ -173,7 +175,8 @@ namespace SimpleScheme
             var state = (Tuple<object, Evaluator>)result.AsyncState;
             Evaluator caller = state.Item2;
             object res = this.endMethodInfo.Invoke(state.Item1, args);
-            state.Item2.UpdateReturnValue(ClrObject.New(res));
+            res = res ?? Undefined.Instance;
+            state.Item2.UpdateReturnValue(ClrObject.FromClrObject(res));
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.

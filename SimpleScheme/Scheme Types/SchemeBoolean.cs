@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+    using System.Collections.Generic;
     using System.Text;
 
     /// <summary>
@@ -21,6 +23,11 @@ namespace SimpleScheme
         /// Define the false value.
         /// </summary>
         public static readonly SchemeBoolean False = new SchemeBoolean(false);
+
+        /// <summary>
+        /// This is used to do equality tests for different types.
+        /// </summary>
+        private static readonly Dictionary<Type, Func<SchemeObject, SchemeObject, SchemeBoolean>> equalMap;
         #endregion
 
         #region Fields
@@ -31,6 +38,24 @@ namespace SimpleScheme
         #endregion
 
         #region Constructors
+        /// <summary>
+        /// Initializes static members of the <see cref="SchemeBoolean"/> class.
+        /// </summary>
+        static SchemeBoolean()
+        {
+            equalMap = new Dictionary<Type, Func<SchemeObject, SchemeObject, SchemeBoolean>>
+                {
+                    { typeof(EmptyList), (obj1, obj2) => obj2 is EmptyList ? True : False },
+                    { typeof(SchemeString), (obj1, obj2) => ((SchemeString)obj1).Equals(obj2) ? True : False },
+                    { typeof(Character), (obj1, obj2) => ((Character)obj1).Equals(obj2) ? True : False },
+                    { typeof(Vector), (obj1, obj2) => Vector.Equal((Vector)obj1, obj2) },
+                    { typeof(Pair), (obj1, obj2) => Pair.Equal((Pair)obj1, obj2) },
+                    { typeof(Symbol), (obj1, obj2) => ((Symbol)obj1).Equals(obj2) ? True : False },
+                    { typeof(SchemeBoolean), (obj1, obj2) => ((SchemeBoolean)obj1).Equals(obj2) ? True : False },
+                    { typeof(Number), (obj1, obj2) => ((Number)obj1).Equals(obj2) ? True : False },
+                };
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SchemeBoolean"/> class.
         /// </summary>
@@ -95,65 +120,14 @@ namespace SimpleScheme
         /// <returns>True if the objs are equal.</returns>
         public static SchemeBoolean Equal(SchemeObject obj1, SchemeObject obj2)
         {
-            // both empty list
-            if (obj1 is EmptyList && obj2 is EmptyList)
+            Func<SchemeObject, SchemeObject, SchemeBoolean> action;
+            if (equalMap.TryGetValue(obj1.GetType(), out action))
             {
-                return True;
-            }
-
-            if (obj1 is SchemeString)
-            {
-                return SchemeString.Equal((SchemeString)obj1, obj2);
-            }
-
-            if (obj1 is Character)
-            {
-                return Character.Equal((Character)obj1, obj2);
-            }
-
-            if (obj1 is Vector)
-            {
-                return Vector.Equal((Vector)obj1, obj2);
-            }
-
-            if (obj1 is Pair)
-            {
-                return Pair.Equal((Pair)obj1, obj2);
-            }
-
-            if (obj1 is Symbol)
-            {
-                return Symbol.Equal((Symbol)obj1, obj2);
-            }
-
-            if (obj1 is SchemeBoolean)
-            {
-                return Equal((SchemeBoolean)obj1, obj2);
-            }
-
-            if (obj1 is Number && obj2 is Number)
-            {
-                return Number.Equal((Number)obj1, (Number)obj2);
+                return action(obj1, obj2);
             }
 
             // delegate to first member, use C# equality
             return obj1.Equals(obj2) ? True : False;
-        }
-
-        /// <summary>
-        /// Tests whether two object are equal, where one of them is a SchemeBoolean.
-        /// </summary>
-        /// <param name="obj1">A SchemeBoolean.</param>
-        /// <param name="obj2">Another object.</param>
-        /// <returns>True if they are both booleans and have the same value.</returns>
-        public static SchemeBoolean Equal(SchemeBoolean obj1, SchemeObject obj2)
-        {
-            if (!(obj2 is SchemeBoolean))
-            {
-                return False;
-            }
-
-            return obj1.Value == ((SchemeBoolean)obj2).Value ? True : False;
         }
 
         /// <summary>
@@ -169,11 +143,13 @@ namespace SimpleScheme
         /// <returns>True if they are equivalent.</returns>
         public static SchemeBoolean Eqv(SchemeObject obj1, SchemeObject obj2)
         {
-            return new SchemeBoolean(obj1 == obj2 || 
-                (obj1 is SchemeBoolean && obj2 is SchemeBoolean && ((SchemeBoolean)obj1).Value == ((SchemeBoolean)obj2).Value) || 
-                (obj1 is Number && obj2 is Number && ((Number)obj1).N == ((Number)obj2).N) ||
-                (obj1 is Character && obj2 is Character && ((Character)obj1).C == ((Character)obj2).C) ||
-                (obj1 is Symbol && obj2 is Symbol && obj1.ToString() == obj2.ToString()));
+            return
+                New(
+                    obj1 == obj2 
+                    || (obj1 is SchemeBoolean && ((SchemeBoolean)obj1).Equals(obj2))
+                    || (obj1 is Number && ((Number)obj1).Equals(obj2))
+                    || (obj1 is Character && ((Character)obj1).Equals(obj2))
+                    || (obj1 is Symbol && ((Symbol)obj1).Equals(obj2)));
         }
 
         /// <summary>
@@ -184,7 +160,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         public static bool IsFalse(SchemeObject value)
         {
-            return value is SchemeBoolean && ((SchemeBoolean)value).Value == false;
+            return value is SchemeBoolean && !((SchemeBoolean)value).Value;
         }
 
         /// <summary>
@@ -207,7 +183,7 @@ namespace SimpleScheme
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
         public static SchemeBoolean Truth(SchemeObject obj)
         {
-            return new SchemeBoolean(!IsFalse(obj));
+            return !IsFalse(obj) ? True : False;
         }
 
         /// <summary>
@@ -258,12 +234,49 @@ namespace SimpleScheme
         {
             if (x is SchemeBoolean)
             {
-                return SchemeBoolean.IsTrue(x);
+                return IsTrue(x);
             }
 
             ErrorHandlers.TypeError(typeof(SchemeBoolean), x);
             return false;
         }
+
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal boolean values.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is SchemeBoolean))
+            {
+                return false;
+            }
+
+            return this.Equals((SchemeBoolean)other);
+        }
+
+        /// <summary>
+        /// Compares two SchemeBoolean values by comparing their underlying boolean value.
+        /// </summary>
+        /// <param name="other">The other SchemeBoolean.</param>
+        /// <returns>True if they have the same boolean value.</returns>
+        public bool Equals(SchemeBoolean other)
+        {
+            return this.value == other.value;
+        }
+
+        /// <summary>
+        /// The hash code is the boolean's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.value.GetHashCode();
+        }
+
+        #endregion
 
         #region Public Methods
         /// <summary>

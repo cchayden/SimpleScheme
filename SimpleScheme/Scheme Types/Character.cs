@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
 
@@ -10,7 +11,7 @@ namespace SimpleScheme
     /// Handles a scheme character.
     /// Scheme characters are represented as .NET char objects.
     /// </summary>
-    public class Character : SchemeObject
+    public class Character : SchemeObject, IEquatable<Character>
     {
         #region Fields
         /// <summary>
@@ -92,6 +93,42 @@ namespace SimpleScheme
             }
 
             return new Character(c);
+        }
+        #endregion
+
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal as characters.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is Character))
+            {
+                return false;
+            }
+
+            return this.Equals((Character)other);
+        }
+
+        /// <summary>
+        /// Compares two Character values by comparing their underlying character.
+        /// </summary>
+        /// <param name="other">The other Character.</param>
+        /// <returns>True if they have the same char.</returns>
+        public bool Equals(Character other)
+        {
+            return this.c == other.c;
+        }
+
+        /// <summary>
+        /// The hash code is simply the character.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.c;
         }
         #endregion
 

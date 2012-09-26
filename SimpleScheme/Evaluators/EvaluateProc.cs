@@ -1,5 +1,4 @@
-﻿#define OLD
-// <copyright file="EvaluateProc.cs" company="Charles Hayden">
+﻿// <copyright file="EvaluateProc.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
@@ -111,11 +110,13 @@ namespace SimpleScheme
         private static Evaluator ApplyStep(Evaluator s)
         {
             Procedure fn = ((EvaluateProc)s).fn;
+#if Diagnostics
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
                     String.Format("evaluate-proc: ({0} {1})", fn.ProcedureName, First(s.ReturnedExpr)));
             }
+#endif
 
             // Pass s.Caller to return to the caller rather than to here, since there is
             //  nothing left to do.

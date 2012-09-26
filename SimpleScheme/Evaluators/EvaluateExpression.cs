@@ -55,12 +55,14 @@ namespace SimpleScheme
             this.fn = fn;
 
             this.ContinueHere(InitialStep);
+#if Diagnostics
             if (caller.Interp.Trace)
             {
                 caller.Interp.CurrentOutputPort.WriteLine(string.Format("evaluate: {0} {1}", fn, args));
             }
 
             this.IncrementCounter(counter);
+#endif
         }
         #endregion
 
@@ -206,7 +208,7 @@ namespace SimpleScheme
                 //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
                 .DefinePrimitive(
                         "quote",
-                        (args, caller) => EvalQuote(args, caller), 
+                        EvalQuote, 
                         1, 
                         ValueType.Obj)
                 //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
@@ -266,11 +268,11 @@ namespace SimpleScheme
 
             // Break apart and evaluate the fn and args
             // Handle special forms that do not need an actual evaluation.
-            SchemeObject fn = First(expr);
-            SchemeObject args = Rest(expr);
+            var fn = First(expr);
+            var args = Rest(expr);
             if (fn is Symbol)
             {
-                switch (fn.ToString())
+                switch (Symbol.ToString((Symbol)fn))
                 {
                     case "quote":
                         // Evaluate quoted expression by just returning the expression.
@@ -352,7 +354,7 @@ namespace SimpleScheme
             // Look for one of the special forms. 
             if (step.fn is Symbol)
             {
-                switch (step.fn.ToString())
+                switch (Symbol.ToString((Symbol)step.fn))
                 {
                     case "begin":
                         // Evaluate begin by evaluating all the items in order, 
@@ -482,13 +484,13 @@ namespace SimpleScheme
         private static Evaluator ApplyProcStep(Evaluator s)
         {
             // Come here after evaluating fn
-            if (!(s.ReturnedExpr is Procedure))
+            var result = s.ReturnedExpr;
+            if (!(result is Procedure))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", s.ReturnedExpr));
+                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", result));
             }
 
-            Procedure.EnsureProcedure(s.ReturnedExpr);
-            return ((Procedure)s.ReturnedExpr).Evaluate(s.Expr, s.Env, s.Caller);
+            return ((Procedure)result).Evaluate(s.Expr, s.Env, s.Caller);
         }
         #endregion
     }

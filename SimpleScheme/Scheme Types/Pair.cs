@@ -109,28 +109,28 @@ namespace SimpleScheme
         /// The first object must be a pair.
         /// If the list is circulr, this will loop forever.
         /// </summary>
-        /// <param name="obj1">The first object (must be a pair).</param>
-        /// <param name="obj2">The other object.</param>
+        /// <param name="elem1">The first object (must be a pair).</param>
+        /// <param name="elem2">The other object.</param>
         /// <returns>True if they are both pairs and all elements are equal.</returns>
-        public static SchemeBoolean Equal(SchemeObject obj1, SchemeObject obj2)
+        public static SchemeBoolean Equal(Pair elem1, SchemeObject elem2)
         {
-            if (!(obj1 is Pair) || !(obj2 is Pair))
+            if (!(elem1 is Pair) || !(elem2 is Pair))
             {
-                return false;
+                return SchemeBoolean.False;
             }
 
-            var pair1 = (Pair)obj1;
-            var pair2 = (Pair)obj2;
+            var pair1 = elem1;
+            var pair2 = (Pair)elem2;
 
             while (true)
             {
                 if (!SchemeBoolean.Equal(First(pair1), First(pair2)).Value)
                 {
-                    return false;
+                    return SchemeBoolean.False;
                 }
 
-                obj1 = Rest(pair1);
-                obj2 = Rest(pair2);
+                var obj1 = Rest(pair1);
+                var obj2 = Rest(pair2);
 
                 if (!(obj1 is Pair) || !(obj2 is Pair))
                 {

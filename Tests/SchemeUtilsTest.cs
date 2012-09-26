@@ -131,8 +131,6 @@ namespace Tests
             Assert.IsFalse(SchemeBoolean.Equal((Number)1, (Number)2).Value);
             Assert.IsTrue(SchemeBoolean.Equal((Number)1.0, (Number)1.0).Value);
             Assert.IsFalse(SchemeBoolean.Equal((Number)1.0, (Number)2.0).Value);
-            Assert.IsTrue(SchemeBoolean.Equal((SchemeBoolean)true, (SchemeBoolean)true).Value);
-            Assert.IsFalse(SchemeBoolean.Equal((SchemeBoolean)true, (SchemeBoolean)false).Value);
             Assert.IsTrue(SchemeBoolean.Equal((Character)'a', (Character)'a').Value);
             Assert.IsFalse(SchemeBoolean.Equal((Character)'a', (Character)'b').Value);
         }

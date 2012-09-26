@@ -30,7 +30,7 @@ namespace SimpleScheme
         /// Set the async completion code, if appropriate.
         /// </summary>
         /// <returns>Null causes the main loop to break.</returns>
-        public override Evaluator Divert()
+        public override Evaluator NextStep()
         {
             this.Interp.SetComplete(this.ReturnedExpr);
             return null;

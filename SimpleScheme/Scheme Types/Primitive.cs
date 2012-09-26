@@ -105,9 +105,13 @@ namespace SimpleScheme
         public override Evaluator Apply(SchemeObject args, Evaluator caller)
         {
             // First check the number of arguments
+#if Check
             int numArgs = this.CheckArgs(args, typeof(Primitive));
             this.CheckArgTypes(numArgs, args);
+#endif
+#if Diagnostics
             caller.IncrementCounter(counter);
+#endif
 
             // Execute the operation
             var res = this.operation(args, caller);

@@ -33,7 +33,7 @@ namespace SimpleScheme
         /// Pass the async result to the resumed step.
         /// </summary>
         /// <returns>Null to return from main loop, or else the step to run next.</returns>
-        public override Evaluator Divert()
+        public override Evaluator NextStep()
         {
             // See if evaluator wants to handle
             Evaluator step = this.SearchForHandler();

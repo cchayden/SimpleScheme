@@ -60,25 +60,32 @@ namespace SimpleScheme
 
             fromClrMap = new Dictionary<Type, Func<object, SchemeObject>>
                 {
+                    { typeof(Number), elem => (SchemeObject)elem },
                     { typeof(int), elem => (Number)(int)elem },
+                    { typeof(SchemeString), elem => (SchemeObject)elem },
                     { typeof(string), elem => SchemeString.New((string)elem) },
+                    { typeof(SchemeBoolean), elem => (SchemeObject)elem },
                     { typeof(bool), elem => (SchemeBoolean)(bool)elem },
                     { typeof(double), elem => (Number)(double)elem },
                     { typeof(float), elem => (Number)(float)elem },
                     { typeof(long), elem => (Number)(long)elem },
                     { typeof(short), elem => (Number)(short)elem },
                     { typeof(byte), elem => (Number)(byte)elem },
+                    { typeof(Character), elem => (Character)elem },
                     { typeof(char), elem => (Character)(char)elem },
-                    { typeof(int[]), elem => (Vector)(object[])elem },
+                    { typeof(EmptyList), elem => EmptyList.Instance },
+                    { typeof(Symbol), elem => SchemeString.New((elem.ToString())) },
+                    { typeof(int[]), elem => Vector.New(elem) },
                     { typeof(string[]), elem => (Vector)(object[])elem },
-                    { typeof(bool[]), elem => (Vector)(object[])elem },
-                    { typeof(double[]), elem => (Vector)(object[])elem },
-                    { typeof(float[]), elem => (Vector)(object[])elem },
-                    { typeof(long[]), elem => (Vector)(object[])elem },
-                    { typeof(short[]), elem => (Vector)(object[])elem },
-                    { typeof(byte[]), elem => (Vector)(object[])elem },
-                    { typeof(char[]), elem => (Vector)(object[])elem },
-                    { typeof(object[]), elem => (Vector)(object[])elem },
+                    { typeof(bool[]), elem => Vector.New(elem) },
+                    { typeof(double[]), elem => Vector.New(elem) },
+                    { typeof(float[]), elem => Vector.New(elem) },
+                    { typeof(long[]), elem => Vector.New(elem) },
+                    { typeof(short[]), elem => Vector.New(elem) },
+                    { typeof(byte[]), elem => Vector.New(elem) },
+                    //{ typeof(char[]), elem => Vector.New(elem) },
+                    { typeof(char[]), elem => SchemeString.New((char[])elem) },
+                    { typeof(object[]), elem => Vector.New(elem) },
                 };
         }
 
@@ -131,6 +138,14 @@ namespace SimpleScheme
         /// <returns>The converted object.</returns>
         public static object ToClrObject(SchemeObject elem, Type clrClass)
         {
+            if (elem is ClrObject)
+            {
+                if (((ClrObject)elem).Value.GetType() == clrClass)
+                {
+                    return ((ClrObject)elem).Value;
+                }
+            }
+
             if (toClrMap.ContainsKey(clrClass))
             {
                 return toClrMap[clrClass](elem);
@@ -147,6 +162,12 @@ namespace SimpleScheme
         public static SchemeObject FromClrObject(object elem)
         {
             Type elemType = elem.GetType();
+            if (elemType == typeof(ClrObject))
+            {
+                elem = ((ClrObject)elem).Value;
+                elemType = elem.GetType();
+            }
+
             if (fromClrMap.ContainsKey(elemType))
             {
                 return fromClrMap[elemType](elem);

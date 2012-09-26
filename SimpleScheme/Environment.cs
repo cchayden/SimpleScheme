@@ -136,7 +136,7 @@ namespace SimpleScheme
         {
             try
             {
-               this.Define(var, val);
+               this.Define(Symbol.New(var), val);
             }
             catch (ErrorHandlers.SchemeException)
             {
@@ -153,7 +153,7 @@ namespace SimpleScheme
         {
             try
             {
-               return this.Lookup(var);
+               return this.Lookup(Symbol.New(var));
             }
             catch (ErrorHandlers.SchemeException)
             {
