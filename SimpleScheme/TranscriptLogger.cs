@@ -3,7 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
     using System.IO;
 
     /// <summary>
@@ -28,7 +27,6 @@ namespace SimpleScheme
         /// <param name="interp">The interpreter using the logger.</param>
         internal TranscriptLogger(Interpreter interp)
         {
-            Contract.Requires(interp != null);
             this.interp = interp;
         }
 
@@ -38,18 +36,12 @@ namespace SimpleScheme
         /// <param name="fileName">The file to write to.</param>
         internal void TranscriptOn(SchemeObject fileName)
         {
-            Contract.Requires(fileName != null);
-            string name = fileName.ToString();
-            if (string.IsNullOrEmpty(name))
-            {
-                ErrorHandlers.ArgumentError("Transcript filename is null or empty");
-            }
-
             if (this.transcriptWriter != null)
             {
                 this.transcriptWriter.Close();
             }
 
+            string name = fileName.ToString(false);
             this.transcriptWriter = new StreamWriter(new FileStream(name, FileMode.Create, FileAccess.Write));
         }
 

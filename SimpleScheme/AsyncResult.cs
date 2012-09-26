@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Threading;
 
     /// <summary>
@@ -118,7 +117,6 @@ namespace SimpleScheme
                     }
                 }
 
-                Contract.Assume(this.asyncWaitHandle != null);
                 return this.asyncWaitHandle;
             }
         }

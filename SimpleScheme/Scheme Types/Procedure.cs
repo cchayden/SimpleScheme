@@ -3,14 +3,11 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// A procedure is executable. 
     /// It supports an Apply method.
     /// Lambdas, Continuations, CLR methods, and primitives are examples of Procedures.
     /// </summary>
-    [ContractClass(typeof(ProcedureContract))]
     public abstract class Procedure : SchemeObject
     {
         #region Constants
@@ -52,7 +49,7 @@ namespace SimpleScheme
         /// <param name="argsInfo">Information about primitive args.</param>
         protected Procedure(string name, ArgsInfo argsInfo)
         {
-            this.procedureName = name ?? AnonymousProc;
+            this.procedureName = name;
             this.minArgs = argsInfo.MinArgs;
             this.maxArgs = argsInfo.MaxArgs;
             this.unevaluated = argsInfo.Unevaluated;
@@ -71,13 +68,11 @@ namespace SimpleScheme
         {
             get
             {
-                Contract.Ensures(Contract.Result<string>() != null);
                 return this.procedureName;
             }
 
             set
             {
-                Contract.Requires(value != null);
                 if (this.ProcedureName == AnonymousProc)
                 {
                     this.procedureName = value;
@@ -102,18 +97,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Display the procedure as a string.
-        /// Since there is nothing to show, at least give the name.
-        /// </summary>
-        /// <returns>The procedure type name.</returns>
-        public override string ToString()
-        {
-            return "<procedure " + this.ProcedureName + ">";
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the procedure primitives.
@@ -121,13 +104,12 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
                         "apply", 
                         new[] { "6.9", "(apply <proc> <args>)", "(apply <proc> <arg1> ... <args>)" },
-                        (args, env, caller) => ((Procedure)First(args)).Apply(ListStar(Rest(args)), caller), 
+                        (args, env, caller) => ((Procedure)First(args)).Apply(ListStar(Rest(args)), env, caller, caller), 
                         new ArgsInfo(2, MaxInt, ArgType.Proc, ArgType.Obj))
                 .DefinePrimitive(
                         "call-with-current-continuation", 
@@ -174,7 +156,6 @@ namespace SimpleScheme
         /// <returns>The object as a procedure.</returns>
         internal static Procedure EnsureProcedure(SchemeObject obj)
         {
-            Contract.Requires(obj != null);
             if (!(obj is Procedure))
             {
                 ErrorHandlers.ProcError("Attempt to use as a procedure", obj);
@@ -184,18 +165,28 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
+        /// <summary>
+        /// Display the procedure as a string.
+        /// Since there is nothing to show, at least give the name.
+        /// </summary>
+        /// <returns>The procedure type name.</returns>
+        public override string ToString()
+        {
+            return "<procedure " + this.ProcedureName + ">";
+        }
 
         /// <summary>
         /// All subclasses have to be able to apply the procedure to arguments.
         /// That is what it means to be a procedure.
-        /// The application environment is supplied by the specific procedure subclass, if necessary.
         /// </summary>
         /// <param name="args">The arguments to the procedure, which may or may not have 
         ///   been evaluated.</param>
+        /// <param name="env">The application environment.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to run after the application.</returns>
-        internal abstract Evaluator Apply(SchemeObject args, Evaluator returnTo);
+        internal abstract Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller);
 
         /// <summary>
         /// Evaluate the procedure.
@@ -211,9 +202,6 @@ namespace SimpleScheme
         /// <returns>The next evaluator to execute.</returns>
         internal virtual Evaluator Evaluate(SchemeObject args, Environment env, Evaluator caller)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
             return EvaluateProc.Call(this, args, env, caller);
         }
         #endregion
@@ -236,13 +224,12 @@ namespace SimpleScheme
         /// <param name="numArgs">The number of arguments expected.</param>
         /// <param name="args">The arguments passed to the procedure.</param>
         /// <param name="evaluatorName">Name, for the error message.</param>
-        protected void CheckArgCount(int numArgs, SchemeObject args, string evaluatorName)
+        /// <param name="caller">The calling evaluator</param>
+        protected void CheckArgCount(int numArgs, SchemeObject args, string evaluatorName, Evaluator caller)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(evaluatorName != null);
             if (numArgs < this.minArgs || numArgs > this.maxArgs)
             {
-                this.ArgCountError(numArgs, minArgs, args, evaluatorName);
+                this.ArgCountError(numArgs, minArgs, args, evaluatorName, caller);
             }
         }
 
@@ -254,28 +241,23 @@ namespace SimpleScheme
         /// <param name="expectedArgs">The expected number of arguments.</param>
         /// <param name="args">The arguments actually passed.</param>
         /// <param name="evaluatorName">The name of the evaluator that is checking the count.</param>
-        protected void ArgCountError(int numArgs, int expectedArgs, SchemeObject args, string evaluatorName)
+        /// <param name="caller">The calling evaluator.</param>
+        protected void ArgCountError(int numArgs, int expectedArgs, SchemeObject args, string evaluatorName, Evaluator caller)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(evaluatorName != null);
-            string msg = numArgs < expectedArgs ? "few" : "many";
-#if FALSE
-            int lineNumber = caller.FindLineNumberInCallStack();
-#else
-            int lineNumber = 0;
-#endif
-            string lineMsg = lineNumber == 0 ? string.Empty : " at line: " + lineNumber;
-            ErrorHandlers.SemanticError(
-                string.Format(
-                    @"""{0}"" too {1} args ({2}) for {3}: ""{4}""{5}",
-                    evaluatorName,
-                    msg,
-                    numArgs,
-                    this.ProcedureName,
-                    args,
-                    lineMsg));
+                string msg = numArgs < expectedArgs ? "few" : "many";
+                int lineNumber = caller.FindLineNumberInCallStack();
+                string lineMsg = lineNumber == 0 ? string.Empty : " at line: " + lineNumber;
+                ErrorHandlers.SemanticError(
+                    string.Format(
+                        @"""{0}"" too {1} args ({2}) for {3}: ""{4}""{5}", 
+                        evaluatorName, 
+                        msg, 
+                        numArgs, 
+                        this.ProcedureName, 
+                        args,
+                        lineMsg), 
+                    null);            
         }
-
         #endregion
 
         #region Private Static Methods
@@ -285,11 +267,9 @@ namespace SimpleScheme
         /// <param name="promise">A proc that will produce the result.</param>
         /// <param name="caller">The caller.</param>
         /// <returns>The result of applying the proc.</returns>
-        private static Evaluator Force(Procedure promise, Evaluator caller)
+        private static EvaluatorOrObject Force(Procedure promise, Evaluator caller)
         {
-            Contract.Requires(promise != null);
-            Contract.Requires(caller != null);
-            return promise.Apply(Undefined.Instance, caller);
+            return promise.Apply(null, null, caller, caller);
         }
         #endregion
 
@@ -302,54 +282,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="caller">The calling evaluator.</param>
         /// <returns>A function to continue the evaluation.</returns>
-        private Evaluator CallCc(Evaluator caller)
+        private EvaluatorOrObject CallCc(Evaluator caller)
         {
-            Contract.Requires(caller != null);
-            return this.Apply(MakeList(new Continuation(caller)), caller);
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.procedureName != null);
+            return this.Apply(MakeList(Continuation.New(caller)), null, caller, caller);
         }
         #endregion
     }
-
-    #region ProcedureContract
-    /// <summary>
-    /// Defined so that we can put preconditions on the abstract function.
-    /// </summary>
-    [ContractClassFor(typeof(Procedure))]
-    internal abstract class ProcedureContract : Procedure
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ProcedureContract"/> class.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="argsInfo">The args info.</param>
-        protected ProcedureContract(string name, ArgsInfo argsInfo)
-            : base(name, argsInfo)
-        {
-        }
-
-        /// <summary>
-        /// Apply the procedure to the args.
-        /// </summary>
-        /// <param name="args">The procedure arguments.</param>
-        /// <param name="returnTo">When done, return control here.</param>
-        /// <returns>An evaluator to continue the computation.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
-        {
-            Contract.Requires(args != null);
-            Contract.Requires(returnTo != null);
-            return null;
-        }
-    }
-    #endregion
 }

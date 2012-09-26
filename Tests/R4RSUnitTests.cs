@@ -714,10 +714,7 @@ namespace Tests
             this.section = "6.5.5";
             this.ReadAndEvaluate(@"(define (test-string->number str)
                                      (define ans (string->number str))
-                                     (cond 
-                                       ((not ans) #t) 
-                                       ((number? ans) #t) 
-                                       (else ans)))");
+                                        (cond ((not ans) #t) ((number? ans) #t) (else ans)))");
             this.Run("#t", "test-string->number", @"(test-string->number ""+#.#"")");
             this.Run("#t", "test-string->number", @"(test-string->number ""-#.#"")");
             this.Run("#t", "test-string->number", @"(test-string->number ""#.#"")");
@@ -1349,7 +1346,7 @@ namespace Tests
         {
             using (var reader = new StringReader(str))
             {
-                InputPort inp = new InputPort(reader, (Interpreter)this.interpreter);
+                InputPort inp = InputPort.New(reader, (Interpreter)this.interpreter);
                 SchemeObject last = EmptyList.Instance;
                 while (true)
                 {

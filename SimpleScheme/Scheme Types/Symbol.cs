@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Handles scheme symbols.
@@ -42,9 +41,8 @@ namespace SimpleScheme
         /// Initializes a new instance of the Symbol class.
         /// </summary>
         /// <param name="name">The value of the symbol.</param>
-        public Symbol(string name)
+        private Symbol(string name)
         {
-            Contract.Requires(name != null);
             this.name = name;
             this.pos = -1;
             this.level = -1;
@@ -56,9 +54,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="name">The value of the symbol.</param>
         /// <param name="lineNumber">The line number where the symbol was read.</param>
-        public Symbol(string name, int lineNumber) : base(lineNumber)
+        private Symbol(string name, int lineNumber) : base(lineNumber)
         {
-            Contract.Requires(name != null);
             this.name = name;
             this.pos = -1;
             this.level = -1;
@@ -71,11 +68,7 @@ namespace SimpleScheme
         /// </summary>
         public string SymbolName
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-                return this.name;
-            }
+            get { return this.name; }
         }
 
         /// <summary>
@@ -87,25 +80,21 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Gets the position in the environment the symbol appears.
+        /// Gets or sets the position in the environment the symbol appears.
         /// </summary>
         internal int Pos
         {
-            get
-            {
-                return this.pos;
-            }
+            get { return this.pos; }
+            set { this.pos = value; }
         }
 
         /// <summary>
-        /// Gets the number of lexical levels out that the symbol apears in an environment.
+        /// Gets or sets the number of lexical levels out that the symbol apears in an environment.
         /// </summary>
         internal int Level
         {
-            get
-            {
-                return this.level;
-            }
+            get { return this.level; }
+            set { this.level = value; }
         }
 
         /// <summary>
@@ -118,7 +107,7 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Cast
+        #region New
         /// <summary>
         /// Converts a string into a Smybol.
         /// </summary>
@@ -126,9 +115,49 @@ namespace SimpleScheme
         /// <returns>The corresponding Symbol.</returns>
         public static implicit operator Symbol(string name)
         {
-            Contract.Requires(name != null);
-            Contract.Ensures(Contract.Result<Symbol>() != null);
+            return New(name);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Symbol class.
+        /// </summary>
+        /// <param name="name">The value of the symbol.</param>
+        /// <returns>A new Smybol.</returns>
+        public static Symbol New(string name)
+        {
             return new Symbol(name);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Symbol class, with a line number.
+        /// </summary>
+        /// <param name="name">The value of the symbol.</param>
+        /// <param name="lineNumber">The line number where the symbol was read.</param>
+        /// <returns>A new Smybol.</returns>
+        public static Symbol New(string name, int lineNumber)
+        {
+            return new Symbol(name, lineNumber);
+        }
+        #endregion
+
+        #region Define Primitives
+        /// <summary>
+        /// Define the symbol primitives.
+        /// </summary>
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
+        {
+            primEnv
+                .DefinePrimitive(
+                    new Symbol("string->symbol"), 
+                    new[] { "6.4", "(string->symbol <string>)" }, 
+                    (args, env, caller) => new Symbol(SchemeString.AsString(First(args))), 
+                    new ArgsInfo(1, ArgType.String))
+                .DefinePrimitive(
+                    new Symbol("symbol?"), 
+                    new[] { "6.4", "(symbol? <obj>)" }, 
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is Symbol), 
+                    new ArgsInfo(1, ArgType.Obj));
         }
         #endregion
 
@@ -141,8 +170,6 @@ namespace SimpleScheme
         /// <returns>True if they are both symbols and represent the same symbol.</returns>
         public static SchemeBoolean Equal(Symbol obj1, SchemeObject obj2)
         {
-            Contract.Requires(obj1 != null);
-            Contract.Requires(obj2 != null);
             if (!(obj2 is Symbol))
             {
                 return false;
@@ -181,7 +208,6 @@ namespace SimpleScheme
         /// <returns>True if they have the same name.</returns>
         public bool Equals(Symbol other)
         {
-            Contract.Assume(other != null);
             return this.name == other.name;
         }
 
@@ -204,31 +230,7 @@ namespace SimpleScheme
         {
             return this.name;
         }
-        #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the symbol primitives.
-        /// </summary>
-        /// <param name="primEnv">The environment to define the primitives into.</param>
-        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
-        {
-            Contract.Requires(primEnv != null);
-            primEnv
-                .DefinePrimitive(
-                    new Symbol("string->symbol"), 
-                    new[] { "6.4", "(string->symbol <string>)" }, 
-                    (args, env, caller) => new Symbol(SchemeString.AsString(First(args))), 
-                    new ArgsInfo(1, ArgType.String))
-                .DefinePrimitive(
-                    new Symbol("symbol?"), 
-                    new[] { "6.4", "(symbol? <obj>)" }, 
-                    (args, env, caller) => SchemeBoolean.Truth(First(args) is Symbol), 
-                    new ArgsInfo(1, ArgType.Obj));
-        }
-        #endregion
-
-        #region Internal Methods
         /// <summary>
         /// Clear the cached environment information for the symbol
         /// </summary>
@@ -237,7 +239,9 @@ namespace SimpleScheme
             this.pos = -1;
             this.level = -1;
         }
+        #endregion
 
+        #region Internal Methods
         /// <summary>
         /// Set the environment location of this symbol.
         /// </summary>
@@ -256,17 +260,6 @@ namespace SimpleScheme
         internal override string Describe()
         {
             return this.ToString();
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.name != null);
         }
         #endregion
     }

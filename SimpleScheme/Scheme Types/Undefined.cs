@@ -3,20 +3,16 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Represents an undefined scheme value.
     /// This type is immutable.
     /// </summary>
     public class Undefined : SchemeObject
     {
-        #region Fields
         /// <summary>
         /// The undefined object instance.
         /// </summary>
         private static readonly Undefined undefined = new Undefined();
-        #endregion
 
         #region Constructors
         /// <summary>
@@ -35,11 +31,7 @@ namespace SimpleScheme
         /// <returns>An undefined object.</returns>
         public static Undefined Instance
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<Undefined>() != null);
-                return undefined;
-            }
+            get { return undefined; }
         }
         #endregion
 

@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
 
     /// <summary>
@@ -94,7 +93,6 @@ namespace SimpleScheme
         /// <returns>A number corresponding to the given int.</returns>
         public static implicit operator Number(int x)
         {
-            Contract.Ensures(Contract.Result<Number>() != null);
             return New(x);
         }
 
@@ -105,10 +103,11 @@ namespace SimpleScheme
         /// <returns>A number corresponding to the given double.</returns>
         public static implicit operator Number(double x)
         {
-            Contract.Ensures(Contract.Result<Number>() != null);
             return New(x);
         }
+        #endregion
 
+        #region New
         /// <summary>
         /// Create a new number from a long.
         /// </summary>
@@ -159,7 +158,6 @@ namespace SimpleScheme
         /// <returns>A Number</returns>
         public static Number New(double number, int lineNumber)
         {
-            Contract.Ensures(Contract.Result<Number>() != null);
             if (number == 0.0)
             {
                 return Zero;
@@ -196,10 +194,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="x">The object.</param>
         /// <returns>The corresponding Number.</returns>
-        [Pure]
         public static int AsInt(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (x is Number)
             {
                 return Convert.ToInt32(((Number)x).N);
@@ -216,7 +212,6 @@ namespace SimpleScheme
         /// <returns>The corresponding double.</returns>
         public static double AsDouble(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (x is Number)
             {
                 return ((Number)x).N;
@@ -233,7 +228,6 @@ namespace SimpleScheme
         /// <returns>The corresponding float.</returns>
         public static float AsFloat(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (float)((Number)x).N;
@@ -250,7 +244,6 @@ namespace SimpleScheme
         /// <returns>The corresponding short.</returns>
         public static short AsShort(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (short)((Number)x).N;
@@ -267,7 +260,6 @@ namespace SimpleScheme
         /// <returns>The corresponding short.</returns>
         public static long AsLong(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (long)((Number)x).N;
@@ -284,7 +276,6 @@ namespace SimpleScheme
         /// <returns>The corresponding byte.</returns>
         public static byte AsByte(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (x is Number)
             {
                 return (byte)((Number)x).N;
@@ -295,59 +286,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Equality
-        /// <summary>
-        /// Provide our own version of the Equals method.
-        /// </summary>
-        /// <param name="other">The other object.</param>
-        /// <returns>True if they are equal numbers.</returns>
-        public override bool Equals(object other)
-        {
-            if (!(other is Number))
-            {
-                return false;
-            }
-
-            return this.Equals((Number)other);
-        }
-
-        /// <summary>
-        /// Compares two Number values by comparing their underlying numerical value.
-        /// </summary>
-        /// <param name="other">The other Number.</param>
-        /// <returns>True if they have the same number value.</returns>
-        public bool Equals(Number other)
-        {
-            Contract.Assume(other != null);
-            return this.n == other.n;
-        }
-
-        /// <summary>
-        /// The hash code is the number's hash code.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return this.n.GetHashCode();
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Create a string representation of the number for printing.
-        /// </summary>
-        /// <returns>The number as a string.</returns>
-        public override string ToString()
-        {
-            if (this.n == Math.Round(this.n))
-            {
-                return ((long)Num(this)).ToString(CultureInfo.InvariantCulture);
-            }
-
-            return Num(this).ToString(CultureInfo.InvariantCulture);
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the numeric primitives.
@@ -355,9 +293,7 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
-
-            //// not implemented
+            // not implemented
             //// <r4rs section="6.5.5">(numerator <q>)</r4rs>
             //// <r4rs section="6.5.5">(denominator <q>)</r4rs>
             //// <r4rs section="6.5.5">(rationalize <x> <y>)</r4rs>
@@ -373,77 +309,77 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "*", 
                     new[] { "6.5.5", "(* <z1> ...)" },
-                    (args, env, caller) => Compute(args, caller, (x, y) => x * y, 1.0),
+                    (args, env, caller) => Compute(args, (x, y) => x * y, 1.0),
                     new ArgsInfo(0, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "+", 
                     new[] { "6.5.5", "(+ <z1> ...)" },
-                    (args, env, caller) => Compute(args, caller, (x, y) => x + y, 0.0),
+                    (args, env, caller) => Compute(args, (x, y) => x + y, 0.0),
                     new ArgsInfo(0, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "-", 
                     new[] { "6.5.5", "(- <z1> <z2>)", "(- <z>)" },
-                    (args, env, caller) => Compute(args, caller, (x, y) => x - y, 0.0),
+                    (args, env, caller) => Compute(args, (x, y) => x - y, 0.0),
                     new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "/", 
                     new[] { "6.5.5", "(/ <z1> <z2>)", "(/ <z>)", "(/ <z1> <z2> ...)" },
-                    (args, env, caller) => Compute(args, caller, (x, y) => x / y, 1.0),
+                    (args, env, caller) => Compute(args, (x, y) => x / y, 1.0),
                     new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "=", 
                     new[] { "6.5.5", "(= <z1> <z2> <z3> ...)" }, 
-                    (args, env, caller) => Compare(args, caller, (x, y) => x == y), 
+                    (args, env, caller) => Compare(args, (x, y) => x == y), 
                     new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "<", 
                     new[] { "6.5.5", "(< <z1> <z2> <z3> ...)" }, 
-                    (args, env, caller) => Compare(args, caller, (x, y) => x < y), 
+                    (args, env, caller) => Compare(args, (x, y) => x < y), 
                     new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     ">", 
                     new[] { "6.5.5", "(> <z1> <z2> <z3> ...)" }, 
-                    (args, env, caller) => Compare(args, caller, (x, y) => x > y), 
+                    (args, env, caller) => Compare(args, (x, y) => x > y), 
                     new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "<=", 
                     new[] { "6.5.5", "(<= <z1> <z2> <z3> ...)" }, 
-                    (args, env, caller) => Compare(args, caller, (x, y) => x <= y), 
+                    (args, env, caller) => Compare(args, (x, y) => x <= y), 
                     new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     ">=", 
                     new[] { "6.5.5", "(>= <z1> <z2> <z3> ...)" }, 
-                    (args, env, caller) => Compare(args, caller, (x, y) => x >= y), 
+                    (args, env, caller) => Compare(args, (x, y) => x >= y), 
                     new ArgsInfo(2, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "abs", 
-                    new[] { "6.5.5", "(abs <x>)" },
-                    (args, env, caller) => Compute1(args, caller, Math.Abs),
+                    new[] { "6.5.5", "(abs <x>)" }, 
+                    (args, env, caller) => (Number)Math.Abs(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "ceiling", 
                     new[] { "6.5.5", "(ceiling <x>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Ceiling),
+                    (args, env, caller) => (Number)Math.Ceiling(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "floor", 
                     new[] { "6.5.5", "(floor <x>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Floor),
+                    (args, env, caller) => (Number)Math.Floor(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "acos", 
                     new[] { "6.5.5", "(acos <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Acos),
+                    (args, env, caller) => (Number)Math.Acos(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "asin", 
                     new[] { "6.5.5", "(asin <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Asin),
+                    (args, env, caller) => (Number)Math.Asin(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "atan", 
                     new[] { "6.5.5", "(atan <z>)", "(atan <y> <x>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Atan),
+                    (args, env, caller) => (Number)Math.Atan(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "complex?", 
@@ -453,7 +389,7 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "cos", 
                     new[] { "6.5.5", "(cos <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Cos),
+                    (args, env, caller) => (Number)Math.Cos(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "even?", 
@@ -468,17 +404,17 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "exact->inexact", 
                     new[] { "6.5.5", "(exact->inexact <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, x => x),
+                    (args, env, caller) => (Number)Num(First(args)),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "exp", 
                     new[] { "6.5.5", "(exp <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Exp),
+                    (args, env, caller) => (Number)Math.Exp(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "expt", 
                     new[] { "6.5.5", "(expt <z1> <z2>)" }, 
-                    (args, env, caller) => Compute2(args, caller, Expt),
+                    (args, env, caller) => (Number)Expt(Num(First(args)), Num(Second(args))),
                     new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "gcd", 
@@ -493,7 +429,7 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "inexact->exact", 
                     new[] { "6.5.5", "(inexact->exact <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, x => x),
+                    (args, env, caller) => (Number)Num(First(args)),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "integer->char", 
@@ -513,22 +449,22 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "log", 
                     new[] { "6.5.5", "(log <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Log),
+                    (args, env, caller) => (Number)Math.Log(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "max", 
                     new[] { "6.5.5", "(max? <x1> <x2> ...)" }, 
-                    (args, env, caller) => Compute(args, caller, Math.Max, Num(First(args))),
+                    (args, env, caller) => Compute(args, Math.Max, Num(First(args))),
                     new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "min", 
                     new[] { "6.5.5", "(min? <x1> <x2> ...)" }, 
-                    (args, env, caller) => Compute(args, caller, Math.Min, Num(First(args))),
+                    (args, env, caller) => Compute(args, Math.Min, Num(First(args))),
                     new ArgsInfo(1, MaxInt, ArgType.Number))
                 .DefinePrimitive(
                     "modulo", 
                     new[] { "6.5.5", "(module <n1> <n2>)" }, 
-                    (args, env, caller) => Compute2(args, caller, Modulo),
+                    (args, env, caller) => (Number)Modulo(Num(First(args)), Num(Second(args))),
                     new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "negative?", 
@@ -558,7 +494,7 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "quotient", 
                     new[] { "6.5.5", "(quotient <n1> <n2>)" }, 
-                    (args, env, caller) => Compute2(args, caller, Quotient),
+                    (args, env, caller) => (Number)Quotient(Num(First(args)), Num(Second(args))),
                     new ArgsInfo(2, ArgType.Number))
                 .DefinePrimitive(
                     "rational?", 
@@ -578,33 +514,85 @@ namespace SimpleScheme
                 .DefinePrimitive(
                     "round", 
                     new[] { "6.5.5", "(round <x>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Round),
+                    (args, env, caller) => (Number)Math.Round(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "sin", 
                     new[] { "6.5.5", "(sin <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Sin),
+                    (args, env, caller) => (Number)Math.Sin(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "sqrt", 
                     new[] { "6.5.5", "(sqrt <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Sqrt),
+                    (args, env, caller) => (Number)Math.Sqrt(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "tan", 
                     new[] { "6.5.5", "(tan <z>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Math.Tan),
+                    (args, env, caller) => (Number)Math.Tan(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "truncate", 
                     new[] { "6.5.5", "(truncate <x>)" }, 
-                    (args, env, caller) => Compute1(args, caller, Truncate),
+                    (args, env, caller) => (Number)Truncate(Num(First(args))),
                     new ArgsInfo(1, ArgType.Number))
                 .DefinePrimitive(
                     "zero?", 
                     new[] { "6.5.5", "(zero? <z>)" }, 
                     (args, env, caller) => SchemeBoolean.Truth(Num(First(args)) == 0), 
                     new ArgsInfo(1, ArgType.Number));
+        }
+        #endregion
+
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal numbers.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is Number))
+            {
+                return false;
+            }
+
+            return this.Equals((Number)other);
+        }
+
+        /// <summary>
+        /// Compares two Number values by comparing their underlying numerical value.
+        /// </summary>
+        /// <param name="other">The other Number.</param>
+        /// <returns>True if they have the same number value.</returns>
+        public bool Equals(Number other)
+        {
+            return this.n == other.n;
+        }
+
+        /// <summary>
+        /// The hash code is the number's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.n.GetHashCode();
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Create a string representation of the number for printing.
+        /// </summary>
+        /// <returns>The number as a string.</returns>
+        public override string ToString()
+        {
+            if (this.n == Math.Round(this.n))
+            {
+                return ((long)Num(this)).ToString(CultureInfo.InvariantCulture);
+            }
+
+            return Num(this).ToString(CultureInfo.InvariantCulture);
         }
         #endregion
 
@@ -650,7 +638,6 @@ namespace SimpleScheme
         /// <returns>The object, cast to double.</returns>
         private static double Num(SchemeObject obj)
         {
-            Contract.Requires(obj != null);
             return ((Number)obj).N;
         }
 
@@ -661,7 +648,6 @@ namespace SimpleScheme
         /// <returns>The greatest common divisor.</returns>
         private static double Gcd(SchemeObject args)
         {
-            Contract.Requires(args != null);
             long gcd = 0;
             while (args is Pair)
             {
@@ -694,7 +680,6 @@ namespace SimpleScheme
         /// <returns>True if the number is exact.</returns>
         private static bool IsExact(SchemeObject x)
         {
-            Contract.Requires(x != null);
             if (!(x is Number))
             {
                 return false;
@@ -711,7 +696,6 @@ namespace SimpleScheme
         /// <returns>The LCM of these numbers.</returns>
         private static double Lcm(SchemeObject args)
         {
-            Contract.Requires(args != null);
             long lcm = 1;
             while (args is Pair)
             {
@@ -736,12 +720,6 @@ namespace SimpleScheme
             int b = numberBase is Number ? (int)Num(numberBase) : 10;
             if (b != 10 || num == Math.Round(num))
             {
-                if (!(b == 2 || b == 8 || b == 10 || b == 16))
-                {
-                    ErrorHandlers.InvalidOperationError("Invalid number base: " + b);
-                }
-                
-                Contract.Assert(b == 2 || b == 8 || b == 10 || b == 16);
                 return Convert.ToString((long)num, b).ToCharArray();
             }
 
@@ -753,60 +731,47 @@ namespace SimpleScheme
         /// Comparison stops when one of the results yields false.
         /// </summary>
         /// <param name="args">A list of numbers to compare.  Caller checks that these are all Number.</param>
-        /// <param name="caller">The caller (to return to).</param>
         /// <param name="comp">The compare operation to apply successively to pairs of 
         ///     adjacent numbers.</param>
         /// <returns>True only if all comparisons are true.</returns>
-        private static Evaluator Compare(SchemeObject args, Evaluator caller, Func<double, double, bool> comp)
+        private static SchemeBoolean Compare(SchemeObject args, Func<double, double, bool> comp)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(comp != null);
             while (Rest(args) is Pair)
             {
                 if (!comp(Num(First(args)), Num(Second(args))))
                 {
-                    caller.ReturnedExpr = SchemeBoolean.False;
-                    return caller;
+                    return false;
                 }
 
                 args = Rest(args);
-                Contract.Assert(args != null);
             }
 
-            caller.ReturnedExpr = SchemeBoolean.True;
-            return caller;
+            return true;
         }
 
         /// <summary>
         /// Compute an operation on a list of numbers.
         /// In addition to usual arithmetic operators, can also do unary - and /
         ///   and also max and min.
-        /// The result is stored in the caller.
         /// </summary>
         /// <param name="args">The list of numbers to operate on.
         /// The caller has already checked that these are all Numbers</param>
-        /// <param name="caller">The caller (to return to).</param>
         /// <param name="oper">The operation to apply</param>
         /// <param name="initial">The initial value of the computation.</param>
-        /// <returns>The caller to return to.</returns>
-        private static Evaluator Compute(SchemeObject args, Evaluator caller, Func<double, double, double> oper, double initial)
+        /// <returns>The final result of the operation as a Number.</returns>
+        private static Number Compute(SchemeObject args, Func<double, double, double> oper, double initial)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(oper != null);
-
             // If there are no numbers, apply return initial value
             if (args is EmptyList)
             {
-                caller.ReturnedExpr = (Number)initial;
-                return caller;
+                return initial;
             }
 
             double resultSoFar = Num(First(args));
             if (Rest(args) is EmptyList)
             {
                 // If there is one number, apply the operation on the initial value and value.
-                caller.ReturnedExpr = (Number)oper(initial, resultSoFar);
-                return caller;
+                return oper(initial, resultSoFar);
             }
 
             args = Rest(args);
@@ -817,42 +782,7 @@ namespace SimpleScheme
                 args = Rest(args);
             }
 
-            caller.ReturnedExpr = (Number)resultSoFar;
-            return caller;
-        }
-
-        /// <summary>
-        /// Compute an operation on a single number
-        /// </summary>
-        /// <param name="args">The numbers to operate on.
-        /// The caller has already checked that this is a Number</param>
-        /// <param name="caller">The caller (to return to).</param>
-        /// <param name="oper">The operation to apply.</param>
-        /// <returns>The final result of the operation as a Number.</returns>
-        private static Evaluator Compute1(SchemeObject args, Evaluator caller, Func<double, double> oper)
-        {
-            Contract.Requires(args != null);
-            Contract.Requires(oper != null);
-
-            caller.ReturnedExpr = (Number)oper(Num(First(args)));
-            return caller;
-        }
-
-        /// <summary>
-        /// Compute an operation on a single number
-        /// </summary>
-        /// <param name="args">The numbers to operate on.
-        /// The caller has already checked that this is a Number</param>
-        /// <param name="caller">The caller (to return to).</param>
-        /// <param name="oper">The operation to apply.</param>
-        /// <returns>The final result of the operation as a Number.</returns>
-        private static Evaluator Compute2(SchemeObject args, Evaluator caller, Func<double, double, double> oper)
-        {
-            Contract.Requires(args != null);
-            Contract.Requires(oper != null);
-
-            caller.ReturnedExpr = (Number)oper(Num(First(args)), Num(Second(args)));
-            return caller;
+            return resultSoFar;
         }
 
         /// <summary>
@@ -880,7 +810,6 @@ namespace SimpleScheme
         /// <returns>The first modulo the second.</returns>
         private static double Modulo(double first, double second)
         {
-            Contract.Requires(second != 0.0);
             var x = (long)first;
             var y = (long)second;
             long m = x % y;

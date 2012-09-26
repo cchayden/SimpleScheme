@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Reflection;
 
     /// <summary>
@@ -40,25 +39,8 @@ namespace SimpleScheme
                 argClasses, 
                 argClasses.Length - 1)
         {
-            Contract.Requires(targetClassName != null);
-            Contract.Requires(methodName != null);
-            Contract.Requires(instanceClass != null);
-            Contract.Requires(argClasses != null);
-            Contract.Requires(caller != null);
-            Contract.Assert(this.MethodInfo != null);
             var endClasses = new[] { typeof(IAsyncResult) };
             this.endMethodInfo = GetMethodInfo(targetClassName, "End" + methodName, endClasses, caller);
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Display the asynchronous clr procedure as a string.  
-        /// </summary>
-        /// <returns>The string form of the procedure.</returns>
-        public override string ToString()
-        {
-            return "<asynchronous-clr-procedure>";
         }
         #endregion
 
@@ -69,7 +51,6 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
@@ -85,7 +66,15 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
+        /// <summary>
+        /// Display the asynchronous clr procedure as a string.  
+        /// </summary>
+        /// <returns>The string form of the procedure.</returns>
+        public override string ToString()
+        {
+            return "<asynchronous-clr-procedure>";
+        }
 
         /// <summary>
         /// Apply the method to the given arguments.
@@ -94,35 +83,29 @@ namespace SimpleScheme
         ///    to the method.
         /// </summary>
         /// <param name="args">Arguments to pass to the method.</param>
+        /// <param name="env">The environment of the application.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
+        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "AsynchronousClrProcedure");
+            this.CheckArgCount(ListLength(args), args, "AsynchronousClrProcedure", caller);
 #endif
             SchemeObject target = null;
             if (!this.MethodInfo.IsStatic)
             {
                 target = First(args);
-                Contract.Assert(target != null);
                 args = Rest(args);
-                Contract.Assert(args != null);
             }
 
             var actualTarget = ClrObject.ToClrObject(target, this.InstanceClass);
-            var argArray = this.ToArgListBegin(args, new InterpreterState(actualTarget, returnTo));
+            var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(actualTarget, returnTo), caller);
             var res = this.MethodInfo.Invoke(actualTarget, argArray) as IAsyncResult;
-            if (res == null)
-            {
-                ErrorHandlers.ClrError("Async method does not return IAsyncResult");
-                return null;
-            }
 
             // res is not converted because it is IAsyncResult -- convert in completion method
-            return SuspendedEvaluator.New(new ClrObject(res), new Environment(false), returnTo);
+            return new SuspendedEvaluator(ClrObject.New(res), returnTo).NextStep();
         }
-
         #endregion
 
         #region Private Methods
@@ -135,7 +118,6 @@ namespace SimpleScheme
         /// <returns>An array of Types corresponding to the list.</returns>
         private static Type[] ClassListBegin(SchemeObject args)
         {
-            Contract.Requires(args != null);
             Type[] array = ClassList(args, 2);
             array[array.Length - 2] = typeof(AsyncCallback);
             array[array.Length - 1] = typeof(object);
@@ -151,13 +133,12 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="args">A list of the method arguments.</param>
         /// <param name="state">State, passed on to completion function.</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>An array of arguments for the method call.</returns>
-        private object[] ToArgListBegin(SchemeObject args, object state)
+        private object[] ToArgListBegin(SchemeObject args, object state, Evaluator caller)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(state != null);
             object[] additionalArgs = { (AsyncCallback)this.CompletionMethod, state };
-            return this.ToArgList(args, additionalArgs, "AsynchronousClrProcedure");
+            return this.ToArgList(args, additionalArgs, "AsynchronousClrProcedure", caller);
         }
 
         /// <summary>
@@ -167,51 +148,17 @@ namespace SimpleScheme
         /// <param name="result">The async result, used to get operation result.</param>
         private void CompletionMethod(IAsyncResult result)
         {
-            Contract.Requires(result != null);
-            Contract.Requires(result.AsyncState != null);
-            Contract.Requires(this.endMethodInfo != null);
             object[] args = { result };
-            var state = (InterpreterState)result.AsyncState;
-            object res = this.endMethodInfo.Invoke(state.Target, args);
+            var state = (Tuple<object, Evaluator>)result.AsyncState;
+            Evaluator caller = state.Item2;
+            object res = this.endMethodInfo.Invoke(state.Item1, args);
             res = res ?? Undefined.Instance;
-            Evaluator caller = state.Caller;
-            Contract.Assert(caller != null);
-            caller.ReturnedExpr = ClrObject.FromClrObject(res);
+            state.Item2.ReturnedExpr = ClrObject.FromClrObject(res);
 
             // Continue executing steps.  This thread takes over stepping
             //  because the other thread has already exited.
-            Contract.Assert(caller.Env != null);
-            Contract.Assert(caller.Env.Interp != null);
-            caller.Env.Interp.RunSteps(caller);
+            caller.EvalStep();
         }
         #endregion
-
-        /// <summary>
-        /// Stores the state across the async call.
-        /// Consists of the invocation target and the evaluator to return to.
-        /// </summary>
-        private struct InterpreterState
-        {
-            /// <summary>
-            /// The invocation target.
-            /// </summary>
-            public readonly object Target;
-
-            /// <summary>
-            /// The caller, also the Evaluator to return to.
-            /// </summary>
-            public readonly Evaluator Caller;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="InterpreterState"/> struct.
-            /// </summary>
-            /// <param name="target">The async target.</param>
-            /// <param name="caller">The calling Evaluator.</param>
-            public InterpreterState(object target, Evaluator caller)
-            {
-                this.Target = target;
-                this.Caller = caller;
-            }
-        }
     }
 }

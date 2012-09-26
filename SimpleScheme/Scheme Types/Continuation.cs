@@ -3,7 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
+    using System.Text;
 
     /// <summary>
     /// Represents a continuation.
@@ -27,11 +27,26 @@ namespace SimpleScheme
         ///   clone necessary.
         /// </summary>
         /// <param name="eval">The continuation to return to when applied.</param>
-        public Continuation(Evaluator eval) : 
+        private Continuation(Evaluator eval) : 
             base(null, new ArgsInfo(1, 1, false))
         {
-            Contract.Requires(eval != null);
             this.savedEvaluator = eval.CloneChain(); 
+        }
+        #endregion
+
+        #region New
+        /// <summary>
+        /// Initializes a new instance of the Continuation class.
+        /// The evaluator and its chain of evaluators back to the beginning have to be cloned because they
+        ///   hold information about the progress of the evaluation.  When the evaluation proceeds
+        ///   these evaluators might be altered, damaging the ability to continue, which is what makes the
+        ///   clone necessary.
+        /// </summary>
+        /// <param name="eval">The continuation to return to when applied.</param>
+        /// <returns>A new continuation.</returns>
+        public static Continuation New(Evaluator eval)
+        {
+            return new Continuation(eval);
         }
         #endregion
 
@@ -54,28 +69,19 @@ namespace SimpleScheme
         ///   does not alter the evaluation, making it impossible to return back to the continuation.
         /// </summary>
         /// <param name="args">The value to return.</param>
+        /// <param name="env"></param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
+        /// <param name="caller">The calling evaluator.  Not used, since control is transferred away.</param>
         /// <returns>The next evaluator to execute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
+        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "Continuation");
+            this.CheckArgCount(ListLength(args), args, "Continuation", caller);
 #endif
             Evaluator nextStep = this.savedEvaluator.CloneChain();
             nextStep.ReturnedExpr = First(args);
-            nextStep.Env = this.savedEvaluator.Env;
+            nextStep.ReturnedEnv = this.savedEvaluator.Env;
             return nextStep;
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.savedEvaluator != null);
         }
         #endregion
     }

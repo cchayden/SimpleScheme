@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Represents a macro definition.
     /// It is just a lambda with a different ToString.
@@ -22,9 +20,20 @@ namespace SimpleScheme
         public Macro(SchemeObject parms, SchemeObject body, Environment env)
             : base(parms, body, env)
         {
-            Contract.Requires(parms != null);
-            Contract.Requires(body != null);
-            Contract.Requires(env != null);
+        }
+        #endregion
+
+        #region New
+        /// <summary>
+        /// Initializes a new instance of the Macro class.
+        /// </summary>
+        /// <param name="parms">The macro params.</param>
+        /// <param name="body">The macro body.</param>
+        /// <param name="env">The environment that the macro is defined in.</param>
+        /// <returns>A new Macro.</returns>
+        public static new Macro New(SchemeObject parms, SchemeObject body, Environment env)
+        {
+            return new Macro(parms, body, env);
         }
         #endregion
 
@@ -50,9 +59,6 @@ namespace SimpleScheme
         /// <returns>The macro representing the expression.</returns>
         internal static new Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
             caller.ReturnedExpr = new Macro(First(args), Rest(args), env);
             return caller;
         }

@@ -3,9 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Evaluate an if expression.
     /// Evaluate the first part, then depending on its truth value, either
@@ -15,6 +12,19 @@ namespace SimpleScheme
     //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
     internal sealed class EvaluateIf : Evaluator
     {
+        #region Constructor
+        /// <summary>
+        /// Initializes a new instance of the EvaluateIf class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateIf(SchemeObject expr, Environment env, Evaluator caller)
+            : base(EvalTestStep, expr, env, caller)
+        {
+        }
+        #endregion
+
         #region Call
         /// <summary>
         /// Creates an if evaluator.
@@ -25,10 +35,7 @@ namespace SimpleScheme
         /// <returns>The if evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return New(expr, env, caller);
+            return new EvaluateIf(expr, env, caller);
         }
         #endregion
 
@@ -36,63 +43,26 @@ namespace SimpleScheme
         /// <summary>
         /// Begin by evaluating the first expression (the test).
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator EvalTestStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Steps to evaluate the test.</returns>
+        private static Evaluator EvalTestStep(Evaluator s)
         {
-            this.Pc = OpCode.EvalAlternative;
-            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
+            s.Pc = EvalAlternativeStep;
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
         /// Back here after the test has been evaluated.
         /// Evaluate and return either the second or third expression.
-        /// If there is no third (or second), the value is undefined.
+        /// If there is no thid, the empty list will be evaluated, which is OK.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator EvalAlternativeStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Execution continues with the return.</returns>
+        private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            SchemeObject toEvaluate = SchemeBoolean.Truth(this.ReturnedExpr).Value ? Second(this.Expr) : Third(this.Expr);
-            if (toEvaluate is EmptyList)
-            {
-                return this.ReturnFromEvaluator(Undefined.Instance);
-            }
-
-            Environment ev = this.Env;
-            Evaluator c = this.Caller;
-            this.Reclaim();
-            return EvaluateExpression.Call(toEvaluate, ev, c);
-        }
-        #endregion
-
-        #region Initialize
-        /// <summary>
-        /// Initializes a new instance of the EvaluateIf class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        private EvaluateIf Initialize(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            base.Initialize(OpCode.EvalTest, expr, env, caller);
-            return this;
-        }
-
-        /// <summary>
-        /// Creates and initializes a new instance of the EvaluateIf class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateIf New(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return GetInstance<EvaluateIf>().Initialize(expr, env, caller);
+            SchemeObject toEvaluate = SchemeBoolean.Truth(s.ReturnedExpr).Value ? Second(s.Expr) : Third(s.Expr);
+            return EvaluateExpression.Call(
+                toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }
         #endregion
     }

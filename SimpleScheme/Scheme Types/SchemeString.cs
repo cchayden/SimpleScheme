@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Text;
 
     /// <summary>
@@ -27,9 +26,8 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="SchemeString"/> class.
         /// </summary>
         /// <param name="str">The string contents.</param>
-        public SchemeString(char[] str)
+        private SchemeString(char[] str)
         {
-            Contract.Requires(str != null);
             this.str = str;
         }
 
@@ -37,9 +35,8 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="SchemeString"/> class.
         /// </summary>
         /// <param name="length">The string length.</param>
-        public SchemeString(int length)
+        private SchemeString(int length)
         {
-            Contract.Requires(length >= 0);
             this.str = new char[length];
         }
 
@@ -47,9 +44,8 @@ namespace SimpleScheme
         /// Initializes a new instance of the <see cref="SchemeString"/> class from a string builder. 
         /// </summary>
         /// <param name="buf">A string builder containing the string value.</param>
-        public SchemeString(StringBuilder buf) : this(buf.ToString().ToCharArray())
+        private SchemeString(StringBuilder buf) : this(buf.ToString().ToCharArray())
         {
-            Contract.Requires(buf != null);
         }
 
         /// <summary>
@@ -57,9 +53,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="buf">A string builder containing the string value.</param>
         /// <param name="lineNumber">The line where the string is read.</param>
-        public SchemeString(StringBuilder buf, int lineNumber) : base(lineNumber)
+        private SchemeString(StringBuilder buf, int lineNumber) : base(lineNumber)
         {
-            Contract.Requires(buf != null);
             this.str = buf.ToString().ToCharArray();
         }
 
@@ -69,9 +64,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The symbol to convert.</param>
         /// <returns>The scheme string.</returns>
-        public SchemeString(Symbol str) : this(str.ToString().ToCharArray())
+        private SchemeString(Symbol str) : this(str.ToString().ToCharArray())
         {
-            Contract.Requires(str != null);
         }
 
         /// <summary>
@@ -80,9 +74,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The scheme string to copy.</param>
         /// <returns>The scheme string.</returns>
-        public SchemeString(SchemeString str) : this(str.ToString().ToCharArray())
+        private SchemeString(SchemeString str) : this(str.ToString().ToCharArray())
         {
-            Contract.Requires(str != null);
         }
 
         /// <summary>
@@ -90,9 +83,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The CLR string.</param>
         /// <returns>The scheme string.</returns>
-        public SchemeString(string str) : this(str.ToCharArray())
+        private SchemeString(string str) : this(str.ToCharArray())
         {
-            Contract.Requires(str != null);
         }
         #endregion
 
@@ -102,11 +94,7 @@ namespace SimpleScheme
         /// </summary>
         public char[] Str
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<char[]>() != null);
-                return this.str;
-            }
+            get { return this.str; }
         }
         #endregion
 
@@ -118,9 +106,7 @@ namespace SimpleScheme
         /// <returns>The corresponding SchemeString.</returns>
         public static implicit operator SchemeString(char[] str)
         {
-            Contract.Requires(str != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return new SchemeString(str);
+            return New(str);
         }
 
         /// <summary>
@@ -130,9 +116,7 @@ namespace SimpleScheme
         /// <returns>The corresponding SchemeString.</returns>
         public static implicit operator SchemeString(StringBuilder buf)
         {
-            Contract.Requires(buf != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return new SchemeString(buf);
+            return New(buf);
         }
 
         /// <summary>
@@ -142,9 +126,7 @@ namespace SimpleScheme
         /// <returns>The corresponding SchemeString.</returns>
         public static implicit operator SchemeString(string str)
         {
-            Contract.Requires(str != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
-            return new SchemeString(str);
+            return New(str);
         }
 
         /// <summary>
@@ -154,9 +136,38 @@ namespace SimpleScheme
         /// <returns>A SchemeString.</returns>
         public static SchemeString New(char[] str)
         {
-            Contract.Requires(str != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
             return new SchemeString(str);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchemeString"/> class.
+        /// </summary>
+        /// <param name="length">The string length.</param>
+        /// <returns>A SchemeString.</returns>
+        public static SchemeString New(int length)
+        {
+            return new SchemeString(length);
+        }
+
+        /// <summary>
+        /// Creates a scheme string from a string builder.
+        /// </summary>
+        /// <param name="buf">A string builder containing the string value.</param>
+        /// <returns>A SchemeString.</returns>
+        public static SchemeString New(StringBuilder buf)
+        {
+            return new SchemeString(buf);
+        }
+
+        /// <summary>
+        /// Creates a scheme string from a string builder.
+        /// </summary>
+        /// <param name="buf">A string builder containing the string value.</param>
+        /// <param name="lineNumber">The line where the string is read.</param>
+        /// <returns>A SchemeString.</returns>
+        public static SchemeString New(StringBuilder buf, int lineNumber)
+        {
+            return new SchemeString(buf, lineNumber);
         }
 
         /// <summary>
@@ -167,8 +178,6 @@ namespace SimpleScheme
         /// <returns>A SchemeString.</returns>
         public static SchemeString New(string str)
         {
-            Contract.Requires(str != null);
-            Contract.Ensures(Contract.Result<SchemeString>() != null);
             return new SchemeString(str);
         }
         #endregion
@@ -182,7 +191,6 @@ namespace SimpleScheme
         /// <returns>The C# string of the schee string.</returns>
         public static string AsString(SchemeObject obj)
         {
-            Contract.Requires(obj != null);
             if (obj is SchemeString)
             {
                 return new string(((SchemeString)obj).str);
@@ -193,106 +201,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Static Methods
-        /// <summary>
-        /// Tests two strings for equality.
-        /// </summary>
-        /// <param name="obj1">The first object (must be a scheme string..</param>
-        /// <param name="obj2">The second object.</param>
-        /// <returns>True if the strings are equal.</returns>
-        public static SchemeBoolean Equal(SchemeString obj1, SchemeObject obj2)
-        {
-            Contract.Requires(obj1 != null);
-            Contract.Requires(obj2 != null);
-            if (!(obj2 is SchemeString))
-            {
-                return false;
-            }
-
-            var str1 = obj1.Str;
-            var str2 = ((SchemeString)obj2).Str;
-            int len1 = str1.Length;
-            int len2 = str2.Length;
-
-            if (len1 != len2)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < len1; i++)
-            {
-                if (str1[i] != str2[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        #endregion
-
-        #region Equality
-        /// <summary>
-        /// Provide our own version of the Equals method.
-        /// </summary>
-        /// <param name="other">The other object.</param>
-        /// <returns>True if they are equal character arrays.</returns>
-        public override bool Equals(object other)
-        {
-            if (!(other is SchemeString))
-            {
-                return false;
-            }
-
-            return this.Equals((SchemeString)other);
-        }
-
-        /// <summary>
-        /// Compares two Number values by comparing their underlying character arrays.
-        /// </summary>
-        /// <param name="other">The other SchemeString.</param>
-        /// <returns>True if they have the same characters.</returns>
-        public bool Equals(SchemeString other)
-        {
-            Contract.Assume(other != null);
-            for (int i = 0; i < this.str.Length; i++)
-            {
-                if (this.str[i] != other.str[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// The hash code is the SchemeString's hash code.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            int hash = 0;
-            foreach (char t in this.str)
-            {
-                hash += t;
-            }
-
-            return hash;
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Gets the string representation of the SchemeString.
-        /// </summary>
-        /// <returns>The string.</returns>
-        public override string ToString()
-        {
-            return new string(this.str);
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the string primitives.
@@ -300,7 +208,6 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
@@ -431,6 +338,104 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Static Methods
+        /// <summary>
+        /// Tests two strings for equality.
+        /// </summary>
+        /// <param name="obj1">The first object (must be a scheme string..</param>
+        /// <param name="obj2">The second object.</param>
+        /// <returns>True if the strings are equal.</returns>
+        public static SchemeBoolean Equal(SchemeString obj1, SchemeObject obj2)
+        {
+            if (!(obj2 is SchemeString))
+            {
+                return false;
+            }
+
+            var str1 = obj1.Str;
+            var str2 = ((SchemeString)obj2).Str;
+            int len1 = str1.Length;
+            int len2 = str2.Length;
+
+            if (len1 != len2)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < len1; i++)
+            {
+                if (str1[i] != str2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region Equality
+        /// <summary>
+        /// Provide our own version of the Equals method.
+        /// </summary>
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal character arrays.</returns>
+        public override bool Equals(object other)
+        {
+            if (!(other is SchemeString))
+            {
+                return false;
+            }
+
+            return this.Equals((SchemeString)other);
+        }
+
+        /// <summary>
+        /// Compares two Number values by comparing their underlying character arrays.
+        /// </summary>
+        /// <param name="other">The other SchemeString.</param>
+        /// <returns>True if they have the same characters.</returns>
+        public bool Equals(SchemeString other)
+        {
+            for (int i = 0; i < this.str.Length; i++)
+            {
+                if (this.str[i] != other.str[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// The hash code is the SchemeString's hash code.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            int hash = 0;
+            foreach (char t in this.str)
+            {
+                hash += t;
+            }
+
+            return hash;
+        }
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Gets the string representation of the SchemeString.
+        /// </summary>
+        /// <returns>The string.</returns>
+        public override string ToString()
+        {
+            return new string(this.str);
+        }
+        #endregion
+
         #region Internal Static Methods
         /// <summary>
         /// Convert a list of chars into a string.
@@ -439,7 +444,6 @@ namespace SimpleScheme
         /// <returns>The caracter array made up of the chars.</returns>
         internal static SchemeString ListToString(SchemeObject chars)
         {
-            Contract.Requires(chars != null);
             var str = new StringBuilder();
             while (chars is Pair)
             {
@@ -510,9 +514,6 @@ namespace SimpleScheme
         /// <returns>The new scheme string.</returns>
         private static SchemeString New(Number length, SchemeObject fill)
         {
-            Contract.Requires(length != null);
-            Contract.Requires(Number.AsInt(length) >= 0);
-            Contract.Requires(fill != null);
             char c = fill is EmptyList ? (char)0 : ((Character)fill).C;
             int len = Number.AsInt(length);
             var res = new SchemeString(len);
@@ -526,7 +527,6 @@ namespace SimpleScheme
         /// <returns>The string length.</returns>
         private static int Length(char[] str)
         {
-            Contract.Requires(str != null);
             return str.Length;
         }
 
@@ -539,12 +539,6 @@ namespace SimpleScheme
         /// <returns>The substring starting with the starting position and ending with the ending position.</returns>
         private static SchemeString Substr(SchemeString str, SchemeObject start, SchemeObject end)
         {
-            Contract.Requires(str != null);
-            Contract.Requires(str.str != null);
-            Contract.Requires(start != null);
-            Contract.Requires(Number.AsInt(start) >= 0);
-            Contract.Requires(end != null);
-            Contract.Requires(Number.AsInt(end) - Number.AsInt(start) >= 0);
             var startPos = Number.AsInt(start);
             var endPos = Number.AsInt(end);
             var len = endPos - startPos;
@@ -561,8 +555,6 @@ namespace SimpleScheme
         /// <returns>A list of the characters.</returns>
         private static SchemeObject ToList(SchemeString s)
         {
-            Contract.Requires(s != null);
-            Contract.Requires(s.str != null);
             SchemeObject result = EmptyList.Instance;
             char[] str = s.str;
             for (int i = str.Length - 1; i >= 0; i--)
@@ -582,12 +574,6 @@ namespace SimpleScheme
         /// <returns>Undefined value.</returns>
         private static SchemeObject Set(SchemeString str, Number index, Character chr)
         {
-            Contract.Requires(str != null);
-            Contract.Requires(str.str != null);
-            Contract.Requires(index != null);
-            Contract.Requires(Number.AsInt(index) >= 0);
-            Contract.Requires(Number.AsInt(index) < str.str.Length);
-            Contract.Requires(chr != null);
             str.str[Number.AsInt(index)] = chr.C;
             return Undefined.Instance;
         }
@@ -599,7 +585,6 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static SchemeObject Copy(SchemeString str)
         {
-            Contract.Requires(str != null);
             return new SchemeString(str);
         }
 
@@ -611,9 +596,6 @@ namespace SimpleScheme
         /// <returns>The return value is unspecified.</returns>
         private static SchemeObject Fill(SchemeString str, Character fill)
         {
-            Contract.Requires(str != null);
-            Contract.Requires(str.str != null);
-            Contract.Requires(fill != null);
             str.Fill(fill.C);
 
             return Undefined.Instance;
@@ -627,7 +609,6 @@ namespace SimpleScheme
         /// and appended.</returns>
         private static SchemeString Append(SchemeObject args)
         {
-            Contract.Requires(args != null);
             var result = new StringBuilder();
 
             while (args is Pair)
@@ -649,8 +630,6 @@ namespace SimpleScheme
         /// if the second is less.</returns>
         private static int Compare(SchemeString first, SchemeString second, bool caseInsensitive)
         {
-            Contract.Requires(first != null);
-            Contract.Requires(second != null);
             var str1 = first.Str;
             var str2 = second.Str;
             var len1 = str1.Length;
@@ -681,8 +660,6 @@ namespace SimpleScheme
         /// <returns>The number represented by the string.</returns>
         private static SchemeObject ToNumber(SchemeObject val, SchemeObject bas)
         {
-            Contract.Requires(val != null);
-            Contract.Requires(bas != null);
             int numberBase = bas is Number ? Number.AsInt(bas) : 10;
             if (numberBase == 10)
             {
@@ -692,11 +669,6 @@ namespace SimpleScheme
                     return (Number)res;
                 }
 
-                return (SchemeBoolean)false;
-            }
-
-            if (!(numberBase == 2 || numberBase == 8 || numberBase == 10 || numberBase == 16))
-            {
                 return (SchemeBoolean)false;
             }
 
@@ -734,17 +706,6 @@ namespace SimpleScheme
             }
 
             return this;
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.str != null);
         }
         #endregion
     }

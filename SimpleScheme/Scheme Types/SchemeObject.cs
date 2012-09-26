@@ -100,4 +100,8 @@ namespace SimpleScheme
             return SchemeObjectExtensions.ToClass(this);
         }
     }
+
+    #region Extension Class
+
+    #endregion
 }

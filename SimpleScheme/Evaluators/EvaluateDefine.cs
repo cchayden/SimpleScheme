@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
@@ -14,6 +12,19 @@ namespace SimpleScheme
     /// </summary>
     internal sealed class EvaluateDefine : Evaluator
     {
+        #region Constructor
+        /// <summary>
+        /// Initializes a new instance of the EvaluateDefine class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateDefine(SchemeObject expr, Environment env, Evaluator caller)
+            : base(InitialStep, expr, env, caller)
+        {
+        }
+        #endregion
+
         #region Call
         /// <summary>
         /// Call a define evaluator.
@@ -28,24 +39,21 @@ namespace SimpleScheme
         /// <returns>The define evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
             if (First(expr) is Pair)
             {
                 // Defun case -- create a lambda and bind it to the variable.
                 var symbol = First(First(expr));
                 if (!(symbol is Symbol))
                 {
-                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)));
+                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)), null);
                 }
 
-                env.Define((Symbol)symbol, new Lambda(Rest(First(expr)), Rest(expr), env));
+                env.Define((Symbol)symbol, Lambda.New(Rest(First(expr)), Rest(expr), env));
                 caller.ReturnedExpr = Undefined.Instance;
                 return caller;
             }
 
-            return New(expr, env, caller);
+            return new EvaluateDefine(expr, env, caller);
         }
         #endregion
 
@@ -53,55 +61,33 @@ namespace SimpleScheme
         /// <summary>
         /// Start by evaluating the expression.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator InitialStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Continue by evaluating the expression.</returns>
+        private static Evaluator InitialStep(Evaluator s)
         {
-            this.Pc = OpCode.StoreDefine;
-            return EvaluateExpression.Call(Second(this.Expr), this.Env, this);
+            s.Pc = StoreDefineStep;
+            return EvaluateExpression.Call(Second(s.Expr), s.Env, s);
         }
 
         /// <summary>
         /// Back from expression evaluation.  Store the result as the value of the symbol
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator StoreDefineStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Execution continues in the caller.</returns>
+        private static Evaluator StoreDefineStep(Evaluator s)
         {
-            this.Env.Define((Symbol)First(this.Expr), this.ReturnedExpr);
-            return this.ReturnFromEvaluator(Undefined.Instance);
-        }
-        #endregion
+            var symbol = First(s.Expr);
+            if (!(symbol is Symbol))
+            {
+                ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)), null);
+            }
 
-        #region Initialize
-        /// <summary>
-        /// Creates and initializes a new instance of the EvaluateDefine class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateDefine New(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return GetInstance<EvaluateDefine>().Initialize(expr, env, caller);
+            s.Env.Define((Symbol)symbol, s.ReturnedExpr);
+            Evaluator caller = s.Caller;
+            caller.ReturnedExpr = Undefined.Instance;
+            return caller;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the EvaluateDefine class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Newly initialized evaluator.</returns>
-        private EvaluateDefine Initialize(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Initialize(OpCode.Initial, expr, env, caller);
-            return this;
-        }
         #endregion
     }
 }

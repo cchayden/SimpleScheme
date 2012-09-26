@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Reflection;
 
     /// <summary>
@@ -30,8 +29,6 @@ namespace SimpleScheme
         private ClrConstructor(string targetClassName, Type[] argClasses)
             : base(targetClassName, "ctor", null, null, argClasses, argClasses.Length)
         {
-            Contract.Requires(targetClassName != null);
-            Contract.Requires(argClasses != null);
             try
             {
                 this.classType = targetClassName.ToClass();
@@ -48,17 +45,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Display the clr constructor as a string.  
-        /// </summary>
-        /// <returns>The string form of the constructor.</returns>
-        public override string ToString()
-        {
-            return "<clr-constructor>";
-        }
-        #endregion
-
         #region Define Primitives
         /// <summary>
         /// Define the sync clr procedure primitives.
@@ -66,7 +52,6 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
@@ -77,42 +62,35 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Internal Methods
+        #region Public Methods
+        /// <summary>
+        /// Display the clr constructor as a string.  
+        /// </summary>
+        /// <returns>The string form of the constructor.</returns>
+        public override string ToString()
+        {
+            return "<clr-constructor>";
+        }
 
         /// <summary>
         /// Execute the constructor.
         /// Match all arguments supplied up to the constructor's types.
         /// </summary>
         /// <param name="args">Arguments to pass to the constructor.</param>
+        /// <param name="env">The environment of the evaluation.</param>
         /// <param name="returnTo">The evaluator to return to.  This can be different from caller if this is the last step in evaluation</param>
+        /// <param name="caller">The calling evaluator.</param>
         /// <returns>The next evaluator to excute.</returns>
-        internal override Evaluator Apply(SchemeObject args, Evaluator returnTo)
+        internal override Evaluator Apply(SchemeObject args, Environment env, Evaluator returnTo, Evaluator caller)
         {
 #if Check
-            this.CheckArgCount(ListLength(args), args, "ClrConstructor");
+            this.CheckArgCount(ListLength(args), args, "ClrConstructor", caller);
 #endif
             Assembly assembly = this.classType.Assembly;
-            object[] argArray = this.ToArgList(args, null, "ClrConstructor");
+            object[] argArray = this.ToArgList(args, null, "ClrConstructor", caller);
             object res = assembly.CreateInstance(this.classType.FullName, false, BindingFlags.Default, null, argArray, null, null);
-            if (res == null)
-            {
-                ErrorHandlers.ClrError("Constructor failed");
-                return null;
-            }
-
-            returnTo.ReturnedExpr = new ClrObject(res);
+            returnTo.ReturnedExpr = ClrObject.New(res);
             return returnTo;
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.classType != null);
         }
         #endregion
     }

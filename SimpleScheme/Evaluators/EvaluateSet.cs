@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
@@ -15,12 +13,29 @@ namespace SimpleScheme
         /// <summary>
         /// The variable of the assignment.
         /// </summary>
-        private SchemeObject lhs;
+        private readonly SchemeObject lhs;
 
         /// <summary>
         /// The expression of the assignment.
         /// </summary>
-        private SchemeObject rhs;
+        private readonly SchemeObject rhs;
+        #endregion
+
+        #region Constructors
+        /// <summary>
+        /// Initializes a new instance of the EvaluateSet class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="lhs">The left hand side -- the variable to set.</param>
+        /// <param name="rhs">The right hand side -- the new value.</param>
+        private EvaluateSet(SchemeObject expr, Environment env, Evaluator caller, SchemeObject lhs, SchemeObject rhs)
+            : base(InitialStep, expr, env, caller)
+        {
+            this.lhs = lhs;
+            this.rhs = rhs;
+        }
         #endregion
 
         #region Call
@@ -33,16 +48,14 @@ namespace SimpleScheme
         /// <returns>The set evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            var lhs = First(expr);
+            SchemeObject lhs = First(expr);
+            SchemeObject rhs = Second(expr);
             if (!(lhs is Symbol))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs));
+                ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs), null);
             }
 
-            return New(expr, env, caller);
+            return new EvaluateSet(expr, env, caller, lhs, rhs);
         }
         #endregion
 
@@ -50,74 +63,33 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate the second expression (rhs).
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator InitialStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Code to evaluate the second expression.</returns>
+        private static Evaluator InitialStep(Evaluator s)
         {
-            this.Pc = OpCode.Set;
-            return EvaluateExpression.Call(this.rhs, this.Env, this);
+            var step = (EvaluateSet)s;
+            s.Pc = SetStep;
+            return EvaluateExpression.Call(step.rhs, s.Env, s);
         }
 
         /// <summary>
         /// Back here after evaluation.  Assign the result to the variable in the environment
         ///   named by the first part of the expression.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator SetStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Returns to caller.</returns>
+        private static Evaluator SetStep(Evaluator s)
         {
-            if (!(this.lhs is Symbol))
+            var step = (EvaluateSet)s;
+            if (!(step.lhs is Symbol))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", this.lhs.ToString(true)));
+                ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", step.lhs.ToString(true)), step.lhs);
             }
 
-            this.Env.Set((Symbol)this.lhs, this.ReturnedExpr);
-            return this.ReturnFromEvaluator(Undefined.Instance);
-        }
-        #endregion
-
-        #region Initialize
-        /// <summary>
-        /// Creates and initializes a new instance of the EvaluateSet class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateSet New(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return GetInstance<EvaluateSet>().Initialize(expr, env, caller);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the EvaluateSet class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Newly initialized evaluator.</returns>
-        private EvaluateSet Initialize(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            this.lhs = First(expr);
-            this.rhs = Second(expr);
-            Initialize(OpCode.Initial, expr, env, caller);
-            return this;
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.degenerate || this.lhs != null);
-            Contract.Invariant(this.degenerate || this.rhs != null);
+            s.Env.Set((Symbol)step.lhs, s.ReturnedExpr);
+            Evaluator caller = s.Caller;
+            caller.ReturnedExpr = Undefined.Instance;
+            return caller;
         }
         #endregion
     }

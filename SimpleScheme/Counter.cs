@@ -31,7 +31,6 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
             primEnv
                 .DefinePrimitive(
                     "dump-counters", 
@@ -63,15 +62,15 @@ namespace SimpleScheme
         /// <param name="counter">The counter name.</param>
         internal void Increment(string counter)
         {
-            lock(this)
+            lock (this)
             {
-                if (counters.ContainsKey(counter))
+                if (this.counters.ContainsKey(counter))
                 {
                     this.counters[counter]++;
                 }
                 else
                 {
-                    counters[counter] = 1;
+                    this.counters[counter] = 1;
                 }
             }
         }
@@ -101,16 +100,17 @@ namespace SimpleScheme
             SchemeObject res = EmptyList.Instance;
             lock (this)
             {
-                foreach (var kvp in counters)
+                foreach (var kvp in this.counters)
                 {
                     int count = kvp.Value;
                     if (count > 0)
                     {
                         Contract.Assume(kvp.Key != null);
-                        res = List.Cons(List.Cons((Symbol)(kvp.Key), (Number)count), res);
+                        res = List.Cons(List.Cons((Symbol)kvp.Key, (Number)count), res);
                     }
                 }
             }
+
             return res;
         }
 
@@ -121,17 +121,15 @@ namespace SimpleScheme
         /// <returns>The counter value.</returns>
         private SchemeObject GetCounter(SchemeObject name)
         {
-            Contract.Requires(name != null);
             string counterName = name.ToString();
             lock (this)
             {
-                foreach (var kvp in counters)
+                foreach (var kvp in this.counters)
                 {
                     if (kvp.Key == counterName)
                     {
                         return (Number)kvp.Value;
                     }
-
                 }
             }
 
@@ -145,10 +143,9 @@ namespace SimpleScheme
         /// <param name="sb">The string builder to dump to.</param>
         private void Dump(StringBuilder sb)
         {
-            Contract.Requires(sb != null);
             lock (this)
             {
-                foreach (var kvp in counters.OrderBy(elem => elem.Key))
+                foreach (var kvp in this.counters.OrderBy(elem => elem.Key))
                 {
                     int count = kvp.Value;
                     if (count > 0)
@@ -172,17 +169,6 @@ namespace SimpleScheme
             }
 
             return Undefined.Instance;
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.counters != null);
         }
         #endregion
     }

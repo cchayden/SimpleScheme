@@ -4,7 +4,6 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Utilities for manipulating lists and vectors, input and output, and converting 
@@ -34,7 +33,6 @@ namespace SimpleScheme
         /// <param name="primEnv">The environment to define the primitives into.</param>
         internal static void DefinePrimitives(PrimitiveEnvironment primEnv)
         {
-            Contract.Requires(primEnv != null);
             const int MaxInt = int.MaxValue;
             primEnv
                 .DefinePrimitive(
@@ -55,8 +53,6 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject Error(string message)
         {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
             Console.Error.WriteLine("**** ERROR: " + message);
             throw new SchemeException(message);
         }
@@ -72,9 +68,6 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject TypeError(Type expected, EvaluatorOrObject got)
         {
-            Contract.Requires(expected != null);
-            Contract.Requires(got != null);
-            Contract.Ensures(false);
             string message = string.Format(
                 "Invalid type: expected {0}, got {1}: {2}", 
                 expected.SchemeTypeName(), 
@@ -99,8 +92,6 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject PrintError(SchemeObject got)
         {
-            Contract.Requires(got != null);
-            Contract.Ensures(false);
             string message = string.Format(
                 "Invalid type whem printing: expected SchemeObject, got {0}: {1}", 
                 got.SchemeTypeName(), 
@@ -124,26 +115,8 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject IoError(string message)
         {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
             Console.Error.WriteLine("**** I/O ERROR: {0}", message);
             throw new SchemeIoException(message);
-        }
-
-        /// <summary>
-        /// Handle an error by printing a message on the console 
-        ///    and throwing an exception.
-        /// These are argument errors, caused by the host passing invalud information.
-        /// </summary>
-        /// <param name="message">The message to display and to put 
-        ///    into the exception.</param>
-        /// <returns>Actually, does not return.</returns>
-        internal static SchemeObject ArgumentError(string message)
-        {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
-            Console.Error.WriteLine("**** ARGUMENT ERROR: {0}", message);
-            throw new SchemeInternalException(message);
         }
 
         /// <summary>
@@ -156,8 +129,6 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject InternalError(string message)
         {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
             Console.Error.WriteLine("**** INTERNAL ERROR: {0}", message);
             throw new SchemeInternalException(message);
         }
@@ -172,8 +143,6 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject ClrError(string message)
         {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
             Console.Error.WriteLine("**** CLR ERROR: {0}", message);
             throw new SchemeClrException(message);
         }
@@ -185,11 +154,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="message">The message to display and to put 
         ///     into the exception.</param>
+        /// <param name="got">The actual result.</param>
         /// <returns>Actually, does not return.</returns>
-        internal static SchemeObject SemanticError(string message)
+        internal static SchemeObject SemanticError(string message, SchemeObject got)
         {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
         }
@@ -201,13 +169,10 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="message">The message to display and to put 
         ///    into the exception.</param>
-        /// <param name="got">The object we got instead of the proc.</param>
+        /// <param name="got">The object we got instead of he proc.</param>
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject ProcError(string message, SchemeObject got)
         {
-            Contract.Requires(message != null);
-            Contract.Requires(got != null);
-            Contract.Ensures(false);
             string msg = string.Format("{0}, got {1}: {2}", message, got.SchemeTypeName(), got.ToString(true));
             if (got is Symbol)
             {
@@ -228,8 +193,6 @@ namespace SimpleScheme
         /// <returns>Actually, does not return.</returns>
         internal static SchemeObject InvalidOperationError(string message)
         {
-            Contract.Requires(message != null);
-            Contract.Ensures(false);
             Console.Error.WriteLine("**** INVALID OPERATION ERROR: {0}", message);
             throw new InvalidOperationException(message);
         }
@@ -240,8 +203,6 @@ namespace SimpleScheme
         /// <param name="ex">The exception to print.</param>
         internal static void PrintException(Exception ex)
         {
-            Contract.Requires(ex != null);
-
             // If this is a scheme exception, it has already been reported.
             if (!(ex is SchemeException))
             {

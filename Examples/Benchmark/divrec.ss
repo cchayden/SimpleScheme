@@ -5,7 +5,6 @@
        (a '() (cons '() a)))
       ((= n 0) a)))
  
-; this is not tail recursive, and generates a large stack
 (define (recursive-div2 l)
   (cond ((null? l) '())
         (else (cons (car l) (recursive-div2 (cddr l))))))

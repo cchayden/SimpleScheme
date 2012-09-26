@@ -4,8 +4,8 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.IO;
+    using System.Text;
 
     /// <summary>
     /// Writes to the output port.
@@ -30,10 +30,8 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="outp">The TextWriter to write output to.</param>
         /// <param name="interp">The interpreter.</param>
-        public OutputPort(TextWriter outp, Interpreter interp)
+        private OutputPort(TextWriter outp, Interpreter interp)
         {
-            Contract.Requires(outp != null);
-            Contract.Requires(interp != null);
             this.outp = outp;
             this.transcript = interp.Transcript;
         }
@@ -45,15 +43,11 @@ namespace SimpleScheme
         /// </summary>
         internal TextWriter Writer
         { 
-            get
-            {
-                Contract.Ensures(Contract.Result<TextWriter>() != null);
-                return this.outp;
-            }
+            get { return this.outp; }
         }
 
         /// <summary>
-        /// Gets a value indicating whether output is going to the console.
+        /// True if writing to Console
         /// </summary>
         internal bool IsConsole
         {
@@ -61,7 +55,116 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region New
+        /// <summary>
+        /// Initializes a new instance of the OutputPort class.
+        /// </summary>
+        /// <param name="outp">The TextWriter to write output to.</param>
+        /// <param name="interp">The interpreter.</param>
+        /// <returns>A new output port</returns>
+        public static OutputPort New(TextWriter outp, Interpreter interp)
+        {
+            return new OutputPort(outp, interp);
+        }
+
+        #endregion
+
+        #region Define Primitives
+        /// <summary>
+        /// Define the output primitives.
+        /// </summary>
+        /// <param name="primEnv">The environment to define the primitives into.</param>
+        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
+        {
+            // TODO not implemented
+            //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
+
+            primEnv
+                .DefinePrimitive(
+                    "call-with-output-file",
+                    new[] {"6.10.1", "(call-with-output-file <string> <proc>)"}, 
+                    (args, env, caller) => EvaluateCallWithOutputFile.Call(args, caller), 
+                    new ArgsInfo(2, ArgType.String, ArgType.Proc))
+                .DefinePrimitive(
+                    "close-output-port", new[] { "6.10.1", "(close-output-port <port>)" },
+                    (args, env, caller) => Port(First(args), caller.Interp.CurrentOutputPort).CloseOutputPort(), 
+                    new ArgsInfo(1, ArgType.OutputPort))
+                .DefinePrimitive(
+                    "current-output-port", new[] { "6.10.1", "(current-output-port)" },
+                    (args, env, caller) => caller.Interp.CurrentOutputPort, 
+                    new ArgsInfo(0))
+                .DefinePrimitive(
+                    "display", new[] { "6.10.3", "(display <obj>)", "(display <obj> <port>)" },
+                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).Display(First(args)), 
+                    new ArgsInfo(1, 2, ArgType.Obj, ArgType.OutputPort))
+                .DefinePrimitive(
+                    "newline", new[] { "6.10.3", "(newline)", "(newline <port>)" },
+                    (args, env, caller) => Port(First(args), caller.Interp.CurrentOutputPort).Newline(), 
+                    new ArgsInfo(0, 1, ArgType.OutputPort))
+                .DefinePrimitive(
+                    "open-output-file", new[] { "6.10.1", "(open-output-file <filename>)" },
+                    (args, env, caller) => EvaluateCallWithOutputFile.OpenOutputFile(First(args), caller.Interp), 
+                    new ArgsInfo(1, ArgType.String))
+                .DefinePrimitive(
+                    "output-port?", new[] { "6.10.1", "(output-port? <obj>)" },
+                    (args, env, caller) => SchemeBoolean.Truth(First(args) is OutputPort), 
+                    new ArgsInfo(1, ArgType.Obj))
+                .DefinePrimitive(
+                    "write", new[] { "6.10.3", "(write <obj>)", "(write <obj> <port>)" },
+                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).Write(First(args)), 
+                    new ArgsInfo(1, 2, ArgType.Obj, ArgType.OutputPort))
+                .DefinePrimitive(
+                    "p", new[] { "(p <expr>)", "(p <expr> <port>)" },
+                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).P(First(args)), 
+                    new ArgsInfo(1, ArgType.Obj, ArgType.OutputPort))
+                .DefinePrimitive(
+                    "write-char", new[] { "6.10.3", "(write-char <char>)", "(write-char> <char> <port>)" },
+                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).WriteChar(First(args)), 
+                    new ArgsInfo(1, 2, ArgType.Char, ArgType.OutputPort))
+                .DefinePrimitive(
+                    "dump-env", new[] { "(dump-env)" },
+                    (args, env, caller) => DumpEnv(caller.Env), 
+                    new ArgsInfo(0));
+        }
+        #endregion
+
         #region Public Methods
+        /// <summary>
+        /// Write a string to the output port, followed by a newline.
+        /// </summary>
+        /// <param name="str">The string to write.</param>
+        internal void WriteLine(string str)
+        {
+            this.outp.Write(str + this.outp.NewLine);
+            this.transcript.LogOutputLine("=> " + str, this);
+        }
+
+        /// <summary>
+        /// Write a string to the output port, NOT followed by a newline.
+        /// </summary>
+        /// <param name="str">The string to write.</param>
+        internal void Write(string str)
+        {
+            this.outp.Write(str);
+            this.transcript.LogOutput(str, this);
+        }
+
+        /// <summary>
+        /// Close the output port.
+        /// </summary>
+        internal void Close()
+        {
+            this.outp.Close();
+        }
+
+        /// <summary>
+        /// Flush the output waiting on the output port.
+        /// </summary>
+        internal void Flush()
+        {
+            this.outp.Flush();
+        }
+
         /// <summary>
         /// Display the output port as a string.
         /// Since there is nothing to show, at least give the type.
@@ -73,77 +176,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the output primitives.
-        /// </summary>
-        /// <param name="primEnv">The environment to define the primitives into.</param>
-        internal static new void DefinePrimitives(PrimitiveEnvironment primEnv)
-        {
-            Contract.Requires(primEnv != null);
-
-            // TODO not implemented
-            //// <r4rs section="6.10.1">(with-output-to-file <string> <thunk>)</r4rs>
-
-            primEnv
-                .DefinePrimitive(
-                    "call-with-output-file",
-                    new[] { "6.10.1", "(call-with-output-file <string> <proc>)" },
-                    (args, env, caller) => EvaluateCallWithOutputFile.Call(args, caller),
-                    new ArgsInfo(2, ArgType.String, ArgType.Proc))
-                .DefinePrimitive(
-                    "close-output-port", 
-                    new[] { "6.10.1", "(close-output-port <port>)" },
-                    (args, env, caller) => Port(First(args), caller.Interp.CurrentOutputPort).CloseOutputPort(), 
-                    new ArgsInfo(1, ArgType.OutputPort))
-                .DefinePrimitive(
-                    "current-output-port", 
-                    new[] { "6.10.1", "(current-output-port)" },
-                    (args, env, caller) => caller.Interp.CurrentOutputPort, 
-                    new ArgsInfo(0))
-                .DefinePrimitive(
-                    "display", 
-                    new[] { "6.10.3", "(display <obj>)", "(display <obj> <port>)" },
-                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).Display(First(args)), 
-                    new ArgsInfo(1, 2, ArgType.Obj, ArgType.OutputPort))
-                .DefinePrimitive(
-                    "newline", 
-                    new[] { "6.10.3", "(newline)", "(newline <port>)" },
-                    (args, env, caller) => Port(First(args), caller.Interp.CurrentOutputPort).Newline(), 
-                    new ArgsInfo(0, 1, ArgType.OutputPort))
-                .DefinePrimitive(
-                    "open-output-file", 
-                    new[] { "6.10.1", "(open-output-file <filename>)" },
-                    (args, env, caller) => EvaluateCallWithOutputFile.OpenOutputFile(First(args), caller.Interp), 
-                    new ArgsInfo(1, ArgType.String))
-                .DefinePrimitive(
-                    "output-port?", 
-                    new[] { "6.10.1", "(output-port? <obj>)" },
-                    (args, env, caller) => SchemeBoolean.Truth(First(args) is OutputPort), 
-                    new ArgsInfo(1, ArgType.Obj))
-                .DefinePrimitive(
-                    "write", 
-                    new[] { "6.10.3", "(write <obj>)", "(write <obj> <port>)" },
-                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).Write(First(args)), 
-                    new ArgsInfo(1, 2, ArgType.Obj, ArgType.OutputPort))
-                .DefinePrimitive(
-                    "p", 
-                    new[] { "(p <expr>)", "(p <expr> <port>)" },
-                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).P(First(args)), 
-                    new ArgsInfo(1, ArgType.Obj, ArgType.OutputPort))
-                .DefinePrimitive(
-                    "write-char", 
-                    new[] { "6.10.3", "(write-char <char>)", "(write-char> <char> <port>)" },
-                    (args, env, caller) => Port(Second(args), caller.Interp.CurrentOutputPort).WriteChar(First(args)), 
-                    new ArgsInfo(1, 2, ArgType.Char, ArgType.OutputPort))
-                .DefinePrimitive(
-                    "dump-env", 
-                    new[] { "(dump-env)" },
-                    (args, env, caller) => DumpEnv(caller.Env), 
-                    new ArgsInfo(0));
-        }
-        #endregion
-
         #region CLR Type Converters
         /// <summary>
         /// Convert to text writer
@@ -152,7 +184,6 @@ namespace SimpleScheme
         /// <returns>The text writer.</returns>
         internal static TextWriter AsTextWriter(SchemeObject obj)
         {
-            Contract.Requires(obj != null);
             if (obj is OutputPort)
             {
                 return ((OutputPort)obj).Writer;
@@ -160,52 +191,6 @@ namespace SimpleScheme
 
             ErrorHandlers.TypeError(typeof(OutputPort), obj);
             return null;
-        }
-        #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Write a string to the output port, followed by a newline.
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        internal void WriteLine(string str)
-        {
-            Contract.Requires(str != null);
-            Contract.Assert(this.outp != null);
-            Contract.Assert(this.transcript != null);
-            this.outp.Write(str + this.outp.NewLine);
-            this.transcript.LogOutputLine("=> " + str, this);
-        }
-
-        /// <summary>
-        /// Write a string to the output port, NOT followed by a newline.
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        internal void Write(string str)
-        {
-            Contract.Requires(str != null);
-            Contract.Assert(this.outp != null);
-            Contract.Assert(this.transcript != null);
-            this.outp.Write(str);
-            this.transcript.LogOutput(str, this);
-        }
-
-        /// <summary>
-        /// Close the output port.
-        /// </summary>
-        internal void Close()
-        {
-            Contract.Assert(this.outp != null);
-            this.outp.Close();
-        }
-
-        /// <summary>
-        /// Flush the output waiting on the output port.
-        /// </summary>
-        internal void Flush()
-        {
-            Contract.Assert(this.outp != null);
-            this.outp.Flush();
         }
         #endregion
 
@@ -230,7 +215,6 @@ namespace SimpleScheme
         /// <returns>Undefined instance.</returns>
         private static SchemeObject DumpEnv(Environment env)
         {
-            Contract.Requires(env != null);
             env.DumpEnv();
             return Undefined.Instance;
         }
@@ -240,12 +224,11 @@ namespace SimpleScheme
         /// <summary>
         /// Print the obj on the console.
         /// </summary>
-        /// <param name="obj">The obj to print.</param>
+        /// <param name="x">The obj to print.</param>
         /// <returns>Undefined value.</returns>
-        private SchemeObject P(SchemeObject obj)
+        private SchemeObject P(SchemeObject x)
         {
-            Contract.Requires(obj != null);
-            this.WriteLine(obj.ToString(false));
+            this.WriteLine(x.ToString(false));
             return Undefined.Instance;
         }
 
@@ -257,7 +240,6 @@ namespace SimpleScheme
         /// <returns>The undefined object.</returns>
         private SchemeObject Display(SchemeObject expr)
         {
-            Contract.Requires(expr != null);
             this.Write(expr.ToString(false));
             return Undefined.Instance;
         }
@@ -270,7 +252,6 @@ namespace SimpleScheme
         /// <returns>The undefined object.</returns>
         private SchemeObject Write(SchemeObject expr)
         {
-            Contract.Requires(expr != null);
             this.Write(expr.ToString(true));
             return Undefined.Instance;
         }
@@ -284,7 +265,6 @@ namespace SimpleScheme
         /// <returns>The undefined object.</returns>
         private SchemeObject WriteChar(SchemeObject expr)
         {
-            Contract.Requires(expr != null);
             this.Write(expr.ToString(false));
             return Undefined.Instance;
         }
@@ -307,18 +287,6 @@ namespace SimpleScheme
         {
             this.Write(this.outp.NewLine);
             return Undefined.Instance;
-        }
-        #endregion
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.outp != null);
-            Contract.Invariant(this.transcript != null);
         }
         #endregion
     }

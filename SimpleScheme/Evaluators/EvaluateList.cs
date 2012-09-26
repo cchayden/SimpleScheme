@@ -4,9 +4,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System;
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -22,6 +19,27 @@ namespace SimpleScheme
         private SchemeObject result;
         #endregion
 
+        #region Constructor
+        /// <summary>
+        /// Initializes a new instance of the EvaluateList class.
+        /// This is used in the "list" primitive, and ALSO to evaluate the
+        ///   arguments in a list that is part of procedure application.
+        /// Because it is used internally, the evaluator must not use destructive
+        ///   operations on its member variables.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        private EvaluateList(SchemeObject expr, Environment env, Evaluator caller)
+            : base(EvalExprStep, expr, env, caller)
+        {
+            // Start with an empty list.  As exprs are evaluated, they will be consed on the
+            //  front.  The list will be reversed before it is returned.  Because this is done
+            //  destructively, cloning needs to copy the result.
+            this.result = EmptyList.Instance;
+        }
+        #endregion
+
         #region Call
         /// <summary>
         /// Create a list evaluator.
@@ -32,10 +50,6 @@ namespace SimpleScheme
         /// <returns>A list evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-
             // first check for degenerate cases
             if (expr is EmptyList)
             {
@@ -45,7 +59,7 @@ namespace SimpleScheme
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad args for list: " + expr);
+                ErrorHandlers.SemanticError("Bad args for list: " + expr, null);
             }
 
             if (AllEvaluated(expr))
@@ -63,7 +77,7 @@ namespace SimpleScheme
             }
 
             // Something actually needs to be evaluated.
-            return New(expr, env, caller);
+            return new EvaluateList(expr, env, caller);
         }
         #endregion
 
@@ -82,47 +96,6 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Steps
-        /// <summary>
-        /// Create the list by evaluating the expression.
-        /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator EvalExprStep()
-        {
-            // this is executed only for the first expression
-            this.Pc = OpCode.Loop;
-            return EvaluateExpression.Call(First(this.Expr), this.Env, this);
-        }
-
-        /// <summary>
-        /// Back from evaluating the expression.  Accumulate the result and, if there
-        ///   is anything left, loop back here to evaluate another expression.
-        /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator LoopStep()
-        {
-            // back from the evaluation -- save the result and keep going with the rest
-            this.result = Cons(this.ReturnedExpr, this.result);
-            this.Expr = Rest(this.Expr);
-
-            if (this.Expr is Pair)
-            {
-                // Come back to this step, so don't assign PC for better performance.
-                return EvaluateExpression.Call(First(this.Expr), this.Env, this);
-            }
-
-            // We are done.  Reverse the list and return it.
-            if (Rest(this.result) is EmptyList)
-            {
-                // only one element -- no need to reverse
-                return this.ReturnFromEvaluator(this.result);
-            }
-
-            // We can only do this destructively if we have copied the result on Clone.
-            return this.ReturnFromEvaluator(Pair.ReverseListInPlace(this.result));
-        }
-        #endregion
-
         #region Private Methods
         /// <summary>
         /// Tests if all the members of a list are self-evaluating.
@@ -134,7 +107,6 @@ namespace SimpleScheme
         /// <returns>True if all list elements are self-evaluating.</returns>
         private static bool AllEvaluated(SchemeObject expr)
         {
-            Contract.Requires(expr != null);
             while (expr is Pair)
             {
                 SchemeObject first = First(expr);
@@ -144,7 +116,6 @@ namespace SimpleScheme
                 }
 
                 expr = Rest(expr);
-                Contract.Assert(expr != null);
             }
 
             return true;
@@ -158,7 +129,6 @@ namespace SimpleScheme
         /// <returns>True if all items are simple.</returns>
         private static bool AllSimple(SchemeObject expr)
         {
-            Contract.Requires(expr != null);
             while (expr is Pair)
             {
                 SchemeObject first = First(expr);
@@ -168,9 +138,7 @@ namespace SimpleScheme
                 }
 
                 expr = Rest(expr);
-                Contract.Assert(expr != null);
             }
-
             return false;
         }
 
@@ -185,64 +153,60 @@ namespace SimpleScheme
         /// <returns>The listof results.</returns>
         private static SchemeObject EvaluateSymbolsInList(SchemeObject expr, Environment env)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            return MapFun(obj => (obj is Symbol ? env.Lookup((Symbol)obj) : obj), expr);
+            return MapFun((obj) => (obj is Symbol ? env.Lookup((Symbol)obj) : obj), expr);
         }
 
         #endregion
 
-        #region Initialize
+        #region Steps
         /// <summary>
-        /// Creates and initializes a new instance of the EvaluateAnd class.
+        /// Create the list by evaluating the expression.
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateList New(SchemeObject expr, Environment env, Evaluator caller)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Next step evaluates the first expression.</returns>
+        private static Evaluator EvalExprStep(Evaluator s)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return GetInstance<EvaluateList>().Initialize(expr, env, caller);
+            // this is executed only for the first expression
+            s.Pc = LoopStep;
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s);
         }
 
         /// <summary>
-        /// Initializes a new instance of the EvaluateList class.
-        /// This is used in the "list" primitive, and ALSO to evaluate the
-        ///   arguments in a list that is part of procedure application.
-        /// Because it is used internally, the evaluator must not use destructive
-        ///   operations on its member variables.
+        /// Back from evaluating the expression.  Accumulate the result and, if there
+        ///   is anything left, loop back here to evaluate another expression.
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private EvaluateList Initialize(SchemeObject expr, Environment env, Evaluator caller)
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The created list, or an evaluator to loop back and evaluate some more.</returns>
+        private static Evaluator LoopStep(Evaluator s)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
+            var step = (EvaluateList)s;
 
-            // Start with an empty list.  As exprs are evaluated, they will be consed on the
-            //  front.  The list will be reversed before it is returned.  Because this is done
-            //  destructively, cloning needs to copy the result.
-            this.result = EmptyList.Instance;
-            Initialize(OpCode.EvalExpr, expr, env, caller);
-            return this;
-        }
-        #endregion
+            // back from the evaluation -- save the result and keep going with the rest
+            step.result = Cons(s.ReturnedExpr, step.result);
+            step.Expr = Rest(step.Expr);
 
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.degenerate || this.result != null);
+            if (s.Expr is Pair)
+            {
+                // Come back to this step, so don't assign PC for better performance.
+                return EvaluateExpression.Call(First(s.Expr), s.Env, s);
+            }
+
+            // We are done.  Reverse the list and return it.
+            Evaluator caller = step.Caller;
+            if (Rest(step.result) is EmptyList)
+            {
+                // only one element -- no need to reverse
+                caller.ReturnedExpr = step.result;
+            }
+            else
+            {
+                // We can only do this destructively if we have copied the result on Clone.
+                caller.ReturnedExpr = Pair.ReverseListInPlace(step.result);
+            }
+
+            return caller;
         }
+
         #endregion
     }
 }

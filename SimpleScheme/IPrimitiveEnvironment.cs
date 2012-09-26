@@ -3,9 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// The function that executes a primitive.
     /// </summary>
@@ -22,7 +19,6 @@ namespace SimpleScheme
     ///   parent of the global environment.  This allows it to be shared between
     ///   different interpreter instances.
     /// </summary>
-    [ContractClass(typeof(IPrimitiveEnvironmentContract))]
     public interface IPrimitiveEnvironment : IEnvironment
     {
         /// <summary>
@@ -72,7 +68,6 @@ namespace SimpleScheme
         public ArgsInfo(int numArgs, params ArgType[] argTypes) : 
             this(numArgs, numArgs, false, argTypes)
         {
-            Contract.Requires(argTypes != null);
         }
 
         /// <summary>
@@ -84,7 +79,6 @@ namespace SimpleScheme
         public ArgsInfo(int minArgs, int maxArgs, params ArgType[] argTypes) : 
             this(minArgs, maxArgs, false, argTypes)
         {
-            Contract.Requires(argTypes != null);
         }
 
         /// <summary>
@@ -96,7 +90,6 @@ namespace SimpleScheme
         public ArgsInfo(int numArgs, bool unevaluated, params ArgType[] argTypes) : 
             this(numArgs, numArgs, unevaluated, argTypes)
         {
-            Contract.Requires(argTypes != null);
         }
 
         /// <summary>
@@ -107,7 +100,6 @@ namespace SimpleScheme
         public ArgsInfo(bool unevaluated, params ArgType[] argTypes) : 
             this(0, int.MaxValue, unevaluated, argTypes)
         {
-            Contract.Requires(argTypes != null);
         }
 
         /// <summary>
@@ -120,7 +112,6 @@ namespace SimpleScheme
         public ArgsInfo(int minArgs, int maxArgs, bool unevaluated, params ArgType[] argTypes) : 
             this()
         {
-            Contract.Requires(argTypes != null);
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
             this.unevaluated = unevaluated;
@@ -134,11 +125,6 @@ namespace SimpleScheme
         public ArgsInfo(int[] args) : 
             this(args[0], args[1], false)
         {
-            Contract.Requires(args != null);
-            Contract.Requires(1 < args.Length);
-            Contract.Ensures(this.argTypes != null);
-            Contract.Ensures(this.argTypes.Length == 0);
-            Contract.Ensures(this.argTypes.Length < args.Length);
         }
 
         /// <summary>
@@ -146,10 +132,7 @@ namespace SimpleScheme
         /// </summary>
         internal int MinArgs
         {
-            get
-            {
-                return this.minArgs;
-            }
+            get { return this.minArgs; }
         }
 
         /// <summary>
@@ -157,10 +140,7 @@ namespace SimpleScheme
         /// </summary>
         internal int MaxArgs
         {
-            get
-            {
-                return this.maxArgs;
-            }
+            get { return this.maxArgs; }
         }
 
         /// <summary>
@@ -168,10 +148,7 @@ namespace SimpleScheme
         /// </summary>
         internal bool Unevaluated
         {
-            get
-            {
-                return this.unevaluated;
-            }
+            get { return this.unevaluated; }
         }
 
         /// <summary>
@@ -179,66 +156,7 @@ namespace SimpleScheme
         /// </summary>
         internal ArgType[] ArgTypes
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<ArgType[]>() != null);
-                return this.argTypes;
-            }
-        }
-
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.argTypes != null);
-        }
-        #endregion
-    }
-
-    # region Contract Class
-    /// <summary>
-    /// Define the contract for IPrimitiveEnvironment
-    /// </summary>
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1611:ElementParametersMustBeDocumented", Justification = "Contract.")]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1615:ElementReturnValueMustBeDocumented", Justification = "Contract.")]
-    [ContractClassFor(typeof(IPrimitiveEnvironment))]
-    internal abstract class IPrimitiveEnvironmentContract : IPrimitiveEnvironment
-    {
-        /// <summary>
-        /// Contract is in IEnvironment
-        /// </summary>
-        public void Define(string var, SchemeObject val)
-        {
-        }
-
-        /// <summary>
-        /// Contract is in IEnvironment
-        /// </summary>
-        public void Set(string var, SchemeObject val)
-        {
-        }
-
-        /// <summary>
-        /// Contract is in IEnvironment
-        /// </summary>
-        public SchemeObject Lookup(string var)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Define a primitive.
-        /// </summary>
-        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, ArgsInfo argsInfo)
-        {
-            Contract.Requires(name != null);
-            Contract.Requires(operation != null);
-            Contract.Ensures(Contract.Result<IPrimitiveEnvironment>() != null);
-            return null;
+            get { return this.argTypes; }
         }
     }
-    #endregion
 }

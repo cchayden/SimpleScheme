@@ -1,3 +1,4 @@
+;(trace-on)
 ;; fib.ss
 ;; fibonacci-based perf tests
 

@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Evaluate a letrec expression
     /// Bind the variables to values and then evaluate the expressions.
@@ -18,13 +16,13 @@ namespace SimpleScheme
         /// <summary>
         /// The body of the let.
         /// </summary>
-        private SchemeObject body;
+        private readonly SchemeObject body;
 
         /// <summary>
         /// The list of formal parameters to pass to the final lambda.
         /// This is variable1, variable2, ...
         /// </summary>
-        private SchemeObject formals;
+        private readonly SchemeObject formals;
 
         /// <summary>
         /// The list of variables to bind.
@@ -42,6 +40,27 @@ namespace SimpleScheme
         private SchemeObject vals;
         #endregion
 
+        #region Constructor
+        /// <summary>
+        /// Initializes a new instance of the EvaluateLetRec class.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="body">The let body.</param>
+        /// <param name="vars">The variables to be bound.</param>
+        /// <param name="inits">The initialization expressions.</param>
+        private EvaluateLetRec(SchemeObject expr, Environment env, Evaluator caller, SchemeObject body, SchemeObject vars, SchemeObject inits)
+            : base(EvalInitStep, expr, env, caller)
+        {
+            this.body = body;
+            this.vars = vars;
+            this.inits = inits;
+            this.formals = vars;
+            this.vals = EmptyList.Instance;
+        }
+        #endregion
+
         #region Call
         /// <summary>
         /// Call letrec evaluator.
@@ -52,17 +71,14 @@ namespace SimpleScheme
         /// <returns>The let evaluator.</returns>
         internal static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No arguments for letrec");
+                ErrorHandlers.SemanticError("No arguments for letrec", null);
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for letrec: " + expr);
+                ErrorHandlers.SemanticError("Bad arg list for letrec: " + expr, null);
             }
 
             SchemeObject body = Rest(expr);
@@ -73,10 +89,14 @@ namespace SimpleScheme
             }
 
             SchemeObject bindings = First(expr);
-            var formals = MapFun(First, bindings);
-            var initVals = Fill(ListLength(formals), Undefined.Instance);
+            //// In the bindings, the variables are first, the values are second, and anything left over is discarded.
+            //// If either is missing, an empty list is used instead.
+            //// To start with, bindings are undefined.
+            SchemeObject formals = MapFun(First, bindings);
+            SchemeObject inits = MapFun(Second, bindings);
+            SchemeObject initVals = Fill(ListLength(formals), Undefined.Instance);
 
-            return New(expr, new Environment(env, formals, initVals), caller);
+            return new EvaluateLetRec(expr, new Environment(formals, initVals, env), caller, body, formals, inits);
         }
         #endregion
 
@@ -84,18 +104,20 @@ namespace SimpleScheme
         /// <summary>
         /// Evaluate one of the inits in the environment of the vars.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator EvalInitStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The next step.</returns>
+        private static Evaluator EvalInitStep(Evaluator s)
         {
-            if (this.inits is EmptyList)
+            var step = (EvaluateLetRec)s;
+            if (step.inits is EmptyList)
             {
-                // now do ApplyProc
-                return this.ApplyProcStep();
+                s.Pc = ApplyProcStep;
+                return s;
             }
 
-            var fun = new Lambda(this.formals, MakeList(First(this.inits)), this.Env);
-            this.Pc = OpCode.BindVarToInit;
-            return fun.ApplyWithGivenEnv(this.Env, this);
+            Lambda fun = Lambda.New(step.formals, MakeList(First(step.inits)), s.Env);
+            s.Pc = BindVarToInitStep;
+            return fun.ApplyWithtEnv(s.Env, s);
         }
 
         /// <summary>
@@ -103,88 +125,35 @@ namespace SimpleScheme
         /// Move down list of vars and inits.
         /// Go back and evaluate another init.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator BindVarToInitStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>The next step.</returns>
+        private static Evaluator BindVarToInitStep(Evaluator s)
         {
-            this.vals = Cons(this.ReturnedExpr, this.vals);
-            this.vars = Rest(this.vars);
-            this.inits = Rest(this.inits);
-
-            // now do EvalInit
-            return this.EvalInitStep();
+            var step = (EvaluateLetRec)s;
+            step.vals = Cons(s.ReturnedExpr, step.vals);
+            step.vars = Rest(step.vars);
+            step.inits = Rest(step.inits);
+            s.Pc = EvalInitStep;
+            return s;
         }
 
         /// <summary>
         /// Inits evaluated and bound -- execute the proc and return.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator ApplyProcStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Execution returns to the caller.</returns>
+        private static Evaluator ApplyProcStep(Evaluator s)
         {
+            var step = (EvaluateLetRec)s;
+
             // assign the inits into the env
-            this.UpdateEnvironment(this.formals, ReverseList(this.vals));
+            SchemeObject vars = step.formals;
+            SchemeObject vals = ReverseList(step.vals);
+            step.UpdateEnvironment(vars, vals);
 
             // apply the fun to the vals and return
-            var fun = new Lambda(this.formals, this.body, this.Env);
-            Environment ev = this.Env;
-            Evaluator c = this.Caller;
-            this.Reclaim();
-            return fun.ApplyWithGivenEnv(ev, c);
-        }
-        #endregion
-
-        #region Initialize
-        /// <summary>
-        /// Creates and initializes a new instance of the EvaluateLetRec class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateLetRec New(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return GetInstance<EvaluateLetRec>().Initialize(expr, env, caller);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the EvaluateLetRec class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private EvaluateLetRec Initialize(SchemeObject expr, Environment env, Evaluator caller)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            SchemeObject bindings = First(expr);
-            //// In the bindings, the variables are first, the values are second, and anything left over is discarded.
-            //// If either is missing, an empty list is used instead.
-            //// To start with, bindings are undefined.
-            this.body = Rest(expr);
-            this.formals = MapFun(First, bindings);
-            this.vars = formals;
-            this.inits = MapFun(Second, bindings);
-            this.vals = EmptyList.Instance;
-            Initialize(OpCode.EvalInit, expr, env, caller);
-            return this;
-        }
-        #endregion
-        #region Contract Invariant
-        /// <summary>
-        /// Describes invariants on the member variables.
-        /// </summary>
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(this.degenerate || this.body != null);
-            Contract.Invariant(this.degenerate || this.vars != null);
-            Contract.Invariant(this.degenerate || this.inits != null);
-            Contract.Invariant(this.degenerate || this.formals != null);
-            Contract.Invariant(this.degenerate || this.vals != null);
+            Lambda fun = Lambda.New(step.formals, step.body, s.Env);
+            return fun.ApplyWithtEnv(s.Env, s.Caller);
         }
         #endregion
     }

@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Diagnostics.Contracts;
-
     /// <summary>
     /// Evaluate the items in a list, given the environment.
     /// This is done to the args of a procedure call (except for special forms).
@@ -17,7 +15,7 @@ namespace SimpleScheme
         /// <summary>
         /// The proc to apply to each element of the list.
         /// </summary>
-        private Procedure proc;
+        private readonly Procedure proc;
 
         /// <summary>
         /// Accumulates the returned result.
@@ -25,6 +23,27 @@ namespace SimpleScheme
         /// This happens only if returnResult is true;
         /// </summary>
         private SchemeObject result;
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Initializes a new instance of the EvaluateMap class.
+        /// This is used in the "map" primitive, and as part of "for-each".
+        /// Because it is used internally, the evaluator must not use destructive
+        ///   operations on its member variables.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment</param>
+        /// <param name="caller">The caller.  Return to this when done.</param>
+        /// <param name="proc">The proc to apply to each element of the list.</param>
+        /// <param name="result">Accumulate the result here, if not null.</param>
+        private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
+            : base(ApplyFunStep, expr, env, caller)
+        {
+            this.proc = proc;
+            this.result = result;
+        }
         #endregion
 
         #region Call
@@ -39,11 +58,6 @@ namespace SimpleScheme
         /// <returns>The evaluator to execute.</returns>
         internal static Evaluator Call(Procedure proc, SchemeObject expr, bool returnResult, Environment env, Evaluator caller)
         {
-            Contract.Requires(proc != null);
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-
             // first check for degenerate cases
             if (expr is EmptyList)
             {
@@ -53,11 +67,11 @@ namespace SimpleScheme
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad args for map: " + expr);
+                ErrorHandlers.SemanticError("Bad args for map: " + expr, null);
             }
 
             SchemeObject result = returnResult ? EmptyList.Instance : null;
-            return New(expr, env, caller, proc, result);
+            return new EvaluateMap(expr, env, caller, proc, result);
         }
         #endregion
 
@@ -80,83 +94,47 @@ namespace SimpleScheme
         /// <summary>
         /// Apply the map function to an element of the list and grab the result.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator ApplyFunStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>If apply recurses, return that evaluator.  Otherwise go on to save result.
+        /// If we are done, return the collected results.</returns>
+        private static Evaluator ApplyFunStep(Evaluator s)
         {
-            if (First(this.Expr) is Pair)
+            var step = (EvaluateMap)s;
+            if (First(s.Expr) is Pair)
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                this.Pc = OpCode.CollectAndLoop;
-                return this.proc.Apply(MapFun(First, this.Expr), this);
+                s.Pc = CollectAndLoopStep;
+                return step.proc.Apply(MapFun(First, s.Expr), null, s, s);
             }
 
             // if we are done, return the reversed result list
             // We cannot do this destructively without breaking call/cc.
-            return this.ReturnFromEvaluator(this.result != null ? Pair.ReverseListInPlace(this.result) : Undefined.Instance);
+            Evaluator caller = step.Caller;
+            caller.ReturnedExpr = step.result != null ? Pair.ReverseListInPlace(step.result) : Undefined.Instance;
+            return caller;
         }
 
         /// <summary>
         /// Collect the result of the function application and loop back to do the next one.
         /// </summary>
-        /// <returns>The next step to execute.</returns>
-        protected override Evaluator CollectAndLoopStep()
+        /// <param name="s">This evaluator.</param>
+        /// <returns>Continue back in apply fun step.</returns>
+        private static Evaluator CollectAndLoopStep(Evaluator s)
         {
+            var step = (EvaluateMap)s;
+
             // back from the evaluation -- save the result and keep going with the rest
-            if (this.result != null)
+            if (step.result != null)
             {
                 // Builds a list by tacking new values onto the head.
-                this.result = Cons(this.ReturnedExpr, this.result);
+                step.result = Cons(s.ReturnedExpr, step.result);
             }
 
             // Move down each of the lists
-            this.Expr = MapFun(Rest, this.Expr);
-            //// do ApplyFun now
-            return this.ApplyFunStep();
-        }
-        #endregion
-
-        #region Initialize
-        /// <summary>
-        /// Creates and initializes a new instance of the EvaluateMap class.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="proc">The proc to apply to each element of the list.</param>
-        /// <param name="result">Accumulate the result here, if not null.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private static EvaluateMap New(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            return GetInstance<EvaluateMap>().Initialize(expr, env, caller, proc, result);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the EvaluateMap class.
-        /// This is used in the "map" primitive, and as part of "for-each".
-        /// Because it is used internally, the evaluator must not use destructive
-        ///   operations on its member variables.
-        /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
-        /// <param name="env">The evaluation environment</param>
-        /// <param name="caller">The caller.  Return to this when done.</param>
-        /// <param name="proc">The proc to apply to each element of the list.</param>
-        /// <param name="result">Accumulate the result here, if not null.</param>
-        /// <returns>Initialized evaluator.</returns>
-        private EvaluateMap Initialize(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-        {
-            Contract.Requires(expr != null);
-            Contract.Requires(env != null);
-            Contract.Requires(caller != null);
-            Contract.Requires(proc != null);
-            //// result can be null if the caller does not need the result
-            this.proc = proc;
-            this.result = result;
-            Initialize(OpCode.ApplyFun, expr, env, caller);
-            return this;
+            step.Expr = MapFun(Rest, s.Expr);
+            s.Pc = ApplyFunStep;
+            return s;
         }
         #endregion
     }
