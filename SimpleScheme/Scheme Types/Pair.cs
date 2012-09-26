@@ -81,11 +81,11 @@ namespace SimpleScheme
         /// <param name="obj1">The first object (must be a pair).</param>
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both pairs and all elements are equal.</returns>
-        public static bool Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
         {
             if (!obj2.IsPair())
             {
-                return false;
+                return SchemeBoolean.False;
             }
 
             var pair1 = obj1.AsPair();
@@ -93,9 +93,9 @@ namespace SimpleScheme
 
             while (true)
             {
-                if (!SchemeBoolean.Equal(pair1.First(), pair2.First()))
+                if (!SchemeBoolean.Equal(pair1.First(), pair2.First()).Value)
                 {
-                    return false;
+                    return SchemeBoolean.False;
                 }
 
                 obj1 = pair1.Rest();

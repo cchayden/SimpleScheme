@@ -10,7 +10,7 @@ namespace SimpleScheme
     /// Represents a scheme vector.
     /// It has a fixed length and holds arbitrary scheme objects.
     /// </summary>
-    public static class Vector
+    public class Vector : Printable
     {
         #region Constants
         /// <summary>
@@ -19,42 +19,85 @@ namespace SimpleScheme
         public const string Name = "vector";
         #endregion
 
-        #region Public Static Methods
+        #region Fields
         /// <summary>
-        /// Tests whether to given object is a scheme vector.
+        /// The elements of the vector.
         /// </summary>
-        /// <param name="obj">The object to test</param>
-        /// <returns>True if the object is a scheme vector.</returns>
-        public static bool IsVector(this Obj obj)
+        private readonly Obj[] vec;
+        #endregion
+
+        #region Constructors
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class.
+        /// </summary>
+        /// <param name="length"> The number of elements in the vector.</param>
+        private Vector(int length)
         {
-            return obj is Obj[];
+            this.vec = new Obj[length];
         }
 
         /// <summary>
-        /// Check that an object is a vector.
+        /// Initializes a new instance of the <see cref="Vector"/> class.
         /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The scheme vector.</returns>
-        public static Obj[] AsVector(this Obj obj)
+        /// <param name="length">The vector length.</param>
+        /// <param name="fill">The fill.</param>
+        private Vector(int length, Obj fill) : this(length)
         {
-            if (obj.IsVector()) 
+            for (int i = 0; i < this.vec.Length; i++)
             {
-                return (Obj[])obj;
+                this.vec[i] = fill;
             }
+        }
+        #endregion
 
-            ErrorHandlers.TypeError(Name, obj);
-            return null;
+        #region Properties
+        /// <summary>
+        /// Gets the vector length.
+        /// </summary>
+        public int Length
+        {
+            get { return this.vec.Length; }
         }
 
+        /// <summary>
+        /// Gets or sets an element of the vector.
+        /// </summary>
+        /// <param name="index">The index.</param>
+        /// <returns>The value at the given index.</returns>
+        public Obj this[int index]
+        {
+            get { return this.vec[index]; }
+            set { this.vec[index] = value; }
+        }
+        #endregion
+
+        #region Public Static Methods
         /// <summary>
         /// Create a new Vector.
         /// </summary>
         /// <param name="count">The size for the new vector.</param>
         /// <returns>The vector.</returns>
-        public static Obj[] New(int count)
+        public static Vector New(int count)
         {
-            return new Obj[count];
+            return new Vector(count);
         }
+
+        /// <summary>
+        /// Create a vector from a length and an optional fill value.
+        /// </summary>
+        /// <param name="length">The vector length.</param>
+        /// <param name="fill">The value to initialize the vector entries to.</param>
+        /// <returns>A vector of the objs filled with the fill object.</returns>
+        public static Vector New(Obj length, Obj fill)
+        {
+            if (fill.IsEmptyList())
+            {
+                fill = Undefined.New();
+            }
+
+            return new Vector(Number.AsInt(length), fill);
+        }
+
         #endregion
 
         #region Define Primitives
@@ -133,92 +176,35 @@ namespace SimpleScheme
 
         #region Public Static Methods
         /// <summary>
-        /// Write the vector to the string builder.
-        /// </summary>
-        /// <param name="vec">The vector.</param>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void PrintString(this Obj[] vec, bool quoted, StringBuilder buf)
-        {
-            buf.Append("#(");
-            if (vec.Length > 0)
-            {
-                foreach (Obj v in vec)
-                {
-                    Printer.PrintString(v, quoted, buf);
-                    buf.Append(' ');
-                }
-
-                buf.Remove(buf.Length - 1, 1);
-            }
-
-            buf.Append(')');
-        }
-
-        /// <summary>
-        /// Clean each element of the vector.
-        /// </summary>
-        /// <param name="vec">The vector to clean.</param>
-        public static void Clean(this Obj[] vec)
-        {
-            foreach (Obj v in vec)
-            {
-                Cleaner.Clean(v);
-            }
-        }
-
-        /// <summary>
         /// Tests whether two vectors are equal.
         /// </summary>
         /// <param name="obj1">The first object (must be a scheme vector).</param>
         /// <param name="obj2">The other object.</param>
         /// <returns>True if they are both vectors of equal length and 
         /// all elements are equal.</returns>
-        public static bool Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
         {
             if (!obj2.IsVector())
             {
-                return false;
+                return SchemeBoolean.False;
             }
 
-            var vector1 = (Obj[])obj1;
-            var vector2 = (Obj[])obj2;
+            var vector1 = obj1.AsVector();
+            var vector2 = obj2.AsVector();
             if (vector1.Length != vector2.Length)
             {
-                return false;
+                return SchemeBoolean.False;
             }
 
             for (int i = 0; i < vector1.Length; i++)
             {
-                if (!SchemeBoolean.Equal(vector1[i], vector2[i]))
+                if (!SchemeBoolean.Equal(vector1[i], vector2[i]).Value)
                 {
-                    return false;
+                    return SchemeBoolean.False;
                 }
             }
 
-            return true;
-        }
-
-        /// <summary>
-        /// Create a vector from a length and an optional fill value.
-        /// </summary>
-        /// <param name="length">The vector length.</param>
-        /// <param name="fill">The value to initialize the vector entries to.</param>
-        /// <returns>A vector of the objs filled with the fill object.</returns>
-        public static Obj[] New(Obj length, Obj fill)
-        {
-            var vec = New(Number.AsInt(length));
-            if (fill.IsEmptyList())
-            {
-                fill = Undefined.New();
-            }
-
-            for (int i = 0; i < vec.Length; i++)
-            {
-                vec[i] = fill;
-            }
-
-            return vec;
+            return SchemeBoolean.True;
         }
 
         /// <summary>
@@ -250,9 +236,9 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="objs">A list of values to put in the vector.</param>
         /// <returns>A vector of the objs.</returns>
-        public static Obj[] FromList(Obj objs)
+        public static Vector FromList(Obj objs)
         {
-            Obj[] vec = New(objs.ListLength());
+            Vector vec = New(objs.ListLength());
             if (!objs.IsPair())
             {
                 return vec;
@@ -269,6 +255,42 @@ namespace SimpleScheme
         }
         #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Write the vector to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public void PrintString(bool quoted, StringBuilder buf)
+        {
+            buf.Append("#(");
+            if (this.vec.Length > 0)
+            {
+                foreach (Obj v in this.vec)
+                {
+                    Printer.PrintString(v, quoted, buf);
+                    buf.Append(' ');
+                }
+
+                buf.Remove(buf.Length - 1, 1);
+            }
+
+            buf.Append(')');
+        }
+
+        /// <summary>
+        /// Clean each element of the vector.
+        /// </summary>
+        public void Clean()
+        {
+            foreach (Obj v in this.vec)
+            {
+                Cleaner.Clean(v);
+            }
+        }
+
+        #endregion
+
         #region Internal Static Methods
         /// <summary>
         /// Convert a vector into a list of objs.
@@ -278,7 +300,7 @@ namespace SimpleScheme
         /// <returns>The vector as a list.</returns>
         internal static Obj ToList(Obj vector)
         {
-            Obj[] vec = vector.AsVector();
+            Vector vec = vector.AsVector();
             Obj result = EmptyList.New();
             for (int i = vec.Length - 1; i >= 0; i--)
             {
@@ -298,7 +320,7 @@ namespace SimpleScheme
         /// <returns>Return value is unspecified.</returns>
         private static Obj Fill(Obj vector, Obj fill)
         {
-            Obj[] vec = vector.AsVector();
+            Vector vec = vector.AsVector();
             for (int i = 0; i < vec.Length; i++)
             {
                 vec[i] = fill;
@@ -308,4 +330,36 @@ namespace SimpleScheme
         }
         #endregion
     }
+
+    /// <summary>
+    /// Extension class for Vector
+    /// </summary>
+    public static class VectorExtensions
+    {
+        /// <summary>
+        /// Tests whether to given object is a scheme vector.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme vector.</returns>
+        public static bool IsVector(this Obj obj)
+        {
+            return obj is Vector;
+        }
+
+        /// <summary>
+        /// Check that the object is a vector.
+        /// </summary>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding vector.</returns>
+        public static Vector AsVector(this Obj x)
+        {
+            if (x.IsVector())
+            {
+                return (Vector)x;
+            }
+
+            ErrorHandlers.TypeError(Vector.Name, x);
+            return null;
+        }
+    }    
 }

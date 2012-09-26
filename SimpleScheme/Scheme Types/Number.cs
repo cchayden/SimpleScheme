@@ -360,7 +360,7 @@ namespace SimpleScheme
                 //// <r4rs section="6.5.5">(number? <obj>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("number?"), 
-                    (args, caller) => args.First().IsNumber(), 
+                    (args, caller) => SchemeBoolean.Truth(args.First().IsNumber()), 
                     1, 
                     Primitive.ValueType.Obj)
                 //// <r4rs section="6.5.5">(odd? <n>)</r4rs>
@@ -529,10 +529,10 @@ namespace SimpleScheme
             int b = numberBase.IsNumber() ? (int)Num(numberBase) : 10;
             if (b != 10 || d == Math.Round(d))
             {
-                return Convert.ToString((long)d, b).ToCharArray();
+                return SchemeString.New(Convert.ToString((long)d, b).ToCharArray());
             }
 
-            return num.ToString().ToCharArray();
+            return SchemeString.New(num.ToString().ToCharArray());
         }
 
         /// <summary>

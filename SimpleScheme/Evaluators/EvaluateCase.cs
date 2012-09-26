@@ -120,7 +120,7 @@ namespace SimpleScheme
                 // look for a match within the list of datum items
                 while (data.IsPair())
                 {
-                    if (SchemeBoolean.Eqv(step.keyVal, data.First()))
+                    if (SchemeBoolean.Eqv(step.keyVal, data.First()).Value)
                     {
                         return step.EvalExpr();
                     }

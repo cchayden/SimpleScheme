@@ -10,63 +10,52 @@ namespace SimpleScheme
     /// Operations on boolean values.
     /// Booleans are immutable.
     /// </summary>
-    public static class SchemeBoolean
+    public class SchemeBoolean : Printable
     {
+        #region Static Fields
         #region Constants
-        /// <summary>
-        /// Define the true value.
-        /// </summary>
-        public const bool True = true;
-
-        /// <summary>
-        /// Define the false value.
-        /// </summary>
-        public const bool False = false;
-
         /// <summary>
         /// The printable name of the scheme boolean type.
         /// </summary>
         public const string Name = "boolean";
         #endregion
 
-        #region Public Static Methods
         /// <summary>
-        /// Write the boolean to the string builder.
+        /// Define the true value.
+        /// </summary>
+        public static readonly SchemeBoolean True = new SchemeBoolean(true);
+
+        /// <summary>
+        /// Define the false value.
+        /// </summary>
+        public static readonly SchemeBoolean False = new SchemeBoolean(false);
+        #endregion
+
+        #region Fields
+        /// <summary>
+        /// The boolean value.
+        /// </summary>
+        private readonly bool value;
+        #endregion
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchemeBoolean"/> class.
         /// </summary>
         /// <param name="value">The boolean value.</param>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public static void PrintString(this bool value, bool quoted, StringBuilder buf)
+        private SchemeBoolean(bool value)
         {
-            buf.Append(value ? "#t" : "#f");
+            this.value = value;
         }
 
         /// <summary>
-        /// Tests whether a given object is a scheme boolean.
+        /// Gets a value indicating whether the boolean value is true.
         /// </summary>
-        /// <param name="obj">The object to test.</param>
-        /// <returns>True if the object is a scheme boolean.</returns>
-        public static bool IsSchemeBoolean(this Obj obj)
+        public bool Value
         {
-            return obj is bool;
+            get { return this.value; }
         }
 
-        /// <summary>
-        /// Check that an oject is a scheme boolean.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The scheme boolean.</returns>
-        public static bool AsSchemeBoolean(this Obj obj)
-        {
-            if (obj.IsSchemeBoolean())
-            {
-                return (bool)obj;
-            }
-
-            ErrorHandlers.TypeError(Name, obj);
-            return false;
-        }
-
+        #region Public Static Methods
         /// <summary>
         /// Equality test for two objs.
         /// Two objs are equal if they:
@@ -78,17 +67,22 @@ namespace SimpleScheme
         /// <param name="obj1">One member to test.</param>
         /// <param name="obj2">The other member to test.</param>
         /// <returns>True if the objs are equal.</returns>
-        public static bool Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
         {
             // both empty list
             if (obj1.IsEmptyList() && obj2.IsEmptyList())
             {
-                return true;
+                return True;
             }
 
             if (obj1.IsSchemeString())
             {
                 return SchemeString.Equal(obj1, obj2);
+            }
+
+            if (obj1.IsCharacter())
+            {
+                return Character.Equal(obj1, obj2);
             }
 
             if (obj1.IsVector())
@@ -106,13 +100,34 @@ namespace SimpleScheme
                 return Symbol.Equal(obj1, obj2);
             }
 
+            if (obj1.IsSchemeBoolean())
+            {
+                return Equal(obj1.AsSchemeBoolean(), obj2);
+            }
+
             if (obj1.IsNumber())
             {
-                return Number.Normalize(obj1).Equals(Number.Normalize(obj2));
+                return Number.Normalize(obj1).Equals(Number.Normalize(obj2)) ? True : False;
             }
 
             // delegate to first member, use C# equality
-            return obj1.Equals(obj2);
+            return obj1.Equals(obj2) ? True : False;
+        }
+
+        /// <summary>
+        /// Tests whether two object are equal, where one of them is a SchemeBoolean.
+        /// </summary>
+        /// <param name="obj1">A SchemeBoolean.</param>
+        /// <param name="obj2">Another object.</param>
+        /// <returns>True if they are both booleans and have the same value.</returns>
+        public static SchemeBoolean Equal(SchemeBoolean obj1, Obj obj2)
+        {
+            if (!obj2.IsSchemeBoolean())
+            {
+                return False;
+            }
+
+            return obj1.Value == obj2.AsSchemeBoolean().Value ? True : False;
         }
 
         /// <summary>
@@ -126,13 +141,13 @@ namespace SimpleScheme
         /// <param name="obj1">The first obj.</param>
         /// <param name="obj2">The second obj.</param>
         /// <returns>True if they are equivalent.</returns>
-        public static bool Eqv(Obj obj1, Obj obj2)
+        public static SchemeBoolean Eqv(Obj obj1, Obj obj2)
         {
-            return obj1 == obj2 || 
-                (obj1 is bool && obj1.Equals(obj2)) || 
+            return new SchemeBoolean(obj1 == obj2 || 
+                (obj1 is SchemeBoolean && obj2 is SchemeBoolean && obj1.AsSchemeBoolean().Value == obj2.AsSchemeBoolean().Value) || 
                 (obj1 != null && Number.Normalize(obj1).Equals(Number.Normalize(obj2))) ||
-                (obj1 is char && obj1.Equals(obj2)) ||
-                (obj1 != null && obj2 != null && obj1.IsSymbol() && obj2.IsSymbol() && obj1.ToString() == obj2.ToString());
+                (obj1 is Character && obj2 is Character && obj1.AsCharacter().C == obj2.AsCharacter().C) ||
+                (obj1 != null && obj2 != null && obj1.IsSymbol() && obj2.IsSymbol() && obj1.ToString() == obj2.ToString()));
         }
 
         /// <summary>
@@ -143,7 +158,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is false.</returns>
         public static bool IsFalse(Obj value)
         {
-            return value.IsSchemeBoolean() && (bool)value == false;
+            return value.IsSchemeBoolean() && value.AsSchemeBoolean().Value == false;
         }
 
         /// <summary>
@@ -154,7 +169,7 @@ namespace SimpleScheme
         /// <returns>True if the value is a boolean and the boolean is true.</returns>
         public static bool IsTrue(Obj value)
         {
-            return value.IsSchemeBoolean() && (bool)value;
+            return value.IsSchemeBoolean() && value.AsSchemeBoolean().Value;
         }
 
         /// <summary>
@@ -164,9 +179,19 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The obj to test.</param>
         /// <returns>True if a boolean and true, or else is not a boolean.</returns>
-        public static bool Truth(Obj obj)
+        public static SchemeBoolean Truth(Obj obj)
         {
-            return !IsFalse(obj);
+            return new SchemeBoolean(!IsFalse(obj));
+        }
+
+        /// <summary>
+        /// Converts a boolean into a SchemeBoolean.
+        /// </summary>
+        /// <param name="b">The boolean value.</param>
+        /// <returns>The SchemeBoolean value.</returns>
+        public static SchemeBoolean Truth(bool b)
+        {
+            return b ? True : False;
         }
 
         #endregion
@@ -188,14 +213,63 @@ namespace SimpleScheme
                 //// <r4rs section="6.2">(eqv? <obj1> <obj2>)</r4rs>
                 .DefinePrimitive(Symbol.New("eqv?"), (args, caller) => Truth(Eqv(args.First(), args.Second())), 2, Primitive.ValueType.Obj)
                 //// <r4rs section="6.1">(not <obj>)</r4rs>
-                .DefinePrimitive(Symbol.New("not"), (args, caller) => Truth(args.First().IsSchemeBoolean() && (bool)args.First() == false), 1, Primitive.ValueType.Obj)
+                .DefinePrimitive(Symbol.New("not"), (args, caller) => Truth(args.First().IsSchemeBoolean() && args.First().AsSchemeBoolean().Value == false), 1, Primitive.ValueType.Obj)
                 //// <r4rs section="6.3">(null? <obj>)</r4rs>
                 .DefinePrimitive(Symbol.New("null?"), (args, caller) => Truth(args.First().IsEmptyList()), 1, Primitive.ValueType.Obj);
         }
         #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Write the boolean to the string builder.
+        /// </summary>
+        /// <param name="quoted">Whether to quote (not used).</param>
+        /// <param name="buf">The string builder to write to.</param>
+        public void PrintString(bool quoted, StringBuilder buf)
+        {
+            buf.Append(this.value ? "#t" : "#f");
+        }
+        #endregion
+
+        /// <summary>
+        /// Convert the SchemeBoolean value to a string for printing.
+        /// </summary>
+        /// <returns>The boolean value as a string.</returns>
+        public override string ToString()
+        {
+            return this.value ? "True" : "False";
+        }
     }
 
-    static class Extensions
+    /// <summary>
+    /// Extension class for SchemeBoolean
+    /// </summary>
+    public static class SchemeBooleanExtensions
     {
-    }
+        /// <summary>
+        /// Tests whether to given object is a scheme boolean.
+        /// </summary>
+        /// <param name="obj">The object to test</param>
+        /// <returns>True if the object is a scheme boolean.</returns>
+        public static bool IsSchemeBoolean(this Obj obj)
+        {
+            return obj is SchemeBoolean;
+        }
+
+        /// <summary>
+        /// Check that the object is a scheme boolean.
+        /// </summary>
+        /// <param name="x">The object.</param>
+        /// <returns>The corresponding boolean.</returns>
+        public static SchemeBoolean AsSchemeBoolean(this Obj x)
+        {
+            if (x.IsSchemeBoolean())
+            {
+                return (SchemeBoolean)x;
+            }
+
+            ErrorHandlers.TypeError(SchemeBoolean.Name, x);
+            return null;
+        }
+    }    
 }

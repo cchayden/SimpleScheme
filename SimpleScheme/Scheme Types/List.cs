@@ -301,21 +301,21 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(assoc <obj> <alist>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("assoc"), 
-                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Equal(x, y)), 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Equal(x, y).Value), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(assq <obj> <alist>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("assq"), 
-                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2, 
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(assv <obj> <alist>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("assv"), 
-                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x.First(), (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2, 
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
@@ -403,21 +403,21 @@ namespace SimpleScheme
                 //// <r4rs section="6.3">(member <obj> <list>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("member"), 
-                    (args, caller) => MemberAssoc(args.First(), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y)), 
+                    (args, caller) => MemberAssoc(args.First(), Second(args), x => x, (x, y) => SchemeBoolean.Equal(x, y).Value), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(memq <obj> <list>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("memq"), 
-                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)
                 //// <r4rs section="6.3">(memv <obj> <list>)</r4rs>
                 .DefinePrimitive(
                     Symbol.New("memv"), 
-                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y)), 
+                    (args, caller) => MemberAssoc(args.First(), args.Second(), x => x, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2,
                     Primitive.ValueType.Obj, 
                     Primitive.ValueType.Pair)

@@ -47,9 +47,9 @@ namespace Tests
             using (var reader = new StringReader("abc"))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual('a', port.Parser.ReadChar(null));
-                Assert.AreEqual('b', port.Parser.ReadChar(null));
-                Assert.AreEqual('c', port.Parser.ReadChar(null));
+                Assert.AreEqual('a', port.Parser.ReadChar(null).AsCharacter().C);
+                Assert.AreEqual('b', port.Parser.ReadChar(null).AsCharacter().C);
+                Assert.AreEqual('c', port.Parser.ReadChar(null).AsCharacter().C);
                 Assert.AreEqual(InputPort.Eof, port.Parser.ReadChar(null));
             }
         }
@@ -63,8 +63,8 @@ namespace Tests
             using (var reader = new StringReader("a"))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual('a', port.Parser.PeekChar());
-                Assert.AreEqual('a', port.Parser.ReadChar(null));
+                Assert.AreEqual('a', port.Parser.PeekChar().AsCharacter().C);
+                Assert.AreEqual('a', port.Parser.ReadChar(null).AsCharacter().C);
                 Assert.AreEqual(InputPort.Eof, port.Parser.ReadChar(null));
             }
         }
@@ -78,8 +78,8 @@ namespace Tests
             using (var reader = new StringReader("a"))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual('a', port.Parser.PeekChar());
-                Assert.AreEqual('a', port.Parser.ReadChar(null));
+                Assert.AreEqual('a', port.Parser.PeekChar().AsCharacter().C);
+                Assert.AreEqual('a', port.Parser.ReadChar(null).AsCharacter().C);
                 port.Parser.PeekChar();
                 Assert.AreEqual(InputPort.Eof, port.Parser.ReadChar(null));
             }
@@ -162,22 +162,22 @@ namespace Tests
             using (var reader = new StringReader("#\\stop"))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual('s', port.Parser.NextToken());
+                Assert.AreEqual('s', port.Parser.NextToken().AsCharacter().C);
                 Assert.AreEqual("top", port.Parser.NextToken());
             }
 
             using (var reader = new StringReader("#\\stop#t"))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual('s', port.Parser.NextToken());
+                Assert.AreEqual('s', port.Parser.NextToken().AsCharacter().C);
                 Assert.AreEqual("top", port.Parser.NextToken());
-                Assert.AreEqual(true, port.Parser.NextToken());
+                Assert.AreEqual(true, port.Parser.NextToken().AsSchemeBoolean().Value);
             }
 
             using (var reader = new StringReader("#\\s top"))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual('s', port.Parser.NextToken());
+                Assert.AreEqual('s', port.Parser.NextToken().AsCharacter().C);
                 Assert.AreEqual("top", port.Parser.NextToken().AsSymbol().ToString());
             }
         }
@@ -286,16 +286,16 @@ namespace Tests
                 {
                     Assert.AreEqual(expected, actual.AsSymbol().ToString());
                 }
-                else if (actual is char)
+                else if (actual.IsCharacter())
                 {
                     Assert.AreEqual(1, expected.Length);
-                    Assert.AreEqual(expected[0], actual);
+                    Assert.AreEqual(expected[0], actual.AsCharacter().C);
                 }
-                else if (actual is char[])
+                else if (actual is SchemeString)
                 {
                     for (int i = 0; i < expected.Length; i++)
                     {
-                        Assert.AreEqual(expected[i], ((char[])actual)[i]);
+                        Assert.AreEqual(expected[i], actual.AsSchemeString().Str[i]);
                     }
                 }
                 else
@@ -343,7 +343,7 @@ namespace Tests
             using (var reader = new StringReader(input))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                var actual = port.Parser.NextToken() as object[];
+                var actual = port.Parser.NextToken() as Vector;
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Length, actual.Length);
                 for (int i = 0; i < expected.Length; i++)
@@ -364,7 +364,9 @@ namespace Tests
             using (var reader = new StringReader(input))
             {
                 InputPort port = InputPort.New(reader, (Interpreter)this.interpreter);
-                Assert.AreEqual(expected, port.Parser.NextToken());
+                Obj res = port.Parser.NextToken();
+                Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
+                Assert.AreEqual(expected, res.AsSchemeBoolean().Value);
             }
         }
     }

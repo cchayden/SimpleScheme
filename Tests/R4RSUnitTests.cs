@@ -75,7 +75,8 @@ namespace Tests
                     {
                         string test = string.Format("({0} {1})", predicates[i], ex[j]);
                         Obj res = this.ReadAndEvaluate(test);
-                        Assert.AreEqual(i == j, res, "Failed " + this.section + " " + test);
+                        Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
+                        Assert.AreEqual(i == j, res.AsSchemeBoolean().Value, "Failed " + this.section + " " + test);
                     }
                 }
             }
@@ -427,6 +428,7 @@ namespace Tests
         {
             this.section = "6.2";
             this.LoadTest();
+
             this.Run("#t", "eqv?", "(eqv? 'a 'a)");
             this.Run("#f", "eqv?", "(eqv? 'a 'b)");
             this.Run("#t", "eqv?", "(eqv? 2 2)");
@@ -1310,7 +1312,9 @@ namespace Tests
         /// <param name="test">The test program.</param>
         private void RunTest(string test)
         {
-            Assert.AreEqual(true, this.ReadAndEvaluate(test), "Failed " + this.section);
+            Obj res = this.ReadAndEvaluate(test);
+            Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
+            Assert.IsTrue(res.AsSchemeBoolean().Value, "Failed " + this.section);
         }
 
         /// <summary>

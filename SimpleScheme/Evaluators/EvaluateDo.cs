@@ -180,7 +180,7 @@ namespace SimpleScheme
         private static Evaluator IterateStep(Evaluator s)
         {
             var step = (EvaluateDo)s;
-            if (SchemeBoolean.Truth(step.ReturnedExpr))
+            if (SchemeBoolean.Truth(step.ReturnedExpr).Value)
             {
                 // test is true
                 // Evaluate exprs and return the value of the last

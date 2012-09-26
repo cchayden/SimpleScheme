@@ -37,7 +37,7 @@ namespace Tests
         [TestMethod]
         public void ChrTest()
         {
-            Assert.AreEqual('a', 'a'.AsCharacter());
+            Assert.AreEqual('a', Character.New('a').AsCharacter().C);
             AssertEx.Throws(() => 0.AsCharacter());
         }
 
@@ -105,27 +105,38 @@ namespace Tests
         [TestMethod]
         public void EqualTest()
         {
-            Assert.IsTrue(SchemeBoolean.Equal(EmptyList.New(), EmptyList.New()));
-            Assert.IsFalse(SchemeBoolean.Equal(EmptyList.New(), 1));
-            Assert.IsTrue(SchemeBoolean.Equal("abc", "abc"));
-            Assert.IsFalse(SchemeBoolean.Equal("abc", "ab"));
-            Assert.IsFalse(SchemeBoolean.Equal("abc", 1));
-            var vec1 = new Obj[] { 1, 2, 3 };
-            var vec2 = new Obj[] { 1, 2, 3 };
-            var vec3 = new Obj[] { 1, 2 };
-            var vec4 = new Obj[] { 1, 2, 4 };
-            Assert.IsTrue(SchemeBoolean.Equal(vec1, vec1));
-            Assert.IsTrue(SchemeBoolean.Equal(vec1, vec2));
-            Assert.IsFalse(SchemeBoolean.Equal(vec1, vec3));
-            Assert.IsFalse(SchemeBoolean.Equal(vec1, vec4));
-            Assert.IsTrue(SchemeBoolean.Equal(1, 1));
-            Assert.IsFalse(SchemeBoolean.Equal(1, 2));
-            Assert.IsTrue(SchemeBoolean.Equal(1.0, 1.0));
-            Assert.IsFalse(SchemeBoolean.Equal(1.0, 2.0));
-            Assert.IsTrue(SchemeBoolean.Equal(true, true));
-            Assert.IsFalse(SchemeBoolean.Equal(true, false));
-            Assert.IsTrue(SchemeBoolean.Equal('a', 'a'));
-            Assert.IsFalse(SchemeBoolean.Equal('a', 'b'));
+            Assert.IsTrue(SchemeBoolean.Equal(EmptyList.New(), EmptyList.New()).Value);
+            Assert.IsFalse(SchemeBoolean.Equal(EmptyList.New(), 1).Value);
+            Assert.IsTrue(SchemeBoolean.Equal("abc", "abc").Value);
+            Assert.IsFalse(SchemeBoolean.Equal("abc", "ab").Value);
+            Assert.IsFalse(SchemeBoolean.Equal("abc", 1).Value);
+            var vec1 = Vector.New(3);
+            vec1[0] = 1;
+            vec1[1] = 2;
+            vec1[2] = 3;
+            var vec2 = Vector.New(3);
+            vec2[0] = 1;
+            vec2[1] = 2;
+            vec2[2] = 3;
+            var vec3 = Vector.New(2);
+            vec3[0] = 1;
+            vec3[1] = 2;
+            var vec4 = Vector.New(3);
+            vec4[0] = 1;
+            vec4[1] = 2;
+            vec4[2] = 4;
+            Assert.IsTrue(SchemeBoolean.Equal(vec1, vec1).Value);
+            Assert.IsTrue(SchemeBoolean.Equal(vec1, vec2).Value);
+            Assert.IsFalse(SchemeBoolean.Equal(vec1, vec3).Value);
+            Assert.IsFalse(SchemeBoolean.Equal(vec1, vec4).Value);
+            Assert.IsTrue(SchemeBoolean.Equal(1, 1).Value);
+            Assert.IsFalse(SchemeBoolean.Equal(1, 2).Value);
+            Assert.IsTrue(SchemeBoolean.Equal(1.0, 1.0).Value);
+            Assert.IsFalse(SchemeBoolean.Equal(1.0, 2.0).Value);
+            Assert.IsTrue(SchemeBoolean.Equal(true, true).Value);
+            Assert.IsFalse(SchemeBoolean.Equal(true, false).Value);
+            Assert.IsTrue(SchemeBoolean.Equal('a', 'a').Value);
+            Assert.IsFalse(SchemeBoolean.Equal('a', 'b').Value);
         }
 
         /// <summary>
@@ -134,27 +145,27 @@ namespace Tests
         [TestMethod]
         public void EqvTest()
         {
-            Assert.IsTrue(SchemeBoolean.Eqv(null, null));
-            Assert.IsFalse(SchemeBoolean.Eqv(null, 1));
-            Assert.IsTrue(SchemeBoolean.Eqv("abc", "abc"));
-            Assert.IsFalse(SchemeBoolean.Eqv("abc", "ab"));
-            Assert.IsFalse(SchemeBoolean.Eqv("abc", 1));
+            Assert.IsTrue(SchemeBoolean.Eqv(null, null).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(null, 1).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv("abc", "abc").Value);
+            Assert.IsFalse(SchemeBoolean.Eqv("abc", "ab").Value);
+            Assert.IsFalse(SchemeBoolean.Eqv("abc", 1).Value);
             Obj[] vec1 = { 1, 2, 3 };
             Obj[] vec2 = { 1, 2, 3 };
             Obj[] vec3 = { 1, 2 };
             Obj[] vec4 = { 1, 2, 4 };
-            Assert.IsTrue(SchemeBoolean.Eqv(vec1, vec1));
-            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec2));
-            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec3));
-            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec4));
-            Assert.IsTrue(SchemeBoolean.Eqv(1, 1));
-            Assert.IsFalse(SchemeBoolean.Eqv(1, 2));
-            Assert.IsTrue(SchemeBoolean.Eqv(1.0, 1.0));
-            Assert.IsFalse(SchemeBoolean.Eqv(1.0, 2.0));
-            Assert.IsTrue(SchemeBoolean.Eqv(true, true));
-            Assert.IsFalse(SchemeBoolean.Eqv(true, false));
-            Assert.IsTrue(SchemeBoolean.Eqv('a', 'a'));
-            Assert.IsFalse(SchemeBoolean.Eqv('a', 'b'));
+            Assert.IsTrue(SchemeBoolean.Eqv(vec1, vec1).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec2).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec3).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(vec1, vec4).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(1, 1).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(1, 2).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(1.0, 1.0).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(1.0, 2.0).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv(true, true).Value);
+            Assert.IsFalse(SchemeBoolean.Eqv(true, false).Value);
+            Assert.IsTrue(SchemeBoolean.Eqv('a', 'a').Value);
+            Assert.IsFalse(SchemeBoolean.Eqv('a', 'b').Value);
         }
 
         /// <summary>
@@ -163,8 +174,8 @@ namespace Tests
         [TestMethod]
         public void IsFalseTest()
         {
-            Assert.IsTrue(SchemeBoolean.IsFalse(false));
-            Assert.IsFalse(SchemeBoolean.IsFalse(true));
+            Assert.IsTrue(SchemeBoolean.IsFalse(SchemeBoolean.False));
+            Assert.IsFalse(SchemeBoolean.IsFalse(SchemeBoolean.True));
             Assert.IsFalse(SchemeBoolean.IsFalse(0));
         }
 
@@ -174,8 +185,8 @@ namespace Tests
         [TestMethod]
         public void IsTrueTest()
         {
-            Assert.IsTrue(SchemeBoolean.IsTrue(true));
-            Assert.IsFalse(SchemeBoolean.IsTrue(false));
+            Assert.IsTrue(SchemeBoolean.IsTrue(SchemeBoolean.True));
+            Assert.IsFalse(SchemeBoolean.IsTrue(SchemeBoolean.False));
             Assert.IsFalse(SchemeBoolean.IsTrue(0));
         }
 
@@ -185,9 +196,9 @@ namespace Tests
         [TestMethod]
         public void TruthTest()
         {
-            Assert.IsTrue(SchemeBoolean.Truth(true));
-            Assert.IsFalse(SchemeBoolean.Truth(false));
-            Assert.IsTrue(SchemeBoolean.Truth(0));
+            Assert.IsTrue(SchemeBoolean.Truth(SchemeBoolean.True).Value);
+            Assert.IsFalse(SchemeBoolean.Truth(SchemeBoolean.False).Value);
+            Assert.IsTrue(SchemeBoolean.Truth(0).Value);
         }
 
         /// <summary>
@@ -254,14 +265,14 @@ namespace Tests
         public void ListToStringTest()
         {
             var expected = new[] { 'a', 'b' };
-            var actual = SchemeString.ListToString('a'.MakeList('b'));
+            var actual = SchemeString.ListToString(Character.New('a').MakeList(Character.New('b')));
             for (int i = 0; i < expected.Length; i++)
             {
-                Assert.AreEqual(expected[i], actual[i]);
+                Assert.AreEqual(expected[i], actual.Str[i]);
             }
 
             actual = SchemeString.ListToString(1);
-            Assert.AreEqual(0, actual.Length);
+            Assert.AreEqual(0, actual.Str.Length);
             AssertEx.Throws(() => SchemeString.ListToString(1.MakeList(2)));
         }
 
@@ -318,10 +329,10 @@ namespace Tests
         public void StrTest()
         {
             var actual = SchemeString.New(Symbol.New("abc")).AsSchemeString();
-            Assert.AreEqual(3, actual.Length);
-            Assert.AreEqual('a', actual[0]);
-            Assert.AreEqual('b', actual[1]);
-            Assert.AreEqual('c', actual[2]);
+            Assert.AreEqual(3, actual.Str.Length);
+            Assert.AreEqual('a', actual.Str[0]);
+            Assert.AreEqual('b', actual.Str[1]);
+            Assert.AreEqual('c', actual.Str[2]);
         }
 
         /// <summary>
@@ -333,16 +344,18 @@ namespace Tests
             Assert.AreEqual("()", Printer.AsString(EmptyList.New()));
             Assert.AreEqual("1", Printer.AsString(1.0));
             Assert.AreEqual("1.5", Printer.AsString(1.5));
-            Assert.AreEqual("#\\a", Printer.AsString('a'));
+            Assert.AreEqual("#\\a", Printer.AsString(Character.New('a')));
             Assert.AreEqual("(1 . 2)", Printer.AsString(new Pair(1, 2)));
             Assert.AreEqual("(1 2)", Printer.AsString(1.MakeList(2)));
             Assert.AreEqual(@"abc", Printer.AsString("abc"));
-            char[] empty = new char[0];
+            SchemeString empty = SchemeString.New(0);
             Assert.AreEqual(@"""""", Printer.AsString(empty));
-            var test = new Obj[] { 1, 2 };
+            var test = Vector.New(2);
+            test[0] = 1;
+            test[1] = 2;
             Assert.AreEqual("#(1 2)", Printer.AsString(test));
-            Assert.AreEqual("#t", Printer.AsString(true));
-            Assert.AreEqual("#f", Printer.AsString(false));
+            Assert.AreEqual("#t", Printer.AsString(SchemeBoolean.True));
+            Assert.AreEqual("#f", Printer.AsString(SchemeBoolean.False));
             Assert.AreEqual("1", Printer.AsString(1));
         }
 
@@ -360,10 +373,12 @@ namespace Tests
             Assert.AreEqual("(1 2)", Printer.AsString(1.MakeList(2), false));
             Assert.AreEqual("abc", Printer.AsString("abc", false));
             Assert.AreEqual(@"""", Printer.AsString(@"""", false));
-            var test = new Obj[] { 1, 2 };
+            var test = Vector.New(2);
+            test[0] = 1;
+            test[1] = 2;
             Assert.AreEqual("#(1 2)", Printer.AsString(test, false));
-            Assert.AreEqual("#t", Printer.AsString(true, false));
-            Assert.AreEqual("#f", Printer.AsString(false, false));
+            Assert.AreEqual("#t", Printer.AsString(SchemeBoolean.True, false));
+            Assert.AreEqual("#f", Printer.AsString(SchemeBoolean.False, false));
             Assert.AreEqual("1", Printer.AsString(1));
         }
 
@@ -407,7 +422,9 @@ namespace Tests
         [TestMethod]
         public void VecTest()
         {
-            var test = new Obj[] { 1, 2 };
+            var test = Vector.New(2);
+            test[0] = 1;
+            test[1] = 2;
             Assert.AreEqual(2, test.AsVector().Length);
             Assert.AreEqual(1, test.AsVector()[0]);
             Assert.AreEqual(2, test.AsVector()[1]);
@@ -420,7 +437,10 @@ namespace Tests
         [TestMethod]
         public void VectorToListTest()
         {
-            var test = new Obj[] { 1, 2, 3 };
+            var test = Vector.New(3);
+            test[0] = 1;
+            test[1] = 2;
+            test[2] = 3;
             var actual = Vector.ToList(test);
             Assert.AreEqual(3, actual.ListLength());
             Assert.AreEqual(1, actual.First());

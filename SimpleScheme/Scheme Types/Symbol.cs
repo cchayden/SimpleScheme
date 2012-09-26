@@ -27,8 +27,14 @@ namespace SimpleScheme
         /// </summary>
         private readonly string name;
 
+        /// <summary>
+        /// The position within the binding environment for the symbol.
+        /// </summary>
         private int pos;
 
+        /// <summary>
+        /// The number of lexical stsps out the smybol is bound.
+        /// </summary>
         private int level;
         #endregion
 
@@ -64,17 +70,26 @@ namespace SimpleScheme
             get { return this.name; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether a symbol have been located in an environment.
+        /// </summary>
         public bool Located
         {
             get { return this.pos != -1; }
         }
 
+        /// <summary>
+        /// Gets or sets the position in the environment the symbol appears.
+        /// </summary>
         public int Pos
         {
             get { return this.pos; }
             set { this.pos = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the number of lexical levels out that the symbol apears in an environment.
+        /// </summary>
         public int Level
         {
             get { return this.level; }
@@ -89,14 +104,14 @@ namespace SimpleScheme
         /// <param name="obj1">The first symbol.</param>
         /// <param name="obj2">The second symbol.</param>
         /// <returns>True if they are both symbols and represent the same symbol.</returns>
-        public static bool Equal(Obj obj1, Obj obj2)
+        public static SchemeBoolean Equal(Obj obj1, Obj obj2)
         {
             if (!obj1.IsSymbol() || !obj2.IsSymbol())
             {
-                return false;
+                return SchemeBoolean.False;
             }
 
-            return obj1.ToString() == obj2.ToString();
+            return obj1.ToString() == obj2.ToString() ? SchemeBoolean.True : SchemeBoolean.False;
         }
 
         /// <summary>
@@ -135,10 +150,15 @@ namespace SimpleScheme
 
         #region Public Methods
 
-        public void Locate(int pos, int level)
+        /// <summary>
+        /// Set the environment location of this symbol.
+        /// </summary>
+        /// <param name="p">The position in the environment.</param>
+        /// <param name="lev">The environment level -- the number of lexical steps out.</param>
+        public void Locate(int p, int lev)
         {
-            this.pos = pos;
-            this.level = level;
+            this.pos = p;
+            this.level = lev;
         }
 
         /// <summary>
@@ -151,6 +171,9 @@ namespace SimpleScheme
             buf.Append(this.name);
         }
 
+        /// <summary>
+        /// Clear the cached environment information for the symbol
+        /// </summary>
         public void Clean()
         {
             this.pos = -1;

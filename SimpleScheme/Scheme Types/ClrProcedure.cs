@@ -239,6 +239,10 @@ namespace SimpleScheme
                 {
                     array[a++] = Printer.AsString(elem, false);
                 }
+                else if (this.ArgClasses[i] == typeof(char[]))
+                {
+                    array[a++] = Printer.AsString(elem, false).ToCharArray();
+                }
                 else
                 {
                     array[a++] = elem;

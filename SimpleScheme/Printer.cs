@@ -57,15 +57,6 @@ namespace SimpleScheme
             switch (x.GetType().FullName)
             {
                 // Names for types implementing Scheme values, used for error messages.
-                case "System.Boolean":
-                    SchemeBoolean.Truth(x).PrintString(quoted, buf);
-                    return;
-                case "System.Char":
-                    x.AsCharacter().PrintString(quoted, buf);
-                    return;
-                case "System.Object[]":
-                    x.AsVector().PrintString(quoted, buf);
-                    return;
                 case "System.Byte":
                 case "System.Int32":
                 case "System.Int16":
@@ -74,10 +65,11 @@ namespace SimpleScheme
                 case "System.Double":
                     x.AsNumber().PrintString(quoted, buf);
                     return;
-                case "System.Char[]":
-                    x.AsSchemeString().PrintString(quoted, buf);
-                    return;
                 case "SimpleScheme.Symbol":
+                case "SimpleScheme.SchemeBoolean":
+                case "SimpleScheme.SchemeString":
+                case "SimpleScheme.Character":
+                case "SimpleScheme.Vector":
                 case "SimpleScheme.Pair":
                 case "SimpleScheme.Procedure":
                 case "SimpleScheme.Primitive":

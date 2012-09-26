@@ -111,7 +111,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateCond)s;
             step.test = s.ReturnedExpr;
-            if (SchemeBoolean.Truth(step.test))
+            if (SchemeBoolean.Truth(step.test).Value)
             {
                 return s.ContinueHere(EvalConsequentStep);
             }
