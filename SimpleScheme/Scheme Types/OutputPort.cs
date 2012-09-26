@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.IO;
     using System.Text;
 
@@ -43,6 +44,14 @@ namespace SimpleScheme
         public TextWriter Writer
         { 
             get { return this.outp; }
+        }
+
+        /// <summary>
+        /// True if writing to Console
+        /// </summary>
+        internal bool IsConsole
+        {
+            get { return this.outp == Console.Out; }
         }
         #endregion
 
@@ -138,16 +147,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Write the output port to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.ToString());
-        }
-
         /// <summary>
         /// Write a string to the output port, followed by a newline.
         /// </summary>

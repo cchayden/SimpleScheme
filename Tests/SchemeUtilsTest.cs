@@ -74,6 +74,20 @@ namespace Tests
         }
 
         /// <summary>
+        /// A test for Nth
+        /// </summary>
+        [TestMethod]
+        public void NthTest()
+        {
+            var actual = List.Cons((Number)1, List.Cons((Number)2, List.Cons((Number)3, (Number)4)));
+            Assert.IsInstanceOfType(actual, typeof(Pair));
+            Assert.AreEqual(1, ((Number)List.Nth(actual, (Number)0)).N);
+            Assert.AreEqual(2, ((Number)List.Nth(actual, (Number)1)).N);
+            Assert.AreEqual(3, ((Number)List.Nth(actual, (Number)2)).N);
+            Assert.AreEqual(EmptyList.Instance, List.Nth(actual, (Number)3));
+        }
+
+        /// <summary>
         /// A test for SetFirst
         /// </summary>
         [TestMethod]
@@ -392,29 +406,17 @@ namespace Tests
         }
 
         /// <summary>
-        /// A test for PrintString with quote flag false.
+        /// A test for ToString with quote flag false.
         /// </summary>
         [TestMethod]
         public void AsStringTestWithBuf()
         {
-            StringBuilder buf = new StringBuilder().Append("x");
-            Undefined.Instance.PrintString(false, buf);
-            Assert.AreEqual("x", buf.ToString());
-            buf = new StringBuilder().Append("x");
-            ((Number)1.0).PrintString(false, buf);
-            Assert.AreEqual("x1", buf.ToString());
-            buf = new StringBuilder().Append("x");
-            ((Number)1.5).PrintString(false, buf);
-            Assert.AreEqual("x1.5", buf.ToString());
-            buf = new StringBuilder().Append("x");
-            ((Character)'a').PrintString(false, buf);
-            Assert.AreEqual("xa", buf.ToString());
-            buf = new StringBuilder().Append("x");
-            ((Symbol)"abc").PrintString(false, buf);
-            Assert.AreEqual("xabc", buf.ToString());
-            buf = new StringBuilder().Append("x");
-            ((SchemeString)"abc").PrintString(false, buf);
-            Assert.AreEqual("xabc", buf.ToString());
+            Assert.AreEqual(string.Empty, Undefined.Instance.ToString(false));
+            Assert.AreEqual("1", ((Number)1.0).ToString(false));
+            Assert.AreEqual("1.5", ((Number)1.5).ToString(false));
+            Assert.AreEqual("a", ((Character)'a').ToString(false));
+            Assert.AreEqual("abc", ((Symbol)"abc").ToString(false));
+            Assert.AreEqual("abc", ((SchemeString)"abc").ToString(false));
         }
 
         /// <summary>

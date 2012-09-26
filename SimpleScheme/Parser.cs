@@ -13,6 +13,13 @@ namespace SimpleScheme
     /// </summary>
     public class Parser
     {
+        #region Constants
+        /// <summary>
+        /// The interactive prompt.
+        /// </summary>
+        private const string Prompt = "{0} > ";
+        #endregion
+
         #region Static Fields
         /// <summary>
         /// Store the names and values of all named characters.
@@ -27,14 +34,14 @@ namespace SimpleScheme
                 { "enq", '\x0005' },
                 { "ack", '\x0006' },
                 { "bel", '\x0007' },
-                { "bs",  '\x0008' },
-                { "ht",  '\x0009' },
-                { "nl",  '\x000a' },
-                { "vt",  '\x000b' },
-                { "np",  '\x000c' },
-                { "cr",  '\x000d' },
-                { "so",  '\x000e' },
-                { "si",  '\x000f' },
+                { "bs", '\x0008' },
+                { "ht", '\x0009' },
+                { "nl", '\x000a' },
+                { "vt", '\x000b' },
+                { "np", '\x000c' },
+                { "cr", '\x000d' },
+                { "so", '\x000e' },
+                { "si", '\x000f' },
                 { "dle", '\x0010' },
                 { "dc1", '\x0011' },
                 { "dc2", '\x0012' },
@@ -44,13 +51,13 @@ namespace SimpleScheme
                 { "syn", '\x0016' },
                 { "etc", '\x0017' },
                 { "can", '\x0018' },
-                { "em",  '\x0019' },
+                { "em", '\x0019' },
                 { "sub", '\x001a' },
                 { "esc", '\x001b' },
-                { "fs",  '\x001c' },
-                { "gs",  '\x001d' },
-                { "rs",  '\x001e' },
-                { "us",  '\x001f' },
+                { "fs", '\x001c' },
+                { "gs", '\x001d' },
+                { "rs", '\x001e' },
+                { "us", '\x001f' },
                 { "del", '\x007f' },
                 { "sp", ' ' },
                 { "space", ' ' },
@@ -58,6 +65,7 @@ namespace SimpleScheme
                 { "newline", '\n' },
                 { "return", '\r' }
             };
+
         #endregion
 
         #region Fields
@@ -69,17 +77,23 @@ namespace SimpleScheme
         /// <summary>
         /// The character buffer to read from.
         /// </summary>
-        private Tuple<bool, int> charBuffer = new Tuple<bool, int>(false, -1);
+        private readonly CharacterBuffer charBuffer = new CharacterBuffer();
 
         /// <summary>
         /// The token buffer to read from.
         /// </summary>
-        private Tuple<bool, SchemeObject> tokBuffer = new Tuple<bool, SchemeObject>(false, null);
+        private readonly TokenBuffer tokBuffer = new TokenBuffer();
+
+        /// <summary>
+        /// Buffers characters read from the input stream.
+        /// </summary>
+        private readonly LineBuffer lineBuffer;
 
         /// <summary>
         /// Used to make a transcript of the input.
         /// </summary>
         private StringBuilder logger;
+
         #endregion
 
         #region Constructor
@@ -90,16 +104,28 @@ namespace SimpleScheme
         public Parser(TextReader inp)
         {
             this.inp = inp;
+            this.lineBuffer = new LineBuffer(inp);
         }
         #endregion
 
         #region Properties
         /// <summary>
+        /// Gets the current line number.
+        /// </summary>
+        public int LineNumber
+        {
+            get { return this.lineBuffer.LineNumber; }
+        }
+
+        /// <summary>
         /// Gets the internal TextReader object.
         /// </summary>
         public TextReader Reader
-        { 
-            get { return this.inp; }
+        {
+            get
+            {
+                return this.inp;
+            }
         }
         #endregion
 
@@ -141,7 +167,7 @@ namespace SimpleScheme
             this.logger = sb;
             try
             {
-                int ch = this.GetCharFromBuffer();
+                int ch = this.charBuffer.Get();
                 if (ch == -2)
                 {
                     ch = this.ReadNextChar();
@@ -189,7 +215,7 @@ namespace SimpleScheme
                 int ch = this.ReadOrPop();
                 if (!test((char)ch))
                 {
-                    this.PushCharBuffer(ch);
+                    this.charBuffer.Push(ch);
                     return sb.ToString();
                 }
 
@@ -205,7 +231,7 @@ namespace SimpleScheme
         public SchemeObject NextToken()
         {
             // See if we should re-use a pushed token or character
-            SchemeObject token = this.GetTokenFromBuffer();
+            SchemeObject token = this.tokBuffer.Get();
             if (token != null)
             {
                 return token;
@@ -243,7 +269,7 @@ namespace SimpleScheme
                         return Token.New(",@");
                     }
 
-                    this.PushCharBuffer(ch);
+                    this.charBuffer.Push(ch);
                     return Token.New(",");
 
                 case ';':
@@ -265,7 +291,7 @@ namespace SimpleScheme
                             ErrorHandlers.Warn("EOF inside of a string.");
                         }
 
-                        return (SchemeString)buff;
+                        return SchemeString.New(buff, this.LineNumber);
                     }
 
                 case '#':
@@ -274,53 +300,53 @@ namespace SimpleScheme
                     {
                         case 't':
                         case 'T':
-                            return (SchemeBoolean)true;
+                            return SchemeBoolean.New(true, this.LineNumber);
 
                         case 'f':
                         case 'F':
-                            return (SchemeBoolean)false;
+                            return SchemeBoolean.New(false, this.LineNumber);
 
                         case '(':
-                            this.PushCharBuffer(ch);
-                            return Vector.FromList(this.Read());
+                            this.charBuffer.Push(ch);
+                            return Vector.FromList(this.Read(), this.LineNumber);
 
                         case '\\':
                             ch = this.ReadNextChar();
                             if (char.IsLetter((char)ch))
                             {
-                                this.PushCharBuffer(ch);
+                                this.charBuffer.Push(ch);
                                 string tok = this.NextWord(char.IsLetter);
                                 if (tok.Length == 1)
                                 {
-                                    return (Character)(char)ch;
+                                    return Character.New((char)ch, this.LineNumber);
                                 }
 
                                 tok = tok.ToLower();
                                 if (CharNames.ContainsKey(tok))
                                 {
-                                    return (Character)CharNames[tok];
+                                    return Character.New(CharNames[tok], this.LineNumber);
                                 }
 
                                 // At this point there is a token and also a buffered character
-                                this.PushTokenBuffer(new Token(tok.Substring(1)));
-                                return (Character)(char)ch;
+                                this.tokBuffer.Push(new Token(tok.Substring(1)));
+                                return Character.New((char)ch, this.LineNumber); // TODO
                             }
 
-                            return (Character)(char)ch;
+                            return Character.New((char)ch, this.LineNumber);
 
                         case 'e':
                         case 'i':
                         case 'd':
-                            return (Number)Convert.ToInt32(this.NextWord(IsDecimalDigit), 10);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsDecimalDigit), 10), this.LineNumber);
 
                         case 'b':
-                            return (Number)Convert.ToInt32(this.NextWord(IsBinaryDigit), 2);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsBinaryDigit), 2), this.LineNumber);
 
                         case 'o':
-                            return (Number)Convert.ToInt32(this.NextWord(IsOctalDigit), 8);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsOctalDigit), 8), this.LineNumber);
 
                         case 'x':
-                            return (Number)Convert.ToInt32(this.NextWord(IsHexDigit), 16);
+                            return Number.New(Convert.ToInt32(this.NextWord(IsHexDigit), 16), this.LineNumber);
 
                         default:
                             ErrorHandlers.Warn("#" + ((char)ch) + " not implemented, ignored.");
@@ -331,7 +357,7 @@ namespace SimpleScheme
                     {
                         // read a number or symbol
                         int c = ch;
-                        this.PushCharBuffer(ch);
+                        this.charBuffer.Push(ch);
                         string buf = this.NextWord(IsSymbolChar);
 
                         // read a number
@@ -340,7 +366,7 @@ namespace SimpleScheme
                             double value;
                             if (double.TryParse(buf, out value))
                             {
-                                return (Number)value;
+                                return Number.New(value, this.LineNumber);
                             }
                         }
 
@@ -350,7 +376,7 @@ namespace SimpleScheme
                         }
 
                         // read a symbol
-                        return (Symbol)buf.ToLower();
+                        return Symbol.New(buf.ToLower(), this.LineNumber);
                     }
             }
         }
@@ -405,8 +431,8 @@ namespace SimpleScheme
         /// <returns>True if the character is a symbol character.</returns>
         private static bool IsSymbolChar(char ch)
         {
-            return !char.IsWhiteSpace(ch) && (short)ch != -1 && ch != '(' && ch != ')' 
-                && ch != '\'' && ch != ';' && ch != '"' && ch != ',' && ch != '`';
+            return !char.IsWhiteSpace(ch) && (short)ch != -1 && ch != '(' && ch != ')' && ch != '\'' && ch != ';'
+                   && ch != '"' && ch != ',' && ch != '`';
         }
 
         /// <summary>
@@ -416,67 +442,7 @@ namespace SimpleScheme
         /// <returns>True if the character is a comment character.</returns>
         private static bool IsCommentChar(char ch)
         {
-            return (short)ch != -1 && ch != '\n' && ch != '\r'; 
-        }
-        #endregion
-
-        #region Character Buffer Methods
-        /// <summary>
-        /// Get a character from the character buffer.
-        /// </summary>
-        /// <returns>The buffered character.  If no character is buffered, return -2.</returns>
-        private int GetCharFromBuffer()
-        {
-            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -2;
-            this.ClearCharBuffer();
-            return ch;
-        }
-
-        /// <summary>
-        /// Clear the character buffer.
-        /// </summary>
-        private void ClearCharBuffer()
-        {
-            this.charBuffer = new Tuple<bool, int>(false, -1);
-        }
-
-        /// <summary>
-        /// Push the character into the buffer.
-        /// </summary>
-        /// <param name="ch">The character to push.</param>
-        private void PushCharBuffer(int ch)
-        {
-            this.charBuffer = new Tuple<bool, int>(true, ch);
-        }
-        #endregion
-
-        #region Token Buffer Methods
-        /// <summary>
-        /// Get a token from the token buffer.
-        /// </summary>
-        /// <returns>The buffered token.  If no token is buffered, return null.</returns>
-        private SchemeObject GetTokenFromBuffer()
-        {
-            SchemeObject token = this.tokBuffer.Item1 ? this.tokBuffer.Item2 : null;
-            this.ClearTokenBuffer();
-            return token;
-        }
-
-        /// <summary>
-        /// Clear the token buffer.
-        /// </summary>
-        private void ClearTokenBuffer()
-        {
-            this.tokBuffer = new Tuple<bool, SchemeObject>(false, null);
-        }
-
-        /// <summary>
-        /// Push the character into the buffer.
-        /// </summary>
-        /// <param name="token">The token to push.</param>
-        private void PushTokenBuffer(SchemeObject token)
-        {
-            this.tokBuffer = new Tuple<bool, SchemeObject>(true, token);
+            return (short)ch != -1 && ch != '\n' && ch != '\r';
         }
         #endregion
 
@@ -513,16 +479,16 @@ namespace SimpleScheme
                             token = this.Read();
                             break;
                         case "'":
-                            token = List.MakeList((Symbol)"quote", this.Read());
+                            token = List.MakeList(Symbol.New("quote", this.LineNumber), this.Read());
                             break;
                         case "`":
-                            token = List.MakeList((Symbol)"quasiquote", this.Read());
+                            token = List.MakeList(Symbol.New("quasiquote", this.LineNumber), this.Read());
                             break;
                         case ",":
-                            token = List.MakeList((Symbol)"unquote", this.Read());
+                            token = List.MakeList(Symbol.New("unquote", this.LineNumber), this.Read());
                             break;
                         case ",@":
-                            token = List.MakeList((Symbol)"unquote-splicing", this.Read());
+                            token = List.MakeList(Symbol.New("unquote-splicing", this.LineNumber), this.Read());
                             break;
                     }
                 }
@@ -544,7 +510,7 @@ namespace SimpleScheme
         /// <returns>The next character in the stream.</returns>
         private int Peek()
         {
-            int ch = this.charBuffer.Item1 ? this.charBuffer.Item2 : -1;
+            int ch = this.charBuffer.Peek();
             if (ch != -1)
             {
                 return ch;
@@ -552,8 +518,8 @@ namespace SimpleScheme
 
             try
             {
-                ch = this.inp.Read();
-                this.PushCharBuffer(ch);
+                ch = this.lineBuffer.ReadCharacter();
+                this.charBuffer.Push(ch);
                 return ch;
             }
             catch (IOException ex)
@@ -570,13 +536,13 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private int ReadOrPop()
         {
-            int ch = this.GetCharFromBuffer();
+            int ch = this.charBuffer.Get();
             if (ch != -2)
             {
                 return ch;
             }
 
-            ch = this.inp.Read();
+            ch = this.lineBuffer.ReadCharacter();
 
             if (this.logger != null)
             {
@@ -593,13 +559,13 @@ namespace SimpleScheme
         /// <returns>The character read.</returns>
         private int ReadNextChar()
         {
-            int ch = this.GetCharFromBuffer();
+            int ch = this.charBuffer.Get();
             if (ch != -2)
             {
                 ErrorHandlers.IoError("Read bypassed pushed char.");
             }
 
-            ch = this.inp.Read();
+            ch = this.lineBuffer.ReadCharacter();
             if (this.logger != null)
             {
                 this.logger.Append((char)ch);
@@ -649,8 +615,205 @@ namespace SimpleScheme
                 }
             }
 
-            this.PushTokenBuffer(token);
-            return List.Cons(this.Read(), this.ReadTail(true));
+            this.tokBuffer.Push(token);
+            return List.Cons(this.Read(), this.ReadTail(true), this.LineNumber);
+        }
+        #endregion
+
+        #region CharacterBuffer
+        /// <summary>
+        /// Buffers a single character.
+        /// </summary>
+        private class CharacterBuffer
+        {
+            /// <summary>
+            /// True if a buffered character is present.
+            /// </summary>
+            private bool present;
+
+            /// <summary>
+            /// If present, the buffered character.
+            /// </summary>
+            private int ch;
+
+            /// <summary>
+            /// Get a character from the character buffer.
+            /// </summary>
+            /// <returns>The buffered character.  If no character is buffered, return -2.</returns>
+            public int Get()
+            {
+                int chr = this.present ? this.ch : -2;
+                this.Clear();
+                return chr;
+            }
+
+            /// <summary>
+            /// Push the character into the buffer.
+            /// </summary>
+            /// <param name="chr">The character to push.</param>
+            public void Push(int chr)
+            {
+                this.present = true;
+                this.ch = chr;
+            }
+
+            /// <summary>
+            /// If there is a char in the buffer, return it (without clearing).
+            /// Otherwise, return -1;
+            /// </summary>
+            /// <returns>The char in the buffer, else -1.</returns>
+            public int Peek()
+            {
+                return this.present ? this.ch : -1;
+            }
+
+            /// <summary>
+            /// Clear the character buffer.
+            /// </summary>
+            private void Clear()
+            {
+                this.present = false;
+                this.ch = -1;
+            }
+        }
+        #endregion
+
+        #region TokenBuffer
+        /// <summary>
+        /// Reads Tokens.  May read one ahead, so one token may be pushed back.
+        /// </summary>
+        private class TokenBuffer
+        {
+            /// <summary>
+            /// True if a buffered token is present.
+            /// </summary>
+            private bool present;
+
+            /// <summary>
+            /// If present, a buffered token.
+            /// </summary>
+            private SchemeObject buffer;
+
+            /// <summary>
+            /// Get a token from the token buffer.
+            /// </summary>
+            /// <returns>The buffered token.  If no token is buffered, return null.</returns>
+            public SchemeObject Get()
+            {
+                SchemeObject token = this.present ? this.buffer : null;
+                this.Clear();
+                return token;
+            }
+
+            /// <summary>
+            /// Push the character into the buffer.
+            /// </summary>
+            /// <param name="token">The token to push.</param>
+            public void Push(SchemeObject token)
+            {
+                this.present = true;
+                this.buffer = token;
+            }
+
+            /// <summary>
+            /// Clear the token buffer.
+            /// </summary>
+            private void Clear()
+            {
+                this.present = false;
+                this.buffer = null;
+            }
+        }
+        #endregion
+
+        #region LineBuffer
+        /// <summary>
+        /// Reads characters from an input reader.
+        /// If Console, prompts and buffers.
+        /// The challenge here is to get the line numbers right for interactive input.
+        /// ReadExpr() stops when an expression is complete, so it does not consume a following newline, 
+        ///   and when the next ReadExpr happens, the input still has the newline in it.  So LineNumber before
+        ///   ReadExpr will be one off.
+        /// Address this by buffering in the case of Console input, and prompting at a low level.
+        /// For non-Console input, do not tinker with things.
+        /// In either case, the LineBuffer also keeps track of the input line number.
+        /// </summary>
+        private class LineBuffer
+        {
+            /// <summary>
+            /// The text reader that is the source of input.
+            /// </summary>
+            private readonly TextReader inp;
+
+            /// <summary>
+            /// Buffer for characters read but not delivered to the caller.
+            /// </summary>
+            private string buffer;
+
+            /// <summary>
+            /// The position in the buffer that we are reading from.
+            /// </summary>
+            private int pos;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="LineBuffer"/> class.
+            /// </summary>
+            /// <param name="inp">
+            /// The inp.
+            /// </param>
+            public LineBuffer(TextReader inp)
+            {
+                this.inp = inp;
+                this.buffer = string.Empty;
+                this.pos = 0;
+                this.LineNumber = 1;
+            }
+
+            /// <summary>
+            /// Gets the current line number.
+            /// </summary>
+            public int LineNumber
+            {
+                get; private set;
+            }
+
+            /// <summary>
+            /// Read a single character from the input port.
+            /// If this is coming from the Console, provide a prompt with the line number.
+            /// </summary>
+            /// <returns>The next character.  Returns -1 if end of file.</returns>
+            public int ReadCharacter()
+            {
+                if (this.inp == Console.In)
+                {
+                    // special treatment for console input
+                    while (this.pos >= this.buffer.Length)
+                    {
+                        Console.Write(Prompt, this.LineNumber++);
+
+                        this.buffer = this.inp.ReadLine();
+                        this.pos = 0;
+                        if (this.buffer == null)
+                        {
+                            return -1;
+                        }
+
+                        // ReadLine strips this, so put it back.
+                        this.buffer += System.Environment.NewLine;
+                    }
+
+                    return this.buffer[this.pos++];
+                }
+
+                // normal non-console input
+                int ch = this.inp.Read();
+                if (ch == '\n')
+                {
+                    this.LineNumber++;
+                }
+
+                return ch;
+            }
         }
         #endregion
     }

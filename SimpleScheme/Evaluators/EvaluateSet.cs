@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     /// <summary>
     /// Evaluate a set! expression.
     /// </summary>
@@ -10,6 +12,12 @@ namespace SimpleScheme
     public sealed class EvaluateSet : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "set!"
+        /// </summary>
+        public static readonly Symbol SetSym = "set!";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -36,12 +44,11 @@ namespace SimpleScheme
         /// <param name="lhs">The left hand side -- the variable to set.</param>
         /// <param name="rhs">The right hand side -- the new value.</param>
         private EvaluateSet(SchemeObject expr, Environment env, Evaluator caller, SchemeObject lhs, SchemeObject rhs)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.lhs = lhs;
             this.rhs = rhs;
-            ContinueHere(InitialStep);
-            IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -59,7 +66,7 @@ namespace SimpleScheme
             SchemeObject rhs = Second(expr);
             if (!(lhs is Symbol))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs));
+                ErrorHandlers.SemanticError(String.Format(@"Set: first argument must be a symbol.  Got: ""{0}""", lhs), null);
             }
 
             return new EvaluateSet(expr, env, caller, lhs, rhs);
@@ -76,7 +83,7 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateSet)s;
-            return EvaluateExpression.Call(step.rhs, s.Env, s.ContinueHere(SetStep));
+            return EvaluateExpression.Call(step.rhs, s.Env, s.ContinueAt(SetStep));
         }
 
         /// <summary>
@@ -89,7 +96,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateSet)s;
             s.Env.Set(step.lhs, EnsureSchemeObject(s.ReturnedExpr));
-            return s.ReturnUndefined();
+            return step.ReturnFromStep(Undefined.Instance);
         }
         #endregion
     }

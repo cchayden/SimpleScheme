@@ -42,6 +42,18 @@ namespace SimpleScheme
             this.pos = -1;
             this.level = -1;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the Symbol class.
+        /// </summary>
+        /// <param name="name">The value of the symbol.</param>
+        /// <param name="lineNumber">The line number where the symbol was read.</param>
+        private Symbol(string name, int lineNumber) : base(lineNumber)
+        {
+            this.name = name;
+            this.pos = -1;
+            this.level = -1;
+        }
         #endregion
 
         #region Public Properties
@@ -99,6 +111,17 @@ namespace SimpleScheme
         public static Symbol New(string name)
         {
             return new Symbol(name);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Symbol class, with a line number.
+        /// </summary>
+        /// <param name="name">The value of the symbol.</param>
+        /// <param name="lineNumber">The line number where the symbol was read.</param>
+        /// <returns>A new Smybol.</returns>
+        public static Symbol New(string name, int lineNumber)
+        {
+            return new Symbol(name, lineNumber);
         }
         #endregion
 
@@ -210,16 +233,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Write the symbol to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.name);
-        }
-
-        /// <summary>
         /// Describe a symbol by returning its value.
         /// </summary>
         /// <returns>The symbol as a string.</returns>
@@ -227,6 +240,7 @@ namespace SimpleScheme
         {
             return this.ToString();
         }
+
         /// <summary>
         /// Clear the cached environment information for the symbol
         /// </summary>

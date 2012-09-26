@@ -48,8 +48,8 @@ namespace Tests
         {
             this.section = "2.1";
             const string Test = "'(+ - ... !.. $.+ %.- &.! *.: /:. :+. <-. =. >. ?. ~. _. ^.)";
-            EvaluatorOrObject res = this.ReadAndEvaluate(Test);
-            Assert.AreEqual(17, List.ListLength(EvaluatorOrObject.EnsureSchemeObject(res)), "Failed " + this.section);
+            SchemeObject res = this.ReadAndEvaluate(Test);
+            Assert.AreEqual(17, List.ListLength(res), "Failed " + this.section);
             Assert.AreEqual(Test.Substring(1), res.ToString(), "Failed " + this.section);
         }
 
@@ -73,7 +73,7 @@ namespace Tests
                     for (int j = 0; j < examples1.Length; j++)
                     {
                         string test = string.Format("({0} {1})", predicates[i], ex[j]);
-                        EvaluatorOrObject res = this.ReadAndEvaluate(test);
+                        SchemeObject res = this.ReadAndEvaluate(test);
                         Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
                         Assert.AreEqual(i == j, ((SchemeBoolean)res).Value, "Failed " + this.section + " " + test);
                     }
@@ -946,6 +946,13 @@ namespace Tests
             this.Run("#f", "string<?", @"(string<? ""9"" ""0"")");
             this.Run("#f", "string<?", @"(string<? ""A"" ""A"")");
 
+            this.Run("#t", "string<?", @"(string<? ""A"" ""AB"")");
+            this.Run("#f", "string<?", @"(string<? ""AB"" ""A"")");
+            this.Run("#f", "string<?", @"(string<? ""Bxx"" ""Axx"")");
+            this.Run("#f", "string<?", @"(string<? ""Bxxx"" ""Axxx"")");
+            this.Run("#t", "string<?", @"(string<? ""Axx"" ""Bxx"")");
+            this.Run("#t", "string<?", @"(string<? ""Axxx"" ""Bxxx"")");
+
             this.Run("#f", "string>?", @"(string>? ""A"" ""B"")");
             this.Run("#f", "string>?", @"(string>? ""a"" ""b"")");
             this.Run("#t", "string>?", @"(string>? ""9"" ""0"")");
@@ -1311,7 +1318,7 @@ namespace Tests
         /// <param name="test">The test program.</param>
         private void RunTest(string test)
         {
-            EvaluatorOrObject res = this.ReadAndEvaluate(test);
+            SchemeObject res = this.ReadAndEvaluate(test);
             Assert.IsInstanceOfType(res, typeof(SchemeBoolean));
             Assert.IsTrue(((SchemeBoolean)res).Value, "Failed " + this.section);
         }
@@ -1324,7 +1331,7 @@ namespace Tests
         /// <param name="expr">The expression to evaluate.</param>
         private void Run(string expected, string label, string expr)
         {
-            EvaluatorOrObject res = this.ReadAndEvaluate(expr);
+            SchemeObject res = this.ReadAndEvaluate(expr);
             string actual = res.ToString(true);
             Console.WriteLine("({0} {1}) ==> {2}", label, expected, actual);
             Assert.AreEqual(expected, actual, "Failed " + this.section);
@@ -1335,12 +1342,12 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private EvaluatorOrObject ReadAndEvaluate(string str) 
+        private SchemeObject ReadAndEvaluate(string str) 
         {
             using (var reader = new StringReader(str))
             {
                 InputPort inp = InputPort.New(reader, (Interpreter)this.interpreter);
-                EvaluatorOrObject last = EmptyList.Instance;
+                SchemeObject last = EmptyList.Instance;
                 while (true)
                 {
                     SchemeObject x;

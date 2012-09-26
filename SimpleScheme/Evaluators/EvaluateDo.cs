@@ -14,6 +14,12 @@ namespace SimpleScheme
     public sealed class EvaluateDo : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "do"
+        /// </summary>
+        public static readonly Symbol DoSym = "do";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -64,7 +70,7 @@ namespace SimpleScheme
         /// <param name="commands">The commands.</param>
         /// <param name="testProc">The test proc to execute each interation.</param>
         private EvaluateDo(SchemeObject expr, Environment env, Evaluator caller, SchemeObject vars, SchemeObject inits, SchemeObject steps, SchemeObject exprs, SchemeObject commands, Lambda testProc)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.vars = vars;
             this.inits = inits;
@@ -72,8 +78,7 @@ namespace SimpleScheme
             this.exprs = exprs;
             this.commands = commands;
             this.testProc = testProc;
-            ContinueHere(InitialStep);
-            IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -94,13 +99,13 @@ namespace SimpleScheme
             // Test for errors before creating the object.
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No body for do");
+                ErrorHandlers.SemanticError("No body for do", null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for do: " + expr);
+                ErrorHandlers.SemanticError("Bad arg list for do: " + expr, null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
@@ -148,7 +153,7 @@ namespace SimpleScheme
         private static Evaluator InitialStep(Evaluator s)
         {
             var step = (EvaluateDo)s;
-            return EvaluateList.Call(step.inits, s.Env, s.ContinueHere(TestStep));
+            return EvaluateList.Call(step.inits, s.Env, s.ContinueAt(TestStep));
         }
 
         /// <summary>
@@ -160,8 +165,8 @@ namespace SimpleScheme
         private static Evaluator TestStep(Evaluator s)
         {
             var step = (EvaluateDo)s;
-            s.ReplaceEnvironment(step.vars, EnsureSchemeObject(s.ReturnedExpr));
-            return step.testProc.ApplyWithtEnv(s.Env, step.ContinueHere(IterateStep));
+            step.ReplaceEnvironment(step.vars, EnsureSchemeObject(s.ReturnedExpr));
+            return step.testProc.ApplyWithtEnv(s.Env, step.ContinueAt(IterateStep));
         }
 
         /// <summary>
@@ -181,7 +186,7 @@ namespace SimpleScheme
                 // If no exprs, unspecified.
                 if (step.exprs is EmptyList)
                 {
-                    return step.ReturnUndefined();
+                    return step.ReturnFromStep(Undefined.Instance);
                 }
 
                 return EvaluateSequence.Call(step.exprs, step.Env, step.Caller);
@@ -190,7 +195,7 @@ namespace SimpleScheme
             // test is false
             // evaluate the steps in the environment of the vars
             // bind to fresh copies of the vars
-            return EvaluateList.Call(step.commands, step.Env, step.ContinueHere(LoopStep));
+            return EvaluateList.Call(step.commands, step.Env, step.ContinueAt(LoopStep));
         }
 
         /// <summary>
@@ -201,7 +206,7 @@ namespace SimpleScheme
         private static Evaluator LoopStep(Evaluator s)
         {
             var step = (EvaluateDo)s;
-            return EvaluateList.Call(step.steps, step.Env, step.ContinueHere(TestStep));
+            return EvaluateList.Call(step.steps, step.Env, step.ContinueAt(TestStep));
         }
         #endregion
     }

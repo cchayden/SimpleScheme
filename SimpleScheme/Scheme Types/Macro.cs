@@ -41,15 +41,16 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the macro to the string builder.
+        /// Evaluate a macro.
         /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
+        /// <param name="args">The macro args.</param>
+        /// <param name="env">The execution environment.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>The macro representing the expression.</returns>
+        public static new Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
         {
-            buf.Append(this.ToString());
+            return caller.UpdateReturnValue(new Macro(First(args), Rest(args), env));
         }
-
         /// <summary>
         /// Evaluate the macro.
         /// At this point, the args are NOT evaluated.

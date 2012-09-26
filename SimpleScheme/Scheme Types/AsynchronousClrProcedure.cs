@@ -72,19 +72,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Write the asynchronous clr procedure to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(this.ToString());
-            }
-        }
-
-        /// <summary>
         /// Apply the method to the given arguments.
         /// If the method is static, all arguments are passed to the method.
         /// Otherwise, the first argument is the class instance, and the rest are passed 
@@ -116,6 +103,7 @@ namespace SimpleScheme
             
             var argArray = this.ToArgListBegin(args, new Tuple<object, Evaluator>(target, caller));
             var res = this.MethodInfo.Invoke(target, argArray) as IAsyncResult;
+
             // res is not converted because it is IAsyncResult -- convert in completion method
             return new SuspendedEvaluator(ClrObject.New(res), caller);
         }

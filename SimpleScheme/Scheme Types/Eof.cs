@@ -49,21 +49,6 @@ namespace SimpleScheme
         #endregion
 
         #region Public Methods
-
-        /// <summary>
-        /// Write the Eof object to the string builder.
-        /// If not quoted, write nothing.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-            if (quoted)
-            {
-                buf.Append(this.ToString());
-            }
-        }
-
         /// <summary>
         /// Display the value as a string.
         /// Since there is nothing to show, at least give the type.

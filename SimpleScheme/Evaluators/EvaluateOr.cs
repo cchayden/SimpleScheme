@@ -11,6 +11,12 @@ namespace SimpleScheme
     public sealed class EvaluateOr : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "or"
+        /// </summary>
+        public static readonly Symbol OrSym = "or";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -25,10 +31,9 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateOr(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
-            ContinueHere(EvalTestStep);
-            IncrementCounter(counter);
+            this.ContinueAt(EvalTestStep);
         }
         #endregion
 
@@ -67,7 +72,7 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
         }
 
         /// <summary>
@@ -84,7 +89,7 @@ namespace SimpleScheme
             }
 
             s.StepDownExpr();
-            return s.ContinueHere(EvalTestStep);
+            return s.ContinueAt(EvalTestStep);
         }
         #endregion
     }

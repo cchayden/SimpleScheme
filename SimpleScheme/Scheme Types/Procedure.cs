@@ -121,26 +121,33 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Public Static Methods
         /// <summary>
-        /// Write the procedure to the string builder.
+        /// Ensure that the given object is a procedure.
+        /// Used for checking before attempting to Apply a computed value.
         /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <param name="obj">The object to check</param>
+        /// <returns>The object as a procedure.</returns>
+        public static Procedure EnsureProcedure(SchemeObject obj)
         {
-            buf.Append(this.ToString());
-        }
+            if (!(obj is Procedure))
+            {
+                ErrorHandlers.ProcError("Attempt to Apply non-proc", obj);
+            }
 
+            return (Procedure)obj;
+
+        }
+        #endregion
+
+        #region Public Methods
         /// <summary>
         /// Describe a procedure by returning its value.
         /// </summary>
         /// <returns>The procedure as a string.</returns>
         public override string Describe()
         {
-            var sb = new StringBuilder();
-            this.PrintString(false, sb);
-            return sb.ToString();
+            return this.ToString(false);
         }
 
         /// <summary>
@@ -234,12 +241,14 @@ namespace SimpleScheme
                 string msg = numArgs < this.minArgs ? "few" : "many";
                 ErrorHandlers.SemanticError(
                     string.Format(
-                       @"""{0}"" too {1} args ({2}) for {3}: ""{4}""", 
-                      tag, 
-                      msg, 
-                      numArgs, 
-                      this.ProcedureName, 
-                      args));
+                        @"""{0}"" too {1} args ({2}) for {3}: ""{4}""", 
+                        tag, 
+                        msg, 
+                        numArgs, 
+                        this.ProcedureName, 
+                        args), 
+                        null);
+// TODO pass something here to explain the location of the error
             }
 
             return numArgs;
@@ -270,22 +279,8 @@ namespace SimpleScheme
         /// <returns>A function to continue the evaluation.</returns>
         private EvaluatorOrObject CallCc(Evaluator caller)
         {
-            return this.Apply(List.MakeList(Continuation.New(caller)), caller);
+            return this.Apply(MakeList(Continuation.New(caller)), caller);
         }
         #endregion
-
-        /// <summary>
-        /// Ensure that the given object is a procedure.
-        /// Used for checking before attempting to Apply a computed value.
-        /// </summary>
-        /// <param name="obj">The object to check</param>
-        public static void EnsureProcedure(SchemeObject obj)
-        {
-            if (!(obj is Procedure))
-            {
-                ErrorHandlers.ProcError("Attempt to Apply non-proc", obj);
-            }
-
-        }
     }
 }

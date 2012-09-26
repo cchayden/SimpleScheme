@@ -75,6 +75,11 @@ namespace SimpleScheme
                 expected.SchemeTypeName(), 
                 got.SchemeTypeName(), 
                 got.ToString(true));
+            if (got is Symbol)
+            {
+                message += string.Format(" Line: {0}", ((Symbol)got).LineNumber);
+            }
+
             Console.Error.WriteLine("**** TYPE ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }
@@ -83,7 +88,7 @@ namespace SimpleScheme
         /// Handle an error by printing a message on the console 
         ///    and throwing an exception.
         /// These errors are caused by a failed attempt to print a given value.
-        /// All SchemeObject objects implement PrintString.
+        /// All SchemeObject objects implement ToString(bool).
         /// </summary>
         /// <param name="got">The actual value.</param>
         /// <returns>Actually, does not return.</returns>
@@ -93,6 +98,11 @@ namespace SimpleScheme
                 "Invalid type whem printing: expected SchemeObject, got {0}: {1}", 
                 got.SchemeTypeName(), 
                 got);
+            if (got is Symbol)
+            {
+                message += string.Format(" Line: {0}", ((Symbol)got).LineNumber);
+            }
+
             Console.Error.WriteLine("**** PRINT ERROR: {0}", message);
             throw new SchemeTypeException(message);
         }
@@ -145,9 +155,10 @@ namespace SimpleScheme
         /// This is a semantic error, such as giving the wrong number of arguments to a primitive.
         /// </summary>
         /// <param name="message">The message to display and to put 
-        ///    into the exception.</param>
+        ///     into the exception.</param>
+        /// <param name="got">The actual result.</param>
         /// <returns>Actually, does not return.</returns>
-        public static SchemeObject SemanticError(string message)
+        public static SchemeObject SemanticError(string message, SchemeObject got)
         {
             Console.Error.WriteLine("**** SEMANTIC ERROR: {0}", message);
             throw new SchemeSemanticException(message);
@@ -165,6 +176,11 @@ namespace SimpleScheme
         public static SchemeObject ProcError(string message, SchemeObject got)
         {
             string msg = string.Format("{0}, got {1}: {2}", message, got.SchemeTypeName(), got.ToString(true));
+            if (got is Symbol)
+            {
+                message += string.Format(" Line: {0}", ((Symbol)got).LineNumber);
+            }
+
             Console.Error.WriteLine("**** PROCEDURE ERROR: {0}", msg);
             throw new SchemeProcException(message);
         }

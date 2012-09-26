@@ -3,6 +3,8 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+
     //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
     //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
@@ -13,6 +15,12 @@ namespace SimpleScheme
     public sealed class EvaluateDefine : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "define"
+        /// </summary>
+        public static readonly Symbol DefineSym = "define";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -27,10 +35,9 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateDefine(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
-            ContinueHere(InitialStep);
-            IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -54,7 +61,7 @@ namespace SimpleScheme
                 var symbol = First(First(expr));
                 if (!(symbol  is Symbol))
                 {
-                    ErrorHandlers.SemanticError(string.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)));
+                    ErrorHandlers.SemanticError(String.Format(@"Attempt to define a non-symbol: ""{0}""", symbol.ToString(true)), null);
                 }
 
                 env.Define((Symbol)symbol, Lambda.New(Rest(First(expr)), Rest(expr), env));
@@ -73,7 +80,7 @@ namespace SimpleScheme
         /// <returns>Continue by evaluating the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpression.Call(Second(s.Expr), s.Env, s.ContinueHere(StoreDefineStep));
+            return EvaluateExpression.Call(Second(s.Expr), s.Env, s.ContinueAt(StoreDefineStep));
         }
 
         /// <summary>
@@ -86,11 +93,11 @@ namespace SimpleScheme
             var symbol = First(s.Expr);
             if (!(symbol is Symbol))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)));
+                ErrorHandlers.SemanticError(String.Format(@"Attempt to store to a non-symbol: ""{0}""", symbol.ToString(true)), null);
             }
 
             s.Env.Define((Symbol)symbol, EnsureSchemeObject(s.ReturnedExpr));
-            return s.ReturnUndefined();
+            return s.ReturnFromStep(Undefined.Instance);
         }
 
         #endregion

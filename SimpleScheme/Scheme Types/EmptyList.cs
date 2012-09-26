@@ -41,16 +41,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the empty list to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.ToString());
-        }
-
-        /// <summary>
         /// Print the empty list.
         /// </summary>
         /// <returns>The empty list token.</returns>

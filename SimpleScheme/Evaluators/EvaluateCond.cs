@@ -13,6 +13,12 @@ namespace SimpleScheme
     public sealed class EvaluateCond : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "cond"
+        /// </summary>
+        public static readonly Symbol CondSym = "cond";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -42,11 +48,10 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateCond(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.clauses = expr;
-            ContinueHere(EvalClauseStep);
-            IncrementCounter(counter);
+            this.ContinueAt(EvalClauseStep);
         }
         #endregion
 
@@ -81,15 +86,15 @@ namespace SimpleScheme
         private static Evaluator EvalClauseStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            step.clause = List.First(step.clauses);
-            var clause = List.First(step.clause);
+            step.clause = First(step.clauses);
+            var clause = First(step.clause);
             if (clause is Symbol && clause.ToString() == "else")
             {
                 step.test = EmptyList.Instance;
-                return s.ContinueHere(EvalConsequentStep);
+                return s.ContinueAt(EvalConsequentStep);
             }
 
-            return EvaluateExpression.Call(List.First(step.clause), s.Env, s.ContinueHere(TestClauseStep));
+            return EvaluateExpression.Call(First(step.clause), s.Env, s.ContinueAt(TestClauseStep));
         }
 
         /// <summary>
@@ -106,16 +111,16 @@ namespace SimpleScheme
             step.test = EnsureSchemeObject(s.ReturnedExpr);
             if (SchemeBoolean.Truth(step.test).Value)
             {
-                return s.ContinueHere(EvalConsequentStep);
+                return s.ContinueAt(EvalConsequentStep);
             }
 
-            step.clauses = List.Rest(step.clauses);
+            step.clauses = Rest(step.clauses);
             if (step.clauses is EmptyList)
             {
-                return s.ReturnUndefined();
+                return step.ReturnFromStep(Undefined.Instance);
             }
 
-            return s.ContinueHere(EvalClauseStep);
+            return s.ContinueAt(EvalClauseStep);
         }
 
         /// <summary>
@@ -128,33 +133,37 @@ namespace SimpleScheme
         private static Evaluator EvalConsequentStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            if (List.Rest(step.clause) is EmptyList)
+            if (Rest(step.clause) is EmptyList)
             {
                 // no consequent: return the test as the result
-                return s.ReturnFromStep(step.test);
+                return step.ReturnFromStep(step.test);
             }
 
-            var clause = List.Second(step.clause);
+            var clause = Second(step.clause);
             if (clause is Symbol && clause.ToString() == "=>")
             {
                 // send to recipient -- first evaluate recipient
-                return EvaluateExpression.Call(List.Third(step.clause), s.Env, s.ContinueHere(ApplyRecipientStep));
+                return EvaluateExpression.Call(Third(step.clause), s.Env, s.ContinueAt(ApplyRecipientStep));
             }
 
             // evaluate and return the sequence of expressions directly
-            return EvaluateSequence.Call(List.Rest(step.clause), s.Env, s.Caller);
+            return EvaluateSequence.Call(Rest(step.clause), s.Env, s.Caller);
         }
 
         /// <summary>
-        /// Apply the recipient function to the value of the test
+        /// Apply the recipient function to the value of the test.
+        /// The recipient must evaluate to a procecure.
         /// </summary>
         /// <param name="s">This evaluator.</param>
         /// <returns>The next evaluator to execute (the return).</returns>
         private static Evaluator ApplyRecipientStep(Evaluator s)
         {
             var step = (EvaluateCond)s;
-            Procedure.EnsureProcedure(EnsureSchemeObject(s.ReturnedExpr));
-            return EvaluateProc.CallQuoted(((Procedure)s.ReturnedExpr), List.MakeList(step.test), s.Env, s.Caller);
+            return EvaluateProc.CallQuoted(
+                Procedure.EnsureProcedure(s.ReturnedExpr), 
+                MakeList(step.test), 
+                s.Env, 
+                s.Caller);
         }
         #endregion
     }

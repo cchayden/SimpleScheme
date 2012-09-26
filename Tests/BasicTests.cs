@@ -83,15 +83,19 @@ namespace Tests
             this.section = "0.0";
             this.Run("True", "and", "(procedure? and)");
             this.Run("0", "and", "((lambda (fun)(fun 0)) and)");
+            this.Run("c", "and", "((if #t and) 'c)");
 
             this.Run("True", "or", "(procedure? or)");
             this.Run("0", "or", "((lambda (fun)(fun 0)) or)");
+            this.Run("c", "or", "((if #t or) 'c)");
 
             this.Run("True", "begin", "(procedure? begin)");
             this.Run("0", "begin", "((lambda (fun)(fun 0)) begin)");
+            this.Run("c", "begin", "((if #t begin) 'c)");
 
             this.Run("True", "cond", "(procedure? cond)");
             this.Run("'()", "cond", "((lambda (fun)(fun 0)) cond)");
+            this.Run("c", "cond", "((if #t cond) (#t 'c))");
 
             this.Run("True", "define", "(procedure? define)");
             this.Run("<undefined>", "define", "((lambda (fun)(fun 'a)) define)");
@@ -101,6 +105,7 @@ namespace Tests
 
             this.Run("True", "if", "(procedure? if)");
             this.Run("<undefined>", "if", "((lambda (fun)(fun 0)) if)");
+            this.Run("c", "if", "((if #t if) 'b 'c)");
 
             this.Run("True", "let", "(procedure? let)");
             this.Run("<undefined>", "let", "((lambda (fun)(fun (list 0))) let)");
@@ -112,16 +117,18 @@ namespace Tests
             this.Run("<undefined>", "letrec", "((lambda (fun)(fun (list 0))) letrec)");
 
             this.Run("True", "lambda", "(procedure? lambda)");
-            this.Run("(lambda (0) )", "lambda", "((lambda (fun)(fun (list 0))) lambda)");
+            this.Run("(lambda (list 0) )", "lambda", "((lambda (fun)(fun (list 0))) lambda)");
 
             this.Run("True", "macro", "(procedure? macro)");
-            this.Run("(macro (0) )", "lambda", "((lambda (fun)(fun (list 0))) macro)");
+            this.Run("(macro (list 0) )", "lambda", "((lambda (fun)(fun (list 0))) macro)");
 
             this.Run("True", "quote", "(procedure? quote)");
             this.Run("0", "quote", "((lambda (fun)(fun 0)) quote)");
+            this.Run("c", "quote", "((if #t quote) c)");
 
             this.Run("True", "set!", "(procedure? set!)");
             this.Run("<undefined>", "set!", "(define x 10)((lambda (fun)(fun 'x 0)) set!)");
+            this.Run("<undefined>", "set!", "((if #t set!) c 2)");
 
             this.Run("True", "time", "(procedure? time)");
             this.Run("0", "time", "(first ((lambda (fun)(fun 0)) time))");
@@ -598,7 +605,7 @@ namespace Tests
         /// </summary>
         /// <param name="str">The string to read.</param>
         /// <returns>The value of the last expression.</returns>
-        private EvaluatorOrObject ReadAndEvaluate(string str) 
+        private SchemeObject ReadAndEvaluate(string str) 
         {
             return this.interpreter.Eval(str);
         }

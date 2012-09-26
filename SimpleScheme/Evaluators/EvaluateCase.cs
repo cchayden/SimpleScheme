@@ -18,6 +18,12 @@ namespace SimpleScheme
     public sealed class EvaluateCase : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "case"
+        /// </summary>
+        public static readonly Symbol CaseSym = "case";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -48,11 +54,10 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="clauses">The case clauses.</param>
         private EvaluateCase(SchemeObject expr, Environment env, Evaluator caller, SchemeObject clauses)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.clauses = clauses;
-            this.ContinueHere(EvalKeyStep);
-            this.IncrementCounter(counter);
+            this.ContinueAt(EvalKeyStep);
         }
         #endregion
 
@@ -78,7 +83,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalKeyStep(Evaluator s)
         {
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(CheckClauseStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(CheckClauseStep));
         }
 
         /// <summary>
@@ -98,7 +103,7 @@ namespace SimpleScheme
                 SchemeObject clause = First(step.clauses);
                 if (!(clause is Pair))
                 {
-                    ErrorHandlers.SemanticError("Bad syntax in case: " + clause);
+                    ErrorHandlers.SemanticError("Bad syntax in case: " + clause, null);
                     return null;
                 }
 
@@ -127,7 +132,7 @@ namespace SimpleScheme
             }
 
             // no clauses matched -- unspecified
-            return s.ReturnUndefined();
+            return step.ReturnFromStep(Undefined.Instance);
         }
 
         /// <summary>
@@ -143,7 +148,7 @@ namespace SimpleScheme
             }
 
             // eval and return last expr
-            return EvaluateSequence.Call(this.exprList, this.Caller.Env, this.Caller);
+            return EvaluateSequence.Call(this.exprList, this.Env, this.Caller);
         }
         #endregion
     }

@@ -223,7 +223,7 @@ namespace SimpleScheme
                 level++;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable: ""{0}""", var.SymbolName));
+            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable: ""{0}""", var.SymbolName), var);
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace SimpleScheme
         {
             if (!(var is Symbol))
             {
-                return ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", var.ToString(true)));
+                return ErrorHandlers.SemanticError(string.Format(@"Attempt to set a non-symbol: ""{0}""", var.ToString(true)), var);
             }
 
             var symbol = (Symbol)var;
@@ -272,7 +272,7 @@ namespace SimpleScheme
                 level++;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName));
+            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace SimpleScheme
         {
             if (!(var is Symbol))
             {
-                return ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-symbol: ""{0}""", var.ToString(true)));
+                return ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-symbol: ""{0}""", var.ToString(true)), var);
             }
 
             var symbol = (Symbol)var;
@@ -305,7 +305,7 @@ namespace SimpleScheme
                 level++;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName));
+            return ErrorHandlers.SemanticError(string.Format(@"Unbound variable in set!: ""{0}""", symbol.SymbolName), symbol);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace SimpleScheme
                 levels--;
                 if (levels > 0)
                 {
-                    sb.Append("-----\n");
+                    sb.Append("-----\n ");
                 }
 
                 env = env.lexicalParent;
@@ -516,7 +516,7 @@ namespace SimpleScheme
                     if (!(val is Number))
                     {
                         // If it is found but is not a number, then that is an error.
-                        ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-number: ""{0}""", val.ToString(true)));
+                        ErrorHandlers.SemanticError(string.Format(@"Attempt to increment a non-number: ""{0}""", val.ToString(true)), symbol);
                         return null;
                     }
 
@@ -537,7 +537,7 @@ namespace SimpleScheme
                     var initial = new string(' ', indent);
                     for (int i = 0; i < this.names.Count; i++)
                     {
-                        sb.AppendFormat("{0}{1}: {2}\n", initial, this.names[i], this.values[i]);
+                        sb.AppendFormat("{0}{1}: {2}\n ", initial, this.names[i], this.values[i]);
                     }
                 }
             }
@@ -599,7 +599,7 @@ namespace SimpleScheme
                         SchemeObject symbol = List.First(symbols);
                         if (!(symbol is Symbol))
                         {
-                            ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""",  symbol));
+                            ErrorHandlers.SemanticError(string.Format(@"Bad formal parameter: ""{0}""",  symbol), symbol);
                         }
 
                         this.Add((Symbol)symbol, List.First(vals));

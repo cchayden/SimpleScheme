@@ -3,13 +3,15 @@
 // </copyright>
 namespace Run
 {
+    using System;
+
     using SimpleScheme;
 
     class Run
     {
         static void Main(string[] args)
         {
-            Interpreter.New(args);
+            Interpreter.New(args, true);
         }
     }
 }

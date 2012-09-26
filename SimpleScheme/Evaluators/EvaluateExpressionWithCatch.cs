@@ -36,11 +36,10 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateExpressionWithCatch(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.catchSuspended = true;
-            ContinueHere(InitialStep);
-            IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -78,7 +77,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the expression.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpression.Call(s.Expr, s.Env, s.ContinueHere(DoneStep));
+            return EvaluateExpression.Call(s.Expr, s.Env, s.ContinueAt(DoneStep));
         }
 
         /// <summary>
@@ -95,13 +94,13 @@ namespace SimpleScheme
             // If we get here because of a normal or asynchronous return, then set
             // the return value and set an appropriate flag value.
             var step = (EvaluateExpressionWithCatch)s;
-            if (s.FetchAndResetCaught() > 0)
+            if (step.FetchAndResetCaught() > 0)
             {
                 step.catchSuspended = false;
-                return s.ReturnFromStep(s.ReturnedExpr, ReturnType.CaughtSuspended);
+                return step.ReturnFromStep(s.ReturnedExpr, ReturnType.CaughtSuspended);
             }
 
-            return s.ReturnFromStep(
+            return step.ReturnFromStep(
                 s.ReturnedExpr,
                 step.catchSuspended ? ReturnType.SynchronousReturn : ReturnType.AsynchronousReturn);
         }

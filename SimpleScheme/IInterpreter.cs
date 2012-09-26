@@ -51,7 +51,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        EvaluatorOrObject Eval(SchemeObject expr);
+        SchemeObject Eval(SchemeObject expr);
 
         /// <summary>
         /// Evaluate an expression (expressed as a list) in the global environment.
@@ -59,7 +59,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate, a s a string.</param>
         /// <returns>The result of the evaluation.</returns>
         /// <returns></returns>
-        EvaluatorOrObject Eval(string expr);
+        SchemeObject Eval(string expr);
 
         /// <summary>
         /// Begin an asynchronous evaluation.  This may return before the evaluation is complete.
@@ -84,7 +84,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to use.</param>
         /// <returns>A string representing the object value.</returns>
-        string Print(EvaluatorOrObject obj);
+        string Print(SchemeObject obj);
         #endregion
 
         #region Read/Eval Methods
@@ -93,7 +93,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The value of the evaluated expression.</returns>
-        EvaluatorOrObject ReadEval(InputPort inp);
+        SchemeObject ReadEval(InputPort inp);
 
         /// <summary>
         /// Load the program, contained in the given string, and execute it.
@@ -134,6 +134,7 @@ namespace SimpleScheme
         /// Load a file and evaluate the expressions in it.
         /// </summary>
         /// <param name="fileName">The file to load.</param>
-        void LoadFile(SchemeObject fileName);
+        /// <param name="outp">Input and results are written to this port, if not null.</param>
+        void LoadFile(SchemeObject fileName, OutputPort outp);
     }
 }

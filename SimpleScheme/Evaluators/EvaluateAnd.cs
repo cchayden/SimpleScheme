@@ -12,6 +12,11 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
+        /// The Symbol "and"
+        /// </summary>
+        public static readonly Symbol AndSym = "and";
+
+        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-and");
@@ -25,10 +30,9 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateAnd(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
-            this.ContinueHere(EvalTestStep);
-            this.IncrementCounter(counter);
+            this.ContinueAt(EvalTestStep);
         }
         #endregion
 
@@ -67,7 +71,7 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
         }
 
         /// <summary>
@@ -84,7 +88,7 @@ namespace SimpleScheme
             }
 
             s.StepDownExpr();
-            return s.ContinueHere(EvalTestStep);
+            return s.ContinueAt(EvalTestStep);
         }
         #endregion
     }

@@ -5,17 +5,51 @@ namespace SimpleScheme
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
 
     /// <summary>
     /// All scheme types implement this interface.
     /// This inherits from List so that the static methods defined there will all be available without having
     ///   to be qualified.
-    /// This also provides some type primitives, mostly as static methods.
-    /// The only method a subclass has to implement is PrintString.
+    /// Every SchemeObject has a line number.  This field is set when the object is created by read().
+    /// So objects that are part of a program are associated with the line number in the program where they 
+    ///   originated.  Other objects that are created at run time do not have a line number (set to 0).
+    /// This class also provides some type primitives, mostly as static methods.
+    /// The only method a subclass has to implement is ToString(bool).
     /// </summary>
     public abstract class SchemeObject : EvaluatorOrObject
     {
+        #region Fields
+        /// <summary>
+        /// For symbols created by read, the line number where they were read from.
+        /// </summary>
+        private readonly int lineNumber;
+        #endregion
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchemeObject"/> class.
+        /// </summary>
+        protected SchemeObject()
+        {
+            this.lineNumber = 0;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchemeObject"/> class.
+        /// </summary> <param name="lineNumber">The line number.
+        /// </param>
+        protected SchemeObject(int lineNumber)
+        {
+            this.lineNumber = lineNumber;
+        }
+
+        /// <summary>
+        /// Gets the line number where the object was read.
+        /// </summary>
+        public int LineNumber
+        {
+            get { return this.lineNumber; }
+        }
+
         /// <summary>
         /// Gets the CLR type name of the object.
         /// </summary>
@@ -26,10 +60,15 @@ namespace SimpleScheme
 
         /// <summary>
         /// Print the value into the given buffer.
+        /// This is the default implementation.
+        /// Subclasses can redefine if they desire.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public abstract void PrintString(bool quoted, StringBuilder buf);
+        /// <returns>The object as a string.</returns>
+        public override string ToString(bool quoted)
+        {
+            return this.ToString();
+        }
 
         /// <summary>
         /// Gets a string describing the object.
@@ -49,18 +88,6 @@ namespace SimpleScheme
         public Type ToClass()
         {
             return SchemeObjectExtensions.ToClass(this);
-        }
-
-        /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <returns>The string representing the obj.</returns>
-        public override string ToString(bool quoted)
-        {
-            var buf = new StringBuilder();
-            this.PrintString(quoted, buf);
-            return buf.ToString();
         }
     }
 

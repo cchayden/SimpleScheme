@@ -1,36 +1,28 @@
-﻿// <copyright file="EvaluateExpression.cs" company="Charles Hayden">
+﻿#define OLDx
+// <copyright file="EvaluateExpression.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// The main evaluator for expressions.
     /// </summary>
    //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
     public sealed class EvaluateExpression : Evaluator
     {
-        #region Constants
-        private static readonly Symbol andSym = "and";
-        private static readonly Symbol beginSym = "begin";
-        private static readonly Symbol parallelSym = "parallel";
-        private static readonly Symbol caseSym = "case";
-        private static readonly Symbol condSym = "cond";
-        private static readonly Symbol defineSym = "define";
-        private static readonly Symbol doSym = "do";
-        private static readonly Symbol ifSym = "if";
-        private static readonly Symbol letSym = "let";
-        private static readonly Symbol letstarSym = "let*";
-        private static readonly Symbol letrecSym = "letrec";
-        private static readonly Symbol orSym = "or";
-        private static readonly Symbol setSym = "set!";
-        private static readonly Symbol timeSym = "time";
-        #endregion
-
         #region Fields
         /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-expression");
+
+        /// <summary>
+        /// Maps symbol names to special actions.
+        /// </summary>
+        private static readonly Dictionary<string, SpecialAction> specialActions;
 
         /// <summary>
         /// The function to evaluate.
@@ -39,31 +31,70 @@ namespace SimpleScheme
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// Initializes static members of the <see cref="EvaluateExpression"/> class.
+        /// </summary>
+        static EvaluateExpression()
+        {
+            specialActions = new Dictionary<string, SpecialAction>
+                {
+                    { "begin", EvaluateSequence.Call },
+                    { "parallel", EvaluateParallel.Call },
+                    { "define", EvaluateDefine.Call },
+                    { "set!", EvaluateSet.Call },
+                    { "increment!", Increment },
+                    { "if", EvaluateIf.Call },
+                    { "case", EvaluateCase.Call },
+                    { "or", EvaluateOr.Call },
+                    { "and", EvaluateAnd.Call },
+                    { "cond", EvaluateCond.Call },
+                    { "let", EvaluateLet.Call },
+                    { "let*", EvaluateLetStar.Call },
+                    { "letrec", EvaluateLetRec.Call },
+                    { "do", EvaluateDo.Call },
+                    { "time", EvaluateTime.Call },
+                    { "quote", EvalQuote },
+                    { "lambda", Lambda.Call },
+                    { "macro", Macro.Call }
+                };
+        }
 
         /// <summary>
         /// Initializes a new instance of the EvaluateExpression class.
-        /// The Expr is used to store the fn to evaluate.  
-        /// The real expression being evaluated is Cons(fn, args).
+        /// At this point, fn is something that evaluates to a proc.
+        /// It might be a symbol that, when looked up, resolves to a primitive or to a
+        ///   proc of some kind, like a lambda.
+        /// It is not a symbol like "and" where there are special argument-evaluation rules, so
+        ///   the first task is to evaluate all the arguments.
         /// </summary>
         /// <param name="args">The function args to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The function to evaluate.</param>
         private EvaluateExpression(SchemeObject args, Environment env, Evaluator caller, SchemeObject fn)
-            : base(args, env, caller)
+            : base(args, env, caller, counter)
         {
             this.fn = fn;
 
-            this.ContinueHere(InitialStep);
+            this.ContinueAt(InitialStep);
 #if Diagnostics
             if (caller.Interp.Trace)
             {
-                caller.Interp.CurrentOutputPort.WriteLine(string.Format("evaluate: {0} {1}", fn, args));
+                caller.Interp.CurrentOutputPort.WriteLine(string.Format("evaluate: {0} applied to {1}", fn, args));
             }
-
-            this.IncrementCounter(counter);
 #endif
         }
+        #endregion
+
+        #region Delegates
+        /// <summary>
+        /// The signature of all apecial actions.
+        /// </summary>
+        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="env">The evaluation environment.</param>
+        /// <param name="caller">The caller, used to return to.</param>
+        /// <returns>The evaluator to execute next.</returns>
+        private delegate Evaluator SpecialAction(SchemeObject expr, Environment env, Evaluator caller);
         #endregion
 
         #region Define Primitives
@@ -71,7 +102,10 @@ namespace SimpleScheme
         /// Define the list primitives.
         /// Each of these could go through Apply, but for those primitives that will really need to instantiate
         ///   EvaluateExpression, we just do that directly.
-        /// Ususlly these constructs are not handled as primitives, but are instead
+        /// Usually we can recognize these in InitialStep of the caller and dispatch the correct Evaluator without having to
+        ///   instantiate another evaluator.  But if the primitive is assigned to a variable and the variable appears in the
+        ///   proc spot, it gets here.  For instance ((lambda (fun)(fun 0)) and) will use this primitive, whereas
+        ///   (and 0) will use InitialStep.
         /// </summary>
         /// <param name="env">The environment to define the primitives into.</param>
         public static new void DefinePrimitives(PrimitiveEnvironment env)
@@ -81,131 +115,164 @@ namespace SimpleScheme
                 .DefinePrimitive(
                         "and", 
                         new[] { "4.2.1", "(and <test1> ...)" },
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, andSym), 
+                        (args, caller) => EvaluateAnd.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Obj)
                 .DefinePrimitive(
                         "begin", 
                         new[] { "4.2.3", "(begin <expression1> <expression2> ...)", "5.2", "(begin <definition1> <definition2> ...)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, beginSym), 
+                        (args, caller) => EvaluateSequence.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Obj)
                 .DefinePrimitive(
                         "parallel", 
                         new[] { "(parallel <expr> ...)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, parallelSym), 
+                        (args, caller) => EvaluateParallel.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Pair)
                 .DefinePrimitive(
                         "case", 
-                        new[] { "4.2.1", 
+                        new[] 
+                        { 
+                            "4.2.1", 
                             "(case <key> <clause1> <clause2> ...)", 
                             "clause: ((<datum1> ...) <expression1> <expression2> ...)", 
-                            "else clause: (else <expression1> <expression2> ...)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, caseSym), 
+                            "else clause: (else <expression1> <expression2> ...)" 
+                        }, 
+                        (args, caller) => EvaluateCase.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "cond", new[] { "4.2.1", 
+                        "cond", 
+                        new[] 
+                        { 
+                            "4.2.1", 
                             "(cond <clause1> <clause2> ... )", 
                             "clause: (<test> <expression>)", 
                             "clause: (<test> => <recipient>)", 
-                            "else clause: (else <expression1> <expression2> ...)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, condSym), 
+                            "else clause: (else <expression1> <expression2> ...)" 
+                        }, 
+                        (args, caller) => EvaluateCond.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "define", new[] { "5.2", 
+                        "define", 
+                        new[] 
+                        { 
+                            "5.2", 
                             "(define <variable> <expression>)", 
                             "(define (<variable> <formals>) <body>)", 
-                            "(define (<variable> . <formal>) <body>)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, defineSym), 
+                            "(define (<variable> . <formal>) <body>)" 
+                        }, 
+                        (args, caller) => EvaluateDefine.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.PairOrSymbol)
                 .DefinePrimitive(
-                        "do", new[] { "4.2.4", "(do ((variable1> <init1> <step1>) ...) (<test> <expression> ...) <command> ...)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, doSym), 
+                        "do", 
+                        new[] { "4.2.4", "(do ((variable1> <init1> <step1>) ...) (<test> <expression> ...) <command> ...)" }, 
+                        (args, caller) => EvaluateDo.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Pair)
                 //// Instead of returning a value, return an evaulator that can be run to get the value
                 .DefinePrimitive(
-                        "eval", 
-                        new[] { "(eval <expr>)" },
-                        (args, caller) => Call(First(args), caller.Env, caller), 
-                        1, 
-                        2, 
-                        Primitive.ArgType.Obj)
+                    "eval",
+                    new[] { "(eval <expr>)" },
+                    (args, caller) => Call(First(args), caller.Env, caller),
+                    1,
+                    2,
+                    Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "if", new[] { "4.1.5", "(if <test> <consequent> <alternate>)", "(if <test> <consequent>)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, ifSym), 
+                        "if", 
+                        new[] { "4.1.5", "(if <test> <consequent> <alternate>)", "(if <test> <consequent>)" }, 
+                        (args, caller) => EvaluateIf.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Obj)
                 .DefinePrimitive(
+                        "increment!", 
+                        new[] { "(increment <variable>)" }, 
+                        (args, caller) => Increment(args, caller.Env, caller), 
+                        1, 
+                        Primitive.ArgType.Symbol)
+                .DefinePrimitive(
                         "lambda", 
-                        new[] { "4.1.4", 
+                        new[] 
+                        { 
+                            "4.1.4", 
                             "(lambda <formals> <body>)", 
                             "formals: (<variable1> ...)", 
                             "formals: <variable>", 
-                            "formals: (<variable 1> ... <variable n-1> . <variable n>)" },
-                        (args, caller) => EvalLambda(args, caller.Env, caller), 
+                            "formals: (<variable 1> ... <variable n-1> . <variable n>)" 
+                        },
+                        (args, caller) => Lambda.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.PairOrSymbol)
                 .DefinePrimitive(
-                        "let", new[] { "4.2.2", "(let <bindings> <body>)", "(let <variable> <bindings> <body>)", "bindings: ((<variable1> <init1>) ...)", "body: <expression> ..." }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, letSym), 
+                        "let", 
+                        new[] { "4.2.2", "(let <bindings> <body>)", "(let <variable> <bindings> <body>)", "bindings: ((<variable1> <init1>) ...)", "body: <expression> ..." }, 
+                        (args, caller) => EvaluateLet.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.PairOrSymbol)
                 .DefinePrimitive(
-                        "let*", new[] { "4.2.2", 
+                        "let*", 
+                        new[] 
+                        { 
+                            "4.2.2", 
                             "(let* <bindings> <body>)", 
                             "bindings: ((<variable1> <init1>) ...)", 
-                            "body: <expression> ..." }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, letstarSym), 
+                            "body: <expression> ..." 
+                        }, 
+                        (args, caller) => EvaluateLetStar.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "letrec", new[] { "4.2.2", "(letrec <bindings> <body>)", "bindings: ((<variable1> <init1>) ...)", "body: <expression> ..." }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, letrecSym), 
+                        "letrec", 
+                        new[] { "4.2.2", "(letrec <bindings> <body>)", "bindings: ((<variable1> <init1>) ...)", "body: <expression> ..." }, 
+                        (args, caller) => EvaluateLetRec.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "macro", new[] { "(macro (variable1 ...) <body>)"  },
-                        (args, caller) => EvalMacro(args, caller.Env, caller), 
+                        "macro", 
+                        new[] { "(macro (variable1 ...) <body>)" },
+                        (args, caller) => Macro.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "or", new[] { "4.2.1", "(or <test1> ...)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, orSym), 
+                        "or", 
+                        new[] { "4.2.1", "(or <test1> ...)" }, 
+                        (args, caller) => EvaluateOr.Call(args, caller.Env, caller), 
                         0, 
                         MaxInt, 
                         Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "quote", new[] { "4.1.2", "(quote <datum>)" },
+                        "quote", 
+                        new[] { "4.1.2", "(quote <datum>)" },
                         EvalQuote, 
                         1, 
                         Primitive.ArgType.Obj)
                 .DefinePrimitive(
-                        "set!", new[] { "4.1.6", "(set! <variable> <expression>)" },
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, setSym),
+                        "set!", 
+                        new[] { "4.1.6", "(set! <variable> <expression>)" },
+                        (args, caller) => EvaluateSet.Call(args, caller.Env, caller),
                         2,
                         Primitive.ArgType.Symbol,
                         Primitive.ArgType.Pair)
                 .DefinePrimitive(
-                        "time", new[] { "(time <expr>)" }, 
-                        (args, caller) => new EvaluateExpression(args, caller.Env, caller, timeSym), 
+                        "time", 
+                        new[] { "(time <expr>)" }, 
+                        (args, caller) => EvaluateTime.Call(args, caller.Env, caller), 
                         1, 
                         Primitive.ArgType.Obj);
         }
@@ -222,7 +289,7 @@ namespace SimpleScheme
         /// <param name="env">The environment to evaluate in.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The evaluator.</returns>
-        public static Evaluator Call(EvaluatorOrObject expr, Environment env, Evaluator caller)
+        public static Evaluator Call(SchemeObject expr, Environment env, Evaluator caller)
         {
             // If we don't need to do any steps, then
             // do not create an evaluator -- just return the value directly.
@@ -230,16 +297,19 @@ namespace SimpleScheme
             // First look for a symbol.
             if (expr is Symbol)
             {
+                var symbol = (Symbol)expr;
+                caller.LineNumber = symbol.LineNumber;
+
                 // Evaluate a symbol by looking it up in the environment.
                 // It should correspond to a variable name, for which there 
                 //    is a corresponding value.
                 if (env == null)
                 {
-                    ErrorHandlers.SemanticError("EvaluateExpression: bad environment");
+                    ErrorHandlers.SemanticError("EvaluateExpression: bad environment", symbol);
                     return null;
                 }
 
-                return caller.UpdateReturnValue(env.Lookup((Symbol)expr));
+                return caller.UpdateReturnValue(env.Lookup(symbol));
             }
 
             // Look for all other non-pair forms.
@@ -252,29 +322,22 @@ namespace SimpleScheme
             }
 
             // Break apart and evaluate the fn and args
-            // Handle special forms that do not need an actual evaluation.
-            var fn = First(EnsureSchemeObject(expr));
-            var args = Rest(EnsureSchemeObject(expr));
+            // Handle special forms that do not need an evaluator instance.
+            var obj = EnsureSchemeObject(expr);
+            var fn = First(obj);
+            var args = Rest(obj);
             if (fn is Symbol)
             {
-                switch (Symbol.ToString((Symbol)fn))
+                var funSymbol = (Symbol)fn;
+                caller.LineNumber = funSymbol.LineNumber;
+                var prim = env.Lookup(funSymbol.ToString());
+                if (prim is Procedure)
                 {
-                    case "quote":
-                        // Evaluate quoted expression by just returning the expression.
-                        //// <r4rs section="4.1.2">(quote <datum>)</r4rs>
-                        return EvalQuote(args, caller);
-
-                    case "lambda":
-                        // Evaluate a lambda by creating a closure.
-                        //// <r4rs section="4.1.4">(lambda <formals> <body>)</r4rs>
-                        //// <r4rs section="4.1.4">formals: (<variable1> ...)</r4rs>
-                        //// <r4rs section="4.1.4">formals: <variable></r4rs>
-                        //// <r4rs section="4.1.4">formals: (<variable 1> ... <variable n-1> . <variable n>)</r4rs>
-                        return EvalLambda(args, env, caller);
-
-                    case "macro":
-                        // Evaluate a macro by creating a macro.
-                        return EvalMacro(args, env, caller);
+                    var res = ApplySpecial(args, env, caller, (Procedure)prim);
+                    if (res != null)
+                    {
+                        return res;
+                    }
                 }
             }
 
@@ -284,6 +347,31 @@ namespace SimpleScheme
         #endregion
 
         #region Private Static Methods
+        private static Evaluator ApplySpecial(SchemeObject args, Environment env, Evaluator caller, Procedure fun)
+        {
+            // TODO must check if args are OK
+            // need to get the primitive.  in one case, we have it, in the other, need to get it
+            SpecialAction action;
+            if (specialActions.TryGetValue(fun.ProcedureName, out action))
+            {
+                // fun is a primitive
+//                return ((Primitive)fun).Apply(args, caller);
+                if (!(fun is Primitive))
+                {
+                    ErrorHandlers.InternalError("special primitive must be primitive");
+                }
+                var prim = (Primitive)fun;
+                // want to dispatch through Primitive.Apply
+#if OLD
+                return action(args, env, caller);
+#else
+                return prim.Apply(args, caller);
+#endif
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Evaluate a quote expression.
         /// </summary>
@@ -296,27 +384,15 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Evaluate a lambda expression
+        /// Evaluate a quote expression.
         /// </summary>
-        /// <param name="args">The lambda args.</param>
-        /// <param name="env">The execution environment.</param>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The lambda representing the expression.</returns>
-        private static Evaluator EvalLambda(SchemeObject args, Environment env, Evaluator caller)
+        /// <param name="args">The args to quote.</param>
+        /// <param name="env">The environment (unused).</param>
+        /// <param name="caller">The caller.</param>
+        /// <returns>The quoted expression.</returns>
+        private static Evaluator EvalQuote(SchemeObject args, Environment env, Evaluator caller)
         {
-            return caller.UpdateReturnValue(Lambda.New(First(args), Rest(args), env));
-        }
-
-        /// <summary>
-        /// Evaluate a macro.
-        /// </summary>
-        /// <param name="args">The macro args.</param>
-        /// <param name="env">The execution environment.</param>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>The macro representing the expression.</returns>
-        private static Evaluator EvalMacro(SchemeObject args, Environment env, Evaluator caller)
-        {
-            return caller.UpdateReturnValue(new Macro(First(args), Rest(args), env));
+            return caller.UpdateReturnValue(First(args));
         }
         #endregion
 
@@ -332,113 +408,11 @@ namespace SimpleScheme
         {
             var step = (EvaluateExpression)s;
 
-            // defined as macro for now
-            //// <r4rs section="4.2.6">(quasiquote <template>)</r4rs>
-            //// <r4rs section="4.2.5">(delay <expression>)</r4rs>
-
-            // Look for one of the special forms. 
-            if (step.fn is Symbol)
-            {
-                switch (Symbol.ToString((Symbol)step.fn))
-                {
-                    case "begin":
-                        // Evaluate begin by evaluating all the items in order, 
-                        //   and returning the last.
-                        //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-                        //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                        return EvaluateSequence.Call(s.Expr, s.Env, s.Caller);
-
-                    case "parallel":
-                        // Evaluate begin by evaluating all the items in order.
-                        // Return Undefined.
-                        // If any suspend, keep going.
-                        //// <r4rs section="4.2.3">(begin <expression1> <expression2> ...)</r4rs>
-                        //// <r4rs section="5.2">(begin <definition1> <definition2> ...)</r4rs>
-                        return EvaluateParallel.Call(s.Expr, s.Env, s.Caller);
-
-                    case "define":
-                        // Define is a shortcut for lambda.
-                        // Evaluate by splicing lambda on the front and evaluating that.
-                        //// <r4rs section="5.2">(define <variable> <expression>)</r4rs>
-                        //// <r4rs section="5.2">(define (<variable> <formals>) <body>)</r4rs>
-                        //// <r4rs section="5.2">(define (<variable> . <formal>) <body>)</r4rs>
-                        return EvaluateDefine.Call(s.Expr, s.Env, s.Caller);
-
-                    case "set!":
-                        // Evaluate a set! expression by evaluating the second, 
-                        //   then setting the first to it.
-                        //// <r4rs section="4.1.6">(set! <variable> <expression>)</r4rs>
-                        return EvaluateSet.Call(s.Expr, s.Env, s.Caller);
-
-                    case "increment!":
-                        //// <r4rs section="none">(increment! <variable>)</r4rs>
-                        return Increment(s.Expr, s.Env, s.Caller);
-
-                    case "if":
-                        // Eval an if expression by evaluating the first clause, 
-                        //    and then returning either the second or third.
-                        //// <r4rs section="4.1.5">(if <test> <consequent> <alternate>)</r4rs>
-                        //// <r4rs section="4.1.5">(if <test> <consequent>)</r4rs>
-                        return EvaluateIf.Call(s.Expr, s.Env, s.Caller);
-
-                    case "case":
-                        //// <r4rs section="4.2.1">(case <key> <clause1> <clause2> ...)<r4rs>
-                        //// <r4rs section="4.2.1">clause: ((<datum1> ...) <expression1> <expression2> ...)<r4rs>
-                        //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)<r4rs>
-                        return EvaluateCase.Call(s.Expr, s.Env, s.Caller);
-
-                    case "or":
-                        //// <r4rs section="4.2.1">(or <test1> ...)</r4rs>
-                        return EvaluateOr.Call(s.Expr, s.Env, s.Caller);
-
-                    case "and":
-                        //// <r4rs section="4.2.1">(and <test1> ...)</r4rs>
-                        return EvaluateAnd.Call(s.Expr, s.Env, s.Caller);
-
-                    case "cond":
-                        //// <r4rs section="4.2.1">(cond <clause1> <clause2> ... ()</r4rs>
-                        //// <r4rs section="4.2.1">clause: (<test> <expression>)</r4rs>
-                        //// <r4rs section="4.2.1">clause: (<test> => <recipient>)</r4rs>
-                        //// <r4rs section="4.2.1">else clause: (else <expression1> <expression2> ...)</r4rs>
-                        return EvaluateCond.Call(s.Expr, s.Env, s.Caller);
-
-                    case "let":
-                        //// <r4rs section="4.2.2">(let <bindings> <body>)</r4rs>
-                        //// <r4rs section="4.2.4">(let <variable> <bindings> <body>)</r4rs>
-                        //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
-                        //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                        return EvaluateLet.Call(s.Expr, s.Env, s.Caller);
-
-                    case "let*":
-                        //// <r4rs section="4.2.2">(let* <bindings> <body>)</r4rs>
-                        //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
-                        //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                        return EvaluateLetStar.Call(s.Expr, s.Env, s.Caller);
-
-                    case "letrec":
-                        //// <r4rs section="4.2.2">(letrec <bindings> <body>)</r4rs>
-                        //// <r4rs section="4.2.4">bindings: ((<variable1> <init1>) ...)</r4rs>
-                        //// <r4rs section="4.2.4">body: <expression> ...</r4rs>
-                        return EvaluateLetRec.Call(s.Expr, s.Env, s.Caller);
-
-                    case "do":
-                        //// <r4rs section="4.2.4">(do ((variable1> <init1> <step1>) 
-                        ////                           ...)
-                        ////                           (<test> <expression> ...)
-                        ////                         <command> ...)</r4rs>
-                        return EvaluateDo.Call(s.Expr, s.Env, s.Caller);
-
-                    case "time":
-                        //// (time <expr>)
-                        return EvaluateTime.Call(s.Expr, s.Env, s.Caller);
-                }
-            }
-
             // If we get here, it wasn't one of the special forms.  
             // So we need to evaluate the first item (the function) in preparation for
             //    doing a procedure call.
             //// <r4rs section="4.1.3">(<operator> <operand1> ...)</r4rs>
-            return Call(step.fn, s.Env, s.ContinueHere(ApplyProcStep));
+            return Call(step.fn, s.Env, s.ContinueAt(ApplyProcStep));
         }
 
         /// <summary>
@@ -454,7 +428,7 @@ namespace SimpleScheme
             SchemeObject lhs = First(expr);
             if (!(lhs is Symbol))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Increment: first argument must be a symbol.  Got: ""{0}""", lhs));
+                ErrorHandlers.SemanticError(string.Format(@"Increment: first argument must be a symbol.  Got: ""{0}""", lhs), null);
             }
 
             return caller.UpdateReturnValue(env.Increment(lhs));
@@ -469,14 +443,25 @@ namespace SimpleScheme
         private static Evaluator ApplyProcStep(Evaluator s)
         {
             // Come here after evaluating fn
-            var result = s.ReturnedExpr;
-            if (!(result is Procedure))
+            var fn = s.ReturnedExpr;
+            if (!(fn is Procedure))
             {
-                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", result));
+                ErrorHandlers.SemanticError(string.Format(@"Value must be procedure: ""{0}""", fn), null);
             }
 
-            return ((Procedure)result).Evaluate(s.Expr, s.Env, s.Caller);
+            var proc = (Procedure)fn;
+
+            // detect if fn is a "special" primitive that does not get its args evaluated, and if so apply
+            var res = ApplySpecial(s.Expr, s.Env, s.Caller, proc);
+            if (res != null)
+            {
+                return res;
+            }
+
+            // call normal evaluator 
+            return proc.Evaluate(s.Expr, s.Env, s.Caller);
         }
+
         #endregion
     }
 }

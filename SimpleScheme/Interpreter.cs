@@ -13,13 +13,6 @@ namespace SimpleScheme
     /// </summary>
     public sealed class Interpreter : IInterpreter
     {
-        #region Constants
-        /// <summary>
-        /// The interactive prompt.
-        /// </summary>
-        private const string Prompt = "> ";
-        #endregion
-
         #region Fields
         /// <summary>
         /// The initial step.  When complete, evaluation is done.
@@ -66,7 +59,7 @@ namespace SimpleScheme
             this.GlobalEnvironment = new Environment(this, this.PrimEnvironment);
             this.halted = new HaltedEvaluator(this.GlobalEnvironment);
             this.ended = new EndedEvaluator(this.GlobalEnvironment);
-
+            var echo = (writer != null) ? this.CurrentOutputPort : null;
             try
             {
                 if (loadStandardMacros)
@@ -78,7 +71,7 @@ namespace SimpleScheme
                 {
                     foreach (string file in files)
                     {
-                        this.LoadFile((Symbol)file);
+                        this.LoadFile((Symbol)file, echo);
                     }
                 }
             }
@@ -190,6 +183,17 @@ namespace SimpleScheme
         /// Create a new interpreter with a given set of files to run initially.
         /// </summary>
         /// <param name="files">The files to read.</param>
+        /// <param name="echo">If true, echo input and output while reading files.</param>
+        /// <returns>A scheme interpreter.</returns>
+        public static IInterpreter New(IEnumerable<string> files, bool echo)
+        {
+            return new Interpreter(true, null, files, null, echo ? Console.Out : null);
+        }
+
+        /// <summary>
+        /// Create a new interpreter with a given set of files to run initially.
+        /// </summary>
+        /// <param name="files">The files to read.</param>
         /// <returns>A scheme interpreter.</returns>
         public static IInterpreter New(IEnumerable<string> files)
         {
@@ -226,69 +230,17 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Define Primitives
-        /// <summary>
-        /// Define the counter primitives.
-        /// </summary>
-        /// <param name="env">The environment to define the primitives into.</param>
-        public static void DefinePrimitives(PrimitiveEnvironment env)
-        {
-            env
-                .DefinePrimitive(
-                    "trace-on", 
-                    new[] { "(trace-on)" },
-                    (args, caller) => SetTraceFlag(caller, true), 
-                    0)
-                .DefinePrimitive(
-                    "trace-off", 
-                    new[] { "(trace-off)" },
-                    (args, caller) => SetTraceFlag(caller, false), 
-                    0)
-                .DefinePrimitive(
-                    "counters-on", 
-                    new[] { "(counters-on)" },
-                    (args, caller) => SetCountFlag(caller, true), 
-                    0)
-                .DefinePrimitive(
-                    "counters-off", 
-                    new[] { "(counters-off)" },
-                    (args, caller) => SetCountFlag(caller, false), 
-                    0)
-                .DefinePrimitive(
-                    "backtrace", 
-                    new[] { "(backtrace)" },
-                    (args, caller) => Backtrace(caller), 
-                    0);
-                env.DefinePrimitive(
-                    "debug", 
-                    new[] { "(debug)" },
-                    (args, caller) => Debug(caller), 
-                    0);
-                env.DefinePrimitive(
-                    "list-primitives", 
-                    new[] { "(list-primitives)" },
-                    (args, caller) => caller.Interp.PrimEnvironment.ListPrimitives(), 
-                    0);
-                env.DefinePrimitive(
-                    "describe", 
-                    new[] { "(describe <obj>)" },
-                    (args, caller) => Describe(List.First(args)), 
-                    1, 
-                    Primitive.ArgType.Obj);
-        }
-        #endregion
-
         #region Public Methods
         /// <summary>
         /// Set the asynchronous completion value, if we were
         ///   doing an async call.
         /// </summary>
         /// <param name="returnedExpr">The value to return as the asynchronous result.</param>
-        public void SetComplete(EvaluatorOrObject returnedExpr)
+        public void SetComplete(SchemeObject returnedExpr)
         {
             if (this.asyncResult != null)
             {
-                this.asyncResult.SetAsCompleted(EvaluatorOrObject.EnsureSchemeObject(returnedExpr), false);
+                this.asyncResult.SetAsCompleted(returnedExpr, false);
             }
         }
 
@@ -298,7 +250,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public EvaluatorOrObject Eval(SchemeObject expr)
+        public SchemeObject Eval(SchemeObject expr)
         {
             this.asyncResult = null;
             try
@@ -317,7 +269,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="str">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        public EvaluatorOrObject Eval(string str)
+        public SchemeObject Eval(string str)
         {
             try
             {
@@ -375,7 +327,7 @@ namespace SimpleScheme
         /// Read an expression, evaluate it, and print the results.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        public EvaluatorOrObject ReadEvalPrint()
+        public SchemeObject ReadEvalPrint()
         {
             this.asyncResult = null;
             try
@@ -399,8 +351,6 @@ namespace SimpleScheme
             try
             {
                 SchemeObject expr;
-                this.CurrentOutputPort.Write(Prompt);
-                this.CurrentOutputPort.Flush();
                 if ((expr = this.CurrentInputPort.Read()) is Eof)
                 {
                     return new CompletedAsyncResult<Eof>(Eof.Instance);
@@ -437,7 +387,7 @@ namespace SimpleScheme
         {
             while (true)
             {
-                EvaluatorOrObject expr = this.ReadEvalPrint();
+                SchemeObject expr = this.ReadEvalPrint();
                 if (ReferenceEquals(expr, Eof.Instance))
                 {
                     return;
@@ -453,7 +403,8 @@ namespace SimpleScheme
         /// If any of them are asynchronous, then the evaluation is NOT blocked, but continues on.
         /// </summary>
         /// <param name="fileName">The filename.</param>
-        public void LoadFile(SchemeObject fileName)
+        /// <param name="outp">If not null, input and results are written here.</param>
+        public void LoadFile(SchemeObject fileName, OutputPort outp)
         {
             string name = string.Empty;
             try
@@ -461,7 +412,7 @@ namespace SimpleScheme
                 name = fileName.ToString();
                 using (var fs = new FileStream(name, FileMode.Open, FileAccess.Read))
                 {
-                    this.Load(InputPort.New(new StreamReader(fs), this));
+                    this.Load(InputPort.New(new StreamReader(fs), this), outp);
                 }
             }
             catch (IOException)
@@ -482,7 +433,7 @@ namespace SimpleScheme
             {
                 using (var reader = new StringReader(str))
                 {
-                    this.Load(InputPort.New(reader, this));
+                    this.Load(InputPort.New(reader, this), null);
                 }
             }
             catch (Exception ex)
@@ -532,7 +483,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="inp">The input port to read from.</param>
         /// <returns>The result of the evaluation.</returns>
-        public EvaluatorOrObject ReadEval(InputPort inp)
+        public SchemeObject ReadEval(InputPort inp)
         {
             try
             {
@@ -588,7 +539,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="obj">The object to print.</param>
         /// <returns>The string representing the object.</returns>
-        public string Print(EvaluatorOrObject obj)
+        public string Print(SchemeObject obj)
         {
             try
             {
@@ -611,7 +562,7 @@ namespace SimpleScheme
         /// <param name="expr">The expression to evaluate.</param>
         /// <param name="env">The environment in which to evaluate it.</param>
         /// <returns>The result of the evaluation.</returns>
-        internal EvaluatorOrObject Eval(SchemeObject expr, Environment env)
+        internal SchemeObject Eval(SchemeObject expr, Environment env)
         {
             return this.EvalSteps(EvaluateExpression.Call(expr, env, this.halted));
         }
@@ -621,7 +572,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="step">The step to perform first.</param>
         /// <returns>The evaluation result, or suspended evaluator.</returns>
-        internal EvaluatorOrObject EvalSteps(Evaluator step)
+        internal SchemeObject EvalSteps(Evaluator step)
         {
             while (true)
             {
@@ -650,8 +601,9 @@ namespace SimpleScheme
         /// of the file from being loaded.
         /// </summary>
         /// <param name="inp">The input port.</param>
+        /// <param name="outp">If not null, input and results are written here.</param>
         /// <returns>Undefined instance.</returns>
-        internal SchemeObject Load(InputPort inp)
+        internal SchemeObject Load(InputPort inp, OutputPort outp)
         {
             while (true)
             {
@@ -662,7 +614,16 @@ namespace SimpleScheme
                     return Undefined.Instance;
                 }
 
-                this.Eval(input);
+                if (outp != null)
+                {
+                    outp.WriteLine("> " + input);
+                }
+
+                var res = this.Eval(input);
+                if (outp != null)
+                {
+                    outp.WriteLine(res.ToString());
+                }
             }
         }
 
@@ -677,65 +638,6 @@ namespace SimpleScheme
             {
                 this.CurrentCounters.Increment(counterId);
             }
-        }
-        #endregion
-
-        #region Private Static Methods
-        /// <summary>
-        /// Sets tracing on or off.
-        /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <param name="flag">The new trace state.</param>
-        /// <returns>Undefined object.</returns>
-        private static SchemeObject SetTraceFlag(Evaluator caller, bool flag)
-        {
-            caller.Interp.Trace = flag;
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Sets counting on or off.
-        /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <param name="flag">The new count state.</param>
-        /// <returns>Undefined object.</returns>
-        private static SchemeObject SetCountFlag(Evaluator caller, bool flag)
-        {
-            caller.Interp.Count = flag;
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Display a stack backtrace.
-        /// </summary>
-        /// <param name="caller">The caller.</param>
-        /// <returns>Undefined result.</returns>
-        private static SchemeObject Backtrace(Evaluator caller)
-        {
-            caller.Interp.CurrentOutputPort.WriteLine(caller.StackBacktrace());
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Display whatever debug information is defined
-        /// </summary>
-        /// <param name="caller">The calling evaluator.</param>
-        /// <returns>Undefined object.</returns>
-        private static SchemeObject Debug(Evaluator caller)
-        {
-            caller.Interp.CurrentOutputPort.WriteLine("debug");
-            return Undefined.Instance;
-        }
-
-        /// <summary>
-        /// Return a description of the given object.
-        /// </summary>
-        /// <param name="obj">The object to describe.</param>
-        /// <returns>A description in a SchemeString.</returns>
-        private static SchemeObject Describe(SchemeObject obj)
-        {
-            string msg = string.Format("Type: {0}\nDescription: {1}", obj.GetType().Name, obj.Describe());
-            return SchemeString.New(msg);
         }
         #endregion
 
@@ -779,7 +681,7 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="expr">The expression to evaluate.</param>
         /// <returns>The result of the evaluation.</returns>
-        private EvaluatorOrObject UnsafeEval(SchemeObject expr)
+        private SchemeObject UnsafeEval(SchemeObject expr)
         {
             return this.Eval(expr, this.GlobalEnvironment);
         }
@@ -794,8 +696,8 @@ namespace SimpleScheme
         private IAsyncResult UnsafeBeginEval(SchemeObject expr, AsyncCallback cb, object state)
         {
             this.asyncResult = new AsyncResult<SchemeObject>(cb, state);
-            EvaluatorOrObject res = this.Eval(expr, this.GlobalEnvironment);
-            if (res is SuspendedEvaluator)
+            SchemeObject res = this.Eval(expr, this.GlobalEnvironment);
+            if ((res is ClrObject) && ((ClrObject)res).Value is SuspendedEvaluator)
             {
                 return this.asyncResult;
             }
@@ -810,19 +712,21 @@ namespace SimpleScheme
 
         /// <summary>
         /// Read an expression, evaluate it, and print the results.
+        /// The reader does not read the trailing newline: it returns as soon as it sees that the
+        ///   expression has been completed.  This means that the line number does not get incremented by the
+        ///   first Console read, and is incremented the first thing on subsequent reads.  So the line number does not
+        ///   appear to increment on the very first expression.
         /// </summary>
         /// <returns>If end of file, InputPort.Eof, otherwise expr.</returns>
-        private EvaluatorOrObject UnsafeReadEvalPrint()
+        private SchemeObject UnsafeReadEvalPrint()
         {
             SchemeObject expr;
-            this.CurrentOutputPort.Write(Prompt);
-            this.CurrentOutputPort.Flush();
             if ((expr = this.CurrentInputPort.Read()) is Eof)
             {
                 return Eof.Instance;
             }
 
-            EvaluatorOrObject val = this.UnsafeEval(expr);
+            SchemeObject val = this.UnsafeEval(expr);
             if (val != Undefined.Instance)
             {
                 string output = val.ToString(false);

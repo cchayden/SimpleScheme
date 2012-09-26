@@ -71,6 +71,18 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Construct a pair from two objs.
+        /// </summary>
+        /// <param name="a">The first obj.</param>
+        /// <param name="b">The rest of the objs.</param>
+        /// <param name="lineNumber">The line number the pair was read from.</param>
+        /// <returns>The pair resulting from the construction.</returns>
+        public static Pair Cons(SchemeObject a, SchemeObject b, int lineNumber)
+        {
+            return Pair.New(a, b, lineNumber);
+        }
+
+        /// <summary>
         /// Get the first member of a list.
         /// </summary>
         /// <param name="list">The list to use.</param>
@@ -99,6 +111,30 @@ namespace SimpleScheme
         public static SchemeObject Third(SchemeObject list)
         {
             return First(Rest(Rest(list)));
+        }
+
+        /// <summary>
+        /// Get the Nth member of a list.
+        /// </summary>
+        /// <param name="list">The list to use.</param>
+        /// <param name="n">The number of items to skip.</param>
+        /// <returns>The third member of the list, or the empty list if there is none.</returns>
+        public static SchemeObject Nth(SchemeObject list, SchemeObject n)
+        {
+            int len = 0;
+            int k = Number.AsInt(n);
+            while (list is Pair)
+            {
+                if (len == k)
+                {
+                    return First(list);
+                }
+
+                len++;
+                list = Rest(list);
+            }
+
+            return EmptyList.Instance;
         }
 
         /// <summary>
@@ -145,7 +181,7 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-car! of a non-Pair: ""{0}""", pair.ToString(true)));
+            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-car! of a non-Pair: ""{0}""", pair.ToString(true)), pair);
         }
 
         /// <summary>
@@ -162,7 +198,7 @@ namespace SimpleScheme
                 return Undefined.Instance;
             }
 
-            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-cdr! of a non-Pair: ""{0}""", pair.ToString(true)));
+            return ErrorHandlers.SemanticError(string.Format(@"Attempt to set-cdr! of a non-Pair: ""{0}""", pair.ToString(true)), pair);
         }
 
         /// <summary>
@@ -286,19 +322,19 @@ namespace SimpleScheme
                     (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Equal(x, y).Value), 
                     2,
                     Primitive.ArgType.Obj, 
-                    Primitive.ArgType.Pair)
+                    Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
                     "assq", new[] { "(assq <obj> <alist>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2, 
                     Primitive.ArgType.Obj, 
-                    Primitive.ArgType.Pair)
+                    Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
                     "assv", new[] { "6.3", "(assv <obj> <alist>)" }, 
                     (args, caller) => MemberAssoc(First(args), Second(args), First, (x, y) => SchemeBoolean.Eqv(x, y).Value), 
                     2, 
                     Primitive.ArgType.Obj, 
-                    Primitive.ArgType.Pair)
+                    Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
                      "car", new[] { "6.3", "(car <pair>)" }, 
                      (args, caller) => First(First(args)), 
@@ -319,6 +355,12 @@ namespace SimpleScheme
                     (args, caller) => Third(First(args)), 
                     1, 
                     Primitive.ArgType.Pair)
+                .DefinePrimitive(
+                    "nth", new[] { "(nth <pair> <n>)" }, 
+                    (args, caller) => Nth(First(args), Second(args)), 
+                    2, 
+                    Primitive.ArgType.Pair, 
+                    Primitive.ArgType.Number)
                 .DefinePrimitive(
                     "cdr", new[] { "6.3", "(cdr <pair>)" }, 
                     (args, caller) => Rest(First(args)),
@@ -395,7 +437,7 @@ namespace SimpleScheme
                     "reverse", new[] { "6.3", "(reverse <list>)" }, 
                     (args, caller) => ReverseList(First(args)), 
                     1, 
-                    Primitive.ArgType.Pair)
+                    Primitive.ArgType.PairOrEmpty)
                 .DefinePrimitive(
                     "set-car!", new[] { "6.3", "(set-car! <pair> <obj>)" }, 
                     (args, caller) => SetFirst(First(args), Second(args)), 

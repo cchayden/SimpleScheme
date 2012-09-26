@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="EvaluatorOrObject.cs" company="Microsoft">
+// <copyright file="EvaluatorOrObject.cs" company="Charles Hayden">
 // Copyright © 2011 by Charles Hayden.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -11,13 +11,6 @@ namespace SimpleScheme
     /// </summary>
     public abstract class EvaluatorOrObject : List
     {
-        /// <summary>
-        /// Convert an obj into a string representation.
-        /// </summary>
-        /// <param name="quoted">If true, quote strings and chars.</param>
-        /// <returns>The string representing the obj.</returns>
-        public abstract string ToString(bool quoted);
-
         /// <summary>
         /// Make sure the EvaluatorOrObject is actually a SchemeObject.
         /// In general, evaluation can produce either
@@ -37,5 +30,12 @@ namespace SimpleScheme
             ErrorHandlers.TypeError(typeof(SchemeObject), x);
             return null;
         }
+
+        /// <summary>
+        /// Convert an obj into a string representation.
+        /// </summary>
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <returns>The string representing the obj.</returns>
+        public abstract string ToString(bool quoted);
     }
 }

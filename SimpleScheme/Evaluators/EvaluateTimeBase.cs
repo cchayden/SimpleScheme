@@ -43,13 +43,14 @@ namespace SimpleScheme
         /// <param name="count">The number of times to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
-        protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+        /// <param name="counterId">The counter id of the evaluator.</param>
+        protected EvaluateTimeBase(SchemeObject expr, int count, Environment env, Evaluator caller, int counterId)
+            : base(expr, env, caller, counterId)
         {
             this.counter = count;
             this.startMem = GC.GetTotalMemory(true);
             this.stopwatch = Stopwatch.StartNew();
-            this.ContinueHere(InitialStep);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -80,13 +81,13 @@ namespace SimpleScheme
             step.i++;
             if (step.i < step.counter)
             {
-                  return s.ContinueHere(Step1);
+                  return s.ContinueAt(Step1);
             }
 
             step.stopwatch.Stop();
             long time = step.stopwatch.ElapsedMilliseconds;
             long mem = GC.GetTotalMemory(false) - step.startMem;
-            return s.ReturnFromStep(
+            return step.ReturnFromStep(
                 MakeList(
                     EnsureSchemeObject(s.ReturnedExpr),
                     MakeList((Number)time,  (Symbol)"msec"),
@@ -112,7 +113,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateTimeBase)s;
             step.i = 0;
-            return s.ContinueHere(Step1);
+            return s.ContinueAt(Step1);
         }
         #endregion
     }

@@ -14,6 +14,12 @@ namespace SimpleScheme
     public sealed class EvaluateLet : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "let"
+        /// </summary>
+        public static readonly Symbol LetSym = "let";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -52,14 +58,13 @@ namespace SimpleScheme
         /// <param name="vars">The variables to bind.</param>
         /// <param name="inits">The initial values of the variables.</param>
         private EvaluateLet(SchemeObject expr, Environment env, Evaluator caller, Symbol name, SchemeObject body, SchemeObject vars, SchemeObject inits)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.name = name;
             this.body = body;
             this.vars = vars;
             this.inits = inits;
-            ContinueHere(InitialStep);
-            IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -78,13 +83,13 @@ namespace SimpleScheme
         {
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No arguments for let");
+                ErrorHandlers.SemanticError("No arguments for let", null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for let: " + expr);
+                ErrorHandlers.SemanticError("Bad arg list for let: " + expr, null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
@@ -133,7 +138,7 @@ namespace SimpleScheme
             }
 
             // named let -- eval the inits in the outer environment
-            return EvaluateList.Call(step.inits, s.Env, s.ContinueHere(ApplyNamedLetStep));
+            return EvaluateList.Call(step.inits, s.Env, s.ContinueAt(ApplyNamedLetStep));
         }
 
         /// <summary>

@@ -46,7 +46,7 @@ namespace SimpleScheme
         /// (1) a value, the operation result, or
         /// (2) a Evaluator, The next evaluator to execute. 
         /// </summary>
-        private readonly Func<SchemeObject, Evaluator, EvaluatorOrObject> operation;
+        private readonly Operation operation;
 
         /// <summary>
         /// The argument types.
@@ -105,7 +105,7 @@ namespace SimpleScheme
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
-        public Primitive(Func<SchemeObject, Evaluator, EvaluatorOrObject> operation, string[] description, int minArgs, int maxArgs, ArgType[] argTypes) :
+        public Primitive(Operation operation, string[] description, int minArgs, int maxArgs, ArgType[] argTypes) :
             base(minArgs, maxArgs)
         {
             this.operation = operation;
@@ -258,16 +258,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the primitive to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.ToString());
-        }
-
-        /// <summary>
         /// The string form of a proc is its name in curly brackets.
         /// </summary>
         /// <returns>The name of the proc.</returns>
@@ -323,7 +313,7 @@ namespace SimpleScheme
 
             // Operation returned a result -- just return this
             //  to the caller.
-            return caller.UpdateReturnValue(res);
+            return caller.UpdateReturnValue((SchemeObject)res);
         }
         #endregion
 
@@ -367,7 +357,7 @@ namespace SimpleScheme
                 arg.ToString(true),
                 arg.GetType().Name,
                 valueMessage[argType]);
-            ErrorHandlers.SemanticError(msg);
+            ErrorHandlers.SemanticError(msg, arg);
         }
         #endregion
 

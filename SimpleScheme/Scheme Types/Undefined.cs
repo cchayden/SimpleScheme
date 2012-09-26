@@ -44,13 +44,10 @@ namespace SimpleScheme
         /// One of the main reasons for this type is to suppress output.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <returns>If qupted, then <undefined> otherwise nothing.</undefined></returns>
+        public override string ToString(bool quoted)
         {
-            if (quoted)
-            {
-                buf.Append(this.ToString());
-            }
+            return quoted ? this.ToString() : string.Empty;
         }
 
         /// <summary>

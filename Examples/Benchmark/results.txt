@@ -1,0 +1,109 @@
+﻿chayden-pc2
+Debug
+-----------------------------
+Running sum:10000:100
+((25605 msec) (1562172 bytes))
+Running sumfp:1000000:1
+((23332 msec) (839632 bytes))
+Running tak:18:12:6:17
+((25241 msec) (2049856 bytes))
+Running takl:18:12:6:1
+((15213 msec) (1556316 bytes))
+Running ctak:18:12:6:17
+((51765 msec) (2030844 bytes))
+Running cpstak:18:12:6:17
+((29841 msec) (4107028 bytes))
+Running ntakl:18:12:6:1
+((13302 msec) (1585296 bytes))
+Running deriv:40000
+((22272 msec) (1656984 bytes))
+Running diviter:1000:2000
+((23767 msec) (591076 bytes))
+Running divrec:1000:2000
+((28125 msec) (2174820 bytes))
+Running fft:65536:1
+((58785 msec) (3565000 bytes))
+Running fib:27:1
+((13082 msec) (1204892 bytes))
+Running fibc:24:1
+((21928 msec) (3129484 bytes))
+Running fibfp:27:1
+((12628 msec) (1207572 bytes))
+Running mbrot:75:1
+((15354 msec) (2849048 bytes))
+Running triangl:22:1:1
+((347937 msec) (1476068 bytes))
+
+Release
+------------------------------
+Running sum:10000:100
+((8373 msec) (1735436 bytes))
+Running sumfp:1000000:1
+((7536 msec) (1042648 bytes))
+Running tak:18:12:6:17
+((7346 msec) (2045100 bytes))
+Running takl:18:12:6:1
+((4123 msec) (1553224 bytes))
+Running ctak:18:12:6:17
+((19274 msec) (2037908 bytes))
+Running cpstak:18:12:6:17
+((9630 msec) (4102400 bytes))
+Running ntakl:18:12:6:1
+((3809 msec) (1610564 bytes))
+Running deriv:40000
+((6682 msec) (1739016 bytes))
+Running diviter:1000:2000
+((6382 msec) (586372 bytes))
+Running divrec:1000:2000
+((7810 msec) (2038408 bytes))
+Running fft:65536:1
+((18035 msec) (3640752 bytes))
+Running fib:27:1
+((3887 msec) (1203800 bytes))
+Running fibc:24:1
+((7116 msec) (3124416 bytes))
+Running fibfp:27:1
+((3737 msec) (1203428 bytes))
+Running mbrot:75:1
+((4921 msec) (3046356 bytes))
+Running triangl:22:1:1
+((107447 msec) (1481312 bytes))
+
+
+Chayden-GW1
+Debug
+-----------------------------
+Running sum:10000:100
+((42848 msec) (205656 bytes))
+Running sumfp:1000000:1
+((44510 msec) (65872 bytes))
+Running tak:18:12:6:17
+((45247 msec) (110152 bytes))
+Running takl:18:12:6:1
+((25984 msec) (190136 bytes))
+Running ctak:18:12:6:17
+((88525 msec) (224900 bytes))
+Running cpstak:18:12:6:17
+((55015 msec) (52348 bytes))
+Running ntakl:18:12:6:1
+((22761 msec) (258356 bytes))
+Running deriv:40000
+((37619 msec) (87920 bytes))
+Running diviter:1000:2000
+((37985 msec) (399892 bytes))
+Running divrec:1000:2000
+((48605 msec) (3423168 bytes))
+Running fft:65536:1
+((100446 msec) (296620 bytes))
+Running fib:27:1
+((22231 msec) (112532 bytes))
+Running fibc:24:1
+((35700 msec) (315892 bytes))
+Running fibfp:27:1
+((21077 msec) (111404 bytes))
+Running mbrot:75:1
+((28481 msec) (201120 bytes))
+Running scheme:100
+((18914 msec) (26812 bytes))
+Running triangl:22:1:1
+((618098 msec) (327452 bytes))

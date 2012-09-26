@@ -10,6 +10,12 @@ namespace SimpleScheme
     public sealed class EvaluateTime : EvaluateTimeBase
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "time"
+        /// </summary>
+        public static readonly Symbol TimeSym = "time";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -24,9 +30,8 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateTime(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, 1, env, caller)
+            : base(expr, 1, env, caller, counter)
         {
-            IncrementCounter(counter);
         }
         #endregion
 
@@ -53,7 +58,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator Step1()
         {
-            return EvaluateExpression.Call(First(this.Expr), this.Env, this.ContinueHere(Step2));
+            return EvaluateExpression.Call(First(this.Expr), this.Env, this.ContinueAt(Step2));
         }
         #endregion
     }

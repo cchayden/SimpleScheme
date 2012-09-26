@@ -49,6 +49,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="SchemeString"/> class from a string builder. 
+        /// </summary>
+        /// <param name="buf">A string builder containing the string value.</param>
+        /// <param name="lineNumber">The line where the string is read.</param>
+        private SchemeString(StringBuilder buf, int lineNumber) : base(lineNumber)
+        {
+            this.str = buf.ToString().ToCharArray();
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SchemeString"/> class from a symbol. 
         /// Make a scheme string from the given object.
         /// </summary>
@@ -150,6 +160,17 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Creates a scheme string from a string builder.
+        /// </summary>
+        /// <param name="buf">A string builder containing the string value.</param>
+        /// <param name="lineNumber">The line where the string is read.</param>
+        /// <returns>A SchemeString.</returns>
+        public static SchemeString New(StringBuilder buf, int lineNumber)
+        {
+            return new SchemeString(buf, lineNumber);
+        }
+
+        /// <summary>
         /// Make a scheme string from the given CLR string.
         /// </summary>
         /// <param name="str">The CLR string.</param>
@@ -235,7 +256,8 @@ namespace SimpleScheme
                     "string-concat", 
                     new[] { "(string-concat <string> ...)" },
                     (args, caller) => Append(First(args)), 
-                    1, 
+                    0, 
+                    MaxInt,
                     Primitive.ArgType.Pair)
                 .DefinePrimitive(
                     "string-ci<=?", new[] { "6.7", "(string-ci<=? <string1> <string2>)" },
@@ -453,15 +475,15 @@ namespace SimpleScheme
         /// Write the string to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <returns>The SchemeString as a string.</returns>
+        public override string ToString(bool quoted)
         {
             if (!quoted)
             {
-                buf.Append(this.str);
-                return;
+                return new string(this.str);
             }
 
+            var buf = new StringBuilder();
             buf.Append('"');
 
             if (this.str != null)
@@ -478,6 +500,7 @@ namespace SimpleScheme
             }
 
             buf.Append('"');
+            return buf.ToString();
         }
 
         /// <summary>
@@ -643,16 +666,13 @@ namespace SimpleScheme
         {
             var str1 = first.Str;
             var str2 = second.Str;
-            int diff = str1.Length - str2.Length;
-            if (diff != 0)
-            {
-                return diff;
-            }
+            var len1 = str1.Length;
+            var len2 = str2.Length;
 
-            int len = str1.Length;
+            int len = len1 < len2 ? len1 : len2;
             for (int i = 0; i < len; i++)
             {
-                diff = caseInsensitive
+                var diff = caseInsensitive
                            ? char.ToLower(str1[i]) - char.ToLower(str2[i])
                            : str1[i] - str2[i];
                 if (diff != 0)
@@ -661,7 +681,8 @@ namespace SimpleScheme
                 }
             }
 
-            return 0;
+            // they are the same up to shorter length: return the shorter
+            return len1 - len2;
         }
 
         /// <summary>

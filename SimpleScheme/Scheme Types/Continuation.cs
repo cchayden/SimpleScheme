@@ -52,23 +52,13 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the continuation to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append("<continuation>");
-        }
-
-        /// <summary>
         /// Display the continuation as a string.  
         /// Displays the body, as it has been processed by the reader.
         /// </summary>
         /// <returns>The string form of the continuation.</returns>
         public override string ToString()
         {
-            return string.Empty;
+            return "<continuation>";
         }
 
         /// <summary>

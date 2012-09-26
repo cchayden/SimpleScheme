@@ -44,13 +44,12 @@ namespace SimpleScheme
         /// <param name="proc">The proc to apply to each element of the list.</param>
         /// <param name="result">Accumulate the result here, if not null.</param>
         private EvaluateMap(SchemeObject expr, Environment env, Evaluator caller, Procedure proc, SchemeObject result)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.proc = proc;
             this.result = result;
 
-            this.ContinueHere(ApplyFunStep);
-            this.IncrementCounter(counter);
+            this.ContinueAt(ApplyFunStep);
         }
         #endregion
 
@@ -74,7 +73,7 @@ namespace SimpleScheme
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad args for map: " + expr);
+                ErrorHandlers.SemanticError("Bad args for map: " + expr, null);
                 return caller.UpdateReturnValue(EmptyList.Instance);
             }
 
@@ -97,11 +96,11 @@ namespace SimpleScheme
             {
                 // Grab the arguments to the applications (the head of each list).
                 // Then the proc is applied to them.
-                return step.proc.Apply(MapFun(First, MakeList(s.Expr)), s.ContinueHere(CollectAndLoopStep));
+                return step.proc.Apply(MapFun(First, MakeList(s.Expr)), s.ContinueAt(CollectAndLoopStep));
             }
 
             // if we are done, return the reversed result list
-            return s.ReturnFromStep(step.result != null ? ReverseList(step.result) : Undefined.Instance);
+            return step.ReturnFromStep(step.result != null ? ReverseList(step.result) : Undefined.Instance);
         }
 
         /// <summary>
@@ -122,7 +121,7 @@ namespace SimpleScheme
 
             // Move down each of the lists
             step.UpdateExpr(MapFun(Rest, MakeList(s.Expr)));
-            return s.ContinueHere(ApplyFunStep);
+            return s.ContinueAt(ApplyFunStep);
         }
         #endregion
     }

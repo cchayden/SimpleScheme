@@ -6,6 +6,7 @@ namespace SimpleScheme
     /// <summary>
     /// Evaluate an expression while timing it..
     /// This can evaluate the expression multiple times.
+    /// The timing itself is donein EvaluateTimebase.
     /// </summary>
     public sealed class EvaluateTimeCall : EvaluateTimeBase
     {
@@ -25,9 +26,8 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateTimeCall(Procedure proc, int count, Environment env, Evaluator caller)
-            : base(proc, count, env, caller)
+            : base(proc, count, env, caller, counter)
         {
-            this.IncrementCounter(counter);
         }
         #endregion
 
@@ -57,7 +57,7 @@ namespace SimpleScheme
         /// <returns>If done, the result.  Otherwise, continue to next step.</returns>
         protected override Evaluator Step1()
         {
-            return ((Procedure)this.Expr).Apply(EmptyList.Instance, this.ContinueHere(Step2));
+            return ((Procedure)this.Expr).Apply(EmptyList.Instance, this.ContinueAt(Step2));
         }
         #endregion
     }

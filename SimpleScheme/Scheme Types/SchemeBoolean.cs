@@ -64,6 +64,16 @@ namespace SimpleScheme
         {
             this.value = value;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchemeBoolean"/> class.
+        /// </summary>
+        /// <param name="value">The boolean value.</param>
+        /// <param name="lineNumber">The line where the boolean is read.</param>
+        private SchemeBoolean(bool value, int lineNumber) : base(lineNumber)
+        {
+            this.value = value;
+        }
         #endregion
 
         #region Accessors
@@ -95,6 +105,17 @@ namespace SimpleScheme
         public static SchemeBoolean New(bool val)
         {
             return val ? True : False;
+        }
+
+        /// <summary>
+        /// Convert a boolean into a scheme boolean.
+        /// </summary>
+        /// <param name="val">The boolean value.</param>
+        /// <param name="lineNumber">The line number where the boolean is read.</param>
+        /// <returns>Equivalent scheme boolean.</returns>
+        public static SchemeBoolean New(bool val, int lineNumber)
+        {
+            return val ? new SchemeBoolean(true, lineNumber) : new SchemeBoolean(false, lineNumber);
         }
 
         /// <summary>
@@ -270,10 +291,10 @@ namespace SimpleScheme
         /// Write the boolean to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <returns>The boolean as a string.</returns>
+        public override string ToString(bool quoted)
         {
-            buf.Append(this.value ? "#t" : "#f");
+            return this.value ? "#t" : "#f";
         }
 
         /// <summary>

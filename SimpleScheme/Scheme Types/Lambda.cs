@@ -80,16 +80,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the lambda to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.ToString());
-        }
-
-        /// <summary>
         /// Display the lambda as a string.  
         /// Displays the formal parameters and the body, as it has been processed by the reader.
         /// </summary>
@@ -99,6 +89,17 @@ namespace SimpleScheme
             return this.ToString("lambda");
         }
         #endregion
+        /// <summary>
+        /// Evaluate a lambda expression
+        /// </summary>
+        /// <param name="args">The lambda args.</param>
+        /// <param name="env">The execution environment.</param>
+        /// <param name="caller">The calling evaluator.</param>
+        /// <returns>The lambda representing the expression.</returns>
+        public static Evaluator Call(SchemeObject args, Environment env, Evaluator caller)
+        {
+            return caller.UpdateReturnValue(New(First(args), Rest(args), env));
+        }
 
         /// <summary>
         /// Actually executes the saved program

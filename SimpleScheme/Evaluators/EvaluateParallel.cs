@@ -13,6 +13,12 @@ namespace SimpleScheme
     public sealed class EvaluateParallel : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "parallel"
+        /// </summary>
+        public static readonly Symbol ParallelSym = "parallel";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -63,12 +69,11 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateParallel(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.forked = this.joined = 0;
             this.accum = EmptyList.Instance;
-            this.ContinueHere(InitialStep);
-            this.IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -118,7 +123,7 @@ namespace SimpleScheme
         /// <param name="exp">The value to save as the returned value.</param>
         /// <param name="flag">The return flag.</param>
         /// <returns>The next evaluator, which is the caller.</returns>
-        public override Evaluator UpdateReturnValue(SchemeObject exp, ReturnType flag)
+        internal override Evaluator UpdateReturnValue(SchemeObject exp, ReturnType flag)
         {
             lock (this.lockObj)
             {
@@ -139,7 +144,7 @@ namespace SimpleScheme
         /// <returns>The next evaluator.</returns>
         private static Evaluator InitialStep(Evaluator s)
         {
-            return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
         }
 
         /// <summary>
@@ -183,11 +188,11 @@ namespace SimpleScheme
                     // finished with expressions -- either suspend (if there is more pending) or
                     //   return from the whole thing
                     return step.joined < step.forked ? 
-                        new SuspendedEvaluator(EnsureSchemeObject(s.ReturnedExpr), s.ContinueHere(LoopStep)) : 
-                        s.ReturnFromStep(step.accum);
+                        new SuspendedEvaluator(EnsureSchemeObject(s.ReturnedExpr), s.ContinueAt(LoopStep)) : 
+                        step.ReturnFromStep(step.accum);
                 }
 
-                return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+                return EvaluateExpressionWithCatch.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
             }
         }
 

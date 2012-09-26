@@ -97,22 +97,12 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the clr procedure to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append("clr-procedure: " + this);
-        }
-
-        /// <summary>
         /// Display the CLR proc name as a string.  
         /// </summary>
-        /// <returns>The string form of the continuation.</returns>
+        /// <returns>The string form of the procedure.</returns>
         public override string ToString()
         {
-            return string.Format("ClrProcedure {0}", this.ProcedureName);
+            return string.Format("clr-procedure: {0}", this.ProcedureName);
         }
         #endregion
 
@@ -209,8 +199,9 @@ namespace SimpleScheme
             if (diff != 0)
             {
                 ErrorHandlers.SemanticError(Math.Abs(diff) + 
-                    " too " + (diff > 0 ? "many" : "few") + 
-                    " args to " + this.ProcedureName);
+                                            " too " + (diff > 0 ? "many" : "few") + 
+                                            " args to " + this.ProcedureName, null);
+// TODO cch pass something here
             }
 
             var array = new object[n + additionalN];

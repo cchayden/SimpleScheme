@@ -26,16 +26,15 @@ namespace SimpleScheme
         /// <summary>
         /// Initializes a new instance of the EvaluateCallWithInputFile class.
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="args">A pair, containing a filename and a proc to evaluate.</param>
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="port">The input port.</param>
-        private EvaluateCallWithInputFile(SchemeObject expr, Environment env, Evaluator caller, InputPort port)
-            : base(expr, env, caller)
+        private EvaluateCallWithInputFile(SchemeObject args, Environment env, Evaluator caller, InputPort port)
+            : base(args, env, caller, counter)
         {
             this.port = port;
-            ContinueHere(InitialStep);
-            IncrementCounter(counter);
+            this.ContinueAt(InitialStep);
         }
         #endregion
 
@@ -43,13 +42,13 @@ namespace SimpleScheme
         /// <summary>
         /// Call a new evaluator with an input file
         /// </summary>
-        /// <param name="expr">The expression to evaluate.</param>
+        /// <param name="args">A pair, containing a filename and a proc to evaluate.</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <returns>The created evaluator.</returns>
-        public static Evaluator Call(SchemeObject expr, Evaluator caller)
+        public static Evaluator Call(SchemeObject args, Evaluator caller)
         {
-            InputPort port = OpenInputFile(First(expr), caller.Interp);
-            return new EvaluateCallWithInputFile(expr, caller.Env, caller, port);
+            InputPort port = OpenInputFile(First(args), caller.Interp);
+            return new EvaluateCallWithInputFile(args, caller.Env, caller, port);
         }
 
         /// <summary>
@@ -85,8 +84,7 @@ namespace SimpleScheme
         {
             var step = (EvaluateCallWithInputFile)s;
             var proc = Second(s.Expr);
-            Procedure.EnsureProcedure(proc);
-            return ((Procedure)proc).Apply(MakeList(step.port), s.ContinueHere(CloseStep));
+            return ((Procedure)proc).Apply(MakeList(step.port), s.ContinueAt(CloseStep));
         }
 
         /// <summary>
@@ -102,7 +100,7 @@ namespace SimpleScheme
                 step.port.Close();
             }
 
-            return s.ReturnFromStep(s.ReturnedExpr);
+            return step.ReturnFromStep(s.ReturnedExpr);
         }
         #endregion
     }

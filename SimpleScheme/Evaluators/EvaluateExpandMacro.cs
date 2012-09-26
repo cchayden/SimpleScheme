@@ -10,14 +10,14 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The macro to expand.
-        /// </summary>
-        private readonly Macro fn;
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-expand-macro");
+
+        /// <summary>
+        /// The macro to expand.
+        /// </summary>
+        private readonly Macro fn;
         #endregion
 
         #region Constructor
@@ -30,11 +30,10 @@ namespace SimpleScheme
         /// <param name="caller">The caller.  Return to this when done.</param>
         /// <param name="fn">The macro to expand.</param>
         private EvaluateExpandMacro(SchemeObject expr, Environment env, Evaluator caller, Macro fn)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.fn = fn;
-            ContinueHere(ExpandStep);
-            IncrementCounter(counter);
+            this.ContinueAt(ExpandStep);
         }
         #endregion
 
@@ -66,7 +65,7 @@ namespace SimpleScheme
         private static Evaluator ExpandStep(Evaluator s)
         {
             var step = (EvaluateExpandMacro)s;
-            return step.fn.Apply(s.Expr, s.ContinueHere(EvaluateStep));
+            return step.fn.Apply(s.Expr, s.ContinueAt(EvaluateStep));
         }
 
         /// <summary>

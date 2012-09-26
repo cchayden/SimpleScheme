@@ -12,14 +12,14 @@ namespace SimpleScheme
     {
         #region Fields
         /// <summary>
-        /// The proc or primitive to apply.
-        /// </summary>
-        private readonly Procedure fn;
-
-        /// <summary>
         /// The counter id.
         /// </summary>
         private static readonly int counter = Counter.Create("evaluate-proc");
+
+        /// <summary>
+        /// The proc or primitive to apply.
+        /// </summary>
+        private readonly Procedure fn;
         #endregion
 
         #region Constructor
@@ -33,20 +33,18 @@ namespace SimpleScheme
         /// <param name="fn">The function to apply.</param>
         /// <param name="evaluate">If true, evaluate the args.  If false, do not evaluate them.</param>
         private EvaluateProc(SchemeObject args, Environment env, Evaluator caller, Procedure fn, bool evaluate)
-            : base(args, env, caller)
+            : base(args, env, caller, counter)
         {
             this.fn = fn;
             if (evaluate)
             {
-                ContinueHere(EvalArgsStep);
+                this.ContinueAt(EvalArgsStep);
             }
             else
             {
                 this.UpdateReturnValue(args); // as if EvalArgs returned this, the unevaluated args
-                ContinueHere(ApplyStep);
+                this.ContinueAt(ApplyStep);
             }
-
-            IncrementCounter(counter);
         }
         #endregion
 
@@ -98,7 +96,7 @@ namespace SimpleScheme
         /// <returns>Next action to evaluate the args.</returns>
         private static Evaluator EvalArgsStep(Evaluator s)
         {
-            return EvaluateList.Call(s.Expr, s.Env, s.ContinueHere(ApplyStep));
+            return EvaluateList.Call(s.Expr, s.Env, s.ContinueAt(ApplyStep));
         }
 
         /// <summary>
@@ -114,7 +112,7 @@ namespace SimpleScheme
             if (s.Interp.Trace)
             {
                 s.Caller.Interp.CurrentOutputPort.WriteLine(
-                    String.Format("evaluate-proc: ({0} {1})", fn.ProcedureName, First(EnsureSchemeObject(s.ReturnedExpr))));
+                    String.Format("evaluate-proc: {0} applied to {1}", fn.ProcedureName, s.ReturnedExpr));
             }
 #endif
 

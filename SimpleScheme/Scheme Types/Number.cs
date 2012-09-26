@@ -4,7 +4,7 @@
 namespace SimpleScheme
 {
     using System;
-    using System.Text;
+    using System.Globalization;
 
     /// <summary>
     /// Utilities that have to do with numbers.
@@ -38,6 +38,17 @@ namespace SimpleScheme
         /// </summary>
         /// <param name="number">The number value.</param>
         private Number(double number)
+        {
+            this.n = number;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Number class.
+        /// Create a number from a double.
+        /// </summary>
+        /// <param name="number">The number value.</param>
+        /// <param name="lineNumber">The line where the number is read.</param>
+        private Number(double number, int lineNumber) : base(lineNumber)
         {
             this.n = number;
         }
@@ -136,6 +147,28 @@ namespace SimpleScheme
             }
 
             return new Number(number);
+        }
+
+        /// <summary>
+        /// Create a new number from a double.
+        /// This provides a selection of cached numbers.
+        /// </summary>
+        /// <param name="number">The number value.</param>
+        /// <param name="lineNumber">The line where the number is read.</param>
+        /// <returns>A Number</returns>
+        public static Number New(double number, int lineNumber)
+        {
+            if (number == 0.0)
+            {
+                return Zero;
+            }
+
+            if (number == 1.0)
+            {
+                return One;
+            }
+
+            return new Number(number, lineNumber);
         }
         #endregion
 
@@ -415,7 +448,8 @@ namespace SimpleScheme
                     2, 
                     Primitive.ArgType.Number)
                 .DefinePrimitive(
-                    "gcd", new[] { "6.5.5", "(gcd <n1> ...)" }, 
+                    "gcd", 
+                    new[] { "6.5.5", "(gcd <n1> ...)" }, 
                     (args, caller) => (Number)(args is EmptyList ? 0 : Gcd(args)),
                     0, 
                     MaxInt, 
@@ -616,29 +650,10 @@ namespace SimpleScheme
         {
             if (this.n == Math.Round(this.n))
             {
-                return ((long)Num(this)).ToString();
+                return ((long)Num(this)).ToString(CultureInfo.InvariantCulture);
             }
 
-            return Num(this).ToString();
-        }
-
-        /// <summary>
-        /// Write the number to the string builder.
-        /// For numbers without a fractional part, write as an integer.
-        /// Otherwise, write as a double.
-        /// </summary>
-        /// <param name="quoted">Whether to quote (not used).</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-            if (this.n == Math.Round(this.n))
-            {
-                buf.Append((long)this.n);
-            }
-            else
-            {
-                buf.Append(this.n);
-            }
+            return Num(this).ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -767,7 +782,7 @@ namespace SimpleScheme
                 return Convert.ToString((long)num, b).ToCharArray();
             }
 
-            return num.ToString();
+            return num.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>

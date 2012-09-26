@@ -13,6 +13,12 @@ namespace SimpleScheme
     public sealed class EvaluateIf : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "if"
+        /// </summary>
+        public static readonly Symbol IfSym = "if";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -27,10 +33,9 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateIf(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
-            ContinueHere(EvalTestStep);
-            IncrementCounter(counter);
+            this.ContinueAt(EvalTestStep);
         }
         #endregion
 
@@ -56,7 +61,7 @@ namespace SimpleScheme
         /// <returns>Steps to evaluate the test.</returns>
         private static Evaluator EvalTestStep(Evaluator s)
         {
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(EvalAlternativeStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(EvalAlternativeStep));
         }
 
         /// <summary>
@@ -68,7 +73,7 @@ namespace SimpleScheme
         /// <returns>Execution continues with the return.</returns>
         private static Evaluator EvalAlternativeStep(Evaluator s)
         {
-            EvaluatorOrObject toEvaluate = SchemeBoolean.Truth(EnsureSchemeObject(s.ReturnedExpr)).Value ? Second(s.Expr) : Third(s.Expr);
+            SchemeObject toEvaluate = SchemeBoolean.Truth(EnsureSchemeObject(s.ReturnedExpr)).Value ? Second(s.Expr) : Third(s.Expr);
             return EvaluateExpression.Call(
                 toEvaluate is EmptyList ? Undefined.Instance : toEvaluate, s.Env, s.Caller);
         }

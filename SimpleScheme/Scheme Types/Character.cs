@@ -27,15 +27,7 @@ namespace SimpleScheme
 
         #region Constructors
         /// <summary>
-        /// Initializes a new instance of the <see cref="Character"/> class.
-        /// </summary>
-        /// <param name="c">The character.</param>
-        private Character(char c)
-        {
-            this.c = c;
-        }
-
-        /// <summary>
+        /// Initializes static members of the <see cref="Character"/> class. 
         /// Create some static Character objects.
         /// </summary>
         static Character()
@@ -45,6 +37,25 @@ namespace SimpleScheme
             {
                 fixedChars.Add((char)i, new Character((char)i));
             }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Character"/> class.
+        /// </summary>
+        /// <param name="c">The character.</param>
+        private Character(char c)
+        {
+            this.c = c;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Character"/> class.
+        /// </summary>
+        /// <param name="c">The character.</param>
+        /// <param name="lineNumber">The line where the character is read.</param>
+        private Character(char c, int lineNumber) : base(lineNumber)
+        {
+            this.c = c;
         }
         #endregion
 
@@ -84,41 +95,22 @@ namespace SimpleScheme
 
             return new Character(c);
         }
-        #endregion
 
-        #region Equality
         /// <summary>
-        /// Provide our own version of the Equals method.
+        /// Create a new Character.
         /// </summary>
-        /// <param name="other">The other object.</param>
-        /// <returns>True if they are equal as characters.</returns>
-        public override bool Equals(object other)
+        /// <param name="c">The char.</param>
+        /// <param name="lineNumber">The line where the character is read.</param>
+        /// <returns>The corresponding Character.</returns>
+        public static Character New(char c, int lineNumber)
         {
-            if (!(other is Character))
+            Character res;
+            if (fixedChars.TryGetValue(c, out res))
             {
-                return false;
+                return res;
             }
 
-            return this.Equals((Character)other);
-        }
-
-        /// <summary>
-        /// Compares two Character values by comparing their underlying character.
-        /// </summary>
-        /// <param name="other">The other Character.</param>
-        /// <returns>True if they have the same char.</returns>
-        public bool Equals(Character other)
-        {
-            return this.c == other.c;
-        }
-
-        /// <summary>
-        /// The hash code is simply the character.
-        /// </summary>
-        /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return this.c;
+            return new Character(c, lineNumber);
         }
         #endregion
 
@@ -290,27 +282,57 @@ namespace SimpleScheme
         }
         #endregion
 
-        #region Public Methods
+        #region Equality
         /// <summary>
-        /// Write the character to the string builder.
+        /// Provide our own version of the Equals method.
         /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <param name="other">The other object.</param>
+        /// <returns>True if they are equal as characters.</returns>
+        public override bool Equals(object other)
         {
-            if (quoted)
+            if (!(other is Character))
             {
-                buf.Append("#\\");
+                return false;
             }
 
+            return this.Equals((Character)other);
+        }
+
+        /// <summary>
+        /// Compares two Character values by comparing their underlying character.
+        /// </summary>
+        /// <param name="other">The other Character.</param>
+        /// <returns>True if they have the same char.</returns>
+        public bool Equals(Character other)
+        {
+            return this.c == other.c;
+        }
+
+        /// <summary>
+        /// The hash code is simply the character.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            return this.c;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Return the character, possibly quoted, as a string.
+        /// </summary>
+        /// <param name="quoted">Whether to quote.</param>
+        /// <returns>The character as a string.</returns>
+        public override string ToString(bool quoted)
+        {
+            string prefix = quoted ? "#\\" : string.Empty;
             if (this.c == ' ')
             {
-                buf.Append("space");
+                return prefix + "space";
             }
-            else
-            {
-                buf.Append(this.c);
-            }
+
+            return prefix + this.c;
         }
 
         /// <summary>

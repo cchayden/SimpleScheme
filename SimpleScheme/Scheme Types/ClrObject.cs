@@ -172,16 +172,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Print the CLR object.
-        /// </summary>
-        /// <param name="quoted">True to print quoted.</param>
-        /// <param name="buf">Buffer to print to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.ToString());
-        }
-
-        /// <summary>
         /// Print the enclosed clr object
         /// </summary>
         /// <returns>The enclosed object as a string.</returns>

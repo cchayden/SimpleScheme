@@ -26,6 +26,19 @@ namespace SimpleScheme
 
         /// <summary>
         /// Initializes a new instance of the Pair class.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <param name="rest">The rest of the objs in the list are 
+        /// referenced by this.</param>
+        /// <param name="lineNumber">The line where the Pair is read.</param>
+        protected Pair(SchemeObject first, SchemeObject rest, int lineNumber) : base(lineNumber)
+        {
+            this.FirstCell = first;
+            this.RestCell = rest;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
         /// Make a one-element list.
         /// </summary>
         /// <param name="first">The first object.</param>
@@ -90,6 +103,19 @@ namespace SimpleScheme
         public static Pair New(SchemeObject first, SchemeObject rest)
         {
             return new Pair(first, rest);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Pair class.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <param name="rest">The rest of the objs in the list are 
+        /// referenced by this.</param>
+        /// <param name="lineNumber">The line number the pair was read from.</param>
+        /// <returns>A new Pair.</returns>
+        public static Pair New(SchemeObject first, SchemeObject rest, int lineNumber)
+        {
+            return new Pair(first, rest, lineNumber);
         }
         #endregion
 
@@ -165,14 +191,11 @@ namespace SimpleScheme
         /// Also, detect and handle improper lists.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        public override string ToString(bool quoted)
         {
-            SchemeObject tail = Rest(this);
+            var tail = Rest(this);
             if (tail is Pair && Rest(tail) is EmptyList)
             {
-                string special = null;
-
                 // There is just one more thing in the pair.  See if the first thing 
                 //    is one of these special forms.
                 var curr = First(this);
@@ -181,39 +204,26 @@ namespace SimpleScheme
                     switch (curr.ToString())
                     {
                         case "quote":
-                            special = "'";
-                            break;
+                            return "'" + Second(this).ToString(quoted);
                         case "quasiquote":
-                            special = "`";
-                            break;
+                            return "`" + Second(this).ToString(quoted);
                         case "unquote":
-                            special = ",";
-                            break;
+                            return "," + Second(this).ToString(quoted);
                         case "unquote-splicing":
-                            special = ",@";
-                            break;
+                            return ",@" + Second(this).ToString(quoted);
                     }
-                }
-
-                if (special != null)
-                {
-                    // There was a special form, and one more thing.
-                    // Append a special symbol and the remaining thing.
-                    buf.Append(special);
-                    Second(this).PrintString(quoted, buf);
-                    return;
                 }
             }
 
             // Normal case -- put out the whole list within parentheses.
-            buf.Append('(');
-            First(this).PrintString(quoted, buf);
+            var buf = new StringBuilder("(");
+            buf.Append(First(this).ToString(quoted));
 
             int len = 0;
             while (tail is Pair)
             {
                 buf.Append(' ');
-                First(tail).PrintString(quoted, buf);
+                buf.Append(First(tail).ToString(quoted));
                 SchemeObject oldTail = tail;
                 tail = Rest(tail);
                 len++;
@@ -237,10 +247,11 @@ namespace SimpleScheme
             if (!(tail is EmptyList))
             {
                 buf.Append(" . ");
-                tail.PrintString(quoted, buf);
+                buf.Append(tail.ToString(quoted));
             }
 
             buf.Append(')');
+            return buf.ToString();
         }
 
         /// <summary>

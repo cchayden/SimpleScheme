@@ -35,14 +35,13 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateList(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             // Start with an empty list.  As exprs are evaluated, they will be consed on the
             //  front.  The list will be reversed before it is returned.  Do this rather than
             //  building a list in place so that the evaluator can be cloned.
             this.result = EmptyList.Instance;
-            ContinueHere(EvalExprStep);
-            IncrementCounter(counter);
+            this.ContinueAt(EvalExprStep);
         }
 
         #endregion
@@ -65,7 +64,7 @@ namespace SimpleScheme
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad args for list: " + expr);
+                ErrorHandlers.SemanticError("Bad args for list: " + expr, null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
@@ -82,7 +81,7 @@ namespace SimpleScheme
         private static Evaluator EvalExprStep(Evaluator s)
         {
             // there is more to do --  evaluate the first expression
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
         }
 
         /// <summary>
@@ -108,10 +107,10 @@ namespace SimpleScheme
             // We are done.  Reverse the list and return it.
             if (step.result is EmptyList || Rest(step.result) is EmptyList)
             {
-                return s.ReturnFromStep(step.result);
+                return step.ReturnFromStep(step.result);
             }
 
-            return s.ReturnFromStep(ReverseList(step.result));
+            return step.ReturnFromStep(ReverseList(step.result));
         }
         #endregion
     }

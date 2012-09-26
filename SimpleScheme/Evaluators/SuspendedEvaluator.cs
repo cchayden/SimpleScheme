@@ -3,14 +3,17 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
-
     /// <summary>
     /// This evaluator is returned to suspend evaluation.
     /// It is used after calling an asynchronous operation.
     /// </summary>
     public sealed class SuspendedEvaluator : Evaluator
     {
+        /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create("suspended");
+
         /// <summary>
         /// Initializes a new instance of the SuspendedEvaluator class.
         /// It is used to indicate that an evaluation has suspended rather than returning a value.
@@ -23,9 +26,9 @@ namespace SimpleScheme
         /// <param name="res">The IAsyncResult associated with the suspension.</param>
         /// <param name="caller">The calling evaluator.</param>
         public SuspendedEvaluator(SchemeObject res, Evaluator caller) : 
-            base(res, null, caller)
+            base(res, null, caller, counter)
         {
-            this.UpdateReturnValue(this);
+            this.UpdateReturnValue(ClrObject.New(this));
         }
 
         /// <summary>
@@ -49,16 +52,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Write the evaluator to the string builder.
+        /// Convert an obj into a string representation.
         /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <returns>The string representing the obj.</returns>
+        public override string ToString(bool quoted)
         {
-            if (quoted)
-            {
-                buf.Append("<suspended-evaluator>");
-            }
+            return "<suspended-evaluator>";
         }
     }
 }

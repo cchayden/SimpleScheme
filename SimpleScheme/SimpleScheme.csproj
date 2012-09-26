@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cleaner.cs" />
+    <Compile Include="Debugging.cs" />
     <Compile Include="EvaluatorOrObject.cs" />
     <Compile Include="Evaluators\EndedEvaluator.cs" />
     <Compile Include="Evaluators\EvaluateExpressionWithCatch.cs" />

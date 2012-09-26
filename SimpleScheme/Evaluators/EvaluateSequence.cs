@@ -10,6 +10,12 @@ namespace SimpleScheme
     public sealed class EvaluateSequence : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "begin"
+        /// </summary>
+        public static readonly Symbol BeginSym = "begin";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -24,10 +30,9 @@ namespace SimpleScheme
         /// <param name="env">The evaluation environment</param>
         /// <param name="caller">The caller.  Return to this when done.</param>
         private EvaluateSequence(SchemeObject expr, Environment env, Evaluator caller)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
-            ContinueHere(EvalExprStep);
-            IncrementCounter(counter);
+            this.ContinueAt(EvalExprStep);
         }
         #endregion
 
@@ -64,7 +69,7 @@ namespace SimpleScheme
                 return EvaluateExpression.Call(First(s.Expr), s.Env, s.Caller);
             }
 
-            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueHere(LoopStep));
+            return EvaluateExpression.Call(First(s.Expr), s.Env, s.ContinueAt(LoopStep));
         }
 
         /// <summary>
@@ -75,7 +80,7 @@ namespace SimpleScheme
         private static Evaluator LoopStep(Evaluator s)
         {
             s.StepDownExpr();
-            return s.ContinueHere(EvalExprStep);
+            return s.ContinueAt(EvalExprStep);
         }
         #endregion
     }

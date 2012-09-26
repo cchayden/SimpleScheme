@@ -3,6 +3,7 @@
 // </copyright>
 namespace SimpleScheme
 {
+    using System;
     using System.IO;
     using System.Text;
 
@@ -29,6 +30,11 @@ namespace SimpleScheme
         private readonly Parser parser;
 
         /// <summary>
+        /// All input fomes from this TextReader.
+        /// </summary>
+        private readonly TextReader inp;
+
+        /// <summary>
         /// The logger
         /// </summary>
         private readonly TranscriptLogger transcript;
@@ -43,6 +49,7 @@ namespace SimpleScheme
         /// <param name="interp">The interpreter.</param>
         public InputPort(TextReader inp, Interpreter interp)
         {
+            this.inp = inp;
             this.transcript = interp.Transcript;
             this.parser = new Parser(inp);
         }
@@ -55,6 +62,22 @@ namespace SimpleScheme
         internal Parser Parser
         {
             get { return this.parser; }
+        }
+
+        /// <summary>
+        /// Gets the line that the parser is on now.
+        /// </summary>
+        internal int ParserLineNumber
+        {
+            get { return this.parser.LineNumber; }
+        }
+
+        /// <summary>
+        /// True if reading from Console
+        /// </summary>
+        internal bool IsConsole
+        {
+            get { return this.inp == Console.In;}
         }
         #endregion
 
@@ -81,6 +104,7 @@ namespace SimpleScheme
         {
             // TODO not implemented
             //// <r4rs section="6.10.1">(with-input-from-file <string> <thunk>)</r4rs>
+            // TODO implement char-ready?
             //// <r4rs section="6.10.2">(char-ready?)</r4rs>
             //// <r4rs section="6.10.2">(char-ready? <port>)</r4rs>
 
@@ -164,13 +188,13 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the input port to the string builder.
+        /// Display the input port as a string.
+        /// Since there is nothing to show, at least give the type.
         /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <returns>The input port type name.</returns>
+        public override string ToString()
         {
-            buf.Append(this.ToString());
+            return "<input-port>";
         }
 
         /// <summary>
@@ -193,16 +217,6 @@ namespace SimpleScheme
         public void Close()
         {
             this.parser.Close();
-        }
-
-        /// <summary>
-        /// Display the input port as a string.
-        /// Since there is nothing to show, at least give the type.
-        /// </summary>
-        /// <returns>The input port type name.</returns>
-        public override string ToString()
-        {
-            return "<input-port>";
         }
         #endregion
 
@@ -246,7 +260,7 @@ namespace SimpleScheme
         /// <returns>Undefined object.</returns>
         private static SchemeObject LoadFile(SchemeObject filename, Interpreter interp)
         {
-            interp.LoadFile(filename);
+            interp.LoadFile(filename, null);
             return Undefined.Instance;
         }
 

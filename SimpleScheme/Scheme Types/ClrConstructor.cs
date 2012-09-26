@@ -69,16 +69,6 @@ namespace SimpleScheme
 
         #region Public Methods
         /// <summary>
-        /// Write the clr constructor to the string builder.
-        /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
-        {
-            buf.Append(this.ToString());
-        }
-
-        /// <summary>
         /// Display the clr constructor as a string.  
         /// </summary>
         /// <returns>The string form of the constructor.</returns>

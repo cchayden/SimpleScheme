@@ -4,6 +4,8 @@
 namespace SimpleScheme
 {
     using System;
+    using System.Collections.Generic;
+    using System.Reflection;
 
     /// <summary>
     /// The primitive environment is "below" the global environment.
@@ -15,13 +17,64 @@ namespace SimpleScheme
     /// </summary>
     public class PrimitiveEnvironment : Environment, IPrimitiveEnvironment
     {
+        #region Fields
+
+        /// <summary>
+        /// These classes define DefinePrimitives that needs to be called to install primitives.
+        /// </summary>
+        private static readonly Type[] primitiveTypes = new[]
+            {
+                typeof(PrimitiveEnvironment), 
+                typeof(EvaluateExpression), 
+                typeof(Number),
+                typeof(Procedure),
+                typeof(List),
+                typeof(InputPort),
+                typeof(OutputPort),
+                typeof(Vector),
+                typeof(SchemeBoolean),
+                typeof(SchemeString),
+                typeof(Character),
+                typeof(Symbol),
+                typeof(ClrProcedure),
+                typeof(ClrConstructor),
+                typeof(SynchronousClrProcedure),
+                typeof(AsynchronousClrProcedure),
+                typeof(Counter),
+                typeof(Debugging),
+                typeof(ErrorHandlers)
+            };
+
+        /// <summary>
+        /// A list of static methods to be called to initialize primitives.
+        /// </summary>
+        private static readonly List<MethodInfo> primitiveInitializers = new List<MethodInfo>();
+        #endregion
+
         #region Constructor
+        /// <summary>
+        /// Initializes static members of the <see cref="PrimitiveEnvironment"/> class. 
+        /// Set up the primitive initializers.  The MethodInfo is looked up and stored, to
+        ///   avoid having to do it each time a new primitive environment is created.
+        /// </summary>
+        static PrimitiveEnvironment()
+        {
+            foreach (Type t in primitiveTypes)
+            {
+                primitiveInitializers.Add(t.GetMethod("DefinePrimitives", new[] { typeof(PrimitiveEnvironment) }));
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the PrimitiveEnvironment class.
         /// </summary>
         internal PrimitiveEnvironment()
         {
-            this.InstallPrimitives();
+            // call DefinePrimitives in all classes that define primitives
+            foreach (var mi in primitiveInitializers)
+            {
+                mi.Invoke(null, new object[] { this });
+            }
         }
         #endregion
 
@@ -36,7 +89,32 @@ namespace SimpleScheme
         }
         #endregion
 
-        // TODO define "describe", "primitives"
+        #region Define Primitives
+        /// <summary>
+        /// Define the counter primitives.
+        /// </summary>
+        /// <param name="env">The environment to define the primitives into.</param>
+        public static void DefinePrimitives(PrimitiveEnvironment env)
+        {
+            env
+                .DefinePrimitive(
+                    "exit",
+                    new[] { "(exit)" },
+                    Exit,
+                    0,
+                    1,
+                    Primitive.ArgType.Number)
+                .DefinePrimitive(
+                    "time-call",
+                    new[] { "(time-call <thunk>)", "(time-call <thunk> <count>)" },
+                    (args, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller),
+                    1,
+                    2,
+                    Primitive.ArgType.Proc,
+                    Primitive.ArgType.Number);
+        }
+        #endregion
+
         #region Public Methods
         /// <summary>
         /// Define a primitive, taking a variable number of arguments.
@@ -44,13 +122,13 @@ namespace SimpleScheme
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
-        /// <param name="description"></param>
+        /// <param name="description">An array of strings describing the primitive.</param>
         /// <param name="operation">The operation to perform.</param>
         /// <param name="minArgs">The minimum number of arguments.</param>
         /// <param name="maxArgs">The maximum number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Func<SchemeObject, Evaluator, EvaluatorOrObject> operation, int minArgs, int maxArgs, params Primitive.ArgType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, int minArgs, int maxArgs, params Primitive.ArgType[] argTypes)
         {
             this.Define(name, new Primitive(operation, description, minArgs, maxArgs, argTypes));
             return this;
@@ -62,12 +140,12 @@ namespace SimpleScheme
         ///    with the given name.
         /// </summary>
         /// <param name="name">The primitive name.</param>
-        /// <param name="description"></param>
+        /// <param name="description">Describes the primitive.</param>
         /// <param name="operation">The operation to perform.</param>
         /// <param name="numberOfArgs">The number of arguments.</param>
         /// <param name="argTypes">The argument types.</param>
         /// <returns>A refernce to the environment.</returns>
-        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Func<SchemeObject, Evaluator, EvaluatorOrObject> operation, int numberOfArgs, params Primitive.ArgType[] argTypes)
+        public IPrimitiveEnvironment DefinePrimitive(Symbol name, string[] description, Operation operation, int numberOfArgs, params Primitive.ArgType[] argTypes)
         {
             this.Define(name, new Primitive(operation, description, numberOfArgs, numberOfArgs, argTypes));
             return this;
@@ -85,46 +163,15 @@ namespace SimpleScheme
 
         #region Private Methods
         /// <summary>
-        /// Install standard primitives into the environment.
+        /// Exit the whole process.
         /// </summary>
-        private void InstallPrimitives()
+        /// <param name="args">If given, the process exit code.</param>
+        /// <param name="caller">The calling evaluator (not used).</param>
+        /// <returns>Does not return.</returns>
+        private static SchemeObject Exit(SchemeObject args, Evaluator caller)
         {
-            EvaluateExpression.DefinePrimitives(this);
-            Number.DefinePrimitives(this);
-            Procedure.DefinePrimitives(this);
-            List.DefinePrimitives(this);
-            InputPort.DefinePrimitives(this);
-            OutputPort.DefinePrimitives(this);
-            Vector.DefinePrimitives(this);
-            SchemeBoolean.DefinePrimitives(this);
-            SchemeString.DefinePrimitives(this);
-            Character.DefinePrimitives(this);
-            Symbol.DefinePrimitives(this);
-            ClrProcedure.DefinePrimitives(this);
-            ClrConstructor.DefinePrimitives(this);
-            SynchronousClrProcedure.DefinePrimitives(this);
-            AsynchronousClrProcedure.DefinePrimitives(this);
-            Counter.DefinePrimitives(this);
-            Interpreter.DefinePrimitives(this);
-            ErrorHandlers.DefinePrimitives(this);
-
-            this.DefinePrimitive(
-                    "exit", new[] { "" },
-                    (args, caller) =>
-                        {
-                            System.Environment.Exit(List.First(args) is EmptyList ? 0 : Number.AsInt(List.First(args)));
-                            return Undefined.Instance;
-                        },
-                    0,
-                    1, 
-                    Primitive.ArgType.Number)
-                .DefinePrimitive(
-                    "time-call", new[] { "" },
-                    (args, caller) => EvaluateTimeCall.Call((Procedure)List.First(args), List.Second(args), caller.Env, caller), 
-                    1, 
-                    2, 
-                    Primitive.ArgType.Proc,
-                    Primitive.ArgType.Number);
+            System.Environment.Exit(List.First(args) is EmptyList ? 0 : Number.AsInt(List.First(args)));
+            return Undefined.Instance;
         }
         #endregion
     }

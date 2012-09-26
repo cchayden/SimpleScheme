@@ -3,8 +3,6 @@
 // </copyright>
 namespace SimpleScheme
 {
-    using System.Text;
-
     /// <summary>
     /// This evaluator is returned to halt evaluation.
     /// It is used after an asynchronous fork.
@@ -12,11 +10,16 @@ namespace SimpleScheme
     public class EndedEvaluator : Evaluator
     {
         /// <summary>
+        /// The counter id.
+        /// </summary>
+        private static readonly int counter = Counter.Create("ended");
+
+        /// <summary>
         /// Initializes a new instance of the EndedEvaluator class.
         /// </summary>
         /// <param name="env">The evaluator environment.</param>
         public EndedEvaluator(Environment env) : 
-            base(null, env, null)
+            base(null, env, null, counter)
         {
         }
 
@@ -30,16 +33,13 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Write the evaluator to the string builder.
+        /// Convert an obj into a string representation.
         /// </summary>
-        /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public new void PrintString(bool quoted, StringBuilder buf)
+        /// <param name="quoted">If true, quote strings and chars.</param>
+        /// <returns>The string representing the obj.</returns>
+        public override string ToString(bool quoted)
         {
-            if (quoted)
-            {
-                buf.Append("<ended-evaluator>");
-            }
+            return "<ended-evaluator>";
         }
     }
 }

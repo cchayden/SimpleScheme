@@ -65,15 +65,6 @@ namespace SimpleScheme
         }
 
         /// <summary>
-        /// Print the token.
-        /// </summary>
-        /// <param name="quoted">True to print quoted.</param>
-        /// <param name="buf">Buffer to print to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
-        {
-        }
-
-        /// <summary>
         /// The token value.
         /// </summary>
         /// <returns>The string value of the token.</returns>

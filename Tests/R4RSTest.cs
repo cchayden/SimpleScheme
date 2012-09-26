@@ -36,7 +36,7 @@ namespace Tests
         [DeploymentItem("r4rstest.scm"), TestMethod]
         public void FullTest()
         {
-            this.interpreter.LoadFile((Symbol)"r4rstest.scm");
+            this.interpreter.LoadFile((Symbol)"r4rstest.scm", null);
         }
     }
 }

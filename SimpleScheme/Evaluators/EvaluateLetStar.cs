@@ -13,6 +13,12 @@ namespace SimpleScheme
     public sealed class EvaluateLetStar : Evaluator
     {
         #region Fields
+
+        /// <summary>
+        /// The symbol "let*"
+        /// </summary>
+        public static readonly Symbol LetstarSym = "let*";
+
         /// <summary>
         /// The counter id.
         /// </summary>
@@ -59,15 +65,14 @@ namespace SimpleScheme
         /// <param name="formals">The list of parameters to pass to the lambda.</param>
         /// <param name="vals">Evaluated values of inits.</param>
         private EvaluateLetStar(SchemeObject expr, Environment env, Evaluator caller, SchemeObject body, SchemeObject vars, SchemeObject inits, SchemeObject formals, SchemeObject vals)
-            : base(expr, env, caller)
+            : base(expr, env, caller, counter)
         {
             this.body = body;
             this.vars = vars;
             this.inits = inits;
             this.formals = formals;
             this.vals = vals;
-            ContinueHere(EvalInitStep);
-            IncrementCounter(counter);
+            this.ContinueAt(EvalInitStep);
         }
         #endregion
 
@@ -83,13 +88,13 @@ namespace SimpleScheme
         {
             if (expr is EmptyList)
             {
-                ErrorHandlers.SemanticError("No arguments arguments for let*");
+                ErrorHandlers.SemanticError("No arguments arguments for let*", null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
             if (!(expr is Pair))
             {
-                ErrorHandlers.SemanticError("Bad arg list for let*: " + expr);
+                ErrorHandlers.SemanticError("Bad arg list for let*: " + expr, null);
                 return caller.UpdateReturnValue(Undefined.Instance);
             }
 
@@ -121,11 +126,11 @@ namespace SimpleScheme
             var step = (EvaluateLetStar)s;
             if (step.inits is EmptyList)
             {
-                return s.ContinueHere(ApplyProcStep);
+                return s.ContinueAt(ApplyProcStep);
             }
 
             Procedure fun = Lambda.New(step.formals, MakeList(First(step.inits)), s.Env);
-            return fun.Apply(step.vals, s.ContinueHere(BindVarToInitStep));
+            return fun.Apply(step.vals, s.ContinueAt(BindVarToInitStep));
         }
 
         /// <summary>
@@ -142,7 +147,7 @@ namespace SimpleScheme
             step.vals = Cons(EnsureSchemeObject(s.ReturnedExpr), step.vals);
             step.vars = Rest(step.vars);
             step.inits = Rest(step.inits);
-            return s.ContinueHere(EvalInitStep);
+            return s.ContinueAt(EvalInitStep);
         }
 
         /// <summary>

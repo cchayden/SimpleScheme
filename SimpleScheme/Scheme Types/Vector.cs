@@ -30,6 +30,16 @@ namespace SimpleScheme
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Vector"/> class.
+        /// </summary>
+        /// <param name="length"> The number of elements in the vector.</param>
+        /// <param name="lineNumber">The line where the vector is read.</param>
+        private Vector(int length, int lineNumber) : base(lineNumber)
+        {
+            this.vec = new SchemeObject[length];
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Vector"/> class from a length and an optional fill value.
         /// </summary>
         /// <param name="length">The vector length.</param>
@@ -147,21 +157,23 @@ namespace SimpleScheme
         /// Each element is converted to a Scheme object.
         /// </summary>
         /// <param name="array">The vector elements.</param>
+        /// <returns>A new Vector.</returns>
         public static Vector New(object array)
         {
             Type objType = array.GetType();
             if (!objType.IsArray)
             {
-                var msg = string.Format("Type conversion failed.  Expected array, got {0}", objType.GetType());
+                var msg = string.Format("Type conversion failed.  Expected array, got {0}", objType);
                 ErrorHandlers.ClrError(msg);
             }
 
-            Array ar = (Array)array;
-            Vector v = new Vector(ar.Length);
+            var ar = (Array)array;
+            var v = new Vector(ar.Length);
             for (int i = 0; i < ar.Length; i++)
             {
                 v[i] = ClrObject.FromClrObject(ar.GetValue(i));
             }
+
             return v;
         }
 
@@ -319,6 +331,30 @@ namespace SimpleScheme
 
             return vec;
         }
+
+        /// <summary>
+        /// Creates the vector from a list of values.
+        /// </summary>
+        /// <param name="objs">A list of values to put in the vector.</param>
+        /// <param name="lineNumber">The line where the vector is read.</param>
+        /// <returns>A vector of the objs.</returns>
+        public static Vector FromList(SchemeObject objs, int lineNumber)
+        {
+            var vec = new Vector(ListLength(objs), lineNumber);
+            if (!(objs is Pair))
+            {
+                return vec;
+            }
+
+            int i = 0;
+            while (objs is Pair)
+            {
+                vec[i++] = First(objs);
+                objs = Rest(objs);
+            }
+
+            return vec;
+        }
         #endregion
 
         #region CLR Type Converters
@@ -347,7 +383,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => Number.AsInt(elem));
+                return ((Vector)x).AsArray(Number.AsInt);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -363,7 +399,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => SchemeBoolean.AsBool(elem));
+                return ((Vector)x).AsArray(SchemeBoolean.AsBool);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -379,7 +415,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => Number.AsByte(elem));
+                return ((Vector)x).AsArray(Number.AsByte);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -395,7 +431,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => Number.AsShort(elem));
+                return ((Vector)x).AsArray(Number.AsShort);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -411,7 +447,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => Number.AsLong(elem));
+                return ((Vector)x).AsArray(Number.AsLong);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -427,7 +463,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => Number.AsFloat(elem));
+                return ((Vector)x).AsArray(Number.AsFloat);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -443,7 +479,7 @@ namespace SimpleScheme
         {
             if (x is Vector)
             {
-                return ((Vector)x).AsArray(elem => Number.AsDouble(elem));
+                return ((Vector)x).AsArray(Number.AsDouble);
             }
 
             ErrorHandlers.TypeError(typeof(Vector), x);
@@ -456,15 +492,16 @@ namespace SimpleScheme
         /// Write the vector to the string builder.
         /// </summary>
         /// <param name="quoted">Whether to quote.</param>
-        /// <param name="buf">The string builder to write to.</param>
-        public override void PrintString(bool quoted, StringBuilder buf)
+        /// <returns>The vector as a string.</returns>
+        public override string ToString(bool quoted)
         {
+            var buf = new StringBuilder();
             buf.Append("#(");
             if (this.vec.Length > 0)
             {
                 foreach (SchemeObject v in this.vec)
                 {
-                    v.PrintString(quoted, buf);
+                    buf.Append(v.ToString(quoted));
                     buf.Append(' ');
                 }
 
@@ -472,6 +509,16 @@ namespace SimpleScheme
             }
 
             buf.Append(')');
+            return buf.ToString();
+        }
+
+        /// <summary>
+        /// Display the vector as a string.
+        /// </summary>
+        /// <returns>The vector as a string.</returns>
+        public override string ToString()
+        {
+            return this.ToString(false);
         }
 
         /// <summary>
@@ -483,21 +530,6 @@ namespace SimpleScheme
             {
                 Cleaner.Clean(v);
             }
-        }
-
-        /// <summary>
-        /// Convert the vector to an attay of objects.
-        /// </summary>
-        /// <returns>An array of object</returns>
-        public object[] AsObjectArray()
-        {
-            var res = new object[this.vec.Length];
-            for (var i = 0; i < res.Length; i++)
-            {
-                res[i] = this.vec[i];
-            }
-
-            return res;
         }
 
         /// <summary>
